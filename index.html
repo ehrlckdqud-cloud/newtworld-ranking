@@ -469,6 +469,44 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 .quick-stat small,.quick-link small{color:#82a4b6;font-size:10px;font-weight:800;letter-spacing:.06em}.quick-stat strong{font-size:25px;margin-top:3px}.quick-link{border-color:#4b5630;background:linear-gradient(180deg,#202616,#13180d)}.quick-link b{font-size:16px;margin-top:4px}.quick-link span{font-size:10px;color:#b8c69c;margin-top:3px}
 @media(max-width:620px){.community-quick{grid-template-columns:1fr 1fr}.quick-link{grid-column:1/-1}.quick-stat,.quick-link{min-height:70px}.quick-stat strong{font-size:22px}}
 
+
+/* v18.13: keep BGM alive while viewing workout page */
+.nw-workout-overlay{
+  position:fixed; inset:0; z-index:99995;
+  background:rgba(2,8,12,.92);
+  backdrop-filter:blur(10px);
+  display:none;
+}
+.nw-workout-overlay.open{display:block}
+.nw-workout-shell{
+  position:absolute; inset:14px;
+  max-width:1180px; margin:auto;
+  border:1px solid #294b5d;
+  border-radius:22px;
+  overflow:hidden;
+  background:#071018;
+  box-shadow:0 28px 80px rgba(0,0,0,.55);
+}
+.nw-workout-topbar{
+  height:54px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; padding:0 14px;
+  background:#0b1922; border-bottom:1px solid #203947;
+}
+.nw-workout-topbar b{font-size:15px}
+.nw-workout-close{
+  border:1px solid #35586a; background:#10232d; color:#eff8ff;
+  border-radius:11px; padding:8px 12px; font-weight:800; cursor:pointer;
+}
+.nw-workout-frame{
+  width:100%; height:calc(100% - 54px); border:0; display:block; background:#071018;
+}
+@media(max-width:700px){
+  .nw-workout-shell{inset:0;border-radius:0;border-left:0;border-right:0}
+  .nw-workout-topbar{height:50px}
+  .nw-workout-frame{height:calc(100% - 50px)}
+}
+
 </style>
 
 <style>
@@ -588,12 +626,12 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.12</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.13</p>
 </div>
 <div class="community-quick">
   <div class="quick-stat"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
   <div class="quick-stat"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
-  <a class="quick-link" href="workout.html"><small>🏃 NEWT WORLD HABIT</small><b>오운완 챌린지</b><span>오늘의 운동 기록 · 월간 랭킹 · 연속 기록 보기 →</span></a>
+  <a class="quick-link" href="#workout" id="nwWorkoutOpen"><small>🏃 NEWT WORLD HABIT</small><b>오운완 챌린지</b><span>오늘의 운동 기록 · 월간 랭킹 · 연속 기록 보기 →</span></a>
 </div>
 <div class="sync-panel final-sync">
 <div class="sync-head"><b>🔄 실시간 랭킹 데이터</b><span class="sync-status" id="syncStatus">Google Sheets 연결 준비 중…</span></div>
@@ -1399,6 +1437,68 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
   const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
+})();
+</script>
+
+
+<div class="nw-workout-overlay" id="nwWorkoutOverlay" aria-hidden="true">
+  <div class="nw-workout-shell">
+    <div class="nw-workout-topbar">
+      <b>🏃 뉴트월드 오운완 챌린지</b>
+      <button class="nw-workout-close" id="nwWorkoutClose" type="button">✕ 닫기</button>
+    </div>
+    <iframe class="nw-workout-frame" id="nwWorkoutFrame" title="뉴트월드 오운완 챌린지" loading="lazy"></iframe>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const overlay=document.getElementById('nwWorkoutOverlay');
+  const frame=document.getElementById('nwWorkoutFrame');
+  const closeBtn=document.getElementById('nwWorkoutClose');
+  if(!overlay||!frame||!closeBtn) return;
+
+  function openWorkout(push=true){
+    if(!frame.src) frame.src='workout.html?embedded=1';
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden','false');
+    document.documentElement.style.overflow='hidden';
+    document.body.style.overflow='hidden';
+    if(push && location.hash!=='#workout') history.pushState({nwWorkout:true},'', '#workout');
+  }
+  function closeWorkout(fromPop=false){
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden','true');
+    document.documentElement.style.overflow='';
+    document.body.style.overflow='';
+    if(!fromPop && location.hash==='#workout') history.back();
+  }
+
+  document.addEventListener('click',e=>{
+    const a=e.target.closest && e.target.closest('#nwWorkoutOpen');
+    if(!a) return;
+    e.preventDefault();
+    openWorkout(true);
+  });
+  closeBtn.addEventListener('click',()=>closeWorkout(false));
+  overlay.addEventListener('click',e=>{ if(e.target===overlay) closeWorkout(false); });
+  window.addEventListener('message',e=>{
+    if(e.data==='nw-close-workout') closeWorkout(false);
+  });
+  window.addEventListener('popstate',()=>{
+    if(location.hash==='#workout') openWorkout(false);
+    else closeWorkout(true);
+  });
+  window.addEventListener('hashchange',()=>{
+    if(location.hash==='#workout') openWorkout(false);
+    else closeWorkout(true);
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape' && overlay.classList.contains('open')) closeWorkout(false);
+  });
+
+  if(location.hash==='#workout') openWorkout(false);
 })();
 </script>
 
