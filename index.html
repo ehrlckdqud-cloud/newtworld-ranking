@@ -13,6 +13,24 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="뉴트월드">
+<meta name="description" content="활동왕 실시간 랭킹 · 등급 · 음악 · 제휴정보 · ehrlckdqud-cloud.github.io">
+<link rel="canonical" href="https://ehrlckdqud-cloud.github.io/newtworld-ranking/">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="뉴트월드">
+<meta property="og:title" content="뉴트월드">
+<meta property="og:description" content="활동왕 실시간 랭킹 · 등급 · 음악 · 제휴정보">
+<meta property="og:url" content="https://ehrlckdqud-cloud.github.io/newtworld-ranking/">
+<meta property="og:image" content="https://ehrlckdqud-cloud.github.io/newtworld-ranking/assets/og/newtworld-kakao-preview.png">
+<meta property="og:image:secure_url" content="https://ehrlckdqud-cloud.github.io/newtworld-ranking/assets/og/newtworld-kakao-preview.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1365">
+<meta property="og:image:height" content="768">
+<meta property="og:image:alt" content="뉴트월드 활동왕 실시간 랭킹 · 등급 · 음악 · 제휴정보 대표 이미지">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="뉴트월드">
+<meta name="twitter:description" content="활동왕 실시간 랭킹 · 등급 · 음악 · 제휴정보">
+<meta name="twitter:image" content="https://ehrlckdqud-cloud.github.io/newtworld-ranking/assets/og/newtworld-kakao-preview.png">
 
 <style>
 :root {
@@ -953,6 +971,87 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }
 
+  const NW_SITE_URL='https://ehrlckdqud-cloud.github.io/newtworld-ranking/';
+  const NW_FALLBACK_ARTWORK=NW_SITE_URL+'assets/og/newtworld-kakao-preview.png';
+  function absoluteUrl(src){
+    try{return new URL(src, location.href).href;}catch(_){return src||'';}
+  }
+  function guessImageMime(src){
+    const s=String(src||'').toLowerCase();
+    if(s.endsWith('.jpg')||s.endsWith('.jpeg')) return 'image/jpeg';
+    if(s.endsWith('.webp')) return 'image/webp';
+    if(s.endsWith('.gif')) return 'image/gif';
+    return 'image/png';
+  }
+  function mediaArtworkForTrack(t){
+    const raw=t&&t.cover?absoluteUrl(t.cover):NW_FALLBACK_ARTWORK;
+    const mime=guessImageMime(raw);
+    return [
+      {src:raw, sizes:'512x512', type:mime},
+      {src:raw, sizes:'256x256', type:mime},
+      {src:raw, sizes:'192x192', type:mime},
+      {src:raw, type:mime}
+    ];
+  }
+  function updateMediaSession(playbackOnly=false){
+    if(!('mediaSession' in navigator)) return;
+    const t=current();
+    if(!t) return;
+    if(!playbackOnly){
+      try{
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: t.title || '뉴트월드',
+          artist: t.artist || 'NEWT WORLD MUSIC',
+          album: '뉴트월드',
+          artwork: mediaArtworkForTrack(t)
+        });
+      }catch(_){ }
+    }
+    try{
+      navigator.mediaSession.playbackState = (!audio.paused && !audio.ended) ? 'playing' : 'paused';
+    }catch(_){ }
+    if(typeof navigator.mediaSession.setPositionState === 'function'){
+      try{
+        const duration=Number(audio.duration);
+        if(Number.isFinite(duration) && duration > 0){
+          navigator.mediaSession.setPositionState({
+            duration,
+            playbackRate: Number(audio.playbackRate)||1,
+            position: Math.min(Math.max(Number(audio.currentTime)||0,0), duration)
+          });
+        }
+      }catch(_){ }
+    }
+  }
+  function initMediaSession(){
+    if(!('mediaSession' in navigator)) return;
+    const safe=(name,handler)=>{try{navigator.mediaSession.setActionHandler(name,handler);}catch(_){}};
+    safe('play',()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();tryPlay();});
+    safe('pause',()=>{audio.pause();});
+    safe('previoustrack',()=>{prevTrack();});
+    safe('nexttrack',()=>{nextTrack(true);});
+    safe('seekbackward',(details)=>{
+      const step=(details && Number(details.seekOffset)) || 10;
+      audio.currentTime=Math.max(0,(Number(audio.currentTime)||0)-step);
+      updateMediaSession(true);
+    });
+    safe('seekforward',(details)=>{
+      const step=(details && Number(details.seekOffset)) || 10;
+      const duration=Number(audio.duration)||Infinity;
+      audio.currentTime=Math.min(duration,(Number(audio.currentTime)||0)+step);
+      updateMediaSession(true);
+    });
+    safe('seekto',(details)=>{
+      if(!details || !Number.isFinite(Number(details.seekTime))) return;
+      const target=Math.max(0, Number(details.seekTime));
+      if(details.fastSeek && typeof audio.fastSeek==='function') audio.fastSeek(target);
+      else audio.currentTime=target;
+      updateMediaSession(true);
+    });
+    safe('stop',()=>{audio.pause();audio.currentTime=0;updateMediaSession(true);});
+    updateMediaSession();
+  }
+
   function populateSelect(){
     const sel=$('nwTrackSelect'); sel.innerHTML='';
     tracks.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+t.title;sel.appendChild(o);});
@@ -969,10 +1068,12 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('nwLyricsToggle').textContent=lyricsOn?'가사 ON':'가사 OFF'; $('nwLyricsToggle').classList.toggle('active',lyricsOn);
     $('nwCoverToggle').textContent=coverOn?'커버 ON':'커버 OFF'; $('nwCoverToggle').classList.toggle('active',coverOn);
     $('nwRepeat').textContent=repeatLabel(); $('nwTrackSelect').value=String(index);
+    updateMediaSession();
   }
   function setTrack(i,autoplay){
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));
     const t=current(); audio.src=t.audio; audio.load(); populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
+    updateMediaSession();
     if(autoplay&&bgmOn) tryPlay();
   }
   async function tryPlay(){
@@ -980,7 +1081,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     try{await audio.play(); userStarted=true; $('nwAutoplayNote').classList.remove('show');}
     catch(e){$('nwAutoplayNote').classList.add('show');}
   }
-  function syncPlayIcon(){ const playing=!audio.paused&&!audio.ended; const g=$('nwPlay').querySelector('.nw-icon-glyph'); if(g) g.textContent=playing?'❚❚':'▶'; $('nwLiveDot').style.opacity=playing?'1':'.35'; }
+  function syncPlayIcon(){ const playing=!audio.paused&&!audio.ended; const g=$('nwPlay').querySelector('.nw-icon-glyph'); if(g) g.textContent=playing?'❚❚':'▶'; $('nwLiveDot').style.opacity=playing?'1':'.35'; updateMediaSession(true); }
   function nextTrack(auto=true){ if(index<tracks.length-1)setTrack(index+1,auto); else if(repeatMode==='all')setTrack(0,auto); else {audio.pause();audio.currentTime=0;syncPlayIcon();} }
   function prevTrack(){setTrack(index-1,true);}
 
@@ -1077,9 +1178,11 @@ document.addEventListener('DOMContentLoaded',()=>{
       $('nwDur').textContent=fmt(audio.duration);
     }
     syncLyrics();
+    updateMediaSession(true);
   };
-  audio.onloadedmetadata=()=>{$('nwDur').textContent=fmt(audio.duration);renderLyrics(current());syncLyrics();}; audio.onplay=syncPlayIcon; audio.onpause=syncPlayIcon;
+  audio.onloadedmetadata=()=>{$('nwDur').textContent=fmt(audio.duration);renderLyrics(current());syncLyrics();updateMediaSession();}; audio.onplay=()=>{syncPlayIcon();updateMediaSession(true);}; audio.onpause=()=>{syncPlayIcon();updateMediaSession(true);};
   audio.onended=()=>{
+    updateMediaSession(true);
     $('nwSeek').value=1000;
     setRangeFill($('nwSeek'),1000,0,1000);
     $('nwNow').textContent=fmt(audio.duration||0);
@@ -1118,6 +1221,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   populateSelect(); setTrack(index,false); paintCollapsed(); syncPlayIcon();
   // Attempt autoplay. If blocked, the first real user gesture starts BGM once.
   if(bgmOn) tryPlay();
+  initMediaSession();
   const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
   window.NWMusicAdminAPI={audio,tracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
