@@ -9,6 +9,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="site-config.js"></script>
 <meta name="theme-color" content="#071018">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -461,6 +462,13 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   .home-install-badge{margin-left:auto}
 }
 
+
+/* v18.12 visitor + workout portal */
+.community-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
+.quick-stat,.quick-link{min-height:78px;border:1px solid #244455;border-radius:16px;background:linear-gradient(180deg,#10222d,#0a1720);padding:12px 14px;display:flex;flex-direction:column;justify-content:center;text-decoration:none;color:var(--text)}
+.quick-stat small,.quick-link small{color:#82a4b6;font-size:10px;font-weight:800;letter-spacing:.06em}.quick-stat strong{font-size:25px;margin-top:3px}.quick-link{border-color:#4b5630;background:linear-gradient(180deg,#202616,#13180d)}.quick-link b{font-size:16px;margin-top:4px}.quick-link span{font-size:10px;color:#b8c69c;margin-top:3px}
+@media(max-width:620px){.community-quick{grid-template-columns:1fr 1fr}.quick-link{grid-column:1/-1}.quick-stat,.quick-link{min-height:70px}.quick-stat strong{font-size:22px}}
+
 </style>
 
 <style>
@@ -580,7 +588,12 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.10</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.12</p>
+</div>
+<div class="community-quick">
+  <div class="quick-stat"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
+  <div class="quick-stat"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
+  <a class="quick-link" href="workout.html"><small>🏃 NEWT WORLD HABIT</small><b>오운완 챌린지</b><span>오늘의 운동 기록 · 월간 랭킹 · 연속 기록 보기 →</span></a>
 </div>
 <div class="sync-panel final-sync">
 <div class="sync-head"><b>🔄 실시간 랭킹 데이터</b><span class="sync-status" id="syncStatus">Google Sheets 연결 준비 중…</span></div>
@@ -1375,6 +1388,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 })();
 
+</script>
+
+
+<script>
+(function(){
+  const url=(window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl)||'';
+  if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
+  let id=localStorage.getItem('nwVisitorId');
+  if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
+})();
 </script>
 
 </body></html>
