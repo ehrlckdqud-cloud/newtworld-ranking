@@ -381,6 +381,59 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   .nw-cover-modal{padding:16px}.nw-cover-modal img{max-width:94vw;max-height:78vh;border-radius:18px}
 }
 
+
+/* v18.4 — PWA 홈 화면 설치 버튼 */
+.home-install-wrap{
+  display:flex;justify-content:center;margin:18px 0 8px;
+}
+.home-install-card{
+  display:flex;align-items:center;gap:13px;
+  padding:12px 16px 12px 12px;
+  border:1px solid #294b5d;border-radius:20px;
+  background:linear-gradient(180deg,rgba(14,35,47,.96),rgba(8,22,31,.96));
+  color:#eaf7ff;cursor:pointer;text-align:left;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+  transition:.18s transform,.18s border-color,.18s box-shadow;
+  -webkit-tap-highlight-color:transparent;
+}
+.home-install-card:hover{transform:translateY(-2px);border-color:#5dbfc6;box-shadow:0 16px 38px rgba(0,0,0,.30)}
+.home-install-card:active{transform:translateY(0) scale(.99)}
+.home-install-icon-shell{
+  width:58px;height:58px;border-radius:16px;overflow:hidden;flex:0 0 58px;
+  background:#10212b;border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 8px 20px rgba(0,0,0,.32);
+}
+.home-install-icon-shell img{width:100%;height:100%;object-fit:cover;display:block}
+.home-install-copy{min-width:0}
+.home-install-title{font-size:14px;font-weight:900;line-height:1.25}
+.home-install-sub{font-size:11px;color:#8fb0c1;margin-top:4px;line-height:1.45}
+.home-install-badge{
+  margin-left:6px;padding:5px 8px;border-radius:999px;white-space:nowrap;
+  font-size:10px;font-weight:900;color:#8ff4d8;border:1px solid #2c776d;background:#0b2927;
+}
+.home-install-card.installed{opacity:.74;cursor:default}
+.home-install-card.installed .home-install-badge{color:#a9c4d2;border-color:#39505e;background:#12212a}
+.install-help-modal{
+  position:fixed;inset:0;z-index:10020;display:none;align-items:center;justify-content:center;
+  padding:18px;background:rgba(0,0,0,.72);backdrop-filter:blur(8px)
+}
+.install-help-modal.open{display:flex}
+.install-help-box{
+  width:min(460px,100%);border:1px solid #34596a;border-radius:22px;
+  background:#0b1821;color:#eaf7ff;padding:20px;box-shadow:0 28px 80px rgba(0,0,0,.55)
+}
+.install-help-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.install-help-head b{font-size:18px}
+.install-help-close{border:0!important;background:transparent!important;font-size:22px!important;padding:4px 8px!important;color:#c7dbe6!important}
+.install-help-steps{font-size:13px;line-height:1.7;color:#b9ceda}
+.install-help-steps strong{color:#fff}
+@media(max-width:600px){
+  .home-install-wrap{justify-content:flex-start;margin:14px 0 6px}
+  .home-install-card{width:100%;padding:11px 13px 11px 11px;border-radius:18px}
+  .home-install-icon-shell{width:54px;height:54px;flex-basis:54px;border-radius:15px}
+  .home-install-badge{margin-left:auto}
+}
+
 </style>
 
 <style>
@@ -478,9 +531,29 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
     <div class="support-copy"><span class="support-tag">이벤트 협찬사</span><b>보배(Chapkok)</b><span>Instagram · 클릭하여 방문 ↗</span></div>
   </a>
 </div>
+
+<div class="home-install-wrap">
+  <button type="button" class="home-install-card" id="homeInstallBtn" aria-label="뉴트월드 활동왕을 홈 화면에 추가">
+    <span class="home-install-icon-shell"><img src="assets/icons/icon-192.png" alt="뉴트월드 활동왕 앱 아이콘"></span>
+    <span class="home-install-copy">
+      <span class="home-install-title">뉴트월드 활동왕</span>
+      <span class="home-install-sub" id="homeInstallSub">홈 화면에 앱처럼 추가하기</span>
+    </span>
+    <span class="home-install-badge" id="homeInstallBadge">+ 홈 화면</span>
+  </button>
+</div>
+<div class="install-help-modal" id="installHelpModal" aria-hidden="true">
+  <div class="install-help-box" role="dialog" aria-modal="true" aria-labelledby="installHelpTitle">
+    <div class="install-help-head">
+      <b id="installHelpTitle">📲 홈 화면에 추가</b>
+      <button type="button" class="install-help-close" id="installHelpClose" aria-label="닫기">×</button>
+    </div>
+    <div class="install-help-steps" id="installHelpSteps"></div>
+  </div>
+</div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.3.1</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.4</p>
 </div>
 <div class="sync-panel final-sync">
 <div class="sync-head"><b>🔄 실시간 랭킹 데이터</b><span class="sync-status" id="syncStatus">Google Sheets 연결 준비 중…</span></div>
@@ -1057,6 +1130,92 @@ document.addEventListener('DOMContentLoaded',()=>{
   },true);
   api.audio.addEventListener('timeupdate',()=>{if(modal.classList.contains('open')){$('nwSyncTime').textContent=lines()[lineIndex]?fmt2(lines()[lineIndex].time):'00:00.00';}});
 })();
+
+/* v18.4 — PWA 설치 흐름 */
+(function(){
+  let deferredInstallPrompt = null;
+  const btn = document.getElementById('homeInstallBtn');
+  const sub = document.getElementById('homeInstallSub');
+  const badge = document.getElementById('homeInstallBadge');
+  const modal = document.getElementById('installHelpModal');
+  const closeBtn = document.getElementById('installHelpClose');
+  const help = document.getElementById('installHelpSteps');
+  if(!btn) return;
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  function markInstalled(){
+    btn.classList.add('installed');
+    btn.disabled = true;
+    sub.textContent = '이미 홈 화면에 추가되어 있습니다';
+    badge.textContent = '설치됨';
+  }
+  function openHelp(){
+    let text = '';
+    if(isIOS){
+      text = '<strong>iPhone / iPad Safari</strong><br>1. 아래쪽 <strong>공유</strong> 버튼을 누릅니다.<br>2. <strong>홈 화면에 추가</strong>를 선택합니다.<br>3. 오른쪽 위 <strong>추가</strong>를 누르면 완료됩니다.';
+    }else if(isSamsung){
+      text = '<strong>Samsung Internet</strong><br>브라우저 메뉴에서 <strong>현재 웹페이지 추가 → 홈 화면</strong>을 선택해주세요.<br><br>설치 조건이 충족되면 이 버튼을 다시 눌렀을 때 설치창이 바로 표시될 수 있습니다.';
+    }else{
+      text = '<strong>이 브라우저에서는 자동 설치창을 바로 열 수 없습니다.</strong><br>브라우저 메뉴에서 <strong>앱 설치</strong> 또는 <strong>홈 화면에 추가</strong>를 선택해주세요.';
+    }
+    help.innerHTML = text;
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+  }
+
+  if(isStandalone){
+    markInstalled();
+  }
+
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault();
+    deferredInstallPrompt = e;
+    if(!btn.disabled){
+      sub.textContent = '버튼을 눌러 바로 설치하기';
+      badge.textContent = '설치';
+    }
+  });
+
+  window.addEventListener('appinstalled', ()=>{
+    deferredInstallPrompt = null;
+    markInstalled();
+  });
+
+  btn.addEventListener('click', async ()=>{
+    if(btn.disabled) return;
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      try{
+        const choice = await deferredInstallPrompt.userChoice;
+        if(choice && choice.outcome === 'accepted') markInstalled();
+      }catch(_){}
+      deferredInstallPrompt = null;
+    }else{
+      openHelp();
+    }
+  });
+
+  closeBtn && closeBtn.addEventListener('click', ()=>{
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+  });
+  modal && modal.addEventListener('click', (e)=>{
+    if(e.target === modal){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape' && modal && modal.classList.contains('open')){
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden','true');
+    }
+  });
+})();
+
 </script>
 
 </body></html>
