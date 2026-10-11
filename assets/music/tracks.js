@@ -726,842 +726,842 @@ window.NW_TRACKS = [
         "meta": false
       },
       {
-        "time": 1.93,
+        "time": 3.15,
         "text": "뭐부터 해야 될지 모르겠고",
         "meta": false
       },
       {
-        "time": 4.25,
+        "time": 5.32,
         "text": "괜히 질문 하나 올리는 것도",
         "meta": false
       },
       {
-        "time": 6.58,
+        "time": 7.78,
         "text": "눈치부터 보이던 그때",
         "meta": false
       },
       {
-        "time": 9.13,
+        "time": 10,
         "text": "근데 뭐 별거 있나",
         "meta": false
       },
       {
-        "time": 11.34,
+        "time": 12.41,
         "text": "모르면 물어보면 되는 거지",
         "meta": false
       },
       {
-        "time": 14.04,
+        "time": 14.94,
         "text": "여는 그런 사람들 모인",
         "meta": false
       },
       {
-        "time": 16.69,
+        "time": 17.92,
         "text": "뉴트월드다",
         "meta": false
       },
       {
-        "time": 18.02,
+        "time": 19.05,
         "text": "[Verse 1A - Male Rapper 1]",
         "meta": true
       },
       {
-        "time": 19.39,
+        "time": 20.46,
         "text": "처음 뉴트 데려온 날",
         "meta": false
       },
       {
-        "time": 21.3,
+        "time": 21.87,
         "text": "밤새 수조만 들여다보고",
         "meta": false
       },
       {
-        "time": 22.63,
+        "time": 23.56,
         "text": "온도 몇 도가 맞는지",
         "meta": false
       },
       {
-        "time": 24.44,
+        "time": 25.34,
         "text": "밥은 뭘 줘야 되는지",
         "meta": false
       },
       {
-        "time": 27.47,
+        "time": 28.85,
         "text": "검색하면 말이 다 다르고",
         "meta": false
       },
       {
-        "time": 30.83,
+        "time": 31.76,
         "text": "사진 보면 더 헷갈리고",
         "meta": false
       },
       {
-        "time": 32.64,
+        "time": 33.77,
         "text": "괜히 질문 하나 올렸다가",
         "meta": false
       },
       {
-        "time": 35.67,
+        "time": 36.56,
         "text": "욕 묵을까 눈치 보이고",
         "meta": false
       },
       {
-        "time": 37.4,
+        "time": 38.65,
         "text": "그럴 필요 없다",
         "meta": false
       },
       {
-        "time": 40.59,
+        "time": 41.19,
         "text": "우리도 처음엔 다 몰랐다",
         "meta": false
       },
       {
-        "time": 42.49,
+        "time": 43.44,
         "text": "사진 하나 같이 올리고",
         "meta": false
       },
       {
-        "time": 45.6,
+        "time": 46.27,
         "text": "어떻게 키우는지 말해봐라",
         "meta": false
       },
       {
-        "time": 47.46,
+        "time": 48.73,
         "text": "너무 기본적인 질문이라",
         "meta": false
       },
       {
-        "time": 50.77,
+        "time": 51.32,
         "text": "민망할 것도 없다",
         "meta": false
       },
       {
-        "time": 52.71,
+        "time": 53.63,
         "text": "처음부터 다 아는 사람이",
         "meta": false
       },
       {
-        "time": 55.86,
+        "time": 57.02,
         "text": "세상에 어딨겠노",
         "meta": false
       },
       {
-        "time": 57.23,
+        "time": 58.44,
         "text": "[Verse 1B - Male Rapper 2]",
         "meta": true
       },
       {
-        "time": 58.65,
+        "time": 60.14,
         "text": "아는 사람은 알려주고",
         "meta": false
       },
       {
-        "time": 61.23,
+        "time": 61.8,
         "text": "모르면 같이 찾아보면 된다",
         "meta": false
       },
       {
-        "time": 62.65,
+        "time": 63.62,
         "text": "조금 늦게 시작한 사람도",
         "meta": false
       },
       {
-        "time": 65.84,
+        "time": 66.74,
         "text": "천천히 따라오면 된다",
         "meta": false
       },
       {
-        "time": 68.1,
+        "time": 68.72,
         "text": "“그것도 모르나” 한마디보다",
         "meta": false
       },
       {
-        "time": 70.64,
+        "time": 71.07,
         "text": "“내도 처음엔 그랬다”",
         "meta": false
       },
       {
-        "time": 71.88,
+        "time": 73,
         "text": "그 말 하나가 훨씬 오래",
         "meta": false
       },
       {
-        "time": 75.03,
+        "time": 75.58,
         "text": "사람 마음에 남는다",
         "meta": false
       },
       {
-        "time": 77.2,
+        "time": 78.25,
         "text": "니도 언젠가 익숙해지면",
         "meta": false
       },
       {
-        "time": 80.18,
+        "time": 80.83,
         "text": "새로 온 사람 보일 기다",
         "meta": false
       },
       {
-        "time": 81.52,
+        "time": 82.33,
         "text": "그때 받은 만큼만",
         "meta": false
       },
       {
-        "time": 83.17,
+        "time": 83.61,
         "text": "니가 다시 알려주면 된다",
         "meta": false
       },
       {
-        "time": 84.41,
+        "time": 85.24,
         "text": "사육 정보도 나누고",
         "meta": false
       },
       {
-        "time": 86.27,
+        "time": 86.64,
         "text": "사진도 같이 올리고",
         "meta": false
       },
       {
-        "time": 87.48,
+        "time": 87.78,
         "text": "그렇게 하루하루 쌓인 게",
         "meta": false
       },
       {
-        "time": 88.81,
+        "time": 89.48,
         "text": "이 방 분위기 되는 거다",
         "meta": false
       },
       {
-        "time": 89.62,
+        "time": 90.69,
         "text": "[Chorus - Both Male Voices, Gang Vocals]",
         "meta": true
       },
       {
-        "time": 90.3,
+        "time": 91.94,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 92.69,
+        "time": 93.24,
         "text": "같이 가는 기다",
         "meta": false
       },
       {
-        "time": 93.9,
+        "time": 94.28,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 95.11,
+        "time": 95.45,
         "text": "모르면 물어봐라",
         "meta": false
       },
       {
-        "time": 96.03,
+        "time": 96.82,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 97.4,
+        "time": 97.99,
         "text": "혼자 고민하지 마라",
         "meta": false
       },
       {
-        "time": 98.78,
+        "time": 99.33,
         "text": "서로 배우고 서로 챙기는",
         "meta": false
       },
       {
-        "time": 100.02,
+        "time": 100.86,
         "text": "우리 뉴트월드",
         "meta": false
       },
       {
-        "time": 101.23,
+        "time": 102.11,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 102.76,
+        "time": 103.19,
         "text": "오늘도 반갑고",
         "meta": false
       },
       {
-        "time": 103.74,
+        "time": 104.28,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 104.91,
+        "time": 105.49,
         "text": "내일도 보자",
         "meta": false
       },
       {
-        "time": 106.07,
+        "time": 106.78,
         "text": "작은 생명 하나까지",
         "meta": false
       },
       {
-        "time": 107.52,
+        "time": 109.25,
         "text": "같이 잘 키워보자",
         "meta": false
       },
       {
-        "time": 109.98,
+        "time": 110.54,
         "text": "[Verse 2A - Male Rapper 1]",
         "meta": true
       },
       {
-        "time": 111.92,
+        "time": 112.15,
         "text": "한 달 지나고 나면",
         "meta": false
       },
       {
-        "time": 113.53,
+        "time": 113.93,
         "text": "또 슬슬 분위기 온다",
         "meta": false
       },
       {
-        "time": 115.27,
+        "time": 116.51,
         "text": "활동왕 순위 올라오면",
         "meta": false
       },
       {
-        "time": 117.93,
+        "time": 118.65,
         "text": "다들 자기 이름부터 본다",
         "meta": false
       },
       {
-        "time": 119.75,
+        "time": 121.48,
         "text": "치킨 하나 버거 하나",
         "meta": false
       },
       {
-        "time": 122.49,
+        "time": 123.17,
         "text": "지렁이까지 걸려 있고",
         "meta": false
       },
       {
-        "time": 123.98,
+        "time": 124.66,
         "text": "평소 조용하던 사람도",
         "meta": false
       },
       {
-        "time": 125.57,
+        "time": 126.4,
         "text": "그날은 채팅 한번 친다",
         "meta": false
       },
       {
-        "time": 128.07,
+        "time": 130.23,
         "text": "누가 먼저 당첨되면",
         "meta": false
       },
       {
-        "time": 132.11,
+        "time": 132.53,
         "text": "축하 한마디 남겨주고",
         "meta": false
       },
       {
-        "time": 133.66,
+        "time": 134.15,
         "text": "나는 안 됐다 하면서도",
         "meta": false
       },
       {
-        "time": 135.31,
+        "time": 135.6,
         "text": "다음 달 또 기다린다",
         "meta": false
       },
       {
-        "time": 136.36,
+        "time": 136.93,
         "text": "그게 또 재미 아니겠나",
         "meta": false
       },
       {
-        "time": 137.98,
+        "time": 138.47,
         "text": "당첨보다 같이 노는 맛",
         "meta": false
       },
       {
-        "time": 139.3,
+        "time": 140.24,
         "text": "사람들 웃는 거 보다 보면",
         "meta": false
       },
       {
-        "time": 142.12,
+        "time": 143.15,
         "text": "괜히 기분 좋아진다",
         "meta": false
       },
       {
-        "time": 143.33,
+        "time": 145.09,
         "text": "[Verse 2B - Male Rapper 2]",
         "meta": true
       },
       {
-        "time": 144.98,
+        "time": 146.17,
         "text": "디스코드 들어오는 날이면",
         "meta": false
       },
       {
-        "time": 147.07,
+        "time": 147.71,
         "text": "평소보다 더 시끌시끌하고",
         "meta": false
       },
       {
-        "time": 148.53,
+        "time": 149.4,
         "text": "마이크 켜는 사람도 있고",
         "meta": false
       },
       {
-        "time": 150.07,
+        "time": 151.13,
         "text": "채팅만 하는 사람도 있다",
         "meta": false
       },
       {
-        "time": 152.37,
+        "time": 155.33,
         "text": "처음엔 어렵다 카더라도",
         "meta": false
       },
       {
-        "time": 156.97,
+        "time": 157.79,
         "text": "한번 들어오면 별거 없다",
         "meta": false
       },
       {
-        "time": 158.62,
+        "time": 159.88,
         "text": "누구 이름 하나 불릴 때마다",
         "meta": false
       },
       {
-        "time": 161.4,
+        "time": 162.18,
         "text": "리액션 하나 터져 나온다",
         "meta": false
       },
       {
-        "time": 163.34,
+        "time": 165.12,
         "text": "운동하는 사람들도",
         "meta": false
       },
       {
-        "time": 166.86,
+        "time": 167.67,
         "text": "하루 끝에 기록 남기고",
         "meta": false
       },
       {
-        "time": 168.51,
+        "time": 169.4,
         "text": "다 끝냈으면 긴 말 없이",
         "meta": false
       },
       {
-        "time": 170.48,
+        "time": 171.14,
         "text": "딱 세 글자 올리면 된다",
         "meta": false
       },
       {
-        "time": 172.05,
+        "time": 174.49,
         "text": "오! 운! 완!",
         "meta": false
       },
       {
-        "time": 175,
+        "time": 176.14,
         "text": "하루 하나라도 해냈으면",
         "meta": false
       },
       {
-        "time": 177.3,
+        "time": 178.16,
         "text": "그걸로 된 거다",
         "meta": false
       },
       {
-        "time": 179.48,
+        "time": 180.73,
         "text": "작은 성공 하나씩 쌓이는 것도",
         "meta": false
       },
       {
-        "time": 182.26,
+        "time": 183.31,
         "text": "우리 방식 아니겠나",
         "meta": false
       },
       {
-        "time": 184.55,
+        "time": 184.6,
         "text": "[Chorus - Both Male Voices, Bigger Gang Vocals]",
         "meta": true
       },
       {
-        "time": 185.39,
+        "time": 185.89,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 186.56,
+        "time": 187.02,
         "text": "같이 가는 기다",
         "meta": false
       },
       {
-        "time": 188.01,
+        "time": 188.51,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 189.14,
+        "time": 189.56,
         "text": "모르면 물어봐라",
         "meta": false
       },
       {
-        "time": 190.03,
+        "time": 190.85,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 191.52,
+        "time": 191.86,
         "text": "혼자 고민하지 마라",
         "meta": false
       },
       {
-        "time": 192.93,
+        "time": 193.44,
         "text": "질문도 사진도 웃음도",
         "meta": false
       },
       {
-        "time": 194.07,
+        "time": 194.81,
         "text": "같이 나누는 기다",
         "meta": false
       },
       {
-        "time": 195.2,
+        "time": 195.9,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 196.62,
+        "time": 196.83,
         "text": "오늘도 반갑고",
         "meta": false
       },
       {
-        "time": 197.59,
+        "time": 198.32,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 198.77,
+        "time": 199.37,
         "text": "다 같이 웃자",
         "meta": false
       },
       {
-        "time": 199.97,
+        "time": 200.86,
         "text": "누가 먼저 잘되더라도",
         "meta": false
       },
       {
-        "time": 201.35,
+        "time": 203.4,
         "text": "박수 한번 쳐주자",
         "meta": false
       },
       {
-        "time": 202.72,
+        "time": 204.61,
         "text": "[Bridge A - Male Rapper 1, Emotional]",
         "meta": true
       },
       {
-        "time": 204.42,
+        "time": 206.39,
         "text": "사람이 많아지다 보면",
         "meta": false
       },
       {
-        "time": 207.44,
+        "time": 207.96,
         "text": "생각 다른 사람도 생기고",
         "meta": false
       },
       {
-        "time": 208.78,
+        "time": 209.98,
         "text": "말 한마디 때문에",
         "meta": false
       },
       {
-        "time": 211.09,
+        "time": 211.87,
         "text": "마음 상할 때도 있겠지",
         "meta": false
       },
       {
-        "time": 212.94,
+        "time": 214.12,
         "text": "근데 우리 여기",
         "meta": false
       },
       {
-        "time": 215.44,
+        "time": 215.97,
         "text": "누구 이기려고 모인 건 아니다",
         "meta": false
       },
       {
-        "time": 217.05,
+        "time": 218.02,
         "text": "다 같은 마음 하나로",
         "meta": false
       },
       {
-        "time": 219.31,
+        "time": 220.21,
         "text": "작은 생명 좋아서 온 거다",
         "meta": false
       },
       {
-        "time": 222.09,
+        "time": 224.42,
         "text": "처음 데려온 뉴트가",
         "meta": false
       },
       {
-        "time": 225.84,
+        "time": 226.6,
         "text": "밥 한번 안 먹으면 걱정하고",
         "meta": false
       },
       {
-        "time": 227.93,
+        "time": 228.97,
         "text": "온도 조금만 올라가도",
         "meta": false
       },
       {
-        "time": 230.4,
+        "time": 231.39,
         "text": "몇 번씩 다시 확인하고",
         "meta": false
       },
       {
-        "time": 231.93,
+        "time": 234.77,
         "text": "그 마음 다 비슷하다",
         "meta": false
       },
       {
-        "time": 234.71,
+        "time": 238.35,
         "text": "[Bridge B - Male Rapper 2, Emotional]",
         "meta": true
       },
       {
-        "time": 237.45,
+        "time": 239.88,
         "text": "그러니까 새로 온 사람이",
         "meta": false
       },
       {
-        "time": 241,
+        "time": 241.55,
         "text": "똑같은 걸 또 물어봐도",
         "meta": false
       },
       {
-        "time": 242.82,
+        "time": 243.72,
         "text": "무시부터 하지 말고",
         "meta": false
       },
       {
-        "time": 244.6,
+        "time": 245.42,
         "text": "한번 더 알려주면 된다",
         "meta": false
       },
       {
-        "time": 246.41,
+        "time": 248.56,
         "text": "어린 친구가 물어봐도",
         "meta": false
       },
       {
-        "time": 250.28,
+        "time": 251.27,
         "text": "처음 시작한 사람이 물어봐도",
         "meta": false
       },
       {
-        "time": 252.14,
+        "time": 253.37,
         "text": "따뜻한 말 한마디가",
         "meta": false
       },
       {
-        "time": 254.68,
+        "time": 255.23,
         "text": "그 사람 오래 남게 한다",
         "meta": false
       },
       {
-        "time": 257.22,
+        "time": 258.9,
         "text": "사람 숫자만 늘어나는 방보다",
         "meta": false
       },
       {
-        "time": 260.24,
+        "time": 261.27,
         "text": "좋은 사람이 오래 남는 방",
         "meta": false
       },
       {
-        "time": 263.43,
+        "time": 263.89,
         "text": "정보만 많은 방보다",
         "meta": false
       },
       {
-        "time": 265.73,
+        "time": 266.27,
         "text": "마음 편히 물어보는 방",
         "meta": false
       },
       {
-        "time": 268.08,
+        "time": 268.87,
         "text": "그게 우리가 만들고 싶은",
         "meta": false
       },
       {
-        "time": 271.31,
+        "time": 272.61,
         "text": "뉴트월드 아니겠나",
         "meta": false
       },
       {
-        "time": 272.23,
+        "time": 273.78,
         "text": "[Final Chorus - Both Male Voices, Heartfelt Gang Vocals]",
         "meta": true
       },
       {
-        "time": 273.81,
+        "time": 274.59,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 275.83,
+        "time": 276.28,
         "text": "같이 가는 기다",
         "meta": false
       },
       {
-        "time": 277.03,
+        "time": 277.74,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 278.33,
+        "time": 278.58,
         "text": "혼자 가는 거 아니다",
         "meta": false
       },
       {
-        "time": 279.3,
+        "time": 280.28,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 280.79,
+        "time": 281.04,
         "text": "손 한번 내밀어라",
         "meta": false
       },
       {
-        "time": 281.92,
+        "time": 282.46,
         "text": "작은 생명 아끼는 마음",
         "meta": false
       },
       {
-        "time": 283.21,
+        "time": 283.79,
         "text": "같이 지켜가자",
         "meta": false
       },
       {
-        "time": 285.07,
+        "time": 285.2,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 286.61,
+        "time": 286.01,
         "text": "오늘도 함께하고",
         "meta": false
       },
       {
-        "time": 287.65,
+        "time": 287.55,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 288.62,
+        "time": 288.52,
         "text": "내일도 만나고",
         "meta": false
       },
       {
-        "time": 289.95,
+        "time": 289.85,
         "text": "처음 온 사람도",
         "meta": false
       },
       {
-        "time": 290.87,
+        "time": 291.27,
         "text": "오래 있던 사람도",
         "meta": false
       },
       {
-        "time": 292,
+        "time": 293.09,
         "text": "다 같이 웃는 방",
         "meta": false
       },
       {
-        "time": 294.14,
+        "time": 294.63,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 295.56,
+        "time": 295.99,
         "text": "우리 방이다",
         "meta": false
       },
       {
-        "time": 296.85,
+        "time": 297.37,
         "text": "뉴트월드!",
         "meta": false
       },
       {
-        "time": 298.1,
+        "time": 298.42,
         "text": "같이 잘해보자",
         "meta": false
       },
       {
-        "time": 299.47,
+        "time": 299.88,
         "text": "사진도 질문도 추억도",
         "meta": false
       },
       {
-        "time": 300.88,
+        "time": 302.11,
         "text": "하나씩 쌓아가자",
         "meta": false
       },
       {
-        "time": 302.97,
+        "time": 303.37,
         "text": "[Outro - Male Rapper 1 & 2 Alternating]",
         "meta": true
       },
       {
-        "time": 304.63,
+        "time": 305.23,
         "text": "처음 왔던 날 기억나제",
         "meta": false
       },
       {
-        "time": 306.65,
+        "time": 307.49,
         "text": "니도 누군가 도움 받았을 거다",
         "meta": false
       },
       {
-        "time": 308.78,
+        "time": 309.63,
         "text": "그라모 이제",
         "meta": false
       },
       {
-        "time": 310.55,
+        "time": 311.21,
         "text": "니가 손 한번 내밀어 주라",
         "meta": false
       },
       {
-        "time": 313.09,
+        "time": 314.63,
         "text": "한 명 두 명 그렇게",
         "meta": false
       },
       {
-        "time": 316.27,
+        "time": 317.17,
         "text": "같이 가는 기다",
         "meta": false
       },
       {
-        "time": 319.13,
+        "time": 319.38,
         "text": "오늘보다 내일",
         "meta": false
       },
       {
-        "time": 320.17,
+        "time": 320.51,
         "text": "조금 더 좋은 방",
         "meta": false
       },
       {
-        "time": 321.42,
+        "time": 322,
         "text": "우리 뉴트월드",
         "meta": false
       },
       {
-        "time": 322.99,
+        "time": 323.69,
         "text": "계속 같이 가보자",
         "meta": false
       }
@@ -1963,42 +1963,42 @@ window.NW_TRACKS = [
         "meta": false
       },
       {
-        "time": 170.71,
+        "time": 171.4,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 172.84,
+        "time": 173.13,
         "text": "[Outro - Male Ad-libs and Female Vocal]",
         "meta": true
       },
       {
-        "time": 173.12,
+        "time": 174.37,
         "text": "오늘도 왔네",
         "meta": false
       },
       {
-        "time": 175.42,
+        "time": 176.5,
         "text": "잘 지냈나",
         "meta": false
       },
       {
-        "time": 176.54,
+        "time": 179.11,
         "text": "하루 끝에",
         "meta": false
       },
       {
-        "time": 178.47,
+        "time": 181.38,
         "text": "여기서 보자",
         "meta": false
       },
       {
-        "time": 180.57,
+        "time": 184.08,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 181.66,
+        "time": 188.67,
         "text": "우리 다시 만나는 밤",
         "meta": false
       }
@@ -2355,222 +2355,222 @@ window.NW_TRACKS = [
         "meta": true
       },
       {
-        "time": 111.23,
+        "time": 111.4,
         "text": "No cages, no taking them home",
         "meta": false
       },
       {
-        "time": 113.25,
+        "time": 114.11,
         "text": "This is their place, we’re just passing through",
         "meta": false
       },
       {
-        "time": 114.47,
+        "time": 115.6,
         "text": "Take a picture, take a memory",
         "meta": false
       },
       {
-        "time": 116.53,
+        "time": 117.34,
         "text": "Then leave the wild the way we found it too",
         "meta": false
       },
       {
-        "time": 117.7,
+        "time": 118.46,
         "text": "[Bridge - Male Rapper 2]",
         "meta": true
       },
       {
-        "time": 119.35,
+        "time": 119.47,
         "text": "Different towns, different lives",
         "meta": false
       },
       {
-        "time": 120.96,
+        "time": 121.49,
         "text": "But today we’re side by side",
         "meta": false
       },
       {
-        "time": 122.17,
+        "time": 123.14,
         "text": "Newts and frogs and salamanders",
         "meta": false
       },
       {
-        "time": 124.31,
+        "time": 124.67,
         "text": "That’s a pretty good day in my eyes",
         "meta": false
       },
       {
-        "time": 125.65,
+        "time": 126.61,
         "text": "[Final Hook - Female Vocal, Bigger]",
         "meta": true
       },
       {
-        "time": 126.38,
+        "time": 127.09,
         "text": "Newt World, let’s go",
         "meta": false
       },
       {
-        "time": 128.31,
+        "time": 128.95,
         "text": "Down the road, nice and slow",
         "meta": false
       },
       {
-        "time": 130.45,
+        "time": 130.56,
         "text": "Creek side, moonlight",
         "meta": false
       },
       {
-        "time": 132.23,
+        "time": 132.65,
         "text": "Find a little life tonight",
         "meta": false
       },
       {
-        "time": 133.44,
+        "time": 134.26,
         "text": "Newt World, come on",
         "meta": false
       },
       {
-        "time": 135.9,
+        "time": 136.01,
         "text": "From the sunset to the dawn",
         "meta": false
       },
       {
-        "time": 137.63,
+        "time": 137.71,
         "text": "Green woods, clear sky",
         "meta": false
       },
       {
-        "time": 139.77,
+        "time": 139.88,
         "text": "We’re going wild tonight",
         "meta": false
       },
       {
-        "time": 140.7,
+        "time": 140.77,
         "text": "[Male Ad-libs]",
         "meta": true
       },
       {
-        "time": 141.23,
+        "time": 141.29,
         "text": "Watch your step!",
         "meta": false
       },
       {
-        "time": 142.2,
+        "time": 142.5,
         "text": "Over here!",
         "meta": false
       },
       {
-        "time": 143.17,
+        "time": 143.43,
         "text": "I found one!",
         "meta": false
       },
       {
-        "time": 144.3,
+        "time": 144.64,
         "text": "Get the camera!",
         "meta": false
       },
       {
-        "time": 145.46,
+        "time": 145.44,
         "text": "Newt World!",
         "meta": false
       },
       {
-        "time": 146.23,
+        "time": 146.5,
         "text": "[Final Hook - Female Vocal]",
         "meta": true
       },
       {
-        "time": 147.59,
+        "time": 148.99,
         "text": "Newt World, let’s go",
         "meta": false
       },
       {
-        "time": 150.3,
+        "time": 150.77,
         "text": "Down the road, nice and slow",
         "meta": false
       },
       {
-        "time": 152.25,
+        "time": 152.62,
         "text": "Creek side, moonlight",
         "meta": false
       },
       {
-        "time": 153.86,
+        "time": 154.27,
         "text": "Find a little life tonight",
         "meta": false
       },
       {
-        "time": 155.92,
+        "time": 156.13,
         "text": "Newt World, come on",
         "meta": false
       },
       {
-        "time": 158.02,
+        "time": 158.14,
         "text": "From the sunset to the dawn",
         "meta": false
       },
       {
-        "time": 159.8,
+        "time": 159.91,
         "text": "Green woods, clear sky",
         "meta": false
       },
       {
-        "time": 161.21,
+        "time": 161.89,
         "text": "We’re going wild tonight",
         "meta": false
       },
       {
-        "time": 162.78,
+        "time": 162.77,
         "text": "[Outro - Male Rapper 1 + Female Vocal]",
         "meta": true
       },
       {
-        "time": 163.22,
+        "time": 163.38,
         "text": "Dirty shoes",
         "meta": false
       },
       {
-        "time": 164.63,
+        "time": 164.75,
         "text": "Memory cards full",
         "meta": false
       },
       {
-        "time": 166.16,
+        "time": 166.56,
         "text": "Long ride home",
         "meta": false
       },
       {
-        "time": 167.33,
+        "time": 168.7,
         "text": "Good day",
         "meta": false
       },
       {
-        "time": 169.88,
+        "time": 169.99,
         "text": "[Female]",
         "meta": true
       },
       {
-        "time": 171.13,
+        "time": 171.39,
         "text": "Newt World, let’s go",
         "meta": false
       },
       {
-        "time": 172.46,
+        "time": 172.84,
         "text": "We’ll do it all again",
         "meta": false
       },
       {
-        "time": 173.67,
+        "time": 174.53,
         "text": "[Female]",
         "meta": true
       },
       {
-        "time": 176.32,
+        "time": 177.71,
         "text": "Newt World, let’s go",
         "meta": false
       },
       {
-        "time": 179.54,
+        "time": 180.02,
         "text": "We’ll do it all again",
         "meta": false
       }
