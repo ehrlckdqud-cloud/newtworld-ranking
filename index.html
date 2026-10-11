@@ -308,20 +308,28 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 .nw-progress-row{display:grid;grid-template-columns:36px 1fr 36px;gap:7px;align-items:center;margin-top:8px}.nw-time{font-size:9px;color:#7195a7;text-align:center;font-variant-numeric:tabular-nums}.nw-seek,.nw-volume{
   --nw-range-pct:0%;
   -webkit-appearance:none;appearance:none;
-  height:18px;background:transparent;cursor:pointer;outline:none
+  height:18px;cursor:pointer;outline:none;border:0;
+  /* Put the progress paint on the INPUT itself.
+     Samsung Internet can ignore CSS vars inside ::-webkit-slider-runnable-track. */
+  background:
+    linear-gradient(to right,
+      #6fd1de 0%,
+      #6fd1de var(--nw-range-pct),
+      #dfe5eb var(--nw-range-pct),
+      #dfe5eb 100%) center / 100% 5px no-repeat;
+  border-radius:999px
 }
 .nw-seek{width:100%}
 .nw-seek::-webkit-slider-runnable-track,.nw-volume::-webkit-slider-runnable-track{
-  height:5px;border-radius:999px;
-  background:linear-gradient(to right,#6fd1de 0 var(--nw-range-pct),#dfe5eb var(--nw-range-pct) 100%);
+  height:5px;border-radius:999px;background:transparent;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)
 }
 .nw-seek::-moz-range-track,.nw-volume::-moz-range-track{
-  height:5px;border-radius:999px;background:#dfe5eb;
+  height:5px;border-radius:999px;background:transparent;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.10)
 }
 .nw-seek::-moz-range-progress,.nw-volume::-moz-range-progress{
-  height:5px;border-radius:999px;background:#6fd1de
+  height:5px;border-radius:999px;background:transparent
 }
 .nw-seek::-webkit-slider-thumb,.nw-volume::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;
@@ -354,15 +362,15 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 .nw-lyrics-text{white-space:normal}
 .nw-lyric-line{
   display:block;padding:3px 5px;margin:1px 0;border-radius:8px;
-  color:#7896a5;font-size:11px;line-height:1.65;font-weight:500;
+  color:#a5beca;font-size:11px;line-height:1.65;font-weight:520;
   transform:scale(1);transform-origin:left center;
   transition:color .28s ease,transform .28s ease,background .28s ease,text-shadow .28s ease,opacity .28s ease;
-  opacity:.68
+  opacity:.88
 }
-.nw-lyric-line.meta{color:#587586;font-size:9.5px;opacity:.52;font-weight:650}
+.nw-lyric-line.meta{color:#7f9aa8;font-size:9.5px;opacity:.76;font-weight:650}
 .nw-lyric-line.active{
   color:#fff;opacity:1;font-weight:850;transform:scale(1.055);
-  background:linear-gradient(90deg,rgba(85,200,255,.13),rgba(85,200,255,0));
+  background:linear-gradient(90deg,rgba(85,200,255,.18),rgba(85,200,255,0));
   text-shadow:0 0 14px rgba(255,255,255,.28),0 0 22px rgba(85,200,255,.18)
 }
 .nw-cover-modal{position:fixed;inset:0;z-index:12000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
@@ -553,7 +561,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.4</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.5</p>
 </div>
 <div class="sync-panel final-sync">
 <div class="sync-head"><b>🔄 실시간 랭킹 데이터</b><span class="sync-status" id="syncStatus">Google Sheets 연결 준비 중…</span></div>
@@ -991,7 +999,13 @@ document.addEventListener('DOMContentLoaded',()=>{
     const lo=Number(min ?? el.min ?? 0), hi=Number(max ?? el.max ?? 100);
     const v=Math.min(hi,Math.max(lo,Number(value)||0));
     const pct=hi===lo?0:((v-lo)/(hi-lo))*100;
-    el.style.setProperty('--nw-range-pct',pct.toFixed(3)+'%');
+    const p=pct.toFixed(3)+'%';
+    el.style.setProperty('--nw-range-pct',p);
+    /* Samsung Internet fallback: paint the bar directly on the input element. */
+    el.style.backgroundImage=`linear-gradient(to right,#6fd1de 0%,#6fd1de ${p},#dfe5eb ${p},#dfe5eb 100%)`;
+    el.style.backgroundPosition='center';
+    el.style.backgroundSize='100% 5px';
+    el.style.backgroundRepeat='no-repeat';
   }
   const nwVolume=$('nwVolume'), nwSeek=$('nwSeek');
   nwVolume.value=localStorage.getItem('nwVolume')||'0.35';
