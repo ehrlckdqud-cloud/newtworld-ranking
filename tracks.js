@@ -1963,42 +1963,42 @@ window.NW_TRACKS = [
         "meta": false
       },
       {
-        "time": 171.44,
+        "time": 170.71,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 173.13,
+        "time": 172.84,
         "text": "[Outro - Male Ad-libs and Female Vocal]",
         "meta": true
       },
       {
-        "time": 173.33,
+        "time": 173.12,
         "text": "오늘도 왔네",
         "meta": false
       },
       {
-        "time": 175.68,
+        "time": 175.42,
         "text": "잘 지냈나",
         "meta": false
       },
       {
-        "time": 177.73,
+        "time": 176.54,
         "text": "하루 끝에",
         "meta": false
       },
       {
-        "time": 180.39,
+        "time": 178.47,
         "text": "여기서 보자",
         "meta": false
       },
       {
-        "time": 183.37,
+        "time": 180.57,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 185.54,
+        "time": 181.66,
         "text": "우리 다시 만나는 밤",
         "meta": false
       }
