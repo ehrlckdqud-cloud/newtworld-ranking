@@ -10,332 +10,332 @@ window.NW_TRACKS = [
     "audio": "assets/music/01_newtworld_chat.mp3",
     "syncedLyrics": [
       {
-        "time": 6.98,
+        "time": 7.22,
         "text": "뉴트월드 단톡방에",
         "meta": false
       },
       {
-        "time": 9.17,
+        "time": 9.03,
         "text": "오신 걸 환영해",
         "meta": false
       },
       {
-        "time": 14.56,
+        "time": 14.47,
         "text": "처음이어도 괜찮아",
         "meta": false
       },
       {
-        "time": 17.18,
+        "time": 17.29,
         "text": "천천히 걸어와",
         "meta": false
       },
       {
-        "time": 21.41,
+        "time": 21.35,
         "text": "어려운 일이 있으면",
         "meta": false
       },
       {
-        "time": 23.26,
+        "time": 23.45,
         "text": "망설이지 말고 말해줘",
         "meta": false
       },
       {
-        "time": 29.15,
+        "time": 28.94,
         "text": "작은 질문 하나도",
         "meta": false
       },
       {
-        "time": 31.61,
+        "time": 31.6,
         "text": "우린 같이 풀어가",
         "meta": false
       },
       {
-        "time": 35.76,
+        "time": 35.94,
         "text": "사진도 남기고",
         "meta": false
       },
       {
-        "time": 39.1,
+        "time": 39.21,
         "text": "채팅도 이어가",
         "meta": false
       },
       {
-        "time": 43.18,
+        "time": 43.22,
         "text": "정보를 나누면",
         "meta": false
       },
       {
-        "time": 46.85,
+        "time": 46.92,
         "text": "마음이 더 가까워져",
         "meta": false
       },
       {
-        "time": 50.8,
+        "time": 50.79,
         "text": "오늘이 어색해도",
         "meta": false
       },
       {
-        "time": 54.44,
+        "time": 54.23,
         "text": "금방 익숙해질 거야",
         "meta": false
       },
       {
-        "time": 58.5,
+        "time": 58.22,
         "text": "문을 열고 들어와",
         "meta": false
       },
       {
-        "time": 60.6,
+        "time": 60.4,
         "text": "이제 함께 시작해",
         "meta": false
       },
       {
-        "time": 66.44,
+        "time": 65.66,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 69.92,
+        "time": 70.04,
         "text": "여기서 만나",
         "meta": false
       },
       {
-        "time": 72.75,
+        "time": 73.72,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 76.42,
+        "time": 77.42,
         "text": "처음이어도 좋아",
         "meta": false
       },
       {
-        "time": 79.84,
+        "time": 81.31,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 83.84,
+        "time": 84.89,
         "text": "손을 잡아봐",
         "meta": false
       },
       {
-        "time": 87,
+        "time": 87.76,
         "text": "수많은 이벤트",
         "meta": false
       },
       {
-        "time": 90.5,
+        "time": 91.59,
         "text": "우리 함께 준비해",
         "meta": false
       },
       {
-        "time": 95.98,
+        "time": 97.07,
         "text": "입문자 초보자",
         "meta": false
       },
       {
-        "time": 98.32,
+        "time": 99.24,
         "text": "다 환영이야",
         "meta": false
       },
       {
-        "time": 100.42,
+        "time": 101.54,
         "text": "서툰 말투라도",
         "meta": false
       },
       {
-        "time": 101.87,
+        "time": 102.87,
         "text": "그대로면 충분해",
         "meta": false
       },
       {
-        "time": 104.33,
+        "time": 105.26,
         "text": "좋은 소식 있으면",
         "meta": false
       },
       {
-        "time": 106.34,
+        "time": 107.49,
         "text": "먼저 나눠줘",
         "meta": false
       },
       {
-        "time": 108.56,
+        "time": 109.31,
         "text": "기쁜 순간도",
         "meta": false
       },
       {
-        "time": 109.81,
+        "time": 110.84,
         "text": "우린 크게 웃어줘",
         "meta": false
       },
       {
-        "time": 111.9,
+        "time": 112.58,
         "text": "사진도 남기고",
         "meta": false
       },
       {
-        "time": 114.29,
+        "time": 114.88,
         "text": "채팅도 이어가",
         "meta": false
       },
       {
-        "time": 117.88,
+        "time": 118.84,
         "text": "정보를 나누면",
         "meta": false
       },
       {
-        "time": 121.62,
+        "time": 122.67,
         "text": "마음이 더 가까워져",
         "meta": false
       },
       {
-        "time": 125.65,
+        "time": 126.41,
         "text": "오늘이 어색해도",
         "meta": false
       },
       {
-        "time": 129.22,
+        "time": 130.07,
         "text": "금방 익숙해질 거야",
         "meta": false
       },
       {
-        "time": 132.99,
+        "time": 133.87,
         "text": "문을 열고 들어와",
         "meta": false
       },
       {
-        "time": 134.92,
+        "time": 135.89,
         "text": "이제 함께 시작해",
         "meta": false
       },
       {
-        "time": 140.27,
+        "time": 141.31,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 144.67,
+        "time": 145.89,
         "text": "여기서 만나",
         "meta": false
       },
       {
-        "time": 148.43,
+        "time": 149.27,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 151.77,
+        "time": 152.83,
         "text": "처음이어도 좋아",
         "meta": false
       },
       {
-        "time": 155.89,
+        "time": 156.62,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 159.4,
+        "time": 160.52,
         "text": "손을 잡아봐",
         "meta": false
       },
       {
-        "time": 162.91,
+        "time": 163.3,
         "text": "수많은 이벤트",
         "meta": false
       },
       {
-        "time": 166.03,
+        "time": 166.97,
         "text": "우리 함께 준비해",
         "meta": false
       },
       {
-        "time": 170.86,
+        "time": 171.89,
         "text": "겁내지 않아도 돼",
         "meta": false
       },
       {
-        "time": 174.37,
+        "time": 175.22,
         "text": "여긴 네 자리야",
         "meta": false
       },
       {
-        "time": 177.68,
+        "time": 178.64,
         "text": "반가운 인사 하나로",
         "meta": false
       },
       {
-        "time": 180.58,
+        "time": 181.63,
         "text": "밤이 밝아져",
         "meta": false
       },
       {
-        "time": 184.73,
+        "time": 185.5,
         "text": "네가 웃는 순간",
         "meta": false
       },
       {
-        "time": 188.24,
+        "time": 189.39,
         "text": "우린 더 커져가",
         "meta": false
       },
       {
-        "time": 191.99,
+        "time": 193.22,
         "text": "같이 만든 하루가",
         "meta": false
       },
       {
-        "time": 195.07,
+        "time": 195.89,
         "text": "내일을 데려와",
         "meta": false
       },
       {
-        "time": 199.27,
+        "time": 200.16,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 203.69,
+        "time": 204.68,
         "text": "여기서 만나",
         "meta": false
       },
       {
-        "time": 207.23,
+        "time": 208.22,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 210.98,
+        "time": 212.08,
         "text": "처음이어도 좋아",
         "meta": false
       },
       {
-        "time": 215,
+        "time": 215.63,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 218.58,
+        "time": 219.37,
         "text": "손을 잡아봐",
         "meta": false
       },
       {
-        "time": 221.68,
+        "time": 222.42,
         "text": "수많은 이벤트",
         "meta": false
       },
       {
-        "time": 225.22,
+        "time": 226.09,
         "text": "우리 함께 준비해",
         "meta": false
       },
       {
-        "time": 229.56,
+        "time": 230.47,
         "text": "뉴트월드, 뉴트월드",
         "meta": false
       },
       {
-        "time": 233.38,
+        "time": 234.38,
         "text": "끝까지 함께해",
         "meta": false
       }
@@ -352,152 +352,152 @@ window.NW_TRACKS = [
     "audio": "assets/music/02_newtworld_country.mp3",
     "syncedLyrics": [
       {
-        "time": 16.66,
+        "time": 16.81,
         "text": "멈추지 않는 알림, 톡톡 터지는 단톡방의 불꽃!",
         "meta": false
       },
       {
-        "time": 21.93,
+        "time": 22.12,
         "text": "여기는 어디? 맞아, 우리가 사랑하는 뉴트월드!",
         "meta": false
       },
       {
-        "time": 26.52,
+        "time": 26.55,
         "text": "밤낮없이 이어지는 소통 속에 번져가는 이 열기",
         "meta": false
       },
       {
-        "time": 31.71,
+        "time": 31.66,
         "text": "지루할 틈이 없어, 매일매일이 새로운 축제 같아!",
         "meta": false
       },
       {
-        "time": 35.74,
+        "time": 35.96,
         "text": "작은 웅덩이 속 귀여운 움직임, 넌 눈을 떼지 못해",
         "meta": false
       },
       {
-        "time": 40.62,
+        "time": 40.79,
         "text": "영양 가득 지렁이와 렙토민, 민물새우를 듬뿍 채워",
         "meta": false
       },
       {
-        "time": 44.96,
+        "time": 45.15,
         "text": "뵨태를 마치고 대지로 뛰어오르는 저 기적 좀 봐!",
         "meta": false
       },
       {
-        "time": 49.51,
+        "time": 49.59,
         "text": "순수한 생명들이 만들어내는 우리들만의 놀라운 세계!",
         "meta": false
       },
       {
-        "time": 54.08,
+        "time": 54.14,
         "text": "초보 집사도 우수회원도 다 같이 손을 잡고 런 야!",
         "meta": false
       },
       {
-        "time": 58.83,
+        "time": 58.81,
         "text": "붉은빛 가득한 이 열기 속에 가슴이 뛰기 시작해",
         "meta": false
       },
       {
-        "time": 63.03,
+        "time": 63.25,
         "text": "신비로운 성장을 향해 모두 다 파이어!",
         "meta": false
       },
       {
-        "time": 67.63,
+        "time": 67.86,
         "text": "준비됐어? 이제 진짜 시작이야!",
         "meta": false
       },
       {
-        "time": 71.53,
+        "time": 72.86,
         "text": "오! 뉴트월드! 다 함께 미쳐 소리 질러봐!",
         "meta": false
       },
       {
-        "time": 79,
+        "time": 79.22,
         "text": "시간이 갈수록 점점 더 뜨거워지는 우리들의 점수!",
         "meta": false
       },
       {
-        "time": 83.79,
+        "time": 83.86,
         "text": "환상적인 색감에 시선을 뺏긴 채 영원히 멈추지 않을 레이스!",
         "meta": false
       },
       {
-        "time": 89.8,
+        "time": 89.76,
         "text": "우린 뉴트월드에 완전히 빠져버렸어, Let's go!",
         "meta": false
       },
       {
-        "time": 101.55,
+        "time": 102.23,
         "text": "너도나도 자랑스런 사진들을 가득 투척해",
         "meta": false
       },
       {
-        "time": 106.09,
+        "time": 106.41,
         "text": "매월 말 베일이 벗겨지는 순간, 모두 숨을 죽이지",
         "meta": false
       },
       {
-        "time": 110.96,
+        "time": 111.06,
         "text": "라이브 대공개! 과연 오늘 왕좌는 누가 가져갈까?",
         "meta": false
       },
       {
-        "time": 115.54,
+        "time": 115.9,
         "text": "대박 이벤트, 손지팩의 주인공은 바로 너야!",
         "meta": false
       },
       {
-        "time": 122.08,
+        "time": 122.38,
         "text": "뉴트! 프록! 살라만다! 양서류의 매력으로 가득 채워!",
         "meta": false
       },
       {
-        "time": 127.42,
+        "time": 127.46,
         "text": "치열한 이 바닥, 하지만 우린 언제나 함께니까",
         "meta": false
       },
       {
-        "time": 131.61,
+        "time": 131.57,
         "text": "폭풍 전야의 순위표를 뒤집고 다 같이 달려갈 거야!",
         "meta": false
       },
       {
-        "time": 150.69,
+        "time": 151.17,
         "text": "오! 뉴트월드! 다 함께 미쳐 소리 질러봐!",
         "meta": false
       },
       {
-        "time": 156.88,
+        "time": 156.97,
         "text": "시간이 갈수록 점점 더 뜨거워지는 우리들의 점수!",
         "meta": false
       },
       {
-        "time": 161.53,
+        "time": 161.51,
         "text": "환상적인 색감에 시선을 뺏긴 채 영원히 멈추지 않을 레이스!",
         "meta": false
       },
       {
-        "time": 167.43,
+        "time": 167.54,
         "text": "우린 뉴트월드에 완전히 빠져버렸어!",
         "meta": false
       },
       {
-        "time": 171.92,
+        "time": 172.45,
         "text": "뉴트월드! 뉴트월드!",
         "meta": false
       },
       {
-        "time": 176.59,
+        "time": 176.92,
         "text": "멈추지 마, 끝까지 달려봐!",
         "meta": false
       },
       {
-        "time": 181.85,
+        "time": 181.99,
         "text": "Yeah, 여기가 바로 뉴트월드!",
         "meta": false
       }
@@ -1583,422 +1583,422 @@ window.NW_TRACKS = [
         "meta": true
       },
       {
-        "time": 0.17,
+        "time": 0,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 2.96,
+        "time": 2.62,
         "text": "하루 끝에 여기로 와",
         "meta": false
       },
       {
-        "time": 5.41,
+        "time": 5.16,
         "text": "멀리 있어도 괜찮아",
         "meta": false
       },
       {
-        "time": 7.86,
+        "time": 7.45,
         "text": "우리 다시 만나는 밤",
         "meta": false
       },
       {
-        "time": 10.04,
+        "time": 9.98,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 12.61,
+        "time": 12.4,
         "text": "불을 켜고 여기로 와",
         "meta": false
       },
       {
-        "time": 15.47,
+        "time": 15.1,
         "text": "각자 다른 하루 끝에",
         "meta": false
       },
       {
-        "time": 17.61,
+        "time": 17.48,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 19.48,
+        "time": 19.25,
         "text": "[Verse 1 - Male Rapper 1, Relaxed Storytelling Rap]",
         "meta": true
       },
       {
-        "time": 20.32,
+        "time": 19.89,
         "text": "아침 일찍 눈을 뜨고",
         "meta": false
       },
       {
-        "time": 22.38,
+        "time": 22.12,
         "text": "커피 한 잔 들고 나가",
         "meta": false
       },
       {
-        "time": 24.76,
+        "time": 24.42,
         "text": "누군 출근길 버스 안이고",
         "meta": false
       },
       {
-        "time": 27.18,
+        "time": 26.88,
         "text": "누군 책상 앞에 앉아 있어",
         "meta": false
       },
       {
-        "time": 29.55,
+        "time": 29.53,
         "text": "누군 가게 문을 열고",
         "meta": false
       },
       {
-        "time": 31.78,
+        "time": 31.4,
         "text": "누군 하루 종일 뛰어다녀",
         "meta": false
       },
       {
-        "time": 34.4,
+        "time": 34.09,
         "text": "같은 시간 다른 곳에서",
         "meta": false
       },
       {
-        "time": 36.29,
+        "time": 36.1,
         "text": "각자 자기 하루를 살아",
         "meta": false
       },
       {
-        "time": 39,
+        "time": 38.96,
         "text": "뉴트월드 알림 한번 울리면",
         "meta": false
       },
       {
-        "time": 41.43,
+        "time": 41.02,
         "text": "괜히 화면 한번 들여다봐",
         "meta": false
       },
       {
-        "time": 43.93,
+        "time": 43.79,
         "text": "사진 한 장 올라와 있네",
         "meta": false
       },
       {
-        "time": 46.16,
+        "time": 45.69,
         "text": "익숙한 얼굴처럼 반갑다",
         "meta": false
       },
       {
-        "time": 48.42,
+        "time": 47.62,
         "text": "[Female Hook - Same Melody]",
         "meta": true
       },
       {
-        "time": 49.03,
+        "time": 48.62,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 51.17,
+        "time": 50.84,
         "text": "하루 끝에 여기로 와",
         "meta": false
       },
       {
-        "time": 53.44,
+        "time": 53.22,
         "text": "멀리 있어도 괜찮아",
         "meta": false
       },
       {
-        "time": 55.99,
+        "time": 55.6,
         "text": "우리 다시 만나는 밤",
         "meta": false
       },
       {
-        "time": 58.08,
+        "time": 57.98,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 60.63,
+        "time": 60.49,
         "text": "불을 켜고 여기로 와",
         "meta": false
       },
       {
-        "time": 63.41,
+        "time": 63.23,
         "text": "각자 다른 하루 끝에",
         "meta": false
       },
       {
-        "time": 65.87,
+        "time": 65.52,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 67.49,
+        "time": 67.02,
         "text": "[Verse 2 - Male Rapper 2, Brighter Rhythmic Storytelling Rap]",
         "meta": true
       },
       {
-        "time": 68.26,
+        "time": 67.75,
         "text": "해가 지고 집에 들어오면",
         "meta": false
       },
       {
-        "time": 70.16,
+        "time": 69.64,
         "text": "제일 먼저 불부터 켜고",
         "meta": false
       },
       {
-        "time": 72.95,
+        "time": 72.67,
         "text": "외투는 대충 내려놓고",
         "meta": false
       },
       {
-        "time": 75,
+        "time": 74.41,
         "text": "수조 앞으로 바로 걸어가",
         "meta": false
       },
       {
-        "time": 77.75,
+        "time": 77.52,
         "text": "숨어 있던 녀석 하나",
         "meta": false
       },
       {
-        "time": 79.37,
+        "time": 79.05,
         "text": "천천히 얼굴 내밀어주고",
         "meta": false
       },
       {
-        "time": 82.28,
+        "time": 82.04,
         "text": "오늘은 뭐가 궁금한 건지",
         "meta": false
       },
       {
-        "time": 84.43,
+        "time": 83.87,
         "text": "유리 앞으로 가까이 오네",
         "meta": false
       },
       {
-        "time": 87.05,
+        "time": 86.86,
         "text": "사진 한 장 찍어 올리면",
         "meta": false
       },
       {
-        "time": 89.59,
+        "time": 89.17,
         "text": "어디선가 반응 하나 둘",
         "meta": false
       },
       {
-        "time": 91.74,
+        "time": 91.47,
         "text": "오늘도 잘 지내고 있네",
         "meta": false
       },
       {
-        "time": 93.92,
+        "time": 93.81,
         "text": "그 말 하나 괜히 좋더라",
         "meta": false
       },
       {
-        "time": 95.7,
+        "time": 95.14,
         "text": "[Female Hook - Same Melody]",
         "meta": true
       },
       {
-        "time": 96.62,
+        "time": 96.32,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 99.16,
+        "time": 98.94,
         "text": "하루 끝에 여기로 와",
         "meta": false
       },
       {
-        "time": 101.42,
+        "time": 101.4,
         "text": "멀리 있어도 괜찮아",
         "meta": false
       },
       {
-        "time": 103.8,
+        "time": 103.78,
         "text": "우리 다시 만나는 밤",
         "meta": false
       },
       {
-        "time": 106.23,
+        "time": 106.21,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 108.73,
+        "time": 108.51,
         "text": "불을 켜고 여기로 와",
         "meta": false
       },
       {
-        "time": 111.47,
+        "time": 111.37,
         "text": "각자 다른 하루 끝에",
         "meta": false
       },
       {
-        "time": 113.86,
+        "time": 113.63,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 115.63,
+        "time": 115.13,
         "text": "[Bridge - Male Rapper 1 then Male Rapper 2]",
         "meta": true
       },
       {
-        "time": 116.28,
+        "time": 115.81,
         "text": "사는 곳도 다 다르고",
         "meta": false
       },
       {
-        "time": 118.22,
+        "time": 118.24,
         "text": "하는 일도 전부 다르고",
         "meta": false
       },
       {
-        "time": 120.68,
+        "time": 120.38,
         "text": "나이도 성격도 다른데",
         "meta": false
       },
       {
-        "time": 122.78,
+        "time": 122.45,
         "text": "이상하게 여기선 편하다",
         "meta": false
       },
       {
-        "time": 125.57,
+        "time": 125.43,
         "text": "오늘 하루 잘 풀렸든",
         "meta": false
       },
       {
-        "time": 127.92,
+        "time": 127.73,
         "text": "조금 지치고 힘들었든",
         "meta": false
       },
       {
-        "time": 130.13,
+        "time": 130.07,
         "text": "사진 하나 말 한마디로",
         "meta": false
       },
       {
-        "time": 131.99,
+        "time": 131.84,
         "text": "다시 웃을 이유가 생겨",
         "meta": false
       },
       {
-        "time": 135.06,
+        "time": 134.91,
         "text": "누군 먼저 잠이 들고",
         "meta": false
       },
       {
-        "time": 137.55,
+        "time": 137.42,
         "text": "누군 새벽까지 남아 있고",
         "meta": false
       },
       {
-        "time": 139.99,
+        "time": 139.76,
         "text": "그렇게 매일 다른 하루가",
         "meta": false
       },
       {
-        "time": 141.92,
+        "time": 141.66,
         "text": "여기서 잠깐 겹쳐진다",
         "meta": false
       },
       {
-        "time": 144.62,
+        "time": 144.74,
         "text": "특별한 얘기 없어도 된다",
         "meta": false
       },
       {
-        "time": 147.4,
+        "time": 147.36,
         "text": "그냥 오늘도 왔구나",
         "meta": false
       },
       {
-        "time": 149.82,
+        "time": 149.58,
         "text": "그게 반가운 거니까",
         "meta": false
       },
       {
-        "time": 153.17,
+        "time": 153.32,
         "text": "[Final Hook - Female Vocal, Fuller Arrangement]",
         "meta": true
       },
       {
-        "time": 154.38,
+        "time": 154.08,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 156.93,
+        "time": 156.67,
         "text": "하루 끝에 여기로 와",
         "meta": false
       },
       {
-        "time": 159.87,
+        "time": 158.98,
         "text": "멀리 있어도 괜찮아",
         "meta": false
       },
       {
-        "time": 162.09,
+        "time": 161.36,
         "text": "우리 다시 만나는 밤",
         "meta": false
       },
       {
-        "time": 164.55,
+        "time": 163.82,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 166.81,
+        "time": 166.32,
         "text": "불을 켜고 여기로 와",
         "meta": false
       },
       {
-        "time": 169.64,
+        "time": 168.98,
         "text": "각자 다른 하루 끝에",
         "meta": false
       },
       {
-        "time": 171.9,
+        "time": 171.27,
         "text": "뉴트월드에서 만나",
         "meta": false
       },
       {
-        "time": 173.79,
+        "time": 172.97,
         "text": "[Outro - Male Ad-libs and Female Vocal]",
         "meta": true
       },
       {
-        "time": 174.59,
+        "time": 173.74,
         "text": "오늘도 왔네",
         "meta": false
       },
       {
-        "time": 176.93,
+        "time": 176.39,
         "text": "잘 지냈나",
         "meta": false
       },
       {
-        "time": 179.27,
+        "time": 178.73,
         "text": "하루 끝에",
         "meta": false
       },
       {
-        "time": 181.44,
+        "time": 180.86,
         "text": "여기서 보자",
         "meta": false
       },
       {
-        "time": 183.89,
+        "time": 183.23,
         "text": "오늘도 여기로 와",
         "meta": false
       },
       {
-        "time": 188.48,
+        "time": 187.94,
         "text": "우리 다시 만나는 밤",
         "meta": false
       }
