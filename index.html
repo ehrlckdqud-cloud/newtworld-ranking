@@ -1275,7 +1275,7 @@ body{
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
-  <video id="nwSeasonVideo" class="season-panorama-video" autoplay muted loop playsinline preload="metadata" poster="assets/season/spring.png">
+  <video id="nwSeasonVideo" class="season-panorama-video" autoplay muted loop playsinline preload="metadata" poster="">
     <source id="nwSeasonVideoWebm" data-type="webm" src="" type="video/webm">
     <source id="nwSeasonVideoMp4" data-type="mp4" src="" type="video/mp4">
   </video>
@@ -1319,6 +1319,8 @@ body{
   const first=autoSeason();
   document.body.dataset.season=first;
   window.NWSeasonVideoSync=syncSeasonVideo;
+  // v18.24.12: select the correct season immediately so the default spring poster never flashes first.
+  syncSeasonVideo(first);
   if(mq.addEventListener) mq.addEventListener('change',()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
   else if(mq.addListener) mq.addListener(()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
   window.addEventListener('load',()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
