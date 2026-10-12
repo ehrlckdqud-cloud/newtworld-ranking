@@ -939,7 +939,7 @@ body{
   .visit-stat-block small{font-size:9px}
   .visit-stat-block strong{font-size:20px;line-height:1.05}
   .mobile-total{display:flex}
-  .visit-total-desktop{display:none}
+  .visit-total-desktop{display:flex}
   .visit-total-season{
     position:relative;
     overflow:hidden;
@@ -999,7 +999,6 @@ body{
   <div class="quick-stat visit-today-total">
     <div class="visit-stat-block"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
     <div class="visit-stat-block visit-total-desktop"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
-    <div class="visit-stat-block mobile-total"><small>TOTAL</small><strong id="nwVisitTotalMobile">-</strong></div>
   </div>
   <div class="quick-stat visit-total-season">
     <div class="desktop-blank" aria-hidden="true"></div>
@@ -1942,7 +1941,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
   let id=localStorage.getItem('nwVisitorId');
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
-  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');const mt=document.getElementById('nwVisitTotalMobile');if(mt)mt.textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
 })();
 </script>
