@@ -1754,7 +1754,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     </div>
   </div>
 </div>
-<audio id="nwAudio" preload="metadata"></audio>
+<audio id="nwAudio" preload="auto" playsinline webkit-playsinline></audio>
 <!-- v17: music files and track manifest are external for faster loading and easy expansion. -->
 <script src="assets/music/tracks.js"></script>
 <script id="nwBuiltInTracks" type="application/json">[]</script>
@@ -2042,10 +2042,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('nwSeek').value=1000;
     setRangeFill($('nwSeek'),1000,0,1000);
     $('nwNow').textContent=fmt(audio.duration||0);
+
+    // v18.24.7: screen-off/background playback hardening.
+    // Do NOT use setTimeout here: Android/Samsung may throttle timers in background.
     if(repeatMode==='one'){
-      setTimeout(()=>{audio.currentTime=0;$('nwSeek').value=0;setRangeFill($('nwSeek'),0,0,1000);tryPlay();},120);
+      audio.currentTime=0;
+      $('nwSeek').value=0;
+      setRangeFill($('nwSeek'),0,0,1000);
+      tryPlay();
     }else{
-      setTimeout(()=>nextTrack(true),120);
+      nextTrack(true);
     }
   };
 
@@ -2420,9 +2426,94 @@ document.addEventListener('DOMContentLoaded',()=>{
   function loadRemoteSync(){NWJsonp('syncGet',{},d=>{if(!d||!d.ok||!d.sync||!window.NWMusicAdminAPI)return;const api=window.NWMusicAdminAPI;api.tracks.forEach(t=>{const times=d.sync[t.id];if(Array.isArray(times)&&Array.isArray(t.syncedLyrics)){t.syncedLyrics.forEach((x,i)=>{if(Number.isFinite(Number(times[i])))x.time=Number(times[i]);});}});api.renderLyrics(api.current());api.syncLyrics();});}
   setTimeout(loadRemoteSync,700);
 
-  // 백그라운드 상태 저장/복원. OS가 웹앱 프로세스를 강제종료하는 경우는 웹 기술상 보장 불가.
-  const persist=()=>{const api=window.NWMusicAdminAPI;if(!api||!api.audio)return;localStorage.setItem('nwAudioResume',JSON.stringify({i:api.getIndex(),t:api.audio.currentTime||0,playing:!api.audio.paused&&!api.audio.ended,at:Date.now()}));};
-  setInterval(persist,5000);document.addEventListener('visibilitychange',()=>{persist();if(!document.hidden){const api=window.NWMusicAdminAPI;let st={};try{st=JSON.parse(localStorage.getItem('nwAudioResume')||'{}')}catch(_){ }if(st.playing&&api&&api.audio&&api.audio.paused&&!api.audio.ended)api.audio.play().catch(()=>{});}});window.addEventListener('pagehide',persist);
+  // v18.24.7 — Android/Samsung background playback hardening.
+  // Note: if Android force-kills the PWA/browser process, no web-only code can guarantee playback.
+  let nwResumeBusy=false;
+  function nwMusicState(){
+    const api=window.NWMusicAdminAPI;
+    if(!api||!api.audio)return null;
+    return {api,audio:api.audio};
+  }
+  function persist(){
+    const s=nwMusicState(); if(!s)return;
+    const a=s.audio;
+    const previous=(()=>{try{return JSON.parse(localStorage.getItem('nwAudioResume')||'{}')}catch(_){return {}}})();
+    const activelyPlaying=!a.paused&&!a.ended;
+    // Keep the last known "playing intent" while hidden/frozen so an OS-induced pause
+    // does not overwrite it with false before we get a chance to recover.
+    const intended=(document.hidden && previous.playing===true) ? true : activelyPlaying;
+    localStorage.setItem('nwAudioResume',JSON.stringify({
+      i:s.api.getIndex(),
+      t:Number(a.currentTime)||0,
+      playing:intended,
+      at:Date.now()
+    }));
+  }
+  async function resumeIfNeeded(){
+    if(nwResumeBusy)return;
+    const s=nwMusicState(); if(!s)return;
+    let st={}; try{st=JSON.parse(localStorage.getItem('nwAudioResume')||'{}')}catch(_){}
+    if(!st.playing || !s.audio.paused || s.audio.ended)return;
+    nwResumeBusy=true;
+    try{
+      // Restore position only when the same track is still selected and drift is meaningful.
+      if(Number.isFinite(Number(st.t)) && Math.abs((Number(s.audio.currentTime)||0)-Number(st.t))>3){
+        try{s.audio.currentTime=Math.max(0,Number(st.t)||0)}catch(_){}
+      }
+      await s.audio.play();
+      try{
+        if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+      }catch(_){}
+    }catch(_){
+      // Autoplay may still be blocked after a full OS process kill. The player keeps the
+      // saved position and resumes on the next permitted user/media-session action.
+    }finally{
+      nwResumeBusy=false;
+    }
+  }
+
+  // Strong reference helps prevent aggressive cleanup while page is alive.
+  window.__NW_BACKGROUND_AUDIO__=window.NWMusicAdminAPI?.audio||null;
+
+  // Save often while foregrounded. Hidden-page timers may be throttled, so lifecycle events
+  // below are the important part for screen-off/background use.
+  setInterval(()=>{ if(!document.hidden) persist(); },2000);
+
+  document.addEventListener('visibilitychange',()=>{
+    persist();
+    if(!document.hidden) resumeIfNeeded();
+    else{
+      const s=nwMusicState();
+      if(s && !s.audio.paused && !s.audio.ended){
+        try{
+          if('mediaSession' in navigator) navigator.mediaSession.playbackState='playing';
+        }catch(_){}
+      }
+    }
+  });
+
+  // Page Lifecycle API used by Chromium/Samsung Internet when tabs/PWAs are frozen.
+  document.addEventListener('freeze',persist);
+  document.addEventListener('resume',()=>{persist();resumeIfNeeded();});
+  window.addEventListener('pageshow',()=>{persist();resumeIfNeeded();});
+  window.addEventListener('focus',()=>resumeIfNeeded());
+  window.addEventListener('pagehide',persist);
+
+  // Persist at key media points without changing the user's pause/play choice.
+  const nwBgAudio=window.NWMusicAdminAPI?.audio;
+  if(nwBgAudio){
+    nwBgAudio.addEventListener('play',persist);
+    nwBgAudio.addEventListener('timeupdate',()=>{
+      // Limit writes naturally through the browser; this is only a lightweight snapshot.
+      const now=Date.now();
+      if(!window.__nwLastAudioPersist || now-window.__nwLastAudioPersist>2500){
+        window.__nwLastAudioPersist=now;
+        persist();
+      }
+    });
+    nwBgAudio.addEventListener('loadedmetadata',persist);
+    nwBgAudio.addEventListener('ended',persist);
+  }
 })();
 </script>
 
