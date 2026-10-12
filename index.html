@@ -710,7 +710,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.15</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.16</p>
 </div>
 <div class="attendance-quick">
   <a class="quick-link" href="#attendance" id="nwAttendanceOpen">
@@ -787,6 +787,7 @@ function sheetRowsToData(rows){
         cName=findCol(h,['현재 닉네임','현재닉네임','이름','닉네임','name']),
         cDate=findCol(h,['최초 입장일','최초입장일','입장일']),
         cRole=findCol(h,['회원구분','구분','역할','운영구분']),
+        cStatus=findCol(h,['회원상태','상태','재실상태']),
         cChat=findCol(h,['채팅']),cPhoto=findCol(h,['사진']),cVideo=findCol(h,['영상']),cIntro=findCol(h,['소개']),cAttendance=findCol(h,['출석횟수','출석']),
         cSeason=findCol(h,['시즌총점','월간총점','총점']),cCarry=findCol(h,['전월누적점수','이월누적점수','전월누적']),cLife=findCol(h,['누적점수','영구누적점수']),
         cGrade=findCol(h,['활동등급','영구등급']);
@@ -802,6 +803,7 @@ function sheetRowsToData(rows){
     }else missingId++;
     const roleRaw=cRole>=0?String(a[cRole]||'').trim():'',
           role=(roleRaw==='방장'||roleRaw==='부방장'||roleRaw==='운영진'||roleRaw==='회원')?roleRaw:(OPERATOR_ROLES[name]||'회원'),
+          status=cStatus>=0?String(a[cStatus]||'').trim():'재실',
           prev=cPrev>=0?cleanName(a[cPrev]):'',
           chat=cChat>=0?num(a[cChat]):0,photo=cPhoto>=0?num(a[cPhoto]):0,video=cVideo>=0?num(a[cVideo]):0,intro=cIntro>=0?num(a[cIntro]):0,attendance=cAttendance>=0?num(a[cAttendance]):0,
           calc=chat+photo*5+video*10+intro*500+attendance*50,
@@ -809,7 +811,8 @@ function sheetRowsToData(rows){
           carry=cCarry>=0?num(a[cCarry]):0,
           life=cLife>=0&&String(a[cLife]||'').trim()!==''?num(a[cLife]):carry+season,
           grade=cGrade>=0?String(a[cGrade]||'').trim():'';
-    out.push({key:memberId||`legacy-row-${r}`,memberId,prevName:prev,rank:null,role,date:cDate>=0?String(a[cDate]||''):'',name,chat,photo,video,intro,attendance,seasonTotal:season,lifetimeTotal:life,grade});
+    if(status==='퇴장'||status==='강퇴')continue;
+    out.push({key:memberId||`legacy-row-${r}`,memberId,prevName:prev,rank:null,role,status:status||'재실',date:cDate>=0?String(a[cDate]||''):'',name,chat,photo,video,intro,attendance,seasonTotal:season,lifetimeTotal:life,grade});
   }
   const members=out.filter(x=>!isStaff(x)).sort((a,b)=>b.seasonTotal-a.seasonTotal||b.lifetimeTotal-a.lifetimeTotal||(a.memberId||a.name).localeCompare(b.memberId||b.name,'ko'));
   members.forEach((x,i)=>x.rank=i+1);
