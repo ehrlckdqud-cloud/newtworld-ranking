@@ -767,6 +767,113 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   .v1820-layout .hub-app .home-install-wrap{margin:0}
 }
 
+
+/* v18.21 seasonal themes */
+:root{
+  --season-bg-top:#071018;
+  --season-bg-mid:#09131c;
+  --season-bg-bottom:#061018;
+  --season-glow:rgba(42,86,63,.35);
+  --season-accent:#7bd9a8;
+  --season-scene:none;
+  --season-overlay-1:rgba(3,8,12,.08);
+  --season-overlay-2:rgba(3,8,12,.38);
+  --season-overlay-3:rgba(3,8,12,.82);
+}
+body[data-season="spring"]{
+  --season-bg-top:#1a1216;--season-bg-mid:#1e171a;--season-bg-bottom:#120e12;
+  --season-glow:rgba(233,170,192,.20);--season-accent:#efbfd2;
+  --season-scene:url("assets/season/spring.png");
+  --season-overlay-1:rgba(24,16,20,.03);--season-overlay-2:rgba(24,16,20,.30);--season-overlay-3:rgba(15,11,15,.78);
+}
+body[data-season="summer"]{
+  --season-bg-top:#081814;--season-bg-mid:#0c1d18;--season-bg-bottom:#07120f;
+  --season-glow:rgba(102,180,104,.18);--season-accent:#83d487;
+  --season-scene:url("assets/season/summer.png");
+  --season-overlay-1:rgba(8,20,16,.05);--season-overlay-2:rgba(8,20,16,.34);--season-overlay-3:rgba(5,11,9,.80);
+}
+body[data-season="autumn"]{
+  --season-bg-top:#1b1109;--season-bg-mid:#20160d;--season-bg-bottom:#140d09;
+  --season-glow:rgba(218,128,46,.20);--season-accent:#efaa5a;
+  --season-scene:url("assets/season/autumn.png");
+  --season-overlay-1:rgba(29,15,7,.06);--season-overlay-2:rgba(29,15,7,.34);--season-overlay-3:rgba(18,11,8,.82);
+}
+body[data-season="winter"]{
+  --season-bg-top:#09111a;--season-bg-mid:#0d1823;--season-bg-bottom:#081018;
+  --season-glow:rgba(125,161,200,.20);--season-accent:#b8d6ee;
+  --season-scene:url("assets/season/winter.png");
+  --season-overlay-1:rgba(8,14,20,.04);--season-overlay-2:rgba(8,14,20,.32);--season-overlay-3:rgba(7,11,16,.80);
+}
+body{
+  background:
+    radial-gradient(circle at 50% -5%,var(--season-glow),transparent 32%),
+    linear-gradient(var(--season-bg-top),var(--season-bg-mid) 55%,var(--season-bg-bottom));
+  transition:background .45s ease;
+}
+.season-panorama{
+  display:none;
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  opacity:1;
+  background-image:
+    radial-gradient(circle at center,
+      var(--season-overlay-1) 0%,
+      var(--season-overlay-1) 18%,
+      var(--season-overlay-2) 42%,
+      var(--season-overlay-3) 84%),
+    var(--season-scene);
+  background-repeat:no-repeat,no-repeat;
+  background-size:100% 100%,cover;
+  background-position:center center,center top;
+  transition:background-image .35s ease, opacity .35s ease;
+}
+.season-side-art{display:none!important}
+.wrap{position:relative;z-index:1}
+@media(min-width:1100px){
+  .season-panorama{display:block}
+}
+/* mobile/tablet: season color only, no decorative side art */
+@media(max-width:1099px){
+  .season-panorama{display:none!important}
+}
+
+/* admin theme hub */
+.nw-admin-hub{
+  display:none;position:fixed;inset:0;z-index:100120;
+  background:rgba(2,7,10,.76);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;padding:18px
+}
+.nw-admin-hub.open{display:flex}
+.nw-admin-card{
+  width:min(560px,96vw);border:1px solid #315264;border-radius:22px;
+  background:linear-gradient(180deg,#0e1c25,#08131a);box-shadow:0 28px 80px rgba(0,0,0,.48);padding:18px
+}
+.nw-admin-card h3{margin:0 0 5px;font-size:20px}
+.nw-admin-card p{margin:0 0 15px;color:#91aabd;font-size:12px;line-height:1.55}
+.nw-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.nw-admin-action{
+  border:1px solid #294654;border-radius:14px;background:#0d1b24;color:#eff8ff;
+  padding:12px;text-align:left;cursor:pointer;transition:.18s
+}
+.nw-admin-action:hover{transform:translateY(-2px);border-color:#63c5aa;background:#112630}
+.nw-theme-box{border-top:1px solid #213b48;padding-top:14px}
+.nw-theme-box b{display:block;margin-bottom:8px}
+.nw-theme-options{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.nw-theme-btn{
+  border:1px solid #294654;border-radius:12px;background:#0a171f;color:#dceaf1;
+  padding:10px 6px;cursor:pointer;font-size:12px;font-weight:800;transition:.18s
+}
+.nw-theme-btn:hover{border-color:var(--season-accent);transform:translateY(-1px)}
+.nw-theme-btn.active{border-color:var(--season-accent);box-shadow:0 0 0 1px var(--season-accent) inset;color:#fff}
+.nw-theme-state{margin-top:10px;color:#8ea9ba;font-size:11px}
+.nw-admin-close{margin-top:14px;width:100%;padding:10px;border-radius:12px;border:1px solid #294654;background:#0b1820;color:#dceaf1;cursor:pointer}
+@media(max-width:620px){
+  .nw-admin-actions{grid-template-columns:1fr}
+  .nw-theme-options{grid-template-columns:repeat(3,1fr)}
+}
+
 </style>
 
 <style>
@@ -789,6 +896,16 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </style>
 </head>
 <body>
+<div class="season-panorama" aria-hidden="true"></div>
+<div class="season-side-art left" aria-hidden="true"></div>
+<div class="season-side-art right" aria-hidden="true"></div>
+<script>
+(function(){
+  const m=(new Date()).getMonth()+1;
+  const s=(m>=3&&m<=5)?'spring':(m>=6&&m<=8)?'summer':(m>=9&&m<=11)?'autumn':'winter';
+  document.body.dataset.season=s;
+})();
+</script>
 <div class="wrap">
 <div class="visit-strip" aria-label="뉴트월드 방문 통계">
   <div class="quick-stat"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
@@ -923,7 +1040,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.20</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.21</p>
 </div>
 
 
@@ -1735,6 +1852,29 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 <button id="nwAdminLoginBtn" type="button">🔐 관리자</button>
+<div class="nw-admin-hub" id="nwAdminHub" aria-hidden="true">
+  <div class="nw-admin-card">
+    <h3>🔐 뉴트월드 관리자</h3>
+    <p>관리자 전용 기능입니다. 계절 테마는 모든 방문자에게 공통 적용되며, 자동을 선택하면 3~5월 봄 · 6~8월 여름 · 9~11월 가을 · 12~2월 겨울로 전환됩니다.</p>
+    <div class="nw-admin-actions">
+      <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>음악 타임코드 수정 및 전체 적용</small></button>
+      <button class="nw-admin-action" id="nwPreviewAutoTheme" type="button"><b>🌿 현재 테마 확인</b><br><small>사이트 계절 테마를 즉시 미리보기</small></button>
+    </div>
+    <div class="nw-theme-box">
+      <b>🎨 계절 테마</b>
+      <div class="nw-theme-options">
+        <button class="nw-theme-btn" data-theme="auto">자동</button>
+        <button class="nw-theme-btn" data-theme="spring">🌸 봄</button>
+        <button class="nw-theme-btn" data-theme="summer">🌿 여름</button>
+        <button class="nw-theme-btn" data-theme="autumn">🍁 가을</button>
+        <button class="nw-theme-btn" data-theme="winter">❄️ 겨울</button>
+      </div>
+      <div class="nw-theme-state" id="nwThemeState">테마 정보를 불러오는 중…</div>
+    </div>
+    <button class="nw-admin-close" id="nwAdminHubClose" type="button">닫기</button>
+  </div>
+</div>
+
 <div class="nw-app-overlay" id="nwAppOverlay" aria-hidden="true"><div class="nw-app-shell"><div class="nw-app-topbar"><b id="nwAppTitle">뉴트월드</b><button class="nw-app-close" id="nwAppClose" type="button">✕ 닫기</button></div><iframe class="nw-app-frame" id="nwAppFrame" title="뉴트월드 기능 페이지"></iframe></div></div>
 <div class="nw-workout-overlay" id="nwWorkoutOverlay" aria-hidden="true">
   <div class="nw-workout-shell">
@@ -1818,10 +1958,68 @@ document.addEventListener('DOMContentLoaded',()=>{
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
   document.querySelectorAll('.partner-left .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
 
-  // 공개 사이트에서 관리자 인증 후 싱크 편집기 사용
+  // 관리자 허브 + 계절 테마
   const adminBtn=document.getElementById('nwAdminLoginBtn');
-  async function adminLoginAndOpen(){let token=sessionStorage.getItem('nwAdminToken')||'';if(token){document.getElementById('nwSyncAdminBtn')?.classList.add('show');document.getElementById('nwSyncAdminBtn')?.click();return;}const pw=prompt('뉴트월드 관리자 비밀번호를 입력하세요.');if(!pw)return;const hash=await sha256(pw);NWJsonp('adminLogin',{hash},d=>{if(d&&d.ok){sessionStorage.setItem('nwAdminToken',d.token);document.getElementById('nwSyncAdminBtn')?.classList.add('show');document.getElementById('nwSyncAdminBtn')?.click();}else alert(d?.error||'로그인 실패');});}
+  const adminHub=document.getElementById('nwAdminHub');
+  const themeState=document.getElementById('nwThemeState');
+  const themeBtns=[...document.querySelectorAll('.nw-theme-btn')];
+
+  function autoSeason(){
+    const m=(new Date()).getMonth()+1;
+    return (m>=3&&m<=5)?'spring':(m>=6&&m<=8)?'summer':(m>=9&&m<=11)?'autumn':'winter';
+  }
+  function themeLabel(t){return({auto:'자동',spring:'봄',summer:'여름',autumn:'가을',winter:'겨울'})[t]||t;}
+  function applyTheme(t){
+    const resolved=t==='auto'?autoSeason():t;
+    if(['spring','summer','autumn','winter'].includes(resolved))document.body.dataset.season=resolved;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content',
+      ({spring:'#0b1513',summer:'#061419',autumn:'#140f0b',winter:'#081019'})[resolved]||'#071018');
+  }
+  function markTheme(override,resolved){
+    themeBtns.forEach(b=>b.classList.toggle('active',b.dataset.theme===override));
+    if(themeState)themeState.textContent=`현재 설정: ${themeLabel(override)} · 실제 적용: ${themeLabel(resolved)}`;
+  }
+  function loadGlobalTheme(){
+    NWJsonp('themeGet',{},d=>{
+      if(!d||!d.ok){applyTheme('auto');return;}
+      applyTheme(d.override||'auto');markTheme(d.override||'auto',d.resolved||autoSeason());
+    });
+  }
+  function openAdminHub(){
+    adminHub?.classList.add('open');adminHub?.setAttribute('aria-hidden','false');
+    NWJsonp('themeGet',{},d=>{if(d&&d.ok)markTheme(d.override||'auto',d.resolved||autoSeason());});
+  }
+  async function adminLoginAndOpen(){
+    let token=sessionStorage.getItem('nwAdminToken')||'';
+    if(token){openAdminHub();return;}
+    const pw=prompt('뉴트월드 관리자 비밀번호를 입력하세요.');if(!pw)return;
+    const hash=await sha256(pw);
+    NWJsonp('adminLogin',{hash},d=>{
+      if(d&&d.ok){sessionStorage.setItem('nwAdminToken',d.token);openAdminHub();}
+      else alert(d?.error||'로그인 실패');
+    });
+  }
   adminBtn?.addEventListener('click',adminLoginAndOpen);
+  document.getElementById('nwAdminHubClose')?.addEventListener('click',()=>{adminHub?.classList.remove('open');adminHub?.setAttribute('aria-hidden','true');});
+  adminHub?.addEventListener('click',e=>{if(e.target===adminHub){adminHub.classList.remove('open');adminHub.setAttribute('aria-hidden','true');}});
+  document.getElementById('nwOpenSyncAdmin')?.addEventListener('click',()=>{
+    adminHub?.classList.remove('open');
+    document.getElementById('nwSyncAdminBtn')?.classList.add('show');
+    document.getElementById('nwSyncAdminBtn')?.click();
+  });
+  document.getElementById('nwPreviewAutoTheme')?.addEventListener('click',()=>loadGlobalTheme());
+  themeBtns.forEach(btn=>btn.addEventListener('click',()=>{
+    const token=sessionStorage.getItem('nwAdminToken')||'';
+    if(!token){alert('관리자 로그인이 필요합니다.');return;}
+    const theme=btn.dataset.theme;
+    applyTheme(theme);
+    themeState.textContent='저장 중…';
+    NWJsonp('themeSave',{token,theme},d=>{
+      if(d&&d.ok){applyTheme(d.override||theme);markTheme(d.override||theme,d.resolved||autoSeason());}
+      else {alert(d?.error||'테마 저장 실패');loadGlobalTheme();}
+    });
+  }));
+  loadGlobalTheme();
 
   // 서버에 저장된 싱크 타임코드가 있으면 tracks.js보다 우선 적용
   function loadRemoteSync(){NWJsonp('syncGet',{},d=>{if(!d||!d.ok||!d.sync||!window.NWMusicAdminAPI)return;const api=window.NWMusicAdminAPI;api.tracks.forEach(t=>{const times=d.sync[t.id];if(Array.isArray(times)&&Array.isArray(t.syncedLyrics)){t.syncedLyrics.forEach((x,i)=>{if(Number.isFinite(Number(times[i])))x.time=Number(times[i]);});}});api.renderLyrics(api.current());api.syncLyrics();});}
