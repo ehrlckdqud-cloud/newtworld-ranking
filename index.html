@@ -938,28 +938,31 @@ body{
   .visit-stat-block+.visit-stat-block{border-left:1px solid rgba(127,166,187,.20);padding-left:10px}
   .visit-stat-block small{font-size:9px}
   .visit-stat-block strong{font-size:20px;line-height:1.05}
-  .mobile-total{display:flex}
-  .visit-total-desktop{display:none}
+  .mobile-total{display:none}
+  .visit-total-desktop{display:flex}
   .visit-total-season{
     position:relative;
     overflow:hidden;
     border-color:rgba(255,255,255,.10)!important;
-    background:
-      linear-gradient(135deg,rgba(5,10,14,.16),rgba(5,10,14,.42)),
-      var(--mobile-season-card) center/cover no-repeat!important;
+    background:rgba(5,10,14,.18)!important;
     box-shadow:0 10px 26px rgba(0,0,0,.18);
     pointer-events:auto;
   }
   .visit-total-season .desktop-blank{display:none}
-  .mobile-season{display:flex;align-items:flex-end;justify-content:flex-start;gap:9px;width:100%;height:100%;position:relative;z-index:1}
-  .season-leaf-icon{width:31px;height:31px;flex:0 0 31px;fill:var(--mobile-season-leaf,#9ac9a8);filter:drop-shadow(0 2px 5px rgba(0,0,0,.30))}
-  .mobile-season-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;min-width:0}
+  .mobile-season{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;position:relative;z-index:1;padding:0 4px}
+  .season-leaf-icon{display:none}
+  .season-leaf-img{display:none;max-width:48px;max-height:48px;width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.30));flex:0 0 auto}
+  .mobile-season-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-width:0}
   .mobile-season-copy small{display:none}
   .mobile-season-copy strong{font-size:16px;margin-top:0;color:#f7fbff;line-height:1;text-shadow:0 2px 5px rgba(0,0,0,.35)}
   body[data-season="spring"] .season-spring,
   body[data-season="summer"] .season-summer,
   body[data-season="autumn"] .season-autumn,
-  body[data-season="winter"] .season-winter{display:block}
+  body[data-season="winter"] .season-winter,
+  body[data-season="spring"] .leaf-spring,
+  body[data-season="summer"] .leaf-summer,
+  body[data-season="autumn"] .leaf-autumn,
+  body[data-season="winter"] .leaf-winter{display:block}
 }
 
 </style>
@@ -999,14 +1002,17 @@ body{
   <div class="quick-stat visit-today-total">
     <div class="visit-stat-block"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
     <div class="visit-stat-block visit-total-desktop"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
-    <div class="visit-stat-block mobile-total"><small>TOTAL</small><strong id="nwVisitTotalMobile">-</strong></div>
   </div>
   <div class="quick-stat visit-total-season">
     <div class="desktop-blank" aria-hidden="true"></div>
     <div class="mobile-season" aria-label="현재 계절">
-      <svg class="season-leaf-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M53.8 8.5C34.3 8.1 16.3 17.3 10.6 32.8 6.4 44.3 13.4 54.6 25.1 54.4c15.3-.3 27.4-14.7 28.7-45.9ZM15.6 48.2C24.8 38 34 28.5 46.7 17.8 35.3 31.1 27.8 41.3 21.8 52.9l-6.2-4.7Z"/></svg>
+      <img class="season-leaf-img leaf-spring" src="assets/season/mobile-spring-leaf.png" alt="봄 나뭇잎">
+      <img class="season-leaf-img leaf-summer" src="assets/season/mobile-summer-leaf.png" alt="여름 나뭇잎">
+      <img class="season-leaf-img leaf-autumn" src="assets/season/mobile-autumn-leaf.png" alt="가을 나뭇잎">
+      <img class="season-leaf-img leaf-winter" src="assets/season/mobile-winter-leaf.png" alt="겨울 나뭇잎">
       <div class="mobile-season-copy"><strong class="season-label season-spring">봄</strong><strong class="season-label season-summer">여름</strong><strong class="season-label season-autumn">가을</strong><strong class="season-label season-winter">겨울</strong></div>
     </div>
+  </div>
   </div>
 </div>
 <section class="community-hub v1820-layout">
@@ -1942,7 +1948,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
   let id=localStorage.getItem('nwVisitorId');
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
-  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');const mt=document.getElementById('nwVisitTotalMobile');if(mt)mt.textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
 })();
 </script>
