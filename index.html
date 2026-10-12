@@ -1054,6 +1054,186 @@ body{
   }
 }
 
+
+/* ===== v18.24.5 location weather widget ===== */
+.nw-weather-widget{
+  appearance:none;
+  width:100%;
+  min-height:72px;
+  border:1px solid rgba(115,190,220,.24);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(9,30,40,.96),rgba(8,24,33,.94));
+  color:#ecf8ff;
+  box-shadow:0 8px 22px rgba(0,0,0,.18);
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  text-align:left;
+  padding:10px 12px;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.nw-weather-widget:hover{
+  transform:translateY(-2px);
+  border-color:rgba(102,220,216,.62);
+  background:linear-gradient(145deg,rgba(13,43,53,.98),rgba(8,31,39,.96));
+  box-shadow:0 12px 28px rgba(0,0,0,.24),0 0 0 1px rgba(81,213,202,.08) inset;
+}
+.nw-weather-icon{font-size:28px;line-height:1;text-align:center}
+.nw-weather-main{display:flex;flex-direction:column;min-width:0}
+.nw-weather-main small{font-size:9px;color:#86b4c8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nw-weather-main strong{font-size:20px;line-height:1.05;margin-top:2px}
+.nw-weather-main span{font-size:9px;color:#9bb6c4;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nw-weather-hi-lo{font-size:10px;color:#b8d3df;white-space:nowrap}
+
+/* keep same top size as TODAY/TOTAL on PC and align over partner-openchat */
+@media(min-width:1041px){
+  .pc-top-spacer{
+    grid-column:3;
+    display:flex;
+    align-items:flex-end;
+  }
+  .pc-top-spacer .nw-weather-widget{min-height:72px;height:72px}
+}
+
+/* Mobile: weather occupies the left side of the seasonal card; leaf stays at far right */
+.nw-weather-mobile-summary{display:none}
+@media(max-width:620px){
+  .visit-total-season{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 58px!important;
+    align-items:center!important;
+    gap:4px!important;
+    padding:7px 8px 7px 10px!important;
+    background-color:rgba(5,10,14,.20)!important;
+    background-image:var(--mobile-season-card)!important;
+    background-repeat:no-repeat!important;
+    background-position:right 5px center!important;
+    background-size:52px 52px!important;
+  }
+  .visit-total-season .mobile-season,
+  .visit-total-season .desktop-blank{display:none!important}
+  .nw-weather-mobile-summary{
+    display:grid;
+    grid-template-columns:31px minmax(0,1fr);
+    gap:6px;
+    align-items:center;
+    width:100%;
+    height:100%;
+    border:0;
+    padding:0;
+    background:transparent;
+    color:#f5fbff;
+    text-align:left;
+    cursor:pointer;
+    min-width:0;
+  }
+  .nw-weather-mobile-summary:active{opacity:.72}
+  .nw-weather-mobile-icon{font-size:25px;line-height:1;text-align:center}
+  .nw-weather-mobile-copy{display:flex;flex-direction:column;min-width:0}
+  .nw-weather-mobile-copy small{
+    font-size:8px;color:rgba(230,245,251,.74);white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+  }
+  .nw-weather-mobile-copy strong{font-size:17px;line-height:1.05;margin-top:2px}
+}
+
+/* Detailed weather overlay: stays in the same page, so music keeps playing */
+.nw-weather-modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:100350;
+  background:rgba(2,7,11,.72);
+  backdrop-filter:blur(9px);
+  padding:18px;
+  overflow:auto;
+}
+.nw-weather-modal.open{display:flex;align-items:flex-start;justify-content:center}
+.nw-weather-panel{
+  width:min(780px,96vw);
+  margin:auto;
+  color:#eef8fd;
+  background:linear-gradient(180deg,rgba(11,31,43,.98),rgba(7,20,30,.98));
+  border:1px solid rgba(126,190,219,.30);
+  box-shadow:0 30px 90px rgba(0,0,0,.50);
+  border-radius:22px;
+  overflow:hidden;
+}
+.nw-weather-panel-head{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:16px;
+  padding:18px 20px;border-bottom:1px solid rgba(121,180,206,.16)
+}
+.nw-weather-panel-head small{font-size:9px;color:#6fa9c1;letter-spacing:.16em}
+.nw-weather-panel-head h3{margin:3px 0 2px;font-size:22px}
+.nw-weather-panel-head span{font-size:10px;color:#8eabba}
+.nw-weather-close{
+  width:36px;height:36px;border-radius:11px;border:1px solid rgba(126,190,219,.22);
+  background:#0b202b;color:#fff;font-size:24px;cursor:pointer
+}
+.nw-weather-current{
+  display:grid;grid-template-columns:1.15fr 1fr;gap:14px;padding:18px 20px
+}
+.nw-weather-current-primary{
+  display:flex;align-items:center;gap:16px;padding:16px;
+  border:1px solid rgba(121,180,206,.15);border-radius:17px;background:rgba(13,41,53,.44)
+}
+.nw-weather-current-icon{font-size:54px;line-height:1}
+.nw-weather-current-primary strong{display:block;font-size:44px;line-height:1}
+.nw-weather-current-primary b{display:block;margin-top:7px;font-size:13px;color:#b7d0dc}
+.nw-weather-current-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nw-weather-current-meta>div{
+  display:flex;flex-direction:column;justify-content:center;
+  padding:11px 12px;border:1px solid rgba(121,180,206,.15);border-radius:14px;background:rgba(8,27,37,.58)
+}
+.nw-weather-current-meta small{font-size:9px;color:#7fa9ba}
+.nw-weather-current-meta strong{font-size:15px;margin-top:3px}
+.nw-weather-section{padding:0 20px 18px}
+.nw-weather-section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.nw-weather-section-title b{font-size:13px}
+.nw-weather-section-title span{font-size:9px;color:#7fa5b5}
+.nw-weather-hourly{
+  display:grid;grid-auto-flow:column;grid-auto-columns:minmax(72px,1fr);
+  overflow-x:auto;gap:7px;padding-bottom:3px;scrollbar-width:thin
+}
+.nw-weather-hour{
+  border:1px solid rgba(121,180,206,.14);border-radius:13px;background:rgba(8,26,36,.62);
+  padding:9px 6px;text-align:center;min-width:66px
+}
+.nw-weather-hour small{display:block;font-size:8px;color:#88a9b7}
+.nw-weather-hour .ico{font-size:22px;margin:5px 0}
+.nw-weather-hour strong{display:block;font-size:14px}
+.nw-weather-hour span{display:block;font-size:8px;color:#75b9d5;margin-top:4px}
+.nw-weather-daily{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px}
+.nw-weather-day{
+  border:1px solid rgba(121,180,206,.14);border-radius:13px;background:rgba(8,26,36,.62);
+  padding:10px 5px;text-align:center
+}
+.nw-weather-day small{display:block;font-size:8px;color:#88a9b7}
+.nw-weather-day .ico{font-size:23px;margin:6px 0}
+.nw-weather-day strong{display:block;font-size:11px}
+.nw-weather-day span{display:block;font-size:8px;color:#75b9d5;margin-top:4px}
+.nw-weather-panel-actions{display:flex;gap:8px;padding:0 20px 12px}
+.nw-weather-panel-actions button,.nw-weather-panel-actions a{
+  flex:1;border:1px solid rgba(113,196,207,.24);border-radius:12px;
+  background:#0b2933;color:#eafaff;padding:10px 12px;font-size:10px;font-weight:800;
+  text-align:center;text-decoration:none;cursor:pointer
+}
+.nw-weather-panel-actions button:hover,.nw-weather-panel-actions a:hover{border-color:#5ddacb;background:#103944}
+.nw-weather-privacy{padding:0 20px 18px;font-size:9px;color:#7896a4;text-align:center}
+@media(max-width:620px){
+  .nw-weather-modal{padding:7px}
+  .nw-weather-panel{width:100%;border-radius:18px}
+  .nw-weather-panel-head{padding:15px}
+  .nw-weather-current{grid-template-columns:1fr;padding:12px 15px}
+  .nw-weather-current-primary{padding:13px}
+  .nw-weather-current-icon{font-size:45px}
+  .nw-weather-current-primary strong{font-size:38px}
+  .nw-weather-section{padding:0 15px 15px}
+  .nw-weather-daily{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .nw-weather-panel-actions{padding:0 15px 11px;flex-direction:column}
+}
+
 </style>
 
 <style>
@@ -1094,6 +1274,13 @@ body{
     <div class="visit-stat-block visit-total-desktop"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
   </div>
   <div class="quick-stat visit-total-season">
+    <button class="nw-weather-mobile-summary" id="nwWeatherWidgetMobile" type="button" aria-label="현재 위치 날씨 상세보기">
+      <span class="nw-weather-mobile-icon" id="nwWeatherIconMobile">🌤️</span>
+      <span class="nw-weather-mobile-copy">
+        <small id="nwWeatherLocationMobile">날씨</small>
+        <strong id="nwWeatherTempMobile">보기</strong>
+      </span>
+    </button>
     <div class="desktop-blank" aria-hidden="true"></div>
     <div class="mobile-season" aria-label="현재 계절">
       <svg class="season-leaf-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M53.8 8.5C34.3 8.1 16.3 17.3 10.6 32.8 6.4 44.3 13.4 54.6 25.1 54.4c15.3-.3 27.4-14.7 28.7-45.9ZM15.6 48.2C24.8 38 34 28.5 46.7 17.8 35.3 31.1 27.8 41.3 21.8 52.9l-6.2-4.7Z"/></svg>
@@ -1104,7 +1291,17 @@ body{
   <div class="pc-top-logo" aria-label="NEWT WORLD 로고">
     <img src="assets/branding/newtworld-top-logo.png" alt="NEWT WORLD">
   </div>
-  <div class="pc-top-spacer" aria-hidden="true"></div>
+  <div class="pc-top-spacer">
+    <button class="nw-weather-widget nw-weather-widget-pc" id="nwWeatherWidgetPC" type="button" aria-label="현재 위치 날씨 상세보기">
+      <span class="nw-weather-icon" id="nwWeatherIconPC">🌤️</span>
+      <span class="nw-weather-main">
+        <small id="nwWeatherLocationPC">위치 기반 날씨</small>
+        <strong id="nwWeatherTempPC">날씨 보기</strong>
+        <span id="nwWeatherDescPC">클릭하여 현재 위치 허용</span>
+      </span>
+      <span class="nw-weather-hi-lo" id="nwWeatherHiLoPC">--° / --°</span>
+    </button>
+  </div>
 </div>
 <section class="community-hub v1820-layout">
   <div class="pc-hub-column pc-hub-left">
@@ -2226,6 +2423,227 @@ document.addEventListener('DOMContentLoaded',()=>{
   // 백그라운드 상태 저장/복원. OS가 웹앱 프로세스를 강제종료하는 경우는 웹 기술상 보장 불가.
   const persist=()=>{const api=window.NWMusicAdminAPI;if(!api||!api.audio)return;localStorage.setItem('nwAudioResume',JSON.stringify({i:api.getIndex(),t:api.audio.currentTime||0,playing:!api.audio.paused&&!api.audio.ended,at:Date.now()}));};
   setInterval(persist,5000);document.addEventListener('visibilitychange',()=>{persist();if(!document.hidden){const api=window.NWMusicAdminAPI;let st={};try{st=JSON.parse(localStorage.getItem('nwAudioResume')||'{}')}catch(_){ }if(st.playing&&api&&api.audio&&api.audio.paused&&!api.audio.ended)api.audio.play().catch(()=>{});}});window.addEventListener('pagehide',persist);
+})();
+</script>
+
+
+<div class="nw-weather-modal" id="nwWeatherModal" aria-hidden="true">
+  <div class="nw-weather-panel" role="dialog" aria-modal="true" aria-labelledby="nwWeatherTitle">
+    <div class="nw-weather-panel-head">
+      <div>
+        <small>NEWT WORLD WEATHER</small>
+        <h3 id="nwWeatherTitle">현재 위치 날씨</h3>
+        <span id="nwWeatherUpdated">위치 정보를 불러오세요.</span>
+      </div>
+      <button type="button" class="nw-weather-close" id="nwWeatherClose" aria-label="닫기">×</button>
+    </div>
+
+    <div class="nw-weather-current">
+      <div class="nw-weather-current-primary">
+        <span class="nw-weather-current-icon" id="nwWeatherModalIcon">🌤️</span>
+        <div>
+          <strong id="nwWeatherModalTemp">--°</strong>
+          <b id="nwWeatherModalDesc">날씨 정보 준비 중</b>
+        </div>
+      </div>
+      <div class="nw-weather-current-meta">
+        <div><small>체감</small><strong id="nwWeatherFeels">--°</strong></div>
+        <div><small>습도</small><strong id="nwWeatherHumidity">--%</strong></div>
+        <div><small>바람</small><strong id="nwWeatherWind">-- km/h</strong></div>
+        <div><small>강수</small><strong id="nwWeatherRain">-- mm</strong></div>
+      </div>
+    </div>
+
+    <section class="nw-weather-section">
+      <div class="nw-weather-section-title"><b>시간별 예보</b><span>앞으로 12시간</span></div>
+      <div class="nw-weather-hourly" id="nwWeatherHourly"></div>
+    </section>
+
+    <section class="nw-weather-section">
+      <div class="nw-weather-section-title"><b>주간 예보</b><span>7일</span></div>
+      <div class="nw-weather-daily" id="nwWeatherDaily"></div>
+    </section>
+
+    <div class="nw-weather-panel-actions">
+      <button type="button" id="nwWeatherRefresh">📍 현재 위치 다시 불러오기</button>
+      <a id="nwWeatherComLink" href="https://weather.com/ko-KR/" target="_blank" rel="noopener noreferrer">weather.com에서 자세히 보기 ↗</a>
+    </div>
+    <div class="nw-weather-privacy">위치는 이 브라우저에서 날씨 조회에만 사용하며 Google Sheets에 저장하지 않습니다.</div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const pc=$('nwWeatherWidgetPC'), mob=$('nwWeatherWidgetMobile'), modal=$('nwWeatherModal');
+  if(!pc || !mob || !modal) return;
+
+  let last={lat:null,lon:null,name:'현재 위치',weather:null};
+
+  const wmo={
+    0:['☀️','맑음'],1:['🌤️','대체로 맑음'],2:['⛅','구름 조금'],3:['☁️','흐림'],
+    45:['🌫️','안개'],48:['🌫️','짙은 안개'],
+    51:['🌦️','약한 이슬비'],53:['🌦️','이슬비'],55:['🌧️','강한 이슬비'],
+    56:['🌧️','어는 이슬비'],57:['🌧️','강한 어는 이슬비'],
+    61:['🌦️','약한 비'],63:['🌧️','비'],65:['🌧️','강한 비'],
+    66:['🌧️','어는 비'],67:['🌧️','강한 어는 비'],
+    71:['🌨️','약한 눈'],73:['🌨️','눈'],75:['❄️','강한 눈'],77:['❄️','싸락눈'],
+    80:['🌦️','소나기'],81:['🌧️','소나기'],82:['⛈️','강한 소나기'],
+    85:['🌨️','눈 소나기'],86:['❄️','강한 눈 소나기'],
+    95:['⛈️','뇌우'],96:['⛈️','우박 동반 뇌우'],99:['⛈️','강한 우박 뇌우']
+  };
+  const info=code=>wmo[Number(code)]||['🌤️','날씨'];
+  const n=v=>Number.isFinite(Number(v))?Math.round(Number(v)):'--';
+  const fmtTime=iso=>{try{return new Date(iso).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}catch(_){return iso}};
+  const fmtDay=iso=>{try{return new Date(iso+'T12:00:00').toLocaleDateString('ko-KR',{weekday:'short'})}catch(_){return iso}};
+
+  function setSummary(name,d){
+    const c=d.current, di=d.daily, meta=info(c.weather_code);
+    const hi=n(di.temperature_2m_max[0]), lo=n(di.temperature_2m_min[0]);
+    $('nwWeatherLocationPC').textContent=name;
+    $('nwWeatherTempPC').textContent=n(c.temperature_2m)+'°';
+    $('nwWeatherDescPC').textContent=meta[1];
+    $('nwWeatherIconPC').textContent=meta[0];
+    $('nwWeatherHiLoPC').textContent=hi+'° / '+lo+'°';
+    $('nwWeatherLocationMobile').textContent=name;
+    $('nwWeatherTempMobile').textContent=n(c.temperature_2m)+'°';
+    $('nwWeatherIconMobile').textContent=meta[0];
+  }
+  function setLoading(){
+    $('nwWeatherLocationPC').textContent='현재 위치 확인 중';
+    $('nwWeatherTempPC').textContent='불러오는 중';
+    $('nwWeatherDescPC').textContent='잠시만 기다려주세요';
+    $('nwWeatherIconPC').textContent='📍';
+    $('nwWeatherLocationMobile').textContent='위치 확인';
+    $('nwWeatherTempMobile').textContent='…';
+    $('nwWeatherIconMobile').textContent='📍';
+  }
+  function setNeedPermission(msg='클릭하여 위치 허용'){
+    $('nwWeatherLocationPC').textContent='위치 기반 날씨';
+    $('nwWeatherTempPC').textContent='날씨 보기';
+    $('nwWeatherDescPC').textContent=msg;
+    $('nwWeatherIconPC').textContent='📍';
+    $('nwWeatherHiLoPC').textContent='--° / --°';
+    $('nwWeatherLocationMobile').textContent='위치 날씨';
+    $('nwWeatherTempMobile').textContent='보기';
+    $('nwWeatherIconMobile').textContent='📍';
+  }
+  async function reverseName(lat,lon){
+    try{
+      const u='https://api.bigdatacloud.net/data/reverse-geocode-client?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+'&localityLanguage=ko';
+      const r=await fetch(u,{cache:'no-store'});
+      if(!r.ok) throw 0;
+      const j=await r.json();
+      return j.locality||j.city||j.localityInfo?.administrative?.[3]?.name||j.principalSubdivision||'현재 위치';
+    }catch(_){return '현재 위치'}
+  }
+  async function fetchWeather(lat,lon){
+    const u='https://api.open-meteo.com/v1/forecast?latitude='+encodeURIComponent(lat)+'&longitude='+encodeURIComponent(lon)+
+      '&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m'+
+      '&hourly=temperature_2m,precipitation_probability,weather_code,relative_humidity_2m,wind_speed_10m'+
+      '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset'+
+      '&timezone=auto&forecast_days=7';
+    const r=await fetch(u,{cache:'no-store'});
+    if(!r.ok) throw new Error('날씨 서버 응답 오류');
+    return r.json();
+  }
+  function currentHourIndex(d){
+    const now=Date.now();
+    let best=0,bestDiff=Infinity;
+    d.hourly.time.forEach((t,i)=>{const diff=Math.abs(new Date(t).getTime()-now);if(diff<bestDiff){best=i;bestDiff=diff}});
+    return best;
+  }
+  function paintModal(){
+    const d=last.weather;if(!d)return;
+    const c=d.current, meta=info(c.weather_code);
+    $('nwWeatherTitle').textContent=last.name+' 날씨';
+    $('nwWeatherUpdated').textContent='업데이트 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+' · 위치 기반 실시간 예보';
+    $('nwWeatherModalIcon').textContent=meta[0];
+    $('nwWeatherModalTemp').textContent=n(c.temperature_2m)+'°';
+    $('nwWeatherModalDesc').textContent=meta[1]+' · 최고 '+n(d.daily.temperature_2m_max[0])+'° / 최저 '+n(d.daily.temperature_2m_min[0])+'°';
+    $('nwWeatherFeels').textContent=n(c.apparent_temperature)+'°';
+    $('nwWeatherHumidity').textContent=n(c.relative_humidity_2m)+'%';
+    $('nwWeatherWind').textContent=n(c.wind_speed_10m)+' km/h';
+    $('nwWeatherRain').textContent=(Number(c.precipitation)||0).toFixed(1)+' mm';
+
+    const hi=$('nwWeatherHourly'); hi.innerHTML='';
+    const start=currentHourIndex(d);
+    for(let k=0;k<12;k++){
+      const i=start+k;if(i>=d.hourly.time.length)break;
+      const m=info(d.hourly.weather_code[i]);
+      const el=document.createElement('div');el.className='nw-weather-hour';
+      el.innerHTML='<small>'+fmtTime(d.hourly.time[i])+'</small><div class="ico">'+m[0]+'</div><strong>'+n(d.hourly.temperature_2m[i])+'°</strong><span>💧 '+n(d.hourly.precipitation_probability[i])+'%</span>';
+      hi.appendChild(el);
+    }
+
+    const days=$('nwWeatherDaily');days.innerHTML='';
+    d.daily.time.forEach((t,i)=>{
+      const m=info(d.daily.weather_code[i]);
+      const el=document.createElement('div');el.className='nw-weather-day';
+      el.innerHTML='<small>'+(i===0?'오늘':fmtDay(t))+'</small><div class="ico">'+m[0]+'</div><strong>'+n(d.daily.temperature_2m_max[i])+'° / '+n(d.daily.temperature_2m_min[i])+'°</strong><span>💧 '+n(d.daily.precipitation_probability_max[i])+'%</span>';
+      days.appendChild(el);
+    });
+    $('nwWeatherComLink').href='https://weather.com/ko-KR/weather/today/l/'+last.lat+','+last.lon;
+  }
+  async function loadPosition(force=false){
+    if(!navigator.geolocation){setNeedPermission('이 브라우저는 위치정보를 지원하지 않음');return}
+    setLoading();
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const lat=pos.coords.latitude,lon=pos.coords.longitude;
+        const [name,d]=await Promise.all([reverseName(lat,lon),fetchWeather(lat,lon)]);
+        last={lat,lon,name,weather:d};
+        setSummary(name,d);
+        try{localStorage.setItem('nwWeatherCache',JSON.stringify({lat,lon,name,d,at:Date.now()}))}catch(_){}
+        if(modal.classList.contains('open'))paintModal();
+      }catch(e){
+        console.error(e);setNeedPermission('날씨를 불러오지 못했습니다 · 다시 클릭');
+      }
+    },err=>{
+      console.warn(err);
+      setNeedPermission(err.code===1?'위치 권한이 필요합니다':'위치를 확인하지 못했습니다');
+    },{enableHighAccuracy:false,timeout:9000,maximumAge:10*60*1000});
+  }
+  function useCache(){
+    try{
+      const c=JSON.parse(localStorage.getItem('nwWeatherCache')||'null');
+      if(c&&c.d&&Date.now()-Number(c.at||0)<15*60*1000){
+        last={lat:c.lat,lon:c.lon,name:c.name||'현재 위치',weather:c.d};
+        setSummary(last.name,last.weather);
+        return true;
+      }
+    }catch(_){}
+    return false;
+  }
+  function openModal(){
+    if(!last.weather){
+      loadPosition(true);
+      modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+      $('nwWeatherTitle').textContent='현재 위치 날씨';
+      $('nwWeatherUpdated').textContent='위치 정보를 불러오는 중…';
+      return;
+    }
+    paintModal();
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true')}
+
+  pc.addEventListener('click',openModal);
+  mob.addEventListener('click',openModal);
+  $('nwWeatherClose').addEventListener('click',closeModal);
+  modal.addEventListener('click',e=>{if(e.target===modal)closeModal()});
+  $('nwWeatherRefresh').addEventListener('click',()=>loadPosition(true));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeModal()});
+
+  if(!useCache()){
+    setNeedPermission();
+    if(navigator.permissions&&navigator.permissions.query){
+      navigator.permissions.query({name:'geolocation'}).then(p=>{
+        if(p.state==='granted')loadPosition();
+      }).catch(()=>{});
+    }
+  }
 })();
 </script>
 
