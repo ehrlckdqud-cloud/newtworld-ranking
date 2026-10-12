@@ -850,58 +850,34 @@ body{
   z-index:0;
   opacity:1;
   overflow:hidden;
-  background-image:
-    radial-gradient(circle at center,
-      var(--season-overlay-1) 0%,
-      var(--season-overlay-1) 18%,
-      var(--season-overlay-2) 42%,
-      var(--season-overlay-3) 84%),
-    var(--season-scene);
-  background-repeat:no-repeat,no-repeat;
-  background-size:100% 100%,cover;
-  background-position:center center,center top;
-  transition:background-image .35s ease, opacity .35s ease;
-}
-/* PC only: duplicate the seasonal scene on softly masked edge layers and sway them very slightly.
-   This keeps the existing layout/background while making side branches feel alive without changing mobile. */
-.season-panorama::before,
-.season-panorama::after{
-  content:"";
-  position:absolute;
-  inset:-1.5%;
-  pointer-events:none;
   background-image:var(--season-scene);
   background-repeat:no-repeat;
   background-size:cover;
   background-position:center top;
-  opacity:1;
-  will-change:transform;
-  backface-visibility:hidden;
-  transform:translateZ(0);
-}
-/* v18.24.9: use narrow clipped side layers instead of translucent full-photo overlays.
-   This avoids the "background only gets brighter" effect and makes the branch sway visible. */
-.season-panorama::before{
-  clip-path:polygon(0 0,33% 0,31% 16%,30% 36%,27% 58%,23% 77%,18% 100%,0 100%);
-  transform-origin:8% 9%;
-  animation:nwSeasonBranchSwayLeft 8.6s cubic-bezier(.45,.02,.55,.98) infinite;
+  transition:background-image .35s ease, opacity .35s ease;
 }
 .season-panorama::after{
-  clip-path:polygon(67% 0,100% 0,100% 100%,82% 100%,77% 77%,73% 58%,70% 36%,69% 16%);
-  transform-origin:92% 9%;
-  animation:nwSeasonBranchSwayRight 9.4s cubic-bezier(.45,.02,.55,.98) infinite;
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  background:radial-gradient(circle at center,
+      var(--season-overlay-1) 0%,
+      var(--season-overlay-1) 18%,
+      var(--season-overlay-2) 42%,
+      var(--season-overlay-3) 84%);
 }
-@keyframes nwSeasonBranchSwayLeft{
-  0%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1.002)}
-  25%{transform:translate3d(-5px,-1px,0) rotate(-.45deg) scale(1.006)}
-  50%{transform:translate3d(10px,2px,0) rotate(.82deg) scale(1.014)}
-  75%{transform:translate3d(-3px,0,0) rotate(-.32deg) scale(1.005)}
-}
-@keyframes nwSeasonBranchSwayRight{
-  0%,100%{transform:translate3d(0,0,0) rotate(0deg) scale(1.002)}
-  25%{transform:translate3d(5px,-1px,0) rotate(.42deg) scale(1.006)}
-  50%{transform:translate3d(-10px,2px,0) rotate(-.80deg) scale(1.014)}
-  75%{transform:translate3d(3px,0,0) rotate(.30deg) scale(1.005)}
+.season-panorama-video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center top;
+  z-index:1;
+  filter:saturate(1.02) contrast(1.03) brightness(.98);
+  transform:translateZ(0);
+  will-change:transform,opacity;
 }
 .season-side-art{display:none!important}
 .wrap{position:relative;z-index:1}
@@ -1298,14 +1274,54 @@ body{
 </style>
 </head>
 <body>
-<div class="season-panorama" aria-hidden="true"></div>
+<div class="season-panorama" aria-hidden="true">
+  <video id="nwSeasonVideo" class="season-panorama-video" autoplay muted loop playsinline preload="metadata" poster="assets/season/spring.png">
+    <source id="nwSeasonVideoWebm" data-type="webm" src="" type="video/webm">
+    <source id="nwSeasonVideoMp4" data-type="mp4" src="" type="video/mp4">
+  </video>
+</div>
 <div class="season-side-art left" aria-hidden="true"></div>
 <div class="season-side-art right" aria-hidden="true"></div>
 <script>
 (function(){
-  const m=(new Date()).getMonth()+1;
-  const s=(m>=3&&m<=5)?'spring':(m>=6&&m<=8)?'summer':(m>=9&&m<=11)?'autumn':'winter';
-  document.body.dataset.season=s;
+  const mq=window.matchMedia('(min-width:1100px)');
+  const videoMap={
+    spring:{poster:'assets/season/spring.png',webm:'assets/season-videos/spring.webm',mp4:'assets/season-videos/spring.mp4'},
+    summer:{poster:'assets/season/summer.png',webm:'assets/season-videos/summer.webm',mp4:'assets/season-videos/summer.mp4'},
+    autumn:{poster:'assets/season/autumn.png',webm:'assets/season-videos/autumn.webm',mp4:'assets/season-videos/autumn.mp4'},
+    winter:{poster:'assets/season/winter.png',webm:'assets/season-videos/winter.webm',mp4:'assets/season-videos/winter.mp4'}
+  };
+  function autoSeason(){
+    const m=(new Date()).getMonth()+1;
+    return (m>=3&&m<=5)?'spring':(m>=6&&m<=8)?'summer':(m>=9&&m<=11)?'autumn':'winter';
+  }
+  function syncSeasonVideo(season){
+    const v=document.getElementById('nwSeasonVideo');
+    if(!v) return;
+    const key=videoMap[season]?season:autoSeason();
+    const info=videoMap[key];
+    if(!mq.matches){
+      try{v.pause();}catch(_){ }
+      return;
+    }
+    if(v.dataset.season!==key){
+      const webm=v.querySelector('source[data-type="webm"]');
+      const mp4=v.querySelector('source[data-type="mp4"]');
+      if(webm) webm.src=info.webm;
+      if(mp4) mp4.src=info.mp4;
+      v.poster=info.poster;
+      v.dataset.season=key;
+      v.load();
+    }
+    const playPromise=v.play();
+    if(playPromise&&typeof playPromise.catch==='function') playPromise.catch(()=>{});
+  }
+  const first=autoSeason();
+  document.body.dataset.season=first;
+  window.NWSeasonVideoSync=syncSeasonVideo;
+  if(mq.addEventListener) mq.addEventListener('change',()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
+  else if(mq.addListener) mq.addListener(()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
+  window.addEventListener('load',()=>syncSeasonVideo(document.body.dataset.season||autoSeason()));
 })();
 </script>
 <div class="wrap">
@@ -2414,7 +2430,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   function themeLabel(t){return({auto:'자동',spring:'봄',summer:'여름',autumn:'가을',winter:'겨울'})[t]||t;}
   function applyTheme(t){
     const resolved=t==='auto'?autoSeason():t;
-    if(['spring','summer','autumn','winter'].includes(resolved))document.body.dataset.season=resolved;
+    if(['spring','summer','autumn','winter'].includes(resolved)){
+      document.body.dataset.season=resolved;
+      window.NWSeasonVideoSync?.(resolved);
+    }
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content',
       ({spring:'#0b1513',summer:'#061419',autumn:'#140f0b',winter:'#081019'})[resolved]||'#071018');
   }
