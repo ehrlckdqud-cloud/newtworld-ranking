@@ -517,13 +517,41 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 /* v18.15 layout relocation */
 .visit-strip{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:minmax(220px,240px) 1fr;
   gap:10px;
   margin:0 0 14px;
+  align-items:stretch;
 }
 .visit-strip .quick-stat{
   min-height:72px;
 }
+.visit-today-total{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.visit-today-total .visit-stat-block{
+  min-width:0;
+  flex:1 1 0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.visit-today-total .visit-stat-block+.visit-stat-block{
+  border-left:1px solid rgba(127,166,187,.20);
+  padding-left:10px;
+}
+.visit-total-desktop{display:flex}
+.visit-total-season{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+  pointer-events:none;
+}
+.visit-total-season .desktop-blank{display:block;flex:1 1 auto;height:100%}
+.visit-total-season .mobile-season{display:none}
 .partner-dashboard-link{
   margin-top:2px;
   min-height:82px;
@@ -785,24 +813,28 @@ body[data-season="spring"]{
   --season-glow:rgba(233,170,192,.20);--season-accent:#efbfd2;
   --season-scene:url("assets/season/spring.png");
   --season-overlay-1:rgba(24,16,20,.03);--season-overlay-2:rgba(24,16,20,.30);--season-overlay-3:rgba(15,11,15,.78);
+  --mobile-season-leaf:#efb8ce;--mobile-season-card:url("assets/season/mobile-spring-leaf.png");
 }
 body[data-season="summer"]{
   --season-bg-top:#081814;--season-bg-mid:#0c1d18;--season-bg-bottom:#07120f;
   --season-glow:rgba(102,180,104,.18);--season-accent:#83d487;
   --season-scene:url("assets/season/summer.png");
   --season-overlay-1:rgba(8,20,16,.05);--season-overlay-2:rgba(8,20,16,.34);--season-overlay-3:rgba(5,11,9,.80);
+  --mobile-season-leaf:#72cf86;--mobile-season-card:url("assets/season/mobile-summer-leaf.png");
 }
 body[data-season="autumn"]{
   --season-bg-top:#1b1109;--season-bg-mid:#20160d;--season-bg-bottom:#140d09;
   --season-glow:rgba(218,128,46,.20);--season-accent:#efaa5a;
   --season-scene:url("assets/season/autumn.png");
   --season-overlay-1:rgba(29,15,7,.06);--season-overlay-2:rgba(29,15,7,.34);--season-overlay-3:rgba(18,11,8,.82);
+  --mobile-season-leaf:#e38f43;--mobile-season-card:url("assets/season/mobile-autumn-leaf.png");
 }
 body[data-season="winter"]{
   --season-bg-top:#09111a;--season-bg-mid:#0d1823;--season-bg-bottom:#081018;
   --season-glow:rgba(125,161,200,.20);--season-accent:#b8d6ee;
   --season-scene:url("assets/season/winter.png");
   --season-overlay-1:rgba(8,14,20,.04);--season-overlay-2:rgba(8,14,20,.32);--season-overlay-3:rgba(7,11,16,.80);
+  --mobile-season-leaf:#c4deef;--mobile-season-card:url("assets/season/mobile-winter-leaf.png");
 }
 body{
   background:
@@ -874,6 +906,62 @@ body{
   .nw-theme-options{grid-template-columns:repeat(3,1fr)}
 }
 
+
+/* v18.23/v18.24 mobile seasonal brightness + seasonal leaf card */
+.mobile-total,.mobile-season{display:none}
+.visit-today-total,.visit-total-season{min-width:0}
+.desktop-total{display:flex;flex-direction:column;justify-content:center;height:100%}
+.season-label{display:none}
+@media(max-width:620px){
+  /* Mobile gets a slightly brighter seasonal field while cards remain dark. */
+  body[data-season="spring"]{
+    --season-bg-top:#302229;--season-bg-mid:#402c34;--season-bg-bottom:#251b22;
+    --season-glow:rgba(246,190,210,.31);
+  }
+  body[data-season="summer"]{
+    --season-bg-top:#123126;--season-bg-mid:#1a3e31;--season-bg-bottom:#0f281f;
+    --season-glow:rgba(112,203,135,.29);
+  }
+  body[data-season="autumn"]{
+    --season-bg-top:#382013;--season-bg-mid:#4b2b18;--season-bg-bottom:#2a1a11;
+    --season-glow:rgba(235,154,73,.31);
+  }
+  body[data-season="winter"]{
+    --season-bg-top:#172838;--season-bg-mid:#22384d;--season-bg-bottom:#132230;
+    --season-glow:rgba(153,196,232,.30);
+  }
+
+  .visit-strip{grid-template-columns:1fr 1fr;gap:8px}
+  .visit-strip .quick-stat{min-height:66px;padding:10px 12px}
+  .visit-today-total{display:flex!important;flex-direction:row!important;align-items:center;justify-content:space-between!important;gap:9px}
+  .visit-stat-block{min-width:0;flex:1;display:flex;flex-direction:column;justify-content:center}
+  .visit-stat-block+.visit-stat-block{border-left:1px solid rgba(127,166,187,.20);padding-left:10px}
+  .visit-stat-block small{font-size:9px}
+  .visit-stat-block strong{font-size:20px;line-height:1.05}
+  .mobile-total{display:flex}
+  .visit-total-desktop{display:none}
+  .visit-total-season{
+    position:relative;
+    overflow:hidden;
+    border-color:rgba(255,255,255,.10)!important;
+    background:
+      linear-gradient(135deg,rgba(5,10,14,.16),rgba(5,10,14,.42)),
+      var(--mobile-season-card) center/cover no-repeat!important;
+    box-shadow:0 10px 26px rgba(0,0,0,.18);
+    pointer-events:auto;
+  }
+  .visit-total-season .desktop-blank{display:none}
+  .mobile-season{display:flex;align-items:flex-end;justify-content:flex-start;gap:9px;width:100%;height:100%;position:relative;z-index:1}
+  .season-leaf-icon{width:31px;height:31px;flex:0 0 31px;fill:var(--mobile-season-leaf,#9ac9a8);filter:drop-shadow(0 2px 5px rgba(0,0,0,.30))}
+  .mobile-season-copy{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;min-width:0}
+  .mobile-season-copy small{display:none}
+  .mobile-season-copy strong{font-size:16px;margin-top:0;color:#f7fbff;line-height:1;text-shadow:0 2px 5px rgba(0,0,0,.35)}
+  body[data-season="spring"] .season-spring,
+  body[data-season="summer"] .season-summer,
+  body[data-season="autumn"] .season-autumn,
+  body[data-season="winter"] .season-winter{display:block}
+}
+
 </style>
 
 <style>
@@ -908,8 +996,18 @@ body{
 </script>
 <div class="wrap">
 <div class="visit-strip" aria-label="뉴트월드 방문 통계">
-  <div class="quick-stat"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
-  <div class="quick-stat"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
+  <div class="quick-stat visit-today-total">
+    <div class="visit-stat-block"><small>TODAY</small><strong id="nwVisitToday">-</strong></div>
+    <div class="visit-stat-block visit-total-desktop"><small>TOTAL</small><strong id="nwVisitTotal">-</strong></div>
+    <div class="visit-stat-block mobile-total"><small>TOTAL</small><strong id="nwVisitTotalMobile">-</strong></div>
+  </div>
+  <div class="quick-stat visit-total-season">
+    <div class="desktop-blank" aria-hidden="true"></div>
+    <div class="mobile-season" aria-label="현재 계절">
+      <svg class="season-leaf-icon" viewBox="0 0 64 64" aria-hidden="true"><path d="M53.8 8.5C34.3 8.1 16.3 17.3 10.6 32.8 6.4 44.3 13.4 54.6 25.1 54.4c15.3-.3 27.4-14.7 28.7-45.9ZM15.6 48.2C24.8 38 34 28.5 46.7 17.8 35.3 31.1 27.8 41.3 21.8 52.9l-6.2-4.7Z"/></svg>
+      <div class="mobile-season-copy"><strong class="season-label season-spring">봄</strong><strong class="season-label season-summer">여름</strong><strong class="season-label season-autumn">가을</strong><strong class="season-label season-winter">겨울</strong></div>
+    </div>
+  </div>
 </div>
 <section class="community-hub v1820-layout">
 <div class="hub-partner-left"><aside class="partner-panel partner-left">
@@ -1040,7 +1138,7 @@ body{
 </div>
 <div class="hero-title">
 <h1>NEWT WORLD 활동왕</h1>
-<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.21</p>
+<p>월간 시즌 랭킹 + 영구 누적 등급 시스템 · 회원ID 기반 · v18.23</p>
 </div>
 
 
@@ -1844,7 +1942,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
   let id=localStorage.getItem('nwVisitorId');
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
-  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');const mt=document.getElementById('nwVisitTotalMobile');if(mt)mt.textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
 })();
 </script>
