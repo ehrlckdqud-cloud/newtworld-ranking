@@ -652,6 +652,45 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   outline-offset:3px;
 }
 
+/* v2.5 layout tweak — app directly below attendance; member hub group icon */
+/* v2.4 member hub quick card — add only */
+.member-hub-quick{margin:0;min-width:0;grid-column:2;}
+.member-hub-quick .quick-link{
+  min-height:82px;
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+@media (hover:hover) and (pointer:fine){
+  .member-hub-quick .quick-link:hover{
+    transform:translateY(-2px);
+    border-color:#8a9cff;
+    background:linear-gradient(180deg,#24283d,#151827);
+    box-shadow:0 10px 24px rgba(0,0,0,.22),0 0 0 1px rgba(138,156,255,.10) inset;
+    filter:brightness(1.08);
+  }
+  .member-hub-quick .quick-link:hover b{color:#fff}
+  .member-hub-quick .quick-link:hover span{color:#d8dcff}
+}
+.member-hub-quick .quick-link:focus-visible{outline:2px solid #8a9cff;outline-offset:3px}
+@media(max-width:620px){.member-hub-quick .quick-link{min-height:76px}}
+
+/* member login guidance dialog */
+.nw-member-auth-dialog{
+  position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:18px;
+  background:rgba(1,7,11,.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+.nw-member-auth-dialog.open{display:flex}
+.nw-member-auth-box{
+  width:min(440px,100%);padding:24px;border:1px solid #315166;border-radius:20px;
+  background:linear-gradient(180deg,#0d202b,#081720);box-shadow:0 24px 70px rgba(0,0,0,.48);color:#eef8ff;
+}
+.nw-member-auth-box small{display:block;color:#9bacef;font-weight:900;letter-spacing:.08em;margin-bottom:8px}
+.nw-member-auth-box h3{margin:0 0 10px;font-size:21px}
+.nw-member-auth-box p{margin:0;color:#a7c0cd;font-size:13px;line-height:1.7}
+.nw-member-auth-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
+.nw-member-auth-actions button{border-radius:11px;padding:10px 14px;cursor:pointer;font-weight:850;border:1px solid #365365;background:#102430;color:#dceaf2}
+.nw-member-auth-actions .primary{border-color:#3aa889;background:#0c6554;color:#fff}
+
 
 /* v18.19 — PC center-column compact layout */
 .primary-rooms{
@@ -716,8 +755,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   grid-template-columns:minmax(190px,.72fr) minmax(0,2.35fr) minmax(190px,.72fr);
   grid-template-areas:
     "shop primary openchat"
-    "shop challenges support"
-    "shop app support";
+    "shop challenges support";
   gap:14px;
   align-items:start;
 }
@@ -748,6 +786,12 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   min-height:82px;
   box-sizing:border-box;
 }
+.v1820-layout .hub-challenges > .attendance-quick{grid-column:1;grid-row:1}
+.v1820-layout .hub-challenges > .post-install-quick{grid-column:2;grid-row:1}
+.v1820-layout .hub-challenges > .hub-app{grid-column:1;grid-row:2;min-width:0}
+.v1820-layout .hub-challenges > .member-hub-quick{grid-column:2;grid-row:2;min-width:0}
+.v1820-layout .hub-challenges > .hub-app .home-install-wrap{margin:0;height:100%}
+.v1820-layout .hub-challenges > .hub-app .home-install-card{width:100%;height:100%;min-height:82px;box-sizing:border-box}
 .v1820-layout .hub-support .support-links{
   display:grid;
   grid-template-columns:1fr;
@@ -769,7 +813,6 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
     grid-template-areas:
       "primary primary"
       "shop openchat"
-      "app app"
       "support support"
       "challenges challenges";
   }
@@ -787,13 +830,14 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   .v1820-layout .hub-primary{order:1;width:100%}
   .v1820-layout .hub-partner-left{order:2;width:100%}
   .v1820-layout .hub-partner-right{order:3;width:100%}
-  .v1820-layout .hub-app{order:4;width:100%}
-  .v1820-layout .hub-support{order:5;width:100%}
-  .v1820-layout .hub-challenges{order:6;width:100%;display:flex;flex-direction:column;gap:8px}
+  .v1820-layout .hub-support{order:4;width:100%}
+  .v1820-layout .hub-challenges{order:5;width:100%;display:flex;flex-direction:column;gap:8px}
 
   .v1820-layout .hub-support .support-links{grid-template-columns:1fr;gap:8px}
   .v1820-layout .hub-challenges .attendance-quick{order:1}
-  .v1820-layout .hub-challenges .post-install-quick{order:2}
+  .v1820-layout .hub-challenges > .hub-app{order:2;width:100%;grid-column:auto;grid-row:auto}
+  .v1820-layout .hub-challenges .post-install-quick{order:3}
+  .v1820-layout .hub-challenges .member-hub-quick{order:4;width:100%;grid-column:auto;grid-row:auto}
   .v1820-layout .hub-app .home-install-wrap{margin:0}
 }
 
@@ -1048,7 +1092,8 @@ body{
     margin:0;
   }
   .pc-hub-center .hub-challenges .attendance-quick,
-  .pc-hub-center .hub-challenges .post-install-quick{margin:0}
+  .pc-hub-center .hub-challenges .post-install-quick,
+  .pc-hub-center .hub-challenges .member-hub-quick{margin:0}
 
   /* App card: same width as one attendance card, directly below. */
   .pc-hub-center .hub-app{
@@ -1274,6 +1319,75 @@ body{
 .nw-sync-note{font-size:11px;color:#7e9ca7;margin-top:10px;line-height:1.55}.nw-sync-status{font-size:11px;color:#67d6a2;margin-top:10px;min-height:17px}
 @media(max-width:760px){.nw-sync-admin{padding:7px}.nw-sync-body{grid-template-columns:1fr}.nw-sync-left{border-right:0;border-bottom:1px solid rgba(112,190,220,.15)}.nw-sync-list{height:42vh}.nw-sync-current .line{font-size:17px}.nw-sync-controls{grid-template-columns:repeat(2,1fr)}}
 </style>
+
+<style>
+/* v2.6 — layout correction only: compact feature cards + detail buttons */
+@media(min-width:1041px){
+  /* challenge area remains a strict 2 x 2 grid */
+  .pc-hub-center .hub-challenges{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    grid-auto-rows:82px!important;
+    gap:10px!important;
+    align-items:stretch!important;
+  }
+  .pc-hub-center .hub-challenges > .attendance-quick{grid-column:1!important;grid-row:1!important;margin:0!important;min-width:0!important;height:82px!important}
+  .pc-hub-center .hub-challenges > .post-install-quick{grid-column:2!important;grid-row:1!important;margin:0!important;min-width:0!important;height:82px!important}
+  .pc-hub-center .hub-challenges > .hub-app{grid-column:1!important;grid-row:2!important;width:auto!important;margin:0!important;align-self:stretch!important;min-width:0!important;height:82px!important}
+  .pc-hub-center .hub-challenges > .member-hub-quick{grid-column:2!important;grid-row:2!important;width:auto!important;margin:0!important;min-width:0!important;height:82px!important}
+  .pc-hub-center .hub-challenges .quick-link,
+  .pc-hub-center .hub-challenges .home-install-wrap,
+  .pc-hub-center .hub-challenges .home-install-card{height:82px!important;min-height:82px!important;max-height:82px!important;box-sizing:border-box!important}
+  .pc-hub-center .hub-challenges .home-install-wrap{width:100%!important;margin:0!important}
+  .pc-hub-center .hub-challenges .home-install-card{width:100%!important;padding:10px 12px!important;border-radius:16px!important;gap:10px!important;overflow:hidden!important}
+  .pc-hub-center .hub-challenges .home-install-icon-shell{width:50px!important;height:50px!important;flex:0 0 50px!important;border-radius:13px!important}
+  .pc-hub-center .hub-challenges .home-install-copy{display:flex!important;align-items:baseline!important;gap:7px!important;white-space:nowrap!important;overflow:hidden!important}
+  .pc-hub-center .hub-challenges .home-install-title{font-size:14px!important;flex:0 0 auto!important}
+  .pc-hub-center .hub-challenges .home-install-sub{font-size:10px!important;margin-top:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .pc-hub-center .hub-challenges .home-install-badge{margin-left:auto!important;flex:0 0 auto!important}
+}
+@media(max-width:720px){
+  /* mobile order requested: app immediately above attendance */
+  .v1820-layout .hub-challenges > .hub-app{order:1!important;width:100%!important}
+  .v1820-layout .hub-challenges > .attendance-quick{order:2!important;width:100%!important}
+  .v1820-layout .hub-challenges > .post-install-quick{order:3!important;width:100%!important}
+  .v1820-layout .hub-challenges > .member-hub-quick{order:4!important;width:100%!important}
+}
+/* Ranking member name is plain text; only this compact button opens profile detail. */
+.nw-member-detail-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-left:7px;padding:3px 7px;border-radius:7px;
+  border:1px solid rgba(108,172,202,.42);background:#102733;color:#aedaee;
+  font:800 9px/1.15 inherit;letter-spacing:-.02em;white-space:nowrap;cursor:pointer;
+  vertical-align:middle;transition:.16s ease;
+}
+@media(hover:hover) and (pointer:fine){.nw-member-detail-btn:hover{background:#174055;border-color:#70c4e7;color:#fff;transform:translateY(-1px)}}
+.nw-member-detail-btn:focus-visible{outline:2px solid #69bddf;outline-offset:2px}
+/* v2.7 — detail button alignment only */
+.detail-col,.detail-col-head{text-align:center!important}
+.detail-col .nw-member-detail-btn{margin-left:0}
+.card-head-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex:0 0 auto}
+.card-head-right .nw-member-detail-btn{margin-left:0;flex:0 0 auto}
+.card-head-right .card-grade{flex:0 0 auto}
+@media(min-width:721px){
+  .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:7%}
+  .table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:14%}
+  .table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:13%}
+  .table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:7%;overflow:visible;text-overflow:clip}
+  .table-wrap th:nth-child(5),.table-wrap td:nth-child(5){width:10%}
+  .table-wrap th:nth-child(6),.table-wrap td:nth-child(6){width:7%}
+  .table-wrap th:nth-child(7),.table-wrap td:nth-child(7){width:6%}
+  .table-wrap th:nth-child(8),.table-wrap td:nth-child(8){width:6%}
+  .table-wrap th:nth-child(9),.table-wrap td:nth-child(9){width:7%}
+  .table-wrap th:nth-child(10),.table-wrap td:nth-child(10){width:7%}
+  .table-wrap th:nth-child(11),.table-wrap td:nth-child(11){width:9%}
+  .table-wrap th:nth-child(12),.table-wrap td:nth-child(12){width:7%}
+}
+@media(max-width:720px){
+  .card-head-right{gap:7px}
+  .card-head-right .nw-member-detail-btn{padding:4px 7px;font-size:9px}
+}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1430,15 +1544,7 @@ body{
     <span>최근 집계 출석 · 월간 횟수 · 연속 출석 보기 →</span>
   </a>
 </div>
-<div class="post-install-quick">
-  <a class="quick-link" href="#workout" id="nwWorkoutOpen">
-    <small>🏃 NEWT WORLD HABIT</small>
-    <b>오운완 챌린지 🏋️</b>
-    <span>최근 집계 기록 · 월간 랭킹 · 연속 기록 보기 →</span>
-  </a>
-</div>
-</div>
-    <div class="hub-app">
+<div class="hub-app">
 <div class="home-install-wrap">
   <button type="button" class="home-install-card" id="homeInstallBtn" aria-label="뉴트월드를 홈 화면에 추가">
     <span class="home-install-icon-shell"><img src="assets/icons/icon-192.png" alt="뉴트월드 앱 아이콘"></span>
@@ -1448,6 +1554,21 @@ body{
     </span>
     <span class="home-install-badge" id="homeInstallBadge">+ 홈 화면</span>
   </button>
+</div>
+</div>
+<div class="post-install-quick">
+  <a class="quick-link" href="#workout" id="nwWorkoutOpen">
+    <small>🏃 NEWT WORLD HABIT</small>
+    <b>오운완 챌린지 🏋️</b>
+    <span>최근 집계 기록 · 월간 랭킹 · 연속 기록 보기 →</span>
+  </a>
+</div>
+<div class="member-hub-quick">
+  <a class="quick-link" href="#members" id="nwMemberHubOpen" aria-label="뉴트월드 회원 허브">
+    <small>👥 NEWT WORLD MEMBER HUB</small>
+    <b>회원 허브</b>
+    <span>내 정보 · 사육자 · 지역 · 보유종 검색 및 통계 →</span>
+  </a>
 </div>
 </div>
   </div>
@@ -1523,7 +1644,7 @@ body{
 </div>
 <div class="table-wrap">
 <table>
-<thead><tr><th>순위 / 구분</th><th>영구등급</th><th>이름</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적점수</th></tr></thead>
+<thead><tr><th>순위 / 구분</th><th>영구등급</th><th>이름</th><th class="detail-col-head">상세</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적점수</th></tr></thead>
 <tbody id="tb"></tbody>
 </table>
 </div>
@@ -1710,11 +1831,11 @@ function renderRanking(){
   document.getElementById('tb').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
     const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name">${x.memberId?`<button class="nw-member-link" data-member-id="${x.memberId}">[${x.name}]</button>`:`[${x.name}]`}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
+    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span></td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card"><div class="card-head"><div><b>${firstCell} · ${x.memberId?`<button class="nw-member-link" data-member-id="${x.memberId}">[${x.name}]</button>`:`[${x.name}]`}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
+    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
   }).join('');
   const top=members[0]||{name:'-',seasonTotal:0};
   document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
@@ -2415,13 +2536,25 @@ document.addEventListener('DOMContentLoaded',()=>{
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
   function openPage(page,label,hash){frame.src=page+(page.includes('?')?'&':'?')+'embedded=1';title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
   window.NWOpenPage=openPage;
-  function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile'].includes(location.hash))history.back();}
+  function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
   document.getElementById('nwPartnerOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('partner.html','🤝 제휴샵 파트너센터','#partner')});
   document.getElementById('nwMyPageBtn')?.addEventListener('click',e=>{e.preventDefault();openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
+  const memberHubOpen=document.getElementById('nwMemberHubOpen');
+  const memberAuthDialog=document.getElementById('nwMemberAuthDialog');
+  const closeMemberAuth=()=>{memberAuthDialog?.classList.remove('open');memberAuthDialog?.setAttribute('aria-hidden','true');};
+  memberHubOpen?.addEventListener('click',e=>{
+    e.preventDefault();
+    const token=localStorage.getItem('nwProfileToken')||'';
+    if(token){openPage('members.html','👤 뉴트월드 회원 허브','#members');return;}
+    memberAuthDialog?.classList.add('open');memberAuthDialog?.setAttribute('aria-hidden','false');
+  });
+  document.getElementById('nwMemberAuthClose')?.addEventListener('click',closeMemberAuth);
+  memberAuthDialog?.addEventListener('click',e=>{if(e.target===memberAuthDialog)closeMemberAuth();});
+  document.getElementById('nwMemberAuthGoProfile')?.addEventListener('click',()=>{closeMemberAuth();openPage('profile.html','👤 뉴트월드 내 페이지','#profile');});
   document.getElementById('nwAppClose')?.addEventListener('click',()=>closePage(false));window.addEventListener('message',e=>{if(e.data==='nw-close-page')closePage(false)});
-  window.addEventListener('hashchange',()=>{if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(overlay.classList.contains('open'))closePage(true)});
-  if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');
+  window.addEventListener('hashchange',()=>{if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#members'){if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
+  if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');
 
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
   document.querySelectorAll('.partner-left .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
@@ -2808,4 +2941,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 })();
 </script>
 
+
+<div class="nw-member-auth-dialog" id="nwMemberAuthDialog" aria-hidden="true">
+  <div class="nw-member-auth-box" role="dialog" aria-modal="true" aria-labelledby="nwMemberAuthTitle">
+    <small>👤 NEWT WORLD MEMBER HUB</small>
+    <h3 id="nwMemberAuthTitle">회원식별 인증이 필요합니다</h3>
+    <p>회원 허브는 인증된 뉴트월드 회원 전용 기능입니다.<br>내 페이지에서 회원식별 인증을 먼저 완료해주세요.</p>
+    <div class="nw-member-auth-actions">
+      <button type="button" id="nwMemberAuthClose">닫기</button>
+      <button type="button" class="primary" id="nwMemberAuthGoProfile">내 페이지에서 인증하기</button>
+    </div>
+  </div>
+</div>
 </body></html>
