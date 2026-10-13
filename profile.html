@@ -93,7 +93,7 @@
   function device(){let d=localStorage.getItem('nwProfileDevice');if(!d){d=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2))+'-'+Math.random().toString(36).slice(2);localStorage.setItem('nwProfileDevice',d);}return d;}
   function show(id){['authView','pendingView','profileView'].forEach(x=>$(x).classList.toggle('hidden',x!==id));}
   $('closeBtn').onclick=()=>{if(window.parent!==window)window.parent.postMessage('nw-close-page','*');else history.back();};
-  function openMemberHub(){location.href='members.html';}
+  function openMemberHub(){location.href='members.html?v=2.17&_='+Date.now();}
   $('memberHubBtn').onclick=openMemberHub;
   $('memberHubBtn2').onclick=openMemberHub;
   async function loadCandidates(){const d=await jsonp('profileCandidates');if(!d?.ok)return;const dl=$('memberList');dl.innerHTML='';(d.members||[]).forEach(m=>{if(!m.available)return;const o=document.createElement('option');o.value=m.nickname;dl.appendChild(o);});}
