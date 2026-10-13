@@ -33,7 +33,8 @@
     <h2>인증 진행 중</h2>
     <div class="codebox"><div class="hint">오픈채팅방에 아래 문구를 정확히 입력</div><div class="code" id="codeText">-</div><button type="button" class="btn" id="copyAuthBtn" style="margin-top:10px;padding:7px 11px;font-size:12px;border-radius:9px" disabled>📋 문구복사</button><div id="copyAuthStatus" class="hint" role="status" aria-live="polite" style="margin-top:6px"></div><div class="hint" style="margin-top:8px">형식: <b>인증 NW-XXXXXX</b></div></div>
     <p id="pendingText">다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="checkBtn">인증 상태 확인</button><button class="btn" id="resetBtn">다시 신청</button></div>
+    <p class="hint">승인까지 시간이 걸릴 수 있습니다. 재신청 없이 기존 코드로 기다려주세요.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="checkBtn">인증 상태 확인</button><button class="btn hidden" id="resetBtn" type="button" disabled>새 인증 신청</button></div>
     <div id="pendingStatus" class="status"></div>
   </section>
 
@@ -97,7 +98,9 @@
   $('memberHubBtn2').onclick=openMemberHub;
   async function loadCandidates(){const d=await jsonp('profileCandidates');if(!d?.ok)return;const dl=$('memberList');dl.innerHTML='';(d.members||[]).forEach(m=>{if(!m.available)return;const o=document.createElement('option');o.value=m.nickname;dl.appendChild(o);});}
   async function start(){const nickname=$('nickname').value.trim();if(!nickname)return;const b=$('startBtn');b.disabled=true;const d=await jsonp('profileStart',{nickname,device:device()});b.disabled=false;if(!d?.ok){$('authStatus').classList.remove('hidden');$('authStatus').innerHTML='<span class="err">'+(d?.error||'신청 실패')+'</span>';return;}if(d.authenticated&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}localStorage.setItem('nwProfileRequestId',d.requestId);localStorage.setItem('nwProfileCode',d.code);renderPending(d.code,'카톡 인증코드 입력 대기');}
-  function renderPending(code,msg){show('pendingView');const value=code||localStorage.getItem('nwProfileCode')||'';$('codeText').textContent=value?'인증 '+value:'-';$('copyAuthBtn').disabled=!/^NW-[A-Z2-9]{6}$/.test(value);$('copyAuthStatus').textContent='';$('pendingStatus').textContent=msg||'상태 확인 대기';}
+  let canRestartAuth=false;
+  function setAuthRestart(allowed){canRestartAuth=allowed;$('resetBtn').classList.toggle('hidden',!allowed);$('resetBtn').disabled=!allowed;}
+  function renderPending(code,msg){show('pendingView');setAuthRestart(false);const value=code||localStorage.getItem('nwProfileCode')||'';$('codeText').textContent=value?'인증 '+value:'-';$('copyAuthBtn').disabled=!/^NW-[A-Z2-9]{6}$/.test(value);$('copyAuthStatus').textContent='';$('pendingText').textContent='다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.';$('pendingStatus').textContent=msg||'상태 확인 대기';}
   async function copyAuthPhrase(){
     const text=$('codeText').textContent.trim();if(!/^인증 NW-[A-Z2-9]{6}$/.test(text))return;
     const status=$('copyAuthStatus');let copied=false;
@@ -111,7 +114,27 @@
     status.textContent=copied?'복사했어요! 톡방에 그대로 붙여넣어 주세요.':'복사하지 못했어요. 위 인증 문구 전체를 길게 눌러 복사해 주세요.';
   }
   $('copyAuthBtn').onclick=copyAuthPhrase;
-  async function check(){const id=localStorage.getItem('nwProfileRequestId');if(!id){show('authView');return;}const d=await jsonp('profileStatus',{requestId:id,device:device()});if(!d?.ok){$('pendingStatus').innerHTML='<span class="err">'+(d?.error||'확인 실패')+'</span>';return;}if(d.status==='approved'&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}if(d.status==='expired'||d.status==='rejected'){localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');$('pendingStatus').innerHTML='<span class="warn">'+d.message+'</span>';return;}$('pendingStatus').textContent=d.message||d.status;}
+  async function check(){
+    setAuthRestart(false);const id=localStorage.getItem('nwProfileRequestId');if(!id){show('authView');return;}
+    const d=await jsonp('profileStatus',{requestId:id,device:device()});
+    if(localStorage.getItem('nwProfileRequestId')!==id)return;
+    if(!d?.ok){$('pendingStatus').textContent=d?.error||'확인 실패 · 잠시 후 다시 확인해주세요.';return;}
+    if(d.status==='approved'&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}
+    if(d.status==='expired'||d.status==='rejected'){
+      setAuthRestart(true);$('copyAuthBtn').disabled=true;
+      $('pendingText').textContent=d.status==='expired'?'코드가 만료되었습니다. 유효시간 안에 톡방에 올렸다면 대화집계 후 다시 상태를 확인해주세요. 새 코드가 필요하면 아래에서 신청할 수 있습니다.':'인증 신청이 거절되었습니다. 필요한 내용을 확인한 뒤 새 인증을 신청해주세요.';
+      $('pendingStatus').textContent=d.message||'새 인증을 신청할 수 있습니다.';return;
+    }
+    $('copyAuthBtn').disabled=!/^인증 NW-[A-Z2-9]{6}$/.test($('codeText').textContent.trim());
+    $('pendingText').textContent=d.status==='awaiting_admin'?'카톡 코드 확인이 완료되었습니다. 관리자 승인까지 기존 신청이 유지됩니다.':'다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.';
+    $('pendingStatus').textContent=d.message||d.status;
+  }
+  async function restartAuth(){
+    if(!canRestartAuth)return;
+    // 버튼이 표시된 뒤 관리자 승인/코드확인이 이뤄졌을 수도 있으므로 다시 확인한다.
+    await check();if(!canRestartAuth)return;
+    setAuthRestart(false);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');show('authView');loadCandidates();
+  }
   async function recoverExisting(){const d=await jsonp('profileRecover',{device:device()});if(d?.ok&&d.auth&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return true;}return false;}
   async function loadProfile(){let token=localStorage.getItem('nwProfileToken');if(!token){if(await recoverExisting()){token=localStorage.getItem('nwProfileToken');}else{const req=localStorage.getItem('nwProfileRequestId');if(req){renderPending(localStorage.getItem('nwProfileCode'),'인증 상태를 확인해주세요.');return check();}show('authView');loadCandidates();return;}}
     // 동일 탭 재진입 시 마지막 핵심 프로필을 즉시 먼저 보여주고 서버 갱신은 뒤에서 진행한다.
@@ -128,7 +151,7 @@
   async function loadEditableProfile(prefetched){let p=prefetched;if(!p){const token=localStorage.getItem('nwProfileToken');if(!token)return;const d=await jsonp('memberOwnProfile',{token,device:device()});if(!d?.ok)return;p=d.profile||{};}$('region').value=p.region||'';$('district').value=p.district||'';$('interests').value=p.interests||'';$('introProfile').value=p.intro||'';$('imageUrl').value=p.imageUrl||'';$('speciesList').innerHTML='';(p.species||[]).forEach(addSpeciesRow);if(!(p.species||[]).length)addSpeciesRow();const v=p.visibility||{};document.querySelectorAll('#privacyGrid [data-v]').forEach(x=>x.checked=v[x.dataset.v]!==false);}
   async function saveEditableProfile(){const token=localStorage.getItem('nwProfileToken');if(!token)return;const species=[...document.querySelectorAll('.species-row')].map(r=>({name:r.querySelector('.sp-name').value.trim(),count:r.querySelector('.sp-count').value===''?null:Number(r.querySelector('.sp-count').value),experience:r.querySelector('.sp-exp').value.trim(),breeding:r.querySelector('.sp-breed').value})).filter(x=>x.name);const data={region:$('region').value,district:$('district').value.trim(),interests:$('interests').value.trim(),intro:$('introProfile').value.trim(),imageUrl:$('imageUrl').value.trim(),species,visibility:collectVisibility()};const b=$('saveProfileBtn');b.disabled=true;$('profileSaved').textContent='저장 중…';const d=await jsonp('memberProfileSave',{token,device:device(),data:JSON.stringify(data)});b.disabled=false;if(d?.ok){try{sessionStorage.removeItem('nwMemberHubSnapshot')}catch(_){}}$('profileSaved').textContent=d?.ok?'프로필이 저장되었습니다.':(d?.error||'저장에 실패했습니다.');}
   $('addSpeciesBtn').onclick=()=>addSpeciesRow();$('saveProfileBtn').onclick=saveEditableProfile;
-  $('startBtn').onclick=start;$('checkBtn').onclick=check;$('resetBtn').onclick=()=>{localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');show('authView');loadCandidates()};$('logoutBtn').onclick=async()=>{if(!window.confirm('정말 해제하시겠습니까?\n이 기기 연결을 해제하면 다시 회원식별 인증이 필요합니다.'))return;const token=localStorage.getItem('nwProfileToken');if(token)await jsonp('profileLogout',{token,device:device()});localStorage.removeItem('nwProfileToken');show('authView');loadCandidates();};
+  $('startBtn').onclick=start;$('checkBtn').onclick=check;$('resetBtn').onclick=restartAuth;$('logoutBtn').onclick=async()=>{if(!window.confirm('정말 해제하시겠습니까?\n이 기기 연결을 해제하면 다시 회원식별 인증이 필요합니다.'))return;const token=localStorage.getItem('nwProfileToken');if(token)await jsonp('profileLogout',{token,device:device()});localStorage.removeItem('nwProfileToken');show('authView');loadCandidates();};
   loadProfile();
 })();
 </script>
