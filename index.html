@@ -2535,7 +2535,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
-  function openPage(page,label,hash){frame.src=page+(page.includes('?')?'&':'?')+'embedded=1';title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
+  function openPage(page,label,hash){const profileFresh=/^profile\.html(?:[?#]|$)/.test(page)?'&v=2.14&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
   window.NWOpenPage=openPage;
   function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
