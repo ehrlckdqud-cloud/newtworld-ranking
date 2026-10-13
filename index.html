@@ -1628,7 +1628,7 @@ body{
 </div>
 <div class="section-title"><div><h2>🏆 영구 등급 배지</h2><small>누적점수 기준 · 한 번 해금된 배지는 전체에게 모습이 공개됩니다.</small></div></div>
 <div class="badge-grid" id="badgeGrid"></div>
-<div class="section-title"><div><h2>📊 10월 활동왕 실시간 순위</h2><small>2026.10.10 기준</small></div></div>
+<div class="section-title"><div><h2 id="nwRankingTitle">📊 활동왕 실시간 순위</h2><small id="nwRankingAsOf">집계 기준일 확인 중…</small></div></div>
 <div class="controls">
 <input id="q" placeholder="닉네임 / 회원ID 검색"/>
 <select id="limit"><option value="all">전체 회원</option><option selected="" value="40">TOP 40</option><option value="20">TOP 20</option><option value="10">TOP 10</option><option value="staff">운영진</option></select>
@@ -1802,6 +1802,7 @@ async function loadSheet(raw,save=true){
     DATA=parsed;
     if(save){localStorage.setItem('newtworldSheetUrl',raw);}
     renderAll();
+    window.NWRefreshRankingMeta?.();
     const miss=DATA.missingIdCount||0;
     setStatus(`연결됨 · 전체 ${DATA.length}명 (회원 ${DATA.filter(x=>!isStaff(x)).length} + 운영진 ${DATA.filter(isStaff).length})${miss?` · 회원ID 미입력 ${miss}명`:''} · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 갱신`,miss?'sync-loading':'sync-ok');
     clearInterval(refreshTimer);
@@ -2970,4 +2971,30 @@ document.addEventListener('DOMContentLoaded',()=>{
     </div>
   </div>
 </div>
+<script>
+(function(){
+  let pending=false;
+  window.NWRefreshRankingMeta=function(){
+    if(pending)return;
+    const dateEl=document.getElementById('nwRankingAsOf'),titleEl=document.getElementById('nwRankingTitle');
+    const app=window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl;
+    if(!app||app.includes('PASTE_WEB_APP_URL_HERE')){dateEl.textContent='집계 기준일 확인 불가';return;}
+    pending=true;
+    const cb='nwRankMeta_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+    const script=document.createElement('script');let timer;
+    function finish(data){
+      clearTimeout(timer);delete window[cb];script.remove();pending=false;
+      if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate)){
+        dateEl.textContent=data.latestChatDate.replace(/-/g,'.')+' 기준';
+        if(/^\d{4}-\d{2}$/.test(data.month))titleEl.textContent='📊 '+Number(data.month.slice(5))+'월 활동왕 실시간 순위';
+      }else if(!dateEl.dataset.loaded){dateEl.textContent='집계 기준일 확인 불가';return;}
+      if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate))dateEl.dataset.loaded='1';
+    }
+    window[cb]=finish;script.onerror=()=>finish(null);timer=setTimeout(()=>finish(null),12000);
+    script.src=app+(app.includes('?')?'&':'?')+new URLSearchParams({action:'rankingMeta',callback:cb,_:Date.now()});
+    document.head.appendChild(script);
+  };
+  window.NWRefreshRankingMeta();
+})();
+</script>
 </body></html>

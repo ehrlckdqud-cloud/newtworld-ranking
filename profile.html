@@ -31,7 +31,7 @@
 
   <section id="pendingView" class="card auth hidden">
     <h2>인증 진행 중</h2>
-    <div class="codebox"><div class="hint">오픈채팅방에 아래 문구를 정확히 입력</div><div class="code" id="codeText">-</div><div class="hint" style="margin-top:8px">형식: <b>인증 NW-XXXXXX</b></div></div>
+    <div class="codebox"><div class="hint">오픈채팅방에 아래 문구를 정확히 입력</div><div class="code" id="codeText">-</div><button type="button" class="btn" id="copyAuthBtn" style="margin-top:10px;padding:7px 11px;font-size:12px;border-radius:9px" disabled>📋 문구복사</button><div id="copyAuthStatus" class="hint" role="status" aria-live="polite" style="margin-top:6px"></div><div class="hint" style="margin-top:8px">형식: <b>인증 NW-XXXXXX</b></div></div>
     <p id="pendingText">다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.</p>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="checkBtn">인증 상태 확인</button><button class="btn" id="resetBtn">다시 신청</button></div>
     <div id="pendingStatus" class="status"></div>
@@ -97,7 +97,20 @@
   $('memberHubBtn2').onclick=openMemberHub;
   async function loadCandidates(){const d=await jsonp('profileCandidates');if(!d?.ok)return;const dl=$('memberList');dl.innerHTML='';(d.members||[]).forEach(m=>{if(!m.available)return;const o=document.createElement('option');o.value=m.nickname;dl.appendChild(o);});}
   async function start(){const nickname=$('nickname').value.trim();if(!nickname)return;const b=$('startBtn');b.disabled=true;const d=await jsonp('profileStart',{nickname,device:device()});b.disabled=false;if(!d?.ok){$('authStatus').classList.remove('hidden');$('authStatus').innerHTML='<span class="err">'+(d?.error||'신청 실패')+'</span>';return;}if(d.authenticated&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}localStorage.setItem('nwProfileRequestId',d.requestId);localStorage.setItem('nwProfileCode',d.code);renderPending(d.code,'카톡 인증코드 입력 대기');}
-  function renderPending(code,msg){show('pendingView');$('codeText').textContent='인증 '+(code||localStorage.getItem('nwProfileCode')||'-');$('pendingStatus').textContent=msg||'상태 확인 대기';}
+  function renderPending(code,msg){show('pendingView');const value=code||localStorage.getItem('nwProfileCode')||'';$('codeText').textContent=value?'인증 '+value:'-';$('copyAuthBtn').disabled=!/^NW-[A-Z2-9]{6}$/.test(value);$('copyAuthStatus').textContent='';$('pendingStatus').textContent=msg||'상태 확인 대기';}
+  async function copyAuthPhrase(){
+    const text=$('codeText').textContent.trim();if(!/^인증 NW-[A-Z2-9]{6}$/.test(text))return;
+    const status=$('copyAuthStatus');let copied=false;
+    try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(text);copied=true;}}catch(_){}
+    if(!copied){
+      const input=document.createElement('textarea');input.value=text;input.readOnly=true;
+      input.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';document.body.appendChild(input);
+      const active=document.activeElement;input.focus();input.select();input.setSelectionRange(0,text.length);
+      try{copied=document.execCommand('copy');}catch(_){}finally{input.remove();active?.focus();}
+    }
+    status.textContent=copied?'복사했어요! 톡방에 그대로 붙여넣어 주세요.':'복사하지 못했어요. 위 인증 문구 전체를 길게 눌러 복사해 주세요.';
+  }
+  $('copyAuthBtn').onclick=copyAuthPhrase;
   async function check(){const id=localStorage.getItem('nwProfileRequestId');if(!id){show('authView');return;}const d=await jsonp('profileStatus',{requestId:id,device:device()});if(!d?.ok){$('pendingStatus').innerHTML='<span class="err">'+(d?.error||'확인 실패')+'</span>';return;}if(d.status==='approved'&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}if(d.status==='expired'||d.status==='rejected'){localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');$('pendingStatus').innerHTML='<span class="warn">'+d.message+'</span>';return;}$('pendingStatus').textContent=d.message||d.status;}
   async function recoverExisting(){const d=await jsonp('profileRecover',{device:device()});if(d?.ok&&d.auth&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return true;}return false;}
   async function loadProfile(){let token=localStorage.getItem('nwProfileToken');if(!token){if(await recoverExisting()){token=localStorage.getItem('nwProfileToken');}else{const req=localStorage.getItem('nwProfileRequestId');if(req){renderPending(localStorage.getItem('nwProfileCode'),'인증 상태를 확인해주세요.');return check();}show('authView');loadCandidates();return;}}
