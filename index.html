@@ -514,6 +514,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 .nw-app-overlay{position:fixed;inset:0;z-index:99995;background:rgba(2,8,12,.93);backdrop-filter:blur(10px);display:none}.nw-app-overlay.open{display:block}.nw-app-shell{position:absolute;inset:14px;max-width:1180px;margin:auto;border:1px solid #294b5d;border-radius:22px;overflow:hidden;background:#071018;box-shadow:0 28px 80px rgba(0,0,0,.55)}.nw-app-topbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#0b1922;border-bottom:1px solid #203947}.nw-app-close{border:1px solid #35586a;background:#10232d;color:#eff8ff;border-radius:11px;padding:8px 12px;font-weight:800;cursor:pointer}.nw-app-frame{width:100%;height:calc(100% - 54px);border:0;display:block;background:#071018}@media(max-width:700px){.nw-app-shell{inset:0;border-radius:0}.nw-app-topbar{height:50px}.nw-app-frame{height:calc(100% - 50px)}}
 #nwAdminLoginBtn{position:fixed;left:12px;bottom:12px;z-index:99980;border:1px solid #315264;background:rgba(8,24,33,.93);color:#9ebcca;border-radius:10px;padding:7px 9px;font-size:10px;cursor:pointer}
 #nwMyPageBtn{position:fixed;left:84px;bottom:12px;z-index:99980;border:1px solid #315264;background:rgba(8,24,33,.93);color:#d8eef7;border-radius:10px;padding:7px 9px;font-size:10px;cursor:pointer;box-shadow:0 8px 26px rgba(0,0,0,.18);transition:.18s transform,.18s border-color,.18s background}#nwMyPageBtn:hover{transform:translateY(-2px);border-color:#58c9a0;background:rgba(11,38,45,.96)}
+.nw-member-link{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:0;margin:0;cursor:pointer;text-decoration:none;border-bottom:1px dashed rgba(112,204,178,.45)}.nw-member-link:hover{color:#83e2c3;border-bottom-color:#83e2c3}.card .nw-member-link{font-weight:900}
 
 /* v18.15 layout relocation */
 .visit-strip{
@@ -1709,11 +1710,11 @@ function renderRanking(){
   document.getElementById('tb').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
     const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name">[${x.name}]</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
+    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name">${x.memberId?`<button class="nw-member-link" data-member-id="${x.memberId}">[${x.name}]</button>`:`[${x.name}]`}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
+    return `<div class="card"><div class="card-head"><div><b>${firstCell} · ${x.memberId?`<button class="nw-member-link" data-member-id="${x.memberId}">[${x.name}]</button>`:`[${x.name}]`}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
   }).join('');
   const top=members[0]||{name:'-',seasonTotal:0};
   document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
@@ -1727,6 +1728,8 @@ document.getElementById('limit').onchange=renderRanking;
 document.getElementById('allBtn').onclick=()=>{gradedOnly=false;allBtn.classList.add('active');gradedBtn.classList.remove('active');renderRanking();};
 document.getElementById('gradedBtn').onclick=()=>{gradedOnly=true;gradedBtn.classList.add('active');allBtn.classList.remove('active');renderRanking();};
 document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSheet(DEFAULT_SHEET_URL,false));
+function nwOpenMemberDetail(memberId){if(!memberId)return;const page='members.html?member='+encodeURIComponent(memberId);if(typeof window.NWOpenPage==='function')window.NWOpenPage(page,'👥 회원 상세');else location.href=page;}
+['tb','cards'].forEach(id=>document.getElementById(id)?.addEventListener('click',e=>{const b=e.target.closest('[data-member-id]');if(!b)return;e.preventDefault();e.stopPropagation();nwOpenMemberDetail(b.dataset.memberId);}));
 renderAll();
 loadSheet(DEFAULT_SHEET_URL,false);
 </script>
@@ -2411,6 +2414,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
   function openPage(page,label,hash){frame.src=page+(page.includes('?')?'&':'?')+'embedded=1';title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
+  window.NWOpenPage=openPage;
   function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
   document.getElementById('nwPartnerOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('partner.html','🤝 제휴샵 파트너센터','#partner')});
