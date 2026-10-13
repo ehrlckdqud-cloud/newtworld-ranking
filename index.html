@@ -2985,7 +2985,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     function finish(data){
       clearTimeout(timer);delete window[cb];script.remove();pending=false;
       if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate)){
-        dateEl.textContent=data.latestChatDate.replace(/-/g,'.')+' 기준';
+        const time=/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.latestChatTime||'')?' '+data.latestChatTime:'';
+        dateEl.textContent=data.latestChatDate.replace(/-/g,'.')+time+' 기준';
         if(/^\d{4}-\d{2}$/.test(data.month))titleEl.textContent='📊 '+Number(data.month.slice(5))+'월 활동왕 실시간 순위';
       }else if(!dateEl.dataset.loaded){dateEl.textContent='집계 기준일 확인 불가';return;}
       if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate))dateEl.dataset.loaded='1';
