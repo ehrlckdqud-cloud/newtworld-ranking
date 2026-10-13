@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 620" role="img" aria-label="대한민국 행정구역 지도">
+<defs><linearGradient id="land" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#173f3b"/><stop offset="1" stop-color="#0e2c2b"/></linearGradient><filter id="glow"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity=".35"/></filter></defs>
+<rect width="400" height="620" fill="transparent"/>
+<g filter="url(#glow)" stroke="#6aa795" stroke-width="2" stroke-linejoin="round" fill="url(#land)">
+<!-- 경기/수도권 --> <path d="M132 68 L190 46 L238 66 L250 105 L229 143 L179 150 L139 126 L116 96 Z"/>
+<!-- 강원 --> <path d="M238 66 L287 70 L330 101 L337 154 L310 200 L259 191 L229 143 L250 105 Z"/>
+<!-- 충남 --> <path d="M139 126 L179 150 L196 205 L167 242 L112 239 L83 203 L98 158 Z"/>
+<!-- 충북 --> <path d="M179 150 L229 143 L259 191 L245 241 L196 205 Z"/>
+<!-- 경북 --> <path d="M259 191 L310 200 L329 258 L315 323 L271 350 L238 309 L245 241 Z"/>
+<!-- 전북 --> <path d="M112 239 L167 242 L210 276 L192 323 L137 334 L91 300 Z"/>
+<!-- 경남 --> <path d="M192 323 L238 309 L271 350 L285 397 L245 440 L194 419 L164 371 Z"/>
+<!-- 전남 --> <path d="M91 300 L137 334 L164 371 L145 426 L102 455 L62 425 L49 376 L66 333 Z"/>
+<!-- 제주 --> <path d="M116 523 C145 508 190 509 217 526 C194 546 146 551 116 535 Z"/>
+</g>
+<g fill="#0b2428" stroke="#9acbbd" stroke-width="1.5">
+<circle cx="157" cy="103" r="7"/><circle cx="129" cy="111" r="7"/><circle cx="185" cy="189" r="7"/><circle cx="181" cy="198" r="5"/><circle cx="123" cy="388" r="7"/><circle cx="281" cy="285" r="7"/><circle cx="279" cy="362" r="7"/><circle cx="257" cy="408" r="7"/><circle cx="224" cy="366" r="7"/>
+</g>
+<g fill="none" stroke="#80b9a8" stroke-width="1.3" opacity=".7"><path d="M179 150 L229 143"/><path d="M167 242 L196 205"/><path d="M192 323 L238 309"/><path d="M137 334 L164 371"/></g>
+<g fill="#6a9f91" opacity=".75"><circle cx="53" cy="444" r="3"/><circle cx="71" cy="451" r="2"/><circle cx="85" cy="433" r="2.5"/><circle cx="241" cy="447" r="2.5"/><circle cx="275" cy="421" r="2"/></g>
+</svg>
