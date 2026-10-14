@@ -2432,6 +2432,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* v18.4 — PWA 설치 흐름 */
 (function(){
   let deferredInstallPrompt = null;
+  let installRequestPending = false;
   const btn = document.getElementById('homeInstallBtn');
   const sub = document.getElementById('homeInstallSub');
   const badge = document.getElementById('homeInstallBadge');
@@ -2454,6 +2455,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   const pcLabel = isFirefox && isWindows ? '작업표시줄에 앱 추가' : isSafari ? 'Dock에 앱 추가' : '바탕화면에 바로가기 추가';
   const helpTitle = document.getElementById('installHelpTitle');
   function resetInstallLabel(){
+    if(installRequestPending)return;
+    btn.classList.remove('installed');
+    btn.disabled = false;
     if(isKakaoInApp){
       sub.textContent = '카카오톡에서는 설치할 수 없어요 · 브라우저로 열어주세요';
       badge.textContent = '브라우저로';
@@ -2470,13 +2474,26 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   resetInstallLabel();
 
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
+  const standaloneMedia = window.matchMedia('(display-mode: standalone)');
+  function isAppWindow(){return standaloneMedia.matches || window.navigator.standalone === true;}
+  function syncInstallState(){
+    if(installRequestPending)return;
+    resetInstallLabel();
+    if(isAppWindow() && !isKakaoInApp){
+      sub.textContent = '앱으로 이용 중 · 홈 화면 추가 안내';
+      badge.textContent = '추가 안내';
+      btn.setAttribute('aria-label','홈 화면 추가 방법 보기');
+    }else if(deferredInstallPrompt && isMobile && !isKakaoInApp){
+      sub.textContent = '버튼을 눌러 바로 설치하기';
+      badge.textContent = '설치';
+    }
+  }
   function markInstalled(){
-    btn.classList.add('installed');
-    btn.disabled = true;
-    sub.textContent = isPC ? '뉴트월드 앱이 설치되어 있습니다' : '이미 홈 화면에 추가되어 있습니다';
-    badge.textContent = '설치됨';
+    btn.classList.remove('installed');
+    btn.disabled = false;
+    sub.textContent = '추가 완료 · 다시 추가하려면 안내를 확인하세요';
+    badge.textContent = '추가 안내';
+    btn.setAttribute('aria-label','앱 추가 안내 보기');
   }
   function openHelp(){
     let text = '';
@@ -2522,20 +2539,20 @@ document.addEventListener('DOMContentLoaded',()=>{
     modal.setAttribute('aria-hidden','false');
   }
 
-  if(isStandalone && !isKakaoInApp){
-    markInstalled();
-  }
+  syncInstallState();
+  window.addEventListener('pageshow',syncInstallState);
+  window.addEventListener('focus',syncInstallState);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState === 'visible')syncInstallState();
+  });
+  if(standaloneMedia.addEventListener)standaloneMedia.addEventListener('change',syncInstallState);
+  else if(standaloneMedia.addListener)standaloneMedia.addListener(syncInstallState);
 
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
     if(isKakaoInApp)return;
     deferredInstallPrompt = e;
-    if(!btn.disabled){
-      if(!isPC){
-        sub.textContent = '버튼을 눌러 바로 설치하기';
-        badge.textContent = '설치';
-      }
-    }
+    syncInstallState();
   });
 
   window.addEventListener('appinstalled', ()=>{
@@ -2545,7 +2562,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 
   btn.addEventListener('click', async ()=>{
-    if(btn.disabled) return;
+    if(installRequestPending)return;
     if(isKakaoInApp){
       openHelp();
       try{window.location.assign('kakaotalk://web/openExternal?url='+encodeURIComponent(installSiteURL));}catch(_){}
@@ -2554,18 +2571,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(deferredInstallPrompt){
       const prompt = deferredInstallPrompt;
       deferredInstallPrompt = null;
+      installRequestPending = true;
       btn.disabled = true;
+      let accepted = false;
+      let failed = false;
       try{
         await prompt.prompt();
         const choice = await prompt.userChoice;
-        if(choice && choice.outcome === 'accepted'){markInstalled();if(isPC)openHelp();}
-        else { btn.disabled = false; resetInstallLabel(); }
-      }catch(_){
-        btn.disabled = false;
-        resetInstallLabel();
-        openHelp();
-      }
-
+        accepted = !!(choice && choice.outcome === 'accepted');
+      }catch(_){failed = true;}
+      finally{installRequestPending = false;btn.disabled = false;}
+      if(accepted){markInstalled();if(isPC)openHelp();}
+      else{syncInstallState();if(failed)openHelp();}
     }else{
       openHelp();
     }
