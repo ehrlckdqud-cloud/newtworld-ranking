@@ -5,12 +5,17 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a151d">
 <title>뉴트월드 내 페이지</title>
-<script src="site-config.js"></script>
+<script>
+window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('script');s.async=true;s.src='site-config.js';s.onload=()=>resolve(true);s.onerror=()=>resolve(false);document.head.appendChild(s);});
+</script>
 <style>
 :root{--bg:#071018;--panel:#0c1720ee;--panel2:#101d26ee;--line:#294758;--text:#eef8ff;--muted:#91afbf;--green:#5fd0a1;--gold:#f1c15f;--pink:#ef6e9b;--blue:#6ab6ff;--red:#ff6c73}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% -10%,rgba(225,117,65,.14),transparent 35%),linear-gradient(#071018,#09131a 55%,#061018);color:var(--text);font-family:Arial,"Noto Sans KR",sans-serif}body{padding:20px}.shell{max-width:1180px;margin:0 auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}.brand{font-size:22px;font-weight:900;letter-spacing:.02em}.sub{color:var(--muted);font-size:12px;margin-top:4px}.btn{border:1px solid var(--line);background:#0d1b25;color:var(--text);border-radius:12px;padding:10px 13px;font-weight:800;cursor:pointer}.btn:hover{border-color:var(--green);transform:translateY(-1px)}.btn.primary{background:#0f4d43;border-color:#2e8e75}.btn.danger{background:#381a20;border-color:#7b3f49}.card{background:linear-gradient(180deg,rgba(15,29,39,.96),rgba(8,18,25,.96));border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 42px rgba(0,0,0,.25)}.auth{max-width:720px;margin:40px auto;padding:24px}.auth h2{margin:0 0 7px}.auth p{color:var(--muted);line-height:1.7}.field{display:grid;gap:7px;margin:16px 0}.field label{font-size:12px;color:#b7cfda;font-weight:800}.field input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #294758;background:#08141c;color:#fff;font-size:15px}.hint{font-size:12px;color:#7fa2b3;line-height:1.6}.status{margin-top:16px;padding:14px;border-radius:13px;background:#0a2028;border:1px solid #234556;color:#aeeed3;line-height:1.6}.codebox{margin:18px 0;padding:20px;border:1px dashed #5fd0a1;border-radius:16px;background:rgba(29,91,71,.16);text-align:center}.code{font-size:34px;font-weight:900;letter-spacing:.08em;color:#d8fff0}.hidden{display:none!important}.hero{padding:22px;display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center}.avatar{width:82px;height:82px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,#f7c46e,#c86a26);font-size:42px;border:4px solid rgba(255,255,255,.85)}.name{font-size:29px;font-weight:900}.meta{color:var(--muted);font-size:13px;margin-top:7px}.alive{display:inline-flex;align-items:center;gap:6px;color:#81e2aa}.dot{width:8px;height:8px;border-radius:50%;background:#34dc86}.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:12px 0}.stat{padding:16px}.stat .k{font-size:11px;color:#8fb3c3}.stat .v{font-size:28px;font-weight:900;margin-top:6px}.stat .s{font-size:11px;color:#86a0ad;margin-top:6px}.two{display:grid;grid-template-columns:1.4fr .8fr;gap:12px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}.section{padding:18px}.section h3{margin:0 0 14px;font-size:16px}.grade-row{display:flex;align-items:center;gap:16px}.shield{width:92px;height:100px;display:grid;place-items:center;background:transparent}.shield img{max-width:92px;max-height:100px;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}.grade-name{font-size:26px;font-weight:900;color:var(--gold)}.bar{height:13px;border-radius:999px;background:#23313a;overflow:hidden;margin-top:10px}.bar>i{display:block;height:100%;background:linear-gradient(90deg,#5faeff,#8f7cff);border-radius:999px}.donut-wrap{display:flex;align-items:center;gap:20px}.donut{width:148px;height:148px;border-radius:50%;position:relative;background:conic-gradient(var(--blue) 0 25%,#ffc64d 25% 50%,#a26cff 50% 70%,#62d3b1 70% 85%,var(--pink) 85% 100%)}.donut:after{content:"";position:absolute;inset:28px;border-radius:50%;background:#0c1720}.donut-center{position:absolute;inset:0;display:grid;place-items:center;z-index:2;text-align:center;font-weight:900}.legend{display:grid;gap:8px;font-size:12px}.legend span{display:flex;justify-content:space-between;gap:18px}.chart{height:180px;position:relative;border-left:1px solid #2b3d47;border-bottom:1px solid #2b3d47;margin:10px 6px 0 24px}.chart svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.list{display:grid;gap:9px}.row{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid rgba(120,160,180,.14);font-size:13px}.row:last-child{border-bottom:0}.tag{padding:3px 7px;border-radius:999px;background:#123044;color:#9bd5ef;font-size:10px}.goal{display:grid;gap:12px}.goal .line{display:flex;justify-content:space-between;font-size:12px}.mini{height:9px;background:#26353d;border-radius:99px;overflow:hidden}.mini i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#53b7ff,#e36bb4)}.footer{margin:16px 0;text-align:center;color:#6f8f9e;font-size:11px}.warn{color:#ffd68a}.err{color:#ff9ca1}
 .edit-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.edit-grid .wide{grid-column:1/-1}.field select,.field textarea{width:100%;padding:13px 14px;border-radius:12px;border:1px solid #294758;background:#08141c;color:#fff;font-size:14px}.field textarea{min-height:90px;resize:vertical}.species-list{display:grid;gap:8px}.species-row{display:grid;grid-template-columns:minmax(170px,1.45fr) 100px minmax(140px,.9fr) minmax(130px,.85fr) 44px;gap:8px;align-items:center}.species-row input,.species-row select{width:100%;padding:11px 12px;border:1px solid #294758;border-radius:10px;background:#08141c;color:#fff}.species-row button{height:42px;border:1px solid #5b3940;background:#321b22;color:#ffb3b8;border-radius:10px;cursor:pointer}.species-head{display:grid;grid-template-columns:minmax(170px,1.45fr) 100px minmax(140px,.9fr) minmax(130px,.85fr) 44px;gap:8px;color:#87a9b9;font-size:11px;margin-bottom:6px;padding:0 4px}.privacy-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.privacy-grid label{min-height:42px;padding:9px 11px;border:1px solid #263f4e;border-radius:10px;background:#0a1821;color:#c7dce6;font-size:12px;display:flex;align-items:center;gap:8px;line-height:1.2}.privacy-grid input[type="checkbox"]{width:16px;height:16px;margin:0;flex:0 0 16px;accent-color:#5fd0a1}@media(max-width:760px){.species-head{display:none}.species-row{grid-template-columns:1fr 90px}.species-row .sp-exp,.species-row .sp-breed{grid-column:auto / span 1}.species-row button{grid-column:2}}.notice{padding:12px 14px;border:1px solid #5b5127;background:#292410;color:#f2dd90;border-radius:12px;font-size:12px;line-height:1.6}.profile-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.profile-saved{margin-top:10px;color:#78e3b2;font-size:12px}.member-hub-btn{background:#102d42;border-color:#3f6a84}.profile-preview{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.pill{padding:6px 9px;border-radius:999px;background:#112b36;border:1px solid #2f5362;color:#bde0eb;font-size:11px}
 @media(max-width:900px){body{padding:12px}.edit-grid{grid-template-columns:1fr}.privacy-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid5{grid-template-columns:repeat(2,1fr)}.grid5 .stat:last-child{grid-column:1/-1}.two,.three{grid-template-columns:1fr}.hero{grid-template-columns:auto 1fr}.hero .actions{grid-column:1/-1}.donut-wrap{flex-direction:column;align-items:flex-start}.name{font-size:24px}}
+
+.connection-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #294758}.connection-row>div{min-width:0}.connection-row .btn{flex-shrink:0}.connection-code{font-size:21px;letter-spacing:.03em;overflow-wrap:anywhere;user-select:all}.connection-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:600px){.connection-row{align-items:flex-start}.connection-code{font-size:17px}}
 </style>
 </head>
 <body>
@@ -39,6 +44,14 @@
     <div id="pendingStatus" class="status"></div>
   </section>
 
+
+  <section id="linkEntrySection" class="card auth hidden">
+    <h2>이미 인증한 회원인가요?</h2>
+    <p>기존에 인증된 내페이지에서 <b>다른 기기·브라우저 연결</b> 코드를 발급받아 입력하면 관리자 재승인 없이 연결됩니다.</p>
+    <div class="field"><label for="enterConnectionCode">일회용 연결 코드</label><input id="enterConnectionCode" maxlength="40" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="NL-XXXX-XXXX-XXXX-XXXX-XXXX"></div>
+    <button class="btn primary" type="button" id="consumeLinkCodeBtn">이 브라우저 연결</button>
+    <div id="linkEntryStatus" class="hint" role="status" style="margin-top:10px"></div>
+  </section>
   <main id="profileView" class="hidden">
     <section class="card hero">
       <div class="avatar">🐸</div>
@@ -82,10 +95,20 @@
       <div class="profile-actions"><button class="btn primary" id="saveProfileBtn">프로필 저장</button><button class="btn member-hub-btn" id="memberHubBtn2">회원 검색 · 지도 · 통계 보기</button></div>
       <div class="profile-saved" id="profileSaved"></div>
     </section>
+
+    <section class="card section" style="margin-top:12px" id="connectionSection">
+      <h3>다른 기기·브라우저 연결</h3>
+      <p class="hint">새 브라우저에서도 내 활동·프로필을 그대로 이어서 이용하세요. 코드는 10분 동안 유효하며 한 번만 사용할 수 있어요.</p>
+      <div class="connection-actions"><button class="btn primary" type="button" id="createLinkCodeBtn">연결 코드 발급</button><button class="btn" type="button" id="refreshConnectionsBtn">연결 목록 확인</button></div>
+      <div class="codebox hidden" id="linkCodePanel"><div class="code connection-code" id="connectionCodeText"></div><button class="btn" type="button" id="copyLinkCodeBtn" style="margin-top:10px">코드 복사</button><div class="hint" id="connectionCodeExpiry" style="margin-top:8px"></div></div>
+      <div id="connectionCodeStatus" class="hint" role="status" style="margin-top:10px">연결 코드는 본인만 사용하고, 톡방이나 다른 사람에게 공유하지 마세요.</div>
+      <h3 style="margin-top:22px">연결된 기기·브라우저</h3><div id="connectionList"></div><div id="connectionListStatus" class="hint" role="status">연결 목록 확인을 누르면 현재 연결을 볼 수 있어요.</div>
+    </section>
   </main>
   <div class="footer">뉴트월드 회원ID 기반 · 퇴장/강퇴 시 다음 집계 후 내 페이지 인증이 자동 비활성화됩니다.</div>
 </div>
 <script>
+window.NWConfigReady.then(()=>{
 (()=>{
   const APP=(window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl)||'';
   const $=id=>document.getElementById(id), fmt=n=>Number(n||0).toLocaleString('ko-KR');
@@ -99,7 +122,7 @@
   });}
 
   function device(){let d=localStorage.getItem('nwProfileDevice');if(!d){d=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2))+'-'+Math.random().toString(36).slice(2);localStorage.setItem('nwProfileDevice',d);}return d;}
-  function show(id){['authView','pendingView','profileView'].forEach(x=>$(x).classList.toggle('hidden',x!==id));}
+  function show(id){['authView','pendingView','profileView'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('linkEntrySection').classList.toggle('hidden',id==='profileView');}
   $('closeBtn').onclick=()=>{if(window.parent!==window)window.parent.postMessage('nw-close-page','*');else history.back();};
   function openMemberHub(){location.href='members.html?v=2.18&_='+Date.now();}
   $('memberHubBtn').onclick=openMemberHub;
@@ -181,9 +204,45 @@
   async function loadEditableProfile(prefetched){let p=prefetched;if(!p){const token=localStorage.getItem('nwProfileToken');if(!token)return;const d=await jsonp('memberOwnProfile',{token,device:device()});if(!d?.ok)return;p=d.profile||{};}$('region').value=p.region||'';$('district').value=p.district||'';$('interests').value=p.interests||'';$('introProfile').value=p.intro||'';$('imageUrl').value=p.imageUrl||'';$('speciesList').innerHTML='';(p.species||[]).forEach(addSpeciesRow);if(!(p.species||[]).length)addSpeciesRow();const v=p.visibility||{};document.querySelectorAll('#privacyGrid [data-v]').forEach(x=>x.checked=v[x.dataset.v]!==false);}
   async function saveEditableProfile(){const token=localStorage.getItem('nwProfileToken');if(!token)return;const species=[...document.querySelectorAll('.species-row')].map(r=>({name:r.querySelector('.sp-name').value.trim(),count:r.querySelector('.sp-count').value===''?null:Number(r.querySelector('.sp-count').value),experience:r.querySelector('.sp-exp').value.trim(),breeding:r.querySelector('.sp-breed').value})).filter(x=>x.name);const data={region:$('region').value,district:$('district').value.trim(),interests:$('interests').value.trim(),intro:$('introProfile').value.trim(),imageUrl:$('imageUrl').value.trim(),species,visibility:collectVisibility()};const b=$('saveProfileBtn');b.disabled=true;$('profileSaved').textContent='저장 중…';const d=await jsonp('memberProfileSave',{token,device:device(),data:JSON.stringify(data)});b.disabled=false;if(d?.ok){clearCoreCache();try{sessionStorage.removeItem('nwMemberHubSnapshot')}catch(_){}}$('profileSaved').textContent=d?.ok?'프로필이 저장되었습니다.':(d?.error||'저장에 실패했습니다.');}
   $('addSpeciesBtn').onclick=()=>addSpeciesRow();$('saveProfileBtn').onclick=saveEditableProfile;
-  $('startBtn').onclick=start;$('checkBtn').onclick=check;$('resetBtn').onclick=restartAuth;$('logoutBtn').onclick=async()=>{if(!window.confirm('정말 해제하시겠습니까?\n이 기기 연결을 해제하면 다시 회원식별 인증이 필요합니다.'))return;const token=localStorage.getItem('nwProfileToken');if(token)await jsonp('profileLogout',{token,device:device()});clearCoreCache();localStorage.removeItem('nwProfileToken');$('profileLoadStatus').textContent='';show('authView');loadCandidates();};
+  $('startBtn').onclick=start;$('checkBtn').onclick=check;$('resetBtn').onclick=restartAuth;$('logoutBtn').onclick=async()=>{if(!window.confirm('정말 해제하시겠습니까?\n이 기기 연결을 해제하면 다시 회원식별 인증이 필요합니다.'))return;const token=localStorage.getItem('nwProfileToken');if(token)await jsonp('profileLogout',{token,device:device()});clearConnectionCredentials();$('profileLoadStatus').textContent='';show('authView');loadCandidates();};
+  let activeLinkCode='', activeLinkUntil=0, activeLinkToken='', linkingBusy=false;
+  function connectionLabel(){const ua=navigator.userAgent;let browser=/Edg\//i.test(ua)?'Edge':/Firefox\//i.test(ua)?'Firefox':/SamsungBrowser/i.test(ua)?'Samsung Internet':/CriOS|Chrome\//i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':'브라우저';let os=/Android/i.test(ua)?'Android':/iPhone|iPad|iPod/i.test(ua)?'iOS':/Windows/i.test(ua)?'Windows':/Macintosh/i.test(ua)?'Mac':'기기';return os+' · '+browser;}
+  function connectionParams(){return{token:localStorage.getItem('nwProfileToken')||'',device:device(),label:connectionLabel()};}
+  function clearConnectionCredentials(){clearCoreCache();localStorage.removeItem('nwProfileToken');localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');activeLinkCode='';activeLinkUntil=0;activeLinkToken='';$('linkCodePanel').classList.add('hidden');}
+  async function refreshConnections(){
+    $('connectionListStatus').textContent='연결 목록을 불러오는 중…';
+    const d=await jsonp('profileConnections',connectionParams());if(!d?.ok){$('connectionListStatus').textContent=d?.error||'목록을 불러오지 못했어요.';return;}
+    const box=$('connectionList');box.replaceChildren();
+    (d.connections||[]).forEach(item=>{const row=document.createElement('div');row.className='connection-row';const info=document.createElement('div'),title=document.createElement('b'),note=document.createElement('div');title.textContent=item.label+(item.current?' · 현재 브라우저':'');note.className='hint';note.textContent='연결 '+item.addedAt+' · 최근 확인 '+item.lastSeen;info.append(title,note);const button=document.createElement('button');button.className='btn danger';button.type='button';button.textContent='연결 해제';button.onclick=async()=>{
+      if(!window.confirm(item.label+' 연결을 해제하시겠습니까?'+(item.current?'\n현재 브라우저에서 로그아웃됩니다.':'')))return;
+      button.disabled=true;const r=await jsonp('profileConnectionRevoke',{...connectionParams(),connectionId:item.id});
+      if(!r?.ok){button.disabled=false;$('connectionListStatus').textContent=r?.error||'해제하지 못했어요.';return;}
+      if(r.current){clearConnectionCredentials();show('authView');loadCandidates();return;}
+      refreshConnections();
+    };row.append(info,button);box.appendChild(row);});
+    $('connectionListStatus').textContent=(d.connections||[]).length+'개 브라우저·기기가 연결되어 있어요.';
+  }
+  async function createConnectionCode(){
+    if(linkingBusy)return;
+    if(activeLinkCode&&activeLinkToken===localStorage.getItem('nwProfileToken')&&Date.now()<activeLinkUntil){$('linkCodePanel').classList.remove('hidden');return;}
+    linkingBusy=true;$('createLinkCodeBtn').disabled=true;$('connectionCodeStatus').textContent='연결 코드를 발급하는 중…';
+    try{const request=connectionParams();const d=await jsonp('profileLinkCreate',request);if(request.token!==localStorage.getItem('nwProfileToken'))return;if(!d?.ok){$('connectionCodeStatus').textContent=d?.error||'코드를 발급하지 못했어요.';return;}
+      activeLinkToken=request.token;activeLinkCode=d.code;activeLinkUntil=Number(d.expiresMs)||0;$('connectionCodeText').textContent=d.code;$('connectionCodeExpiry').textContent=d.expiresAt+'까지 · 한 번만 사용 가능';$('linkCodePanel').classList.remove('hidden');$('connectionCodeStatus').textContent='새 브라우저의 내페이지에서 입력해주세요. 톡방에 올리지 마세요.';
+    }finally{linkingBusy=false;$('createLinkCodeBtn').disabled=false;}
+  }
+  async function copyConnectionCode(){if(!activeLinkCode)return;try{await navigator.clipboard.writeText(activeLinkCode);$('connectionCodeStatus').textContent='연결 코드를 복사했어요.';}catch(_){const range=document.createRange();range.selectNodeContents($('connectionCodeText'));const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);$('connectionCodeStatus').textContent='코드를 선택했어요. 복사해서 새 브라우저에 입력해주세요.';}}
+  async function consumeConnectionCode(){
+    const code=$('enterConnectionCode').value.trim();if(!code)return;const b=$('consumeLinkCodeBtn');if(b.disabled)return;b.disabled=true;$('linkEntryStatus').textContent='회원 연결 중…';
+    try{const d=await jsonp('profileLinkConsume',{code,device:device(),label:connectionLabel()});if(!d?.ok||!d.token){$('linkEntryStatus').textContent=d?.error||'연결하지 못했어요. 같은 브라우저에서 새로고침하면 연결이 복구될 수도 있어요.';return;}
+      clearConnectionCredentials();localStorage.setItem('nwProfileToken',d.token);$('enterConnectionCode').value='';$('linkEntryStatus').textContent='연결됐어요.';await loadProfile();
+    }finally{b.disabled=false;}
+  }
+  $('createLinkCodeBtn').onclick=createConnectionCode;$('copyLinkCodeBtn').onclick=copyConnectionCode;$('refreshConnectionsBtn').onclick=refreshConnections;$('consumeLinkCodeBtn').onclick=consumeConnectionCode;
+  $('enterConnectionCode').addEventListener('keydown',e=>{if(e.key==='Enter')consumeConnectionCode();});
+
   loadProfile();
 })();
+});
 </script>
 </body>
 </html>
