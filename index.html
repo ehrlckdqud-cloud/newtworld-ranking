@@ -10,6 +10,20 @@
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<script>
+/* PC app metadata; mobile keeps its existing manifest and icons. */
+(function(){
+  var ua=navigator.userAgent;
+  var mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+  if(mobile)return;
+  var manifest=document.querySelector('link[rel="manifest"]');
+  if(manifest)manifest.href='manifest-desktop-v236.webmanifest';
+  document.querySelectorAll('link[rel="icon"]').forEach(function(icon){icon.remove();});
+  var icon=document.createElement('link');
+  icon.rel='icon';icon.type='image/png';icon.sizes='192x192';icon.href='assets/desktop/main-room-192-v236.png';
+  document.head.appendChild(icon);
+})();
+</script>
 <script src="site-config.js"></script>
 <meta name="theme-color" content="#071018">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2423,26 +2437,21 @@ document.addEventListener('DOMContentLoaded',()=>{
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   const isPC = !isMobile;
   const isWindows = /Windows/i.test(navigator.userAgent);
+  const isFirefox = /Firefox\//i.test(navigator.userAgent);
+  const isEdge = /Edg\//i.test(navigator.userAgent);
+  const isChrome = /Chrome\//i.test(navigator.userAgent) && !isEdge;
+  const isSafari = /Safari\//i.test(navigator.userAgent) && !isChrome && !isEdge;
+  const pcLabel = isFirefox && isWindows ? '작업표시줄에 앱 추가' : isSafari ? 'Dock에 앱 추가' : '바탕화면에 바로가기 추가';
   const helpTitle = document.getElementById('installHelpTitle');
   function resetInstallLabel(){
     if(isPC){
-      sub.textContent = '바탕화면에 바로가기 추가';
-      badge.textContent = '+ 바로가기';
-      btn.setAttribute('aria-label','바탕화면에 바로가기 추가');
+      sub.textContent = pcLabel;
+      badge.textContent = isFirefox ? '+ 앱 추가' : '+ 바로가기';
+      btn.setAttribute('aria-label',pcLabel);
     }
   }
   resetInstallLabel();
-  function downloadDesktopShortcut(){
-    const data = '[InternetShortcut]\r\nURL=https://ehrlckdqud-cloud.github.io/newtworld-ranking/\r\n';
-    const url = URL.createObjectURL(new Blob([data],{type:'application/octet-stream'}));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = '뉴트월드.url';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),60000);
-  }
+
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
   function markInstalled(){
@@ -2451,14 +2460,22 @@ document.addEventListener('DOMContentLoaded',()=>{
     sub.textContent = isPC ? '뉴트월드 앱이 설치되어 있습니다' : '이미 홈 화면에 추가되어 있습니다';
     badge.textContent = '설치됨';
   }
-  function openHelp(shortcutDownloaded = false){
+  function openHelp(){
     let text = '';
-    if(helpTitle) helpTitle.textContent = isPC ? '🖥 바탕화면에 바로가기 추가' : '📲 홈 화면에 추가';
+    if(helpTitle) helpTitle.textContent = isPC ? '🖥 '+pcLabel : '📲 홈 화면에 추가';
     if(isPC){
-      if(shortcutDownloaded){
-        text = '<strong>뉴트월드 바로가기 파일 다운로드를 요청했어요.</strong><br>1. 저장 위치를 선택할 수 있다면 <strong>바탕화면</strong>을 선택해주세요.<br>2. 다운로드 폴더에 저장되었다면 <strong>뉴트월드.url</strong> 파일을 바탕화면으로 옮겨주세요.<br>3. 파일을 더블클릭하면 뉴트월드 사이트가 열립니다.<br><br>브라우저가 다운로드를 차단했다면 허용한 후 다시 눌러주세요. 바탕화면에 자동으로 저장되지는 않습니다.';
+      if(isFirefox && isWindows){
+        text = '<strong>Firefox에서 뉴트월드 앱 추가</strong><br>1. 주소창 오른쪽의 <strong>웹앱 추가 아이콘</strong>을 눌러주세요.<br>2. 작업표시줄 고정 안내가 뜨면 <strong>예</strong>를 선택해주세요.<br>3. 작업표시줄 또는 시작 메뉴의 뉴트월드를 누르면 별도 창으로 열립니다.<br><br>바탕화면 자동 생성과는 다릅니다. 바탕화면에도 두려면 시작 메뉴의 뉴트월드 바로가기를 바탕화면으로 끌어 놓아주세요.<br><br>아이콘이 보이지 않으면 일반 창에서 Firefox 버전을 확인해주세요. Windows용 143 이상, Microsoft Store 설치판은 150 이상이 필요합니다. 사이트 버튼은 Firefox 주소창의 설치 기능을 직접 실행할 수 없습니다.';
+      }else if(isEdge){
+        text = '<strong>Microsoft Edge에서 앱 설치</strong><br>주소창의 앱 설치 아이콘을 누르거나, <strong>⋯ 메뉴 → 추가 도구 → 앱 → 이 사이트를 앱으로 설치</strong>를 선택해주세요.<br><br>바탕화면 아이콘이 없으면 주소창에 <strong>edge://apps</strong>를 입력하고 뉴트월드의 <strong>세부 정보 → 바탕 화면 바로 가기 만들기</strong>를 선택해주세요. 메뉴 이름은 버전에 따라 다를 수 있습니다.';
+      }else if(isChrome){
+        text = '<strong>Chrome에서 앱 설치</strong><br>주소창의 설치 아이콘을 누르거나, <strong>⋮ 메뉴 → 전송, 저장, 공유 → 페이지를 앱으로 설치</strong>를 선택해주세요.<br><br>바탕화면 아이콘이 없으면 주소창에 <strong>chrome://apps</strong>를 입력하고 뉴트월드 우클릭 → <strong>바로가기 만들기</strong>에서 바탕화면을 선택해주세요. 메뉴 이름은 버전에 따라 다를 수 있습니다.';
+      }else if(isSafari){
+        text = '<strong>Mac Safari에서 앱 추가</strong><br>지원되는 Safari에서 <strong>파일 → Dock에 추가</strong>를 선택해주세요. 추가한 아이콘을 누르면 앱처럼 열립니다.';
+      }else if(isFirefox){
+        text = '<strong>Firefox 앱 설치 안내</strong><br>Firefox의 기본 웹앱 설치는 Windows에서 지원합니다. Mac·Linux에서는 책갈피를 추가하거나 Chrome 등 앱 설치를 지원하는 브라우저를 이용해주세요.';
       }else{
-        text = '<strong>바탕화면에 사이트 바로가기 만들기</strong><br>브라우저 창을 줄여 바탕화면이 보이게 한 뒤, 주소창의 사이트 아이콘 또는 주소를 바탕화면으로 끌어 놓아주세요.<br><br>Chrome·Edge의 설치 메뉴를 이용할 수도 있습니다. 설치 후 바탕화면 아이콘이 없다면 브라우저나 운영체제의 바로가기 추가 메뉴를 이용해주세요.';
+        text = '<strong>이 브라우저의 설치 메뉴를 확인해주세요.</strong><br>주소창이나 브라우저 메뉴의 <strong>앱 설치·바로가기 추가</strong> 항목을 이용해주세요. 설치 메뉴가 없다면 책갈피로 저장할 수 있습니다.';
       }
     }else if(isIOS){
       text = '<strong>iPhone / iPad Safari</strong><br>1. 아래쪽 <strong>공유</strong> 버튼을 누릅니다.<br>2. <strong>홈 화면에 추가</strong>를 선택합니다.<br>3. 오른쪽 위 <strong>추가</strong>를 누르면 완료됩니다.';
@@ -2501,17 +2518,14 @@ document.addEventListener('DOMContentLoaded',()=>{
       try{
         await prompt.prompt();
         const choice = await prompt.userChoice;
-        if(choice && choice.outcome === 'accepted') markInstalled();
+        if(choice && choice.outcome === 'accepted'){markInstalled();if(isPC)openHelp();}
         else { btn.disabled = false; resetInstallLabel(); }
       }catch(_){
         btn.disabled = false;
         resetInstallLabel();
-        if(isPC && isWindows){downloadDesktopShortcut();openHelp(true);}
-        else openHelp();
+        openHelp();
       }
-    }else if(isPC && isWindows){
-      downloadDesktopShortcut();
-      openHelp(true);
+
     }else{
       openHelp();
     }
