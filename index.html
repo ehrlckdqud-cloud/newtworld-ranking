@@ -2561,6 +2561,14 @@ document.addEventListener('DOMContentLoaded',()=>{
     markInstalled();
   });
 
+  function showMobileInstallStatus(){
+    // A browser-provided install prompt cannot be recreated by the page.
+    if(isSamsung)sub.textContent='브라우저 메뉴 → 현재 페이지 추가 → 홈 화면';
+    else if(isIOS)sub.textContent='Safari 공유 버튼 → 홈 화면에 추가';
+    else sub.textContent='브라우저 메뉴 → 앱 설치 / 홈 화면에 추가';
+    badge.textContent='설치';
+    btn.disabled=false;
+  }
   btn.addEventListener('click', async ()=>{
     if(installRequestPending)return;
     if(isKakaoInApp){
@@ -2582,9 +2590,10 @@ document.addEventListener('DOMContentLoaded',()=>{
       }catch(_){failed = true;}
       finally{installRequestPending = false;btn.disabled = false;}
       if(accepted){markInstalled();if(isPC)openHelp();}
-      else{syncInstallState();if(failed)openHelp();}
+      else{syncInstallState();if(failed){if(isPC)openHelp();else showMobileInstallStatus();}}
     }else{
-      openHelp();
+      if(isPC)openHelp();
+      else showMobileInstallStatus();
     }
   });
 
