@@ -1,0 +1,46 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>뉴트월드 전문AI비서</title>
+<style>
+:root{color-scheme:dark;--text:#f0f4ef;--muted:#bac9bf;--accent:#d7bd86;--line:rgba(192,217,191,.19)}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;position:relative;isolation:isolate;background:#13201b;color:var(--text);font:16px/1.75 system-ui,sans-serif}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(9,18,14,.38),rgba(9,18,14,.62)),url('assets/ai/study.webp') center center/cover no-repeat;pointer-events:none}
+main{max-width:808px;margin:36px auto;padding:24px}
+section,.hero{background:linear-gradient(145deg,rgba(27,42,35,.94),rgba(13,24,20,.94));border:1px solid var(--line);border-radius:22px;box-shadow:0 18px 48px #0004,inset 0 1px 0 rgba(255,255,255,.045)}
+section{padding:26px;margin:20px 0}
+h1{font-size:28px;line-height:1.4;margin:0;color:#fff8e9;letter-spacing:-.6px}
+h2{font-size:20px;line-height:1.5;margin:0 0 16px;color:#eff4ed;font-weight:700;letter-spacing:-.3px}
+p{margin:12px 0}
+.small{font-size:14px;color:var(--muted)}
+.hero{display:flex;align-items:center;gap:24px;padding:26px;border-color:rgba(215,189,134,.28)}
+.mascot{flex-shrink:0;border-radius:18px;object-fit:cover;border:1px solid rgba(215,189,134,.32);box-shadow:0 8px 26px #0005}
+.eyebrow{color:var(--accent);letter-spacing:2.4px;font-size:11px;font-weight:700;margin-bottom:10px}
+.hero p{color:var(--muted);margin:10px 0 0}
+.hero h1{overflow-wrap:anywhere}
+.ready{border-left:3px solid rgba(142,185,145,.6)}
+button{border:1px solid rgba(165,218,178,.24);border-radius:12px;padding:12px 20px;background:linear-gradient(135deg,#287d50,#1c6741);color:#fff;font:600 15px/1.6 system-ui,sans-serif;cursor:pointer;box-shadow:0 5px 16px #0002;transition:background .15s,border-color .15s}
+button:hover:not(:disabled){background:#308758;border-color:#82b690}
+button:disabled{opacity:.52;cursor:wait}
+button:focus-visible{outline:2px solid #e6c991;outline-offset:4px}
+.secondary{background:rgba(169,198,174,.08);color:#d3e0d4;border-color:rgba(169,198,174,.25);box-shadow:none}
+.secondary:hover:not(:disabled){background:rgba(169,198,174,.16);border-color:#6e9577}
+label{display:block;color:#d9e4d9;font-size:15px}
+textarea{width:100%;min-height:140px;resize:vertical;border:1px solid #486051;border-radius:14px;padding:16px;font:16px/1.75 system-ui,sans-serif;color:#f0f4ef;background:rgba(7,17,12,.86);margin:10px 0 14px;box-shadow:inset 0 2px 8px #0002}
+textarea::placeholder{color:#afc0b3;opacity:1}
+textarea:focus{outline:2px solid rgba(230,201,145,.75);outline-offset:2px;border-color:#9eb191}
+#answer{white-space:pre-wrap;overflow-wrap:anywhere;color:#e9f0e7;line-height:1.9}
+#status{min-height:28px;color:#cddbcf;margin:18px 0 0;font-size:15px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.reply-title{display:flex;align-items:center;gap:12px;padding-bottom:18px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+.reply-title img{border-radius:50%;object-fit:cover;border:1px solid rgba(215,189,134,.3);flex-shrink:0}
+.reply-title h2{margin:0}
+#result>.small{margin-top:24px;padding-top:16px;border-top:1px solid var(--line)}
+footer{text-align:center;margin-top:28px;color:#ede3cd;text-shadow:0 1px 5px #000}
+@media(max-width:600px){main{margin:12px auto;padding:14px}.hero{padding:20px;gap:14px}.mascot{width:88px;height:88px;border-radius:16px}.hero h1{font-size:21px}.hero p{font-size:14px}.eyebrow{font-size:9px;letter-spacing:1.5px}section{padding:20px;margin:16px 0}h2,.reply-title h2{font-size:18px}textarea{padding:14px}.row button{flex:1;padding:12px 14px}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+<main><header class="hero"><img class="mascot" src="assets/ai/assistant.webp" width="140" height="140" alt="책장 앞에서 둥근 안경과 흰 가운을 착용한 뉴트월드 AI비서"><div><div class="eyebrow">NEWTWORLD AI ASSISTANT</div><h1>뉴트월드 전문AI비서</h1><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로,<br>사육과 생태에 대한 궁금증을 함께 풀어드려요.</p></div></header>
+<section class="ready"><h2>뉴트월드 전문AI비서에게 물어보세요</h2><button id="check">AI비서 연결</button><p id="status" role="status" aria-live="polite">회원 인증을 확인하고 있어요.</p></section>
+<section><h2>무엇이 궁금하세요?</h2><label for="question">궁금한 내용을 입력해 주세요.</label><textarea id="question" disabled maxlength="2000" placeholder="예: 뉴트와 살라만더는 어떤 관계인가요?"></textarea><div class="row"><button id="ask" disabled>질문 보내기</button><button id="sample" disabled class="secondary">예시 질문 넣기</button></div><p class="small">AI비서가 답변을 준비하는 동안 잠시 기다려 주세요.</p></section>
+<section id="result" hidden><div class="reply-title"><img src="assets/ai/assistant.webp" width="48" height="48" alt="뉴트월드 전문AI비서"><h2>뉴트월드 전문AI비서의 답변</h2></div><div id="answer"></div><p class="small">이 캐릭터는 뉴트월드 AI비서입니다. 답변에 오류가 있을 수 있으며, 질병·치료는 전문 수의사에게 확인해 주세요.</p></section>
+<p><a id="loginLink" href="profile.html?v=2.43" style="color:#d7bd86" hidden>내페이지에서 회원식별 로그인하기 →</a></p><footer class="small">함께 배우고, 건강하게 키우는 뉴트월드</footer></main>
+<script src="site-config.js"></script><script src="assets/ai/member-ai.js?v=2.43"></script></html>
