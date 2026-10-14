@@ -1466,6 +1466,14 @@ body{
   .pc-hub-center .hub-challenges .home-install-sub{font-size:11px!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important;line-height:1.4!important}
 }
 </style>
+<style>
+@media(max-width:1040px){
+  .home-install-copy{flex:1}
+  .home-install-sub{display:block;white-space:normal;word-break:keep-all}
+  .home-install-badge{flex:0 0 auto;white-space:nowrap}
+}
+.install-help-copy{border:1px solid #5dbfc6;border-radius:10px;background:#16424b;color:#fff;padding:10px 16px;font-weight:700;cursor:pointer}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -2436,6 +2444,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   const isSamsung = /SamsungBrowser/i.test(navigator.userAgent);
   const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
   const isPC = !isMobile;
+  const isKakaoInApp = isMobile && /KAKAOTALK/i.test(navigator.userAgent);
+  const installSiteURL = 'https://ehrlckdqud-cloud.github.io/newtworld-ranking/';
   const isWindows = /Windows/i.test(navigator.userAgent);
   const isFirefox = /Firefox\//i.test(navigator.userAgent);
   const isEdge = /Edg\//i.test(navigator.userAgent);
@@ -2444,10 +2454,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   const pcLabel = isFirefox && isWindows ? '작업표시줄에 앱 추가' : isSafari ? 'Dock에 앱 추가' : '바탕화면에 바로가기 추가';
   const helpTitle = document.getElementById('installHelpTitle');
   function resetInstallLabel(){
-    if(isPC){
+    if(isKakaoInApp){
+      sub.textContent = '카카오톡에서는 설치할 수 없어요 · 브라우저로 열어주세요';
+      badge.textContent = '브라우저로';
+      btn.setAttribute('aria-label','외부 브라우저로 열어 앱 설치하기');
+    }else if(isPC){
       sub.textContent = pcLabel;
       badge.textContent = isFirefox ? '+ 앱 추가' : '+ 바로가기';
       btn.setAttribute('aria-label',pcLabel);
+    }else{
+      sub.textContent = '뉴트월드 앱 설치 · 홈 화면에 추가';
+      badge.textContent = '설치';
+      btn.setAttribute('aria-label','뉴트월드 앱 설치');
     }
   }
   resetInstallLabel();
@@ -2462,8 +2480,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   function openHelp(){
     let text = '';
-    if(helpTitle) helpTitle.textContent = isPC ? '🖥 '+pcLabel : '📲 홈 화면에 추가';
-    if(isPC){
+    if(helpTitle) helpTitle.textContent = isKakaoInApp ? '🌐 브라우저로 열기' : isPC ? '🖥 '+pcLabel : '📲 홈 화면에 추가';
+    if(isKakaoInApp){
+      text = '<strong>브라우저에서 뉴트월드 앱을 설치해주세요.</strong><br>브라우저가 열리면 사이트의 <strong>설치</strong> 버튼을 눌러주세요.<br><br>이동되지 않으면 카카오톡 화면의 <strong>메뉴(⋯) → 다른 브라우저로 열기</strong>를 선택해주세요. 메뉴 이름과 위치는 기기에 따라 다를 수 있어요.<br><br>또는 아래 주소를 복사해 '+(isIOS ? '<strong>Safari</strong>' : '<strong>Chrome·Samsung Internet 등</strong>')+'의 주소창에 붙여넣어주세요.<br><input id="installBrowserAddress" aria-label="뉴트월드 사이트 주소" readonly value="https://ehrlckdqud-cloud.github.io/newtworld-ranking/" style="width:100%;box-sizing:border-box;margin:12px 0 8px;padding:10px;border-radius:8px;border:1px solid #466678;background:#071018;color:#fff;font-size:12px"><button type="button" id="installBrowserCopy" class="install-help-copy">주소 복사</button><span id="installBrowserCopyStatus" role="status" style="display:block;margin-top:8px"></span>';
+    }else if(isPC){
       if(isFirefox && isWindows){
         text = '<strong>Firefox에서 뉴트월드 앱 추가</strong><br>1. 주소창 오른쪽의 <strong>웹앱 추가 아이콘</strong>을 눌러주세요.<br>2. 작업표시줄 고정 안내가 뜨면 <strong>예</strong>를 선택해주세요.<br>3. 작업표시줄 또는 시작 메뉴의 뉴트월드를 누르면 별도 창으로 열립니다.<br><br>바탕화면 자동 생성과는 다릅니다. 바탕화면에도 두려면 시작 메뉴의 뉴트월드 바로가기를 바탕화면으로 끌어 놓아주세요.<br><br>아이콘이 보이지 않으면 일반 창에서 Firefox 버전을 확인해주세요. Windows용 143 이상, Microsoft Store 설치판은 150 이상이 필요합니다. 사이트 버튼은 Firefox 주소창의 설치 기능을 직접 실행할 수 없습니다.';
       }else if(isEdge){
@@ -2480,21 +2500,35 @@ document.addEventListener('DOMContentLoaded',()=>{
     }else if(isIOS){
       text = '<strong>iPhone / iPad Safari</strong><br>1. 아래쪽 <strong>공유</strong> 버튼을 누릅니다.<br>2. <strong>홈 화면에 추가</strong>를 선택합니다.<br>3. 오른쪽 위 <strong>추가</strong>를 누르면 완료됩니다.';
     }else if(isSamsung){
-      text = '<strong>Samsung Internet</strong><br>카카오톡 링크에서 바로 접속한 경우 홈 화면에 앱 설치가 제한될 수 있습니다.<br>현재 페이지 주소를 <strong>복사</strong>한 뒤 Samsung Internet 주소창에 <strong>붙여넣어 다시 접속</strong>해주세요.<br>그 후 상단의 <strong>+ 홈 화면</strong> 버튼을 다시 눌러주세요.';
+      text = '<strong>Samsung Internet에서 앱 설치</strong><br>브라우저 메뉴에서 <strong>현재 페이지 추가 → 홈 화면</strong> 또는 <strong>앱 설치</strong>를 선택해주세요. 표시되는 안내에 따라 추가하면 홈 화면에서 뉴트월드를 열 수 있어요.';
     }else{
-      text = '<strong>카카오톡 링크에서 바로 접속한 경우 홈 화면에 앱 설치가 제한될 수 있습니다.</strong><br>현재 페이지 주소를 <strong>복사</strong>한 뒤 인터넷 브라우저 주소창에 <strong>붙여넣어 다시 접속</strong>해주세요.<br>그 후 상단의 <strong>+ 홈 화면</strong> 버튼을 다시 눌러주세요.';
+      text = '<strong>뉴트월드 앱 설치</strong><br>브라우저 메뉴에서 <strong>앱 설치</strong> 또는 <strong>홈 화면에 추가</strong>를 선택해주세요. 설치 창이 아직 준비되지 않았거나 이미 설치된 경우에도 메뉴에서 확인할 수 있어요.';
     }
     help.innerHTML = text;
+    const copyBtn = document.getElementById('installBrowserCopy');
+    if(copyBtn)copyBtn.addEventListener('click',async ()=>{
+      const status=document.getElementById('installBrowserCopyStatus');
+      try{
+        if(!navigator.clipboard || !navigator.clipboard.writeText)throw new Error('clipboard unavailable');
+        await navigator.clipboard.writeText(installSiteURL);
+        if(status)status.textContent='주소를 복사했어요. 브라우저 주소창에 붙여넣어주세요.';
+      }catch(_){
+        const address=document.getElementById('installBrowserAddress');
+        if(address){address.focus();address.select();}
+        if(status)status.textContent='위 주소를 길게 눌러 복사해주세요.';
+      }
+    });
     modal.classList.add('open');
     modal.setAttribute('aria-hidden','false');
   }
 
-  if(isStandalone){
+  if(isStandalone && !isKakaoInApp){
     markInstalled();
   }
 
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
+    if(isKakaoInApp)return;
     deferredInstallPrompt = e;
     if(!btn.disabled){
       if(!isPC){
@@ -2505,12 +2539,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 
   window.addEventListener('appinstalled', ()=>{
+    if(isKakaoInApp)return;
     deferredInstallPrompt = null;
     markInstalled();
   });
 
   btn.addEventListener('click', async ()=>{
     if(btn.disabled) return;
+    if(isKakaoInApp){
+      openHelp();
+      try{window.location.assign('kakaotalk://web/openExternal?url='+encodeURIComponent(installSiteURL));}catch(_){}
+      return;
+    }
     if(deferredInstallPrompt){
       const prompt = deferredInstallPrompt;
       deferredInstallPrompt = null;
