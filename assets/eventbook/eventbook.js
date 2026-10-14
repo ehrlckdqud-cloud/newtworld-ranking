@@ -26,8 +26,18 @@ function preloadNext(){const size=pagesPerView(),m=month,start=offset+size;const
 function upgradeVisible(){if(!media.matches)return;const m=month,item=list[offset],page=$('nwEventPages').firstElementChild;if(!item||!page)return;setTimeout(()=>{if(page.parentNode!==$('nwEventPages'))return;imageSource(item,m,false).then(src=>{const img=page.querySelector('img');if(img&&page.parentNode=== $('nwEventPages'))img.src=src;}).catch(()=>{});},300);}
 async function draw(){flipBusy=false;drawReady=false;const serial=++drawSerial,m=month,size=pagesPerView();if(activePcCancel)activePcCancel();const pages=$('nwEventPages');
  if(!list.length){pages.replaceChildren();const el=document.createElement('div');el.className='event-empty';el.textContent='🎁 이번 달 월간 추첨이벤트 준비 중';pages.appendChild(el);updateControls();return;}
- const prepared=await preparePages(offset,size,m);if(serial!==drawSerial)return;pages.replaceChildren(...prepared);drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();
+ const prepared=await preparePages(offset,size,m);if(serial!==drawSerial)return;pages.replaceChildren(...prepared);drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();warmPcEngine();
 }
+let pcEnginePromise=null;
+function ensurePcEngine(){
+ if(window.St?.PageFlip)return Promise.resolve(true);if(pcEnginePromise)return pcEnginePromise;
+ pcEnginePromise=new Promise(resolve=>{const script=document.createElement('script');let settled=false,timeout;
+  const finish=ok=>{if(settled)return;settled=true;clearTimeout(timeout);script.onload=script.onerror=null;if(!ok){script.remove();pcEnginePromise=null;}resolve(ok);};
+  script.async=true;script.src=new URL('assets/eventbook/page-flip-v230.js?v=2.32',document.baseURI).href;
+  script.onload=()=>finish(!!window.St?.PageFlip);script.onerror=()=>finish(false);timeout=setTimeout(()=>finish(false),4000);document.head.appendChild(script);
+ });return pcEnginePromise;
+}
+function warmPcEngine(){if(!media.matches)setTimeout(()=>{if(!media.matches)ensurePcEngine();},120);}
 let activePcCancel=null;
 function playPcBookTurn(old,next,direction,duration,serial,commit){
  const stage=$('nwEventStage'),host=document.createElement('div');host.className='event-book-engine';host.setAttribute('aria-hidden','true');stage.appendChild(host);
@@ -48,7 +58,7 @@ async function turn(direction,manual=true){if(manual)stopAuto();if(flipBusy||!dr
  const stage=$('nwEventStage'),layers=[],reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,duration=size===1?(reduced?280:450):330;
  const commit=()=>{pages.replaceChildren(...next);flipBusy=false;drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();};
  offset=target;updateControls();
- if(size===2&&window.St?.PageFlip&&playPcBookTurn(old,next,direction,duration,serial,commit))return;
+ if(size===2){const ready=await ensurePcEngine();if(serial!==drawSerial||m!==month||size!==pagesPerView())return;if(ready&&playPcBookTurn(old,next,direction,duration,serial,commit))return;}
  // Mobile retains its lateral slide. If the PC effect asset is unavailable, fade safely.
  function layer(page,className){const node=document.createElement('div');node.className=className;node.appendChild(page.cloneNode(true));stage.appendChild(node);layers.push(node);return node;}
  let paint;
