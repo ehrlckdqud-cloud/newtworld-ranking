@@ -1,0 +1,42 @@
+/* Photo frame is reserved before list/image requests and never depends on intrinsic image height. */
+.event-stage{aspect-ratio:8/5;min-height:0;transform-style:preserve-3d}
+.event-pages{position:absolute;inset:0;min-height:0;grid-template-columns:1fr 1fr}
+.event-page{height:100%;aspect-ratio:auto;min-height:0;position:relative;overflow:hidden}
+.event-page img{position:absolute;inset:0;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain}
+.event-empty{position:absolute;inset:0;min-height:0;box-sizing:border-box}
+.event-full{z-index:1}.event-flip{animation:none;backface-visibility:visible;transform-style:preserve-3d;transform:rotateY(0);transition:transform .9s cubic-bezier(.4,.05,.25,1);will-change:transform;box-shadow:-10px 0 28px #0008}
+.event-flip.turning{transform:rotateY(-180deg)}.event-flip.backward{animation:none}.event-flip.backward.turning{transform:rotateY(180deg)}
+.event-face{position:absolute;inset:0;backface-visibility:hidden;overflow:hidden;background:#102329}.event-front{transform:translateZ(1px)}.event-back{transform:rotateY(180deg) translateZ(1px)}.event-face .event-page{width:100%;height:100%;pointer-events:none}.event-face .event-full{display:none}
+@media(max-width:720px){.event-stage{aspect-ratio:4/5}.event-pages{grid-template-columns:1fr}.event-flip{width:100%}}
+
+/* Preserve the three-dimensional page: grouping/clipping on this ancestor flattens it. */
+.event-stage{overflow:visible;isolation:auto;transform-style:preserve-3d}
+.event-flip{transition:transform 1.4s cubic-bezier(.4,.05,.25,1)}
+.event-pages{overflow:hidden;border-radius:8px}.event-flip .event-face{border-radius:3px}
+@media(min-width:1041px){
+ .pc-top-logo{display:flex!important;justify-content:center;align-items:center;height:162px}
+ .pc-top-logo>.pc-logo-art{width:100%;height:156px;max-width:100%;object-fit:contain}
+ .pc-hub-center .primary-rooms{display:none!important}.pc-hub-center .hub-challenges{margin-top:0!important}.nw-eventbook{margin-bottom:0}
+ .pc-room-links{display:grid;grid-template-columns:1fr;gap:9px;margin-bottom:12px}.pc-room-links .partner-card{margin:0}
+}
+@media(max-width:1040px){.pc-room-links{display:none!important}}
+
+.nw-community-room .partner-copy::before{content:"뉴트월드"}
+
+/* Per-face projection, driven frame-by-frame for consistent browser rendering. */
+.event-motion{position:absolute;top:0;height:100%;z-index:5;pointer-events:none;will-change:transform}
+.event-motion .event-page{width:100%;height:100%;border-radius:3px}.event-motion .event-full{display:none}
+.event-leaf{width:50%;backface-visibility:visible;background:#102329}
+.event-leaf-right{right:0;transform-origin:left center}.event-leaf-left{left:0;transform-origin:right center}
+.event-slide-out,.event-slide-in{left:0;width:100%}.event-slide-in{z-index:6}
+@media(max-width:720px){.event-stage{overflow:hidden;isolation:isolate}}
+@media(min-width:1041px){.pc-room-links .nw-community-trade .partner-logo-wrap{overflow:hidden}.pc-room-links .nw-community-trade .partner-logo-wrap img{width:100%!important;height:100%!important;object-fit:cover!important;object-position:center;transform:scale(1.08)!important}}
+
+.event-curl{display:block;max-width:none;max-height:none;pointer-events:none;will-change:auto}
+
+.event-book-engine{position:absolute!important;inset:0;z-index:5;pointer-events:none;overflow:visible}
+.event-book-engine .stf__wrapper{position:absolute;inset:0;width:100%;height:100%}
+.event-book-engine .stf__block{position:absolute;inset:0;width:100%;height:100%}
+.event-book-engine .event-page.stf__item{position:absolute!important;aspect-ratio:auto;min-height:0}
+.event-book-engine .event-full{display:none}
+.event-fade-spread{inset:0;width:100%;display:grid;grid-template-columns:1fr 1fr}
