@@ -24,21 +24,38 @@ function makePage(item,source){const page=document.createElement('div');page.cla
 async function preparePages(target,size,m){return Promise.all(Array.from({length:size},async(_,i)=>{const item=list[target+i];let source='';if(item){try{source=await imageSource(item,m);const decoder=new Image();decoder.src=source;if(decoder.decode)await decoder.decode();}catch(_){}}return makePage(item,source);}));}
 function preloadNext(){const size=pagesPerView(),m=month,start=offset+size;const run=()=>{if(m!==month)return;for(const item of list.slice(start,start+(media.matches?1:size*2)))imageSource(item,m).catch(()=>{});};if(media.matches)setTimeout(run,1200);else run();}
 function upgradeVisible(){if(!media.matches)return;const m=month,item=list[offset],page=$('nwEventPages').firstElementChild;if(!item||!page)return;setTimeout(()=>{if(page.parentNode!==$('nwEventPages'))return;imageSource(item,m,false).then(src=>{const img=page.querySelector('img');if(img&&page.parentNode=== $('nwEventPages'))img.src=src;}).catch(()=>{});},300);}
-async function draw(){drawReady=false;const serial=++drawSerial,m=month,size=pagesPerView();const pages=$('nwEventPages');
+async function draw(){flipBusy=false;drawReady=false;const serial=++drawSerial,m=month,size=pagesPerView();const pages=$('nwEventPages');
  if(!list.length){pages.replaceChildren();const el=document.createElement('div');el.className='event-empty';el.textContent='🎁 이번 달 월간 추첨이벤트 준비 중';pages.appendChild(el);updateControls();return;}
  const prepared=await preparePages(offset,size,m);if(serial!==drawSerial)return;pages.replaceChildren(...prepared);drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();
 }
 async function turn(direction,manual=true){if(manual)stopAuto();if(flipBusy||!drawReady||list.length<=pagesPerView())return;clearTimeout(timer);flipBusy=true;updateControls();const serial=++drawSerial,size=pagesPerView(),m=month,last=Math.floor((list.length-1)/size)*size;let target=offset+direction*size;if(target>last)target=0;if(target<0)target=last;
  const next=await preparePages(target,size,m);if(serial!==drawSerial||m!==month||size!==pagesPerView()){flipBusy=false;updateControls();return;}
  const pages=$('nwEventPages'),old=[...pages.children],forward=direction>0;
- if(matchMedia('(prefers-reduced-motion:reduce)').matches||!old[0]?.classList.contains('event-page')){offset=target;pages.replaceChildren(...next);flipBusy=false;updateControls();schedule();preloadNext();upgradeVisible();return;}
- const flap=document.createElement('div');flap.className='event-flip'+(!forward?' backward':'');
- const front=document.createElement('div'),back=document.createElement('div');front.className='event-face event-front';back.className='event-face event-back';
- front.appendChild(old[size===2?(forward?1:0):0].cloneNode(true));back.appendChild(next[size===2?(forward?0:1):0].cloneNode(true));flap.append(front,back);
- if(size===2)pages.replaceChildren(forward?old[0]:next[0],forward?next[1]:old[1]);else pages.replaceChildren(next[0]);
- $('nwEventStage').appendChild(flap);offset=target;updateControls();const angle=forward?-180:180;if(flap.animate){flap.animate([{transform:'rotateY(0deg)'},{transform:'rotateY('+angle+'deg)'}],{duration:1400,easing:'cubic-bezier(.4,.05,.25,1)',fill:'forwards'});}else{void flap.offsetWidth;flap.classList.add('turning');}
- setTimeout(()=>{flap.remove();if(serial===drawSerial)pages.replaceChildren(...next);flipBusy=false;drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();},1450);
+ if(!old[0]?.classList.contains('event-page')){offset=target;pages.replaceChildren(...next);flipBusy=false;updateControls();schedule();preloadNext();upgradeVisible();return;}
+ const stage=$('nwEventStage'),layers=[],reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,duration=reduced?280:(size===1?450:1200);
+ function layer(page,className){const node=document.createElement('div');node.className=className;node.appendChild(page.cloneNode(true));stage.appendChild(node);layers.push(node);return node;}
+ let paint;
+ if(size===1){
+  const outgoing=layer(old[0],'event-motion event-slide-out'),incoming=layer(next[0],'event-motion event-slide-in'),sign=forward?1:-1;
+  paint=t=>{outgoing.style.transform='translateX('+(-sign*t*100)+'%)';incoming.style.transform='translateX('+(sign*(1-t)*100)+'%)';};
+ }else{
+  // Each face projects independently; no nested back-face/preserve-3d dependency.
+  const front=layer(old[forward?1:0],'event-motion event-leaf '+(forward?'event-leaf-right':'event-leaf-left'));
+  const back=layer(next[forward?0:1],'event-motion event-leaf '+(forward?'event-leaf-left':'event-leaf-right'));
+  pages.replaceChildren(forward?old[0]:next[0],forward?next[1]:old[1]);
+  paint=t=>{const first=t<.5,a=Math.min(t*2,1)*90,b=(1-Math.max(0,t*2-1))*90;
+   front.style.visibility=first?'visible':'hidden';back.style.visibility=first?'hidden':'visible';
+   front.style.transform='perspective(1400px) rotateY('+(forward?-a:a)+'deg)';
+   back.style.transform='perspective(1400px) rotateY('+(forward?b:-b)+'deg)';
+   const shade=Math.sin(t*Math.PI);front.style.boxShadow=back.style.boxShadow='0 8px '+(10+shade*28)+'px rgba(0,0,0,'+(.2+shade*.45)+')';
+  };
+ }
+ offset=target;updateControls();paint(0);let start=null,finished=false,timeout;
+ function finish(){if(finished)return;finished=true;clearTimeout(timeout);layers.forEach(x=>x.remove());if(serial!==drawSerial)return;pages.replaceChildren(...next);flipBusy=false;drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();}
+ function frame(time){if(finished)return;if(serial!==drawSerial){finish();return;}if(start===null)start=time;const t=Math.min(1,(time-start)/duration),ease=t*t*(3-2*t);paint(ease);if(t<1)requestAnimationFrame(frame);else finish();}
+ requestAnimationFrame(frame);timeout=setTimeout(finish,duration+250);
 }
+
 async function loadBook(){const next=monthNow();if(month!==next){month=next;offset=0;list=[];images.clear();}$('nwEventTitle').textContent='🎁 '+Number(month.slice(5))+'월 월간 추첨이벤트';let cached=null;try{cached=JSON.parse(localStorage.getItem('nwEventBookList:'+month)||'null');}catch(_){}if(cached?.images?.length){list=cached.images;draw();}
  const d=await read('eventBookList',{month,preview:media.matches?'1':'0'});if(d?.ok&&d.month===month){if(d.firstImage?.ok){const photo=d.firstImage,key=month+':'+photo.id+':preview',src='data:'+photo.mime+';base64,'+photo.base64;images.set(key,Promise.resolve(src));storedPhoto(key,src);}try{localStorage.setItem('nwEventBookList:'+month,JSON.stringify(d));}catch(_){}if(cached?.revision===d.revision&&cached?.images?.length)return;list=d.images||[];offset=Math.min(offset,Math.max(0,Math.floor((list.length-1)/pagesPerView())*pagesPerView()));draw();}else if(!cached?.images?.length){$('nwEventPages').innerHTML='<div class="event-empty">이벤트 소식을 불러오지 못했어요.<br>잠시 후 사이트를 새로고침해주세요.</div>';updateControls();}}
 $('nwEventPrev').onclick=()=>turn(-1);$('nwEventNext').onclick=()=>turn(1);$('nwEventAuto').onclick=()=>{auto=!auto;updateControls();schedule();};
