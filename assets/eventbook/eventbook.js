@@ -45,7 +45,7 @@ async function turn(direction,manual=true){if(manual)stopAuto();if(flipBusy||!dr
  const next=await preparePages(target,size,m);if(serial!==drawSerial||m!==month||size!==pagesPerView()){flipBusy=false;updateControls();return;}
  const pages=$('nwEventPages'),old=[...pages.children],forward=direction>0;
  if(!old[0]?.classList.contains('event-page')){offset=target;pages.replaceChildren(...next);flipBusy=false;updateControls();schedule();preloadNext();upgradeVisible();return;}
- const stage=$('nwEventStage'),layers=[],reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,duration=size===1?(reduced?280:450):2400;
+ const stage=$('nwEventStage'),layers=[],reduced=matchMedia('(prefers-reduced-motion:reduce)').matches,duration=size===1?(reduced?280:450):330;
  const commit=()=>{pages.replaceChildren(...next);flipBusy=false;drawReady=true;updateControls();schedule();preloadNext();upgradeVisible();};
  offset=target;updateControls();
  if(size===2&&window.St?.PageFlip&&playPcBookTurn(old,next,direction,duration,serial,commit))return;
