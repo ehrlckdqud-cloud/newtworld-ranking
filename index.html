@@ -1388,8 +1388,8 @@ body{
   .card-head-right .nw-member-detail-btn{padding:4px 7px;font-size:9px}
 }
 </style>
-<link rel="stylesheet" href="assets/eventbook/eventbook.css?v=2.20">
-<link rel="stylesheet" href="assets/eventbook/eventbook-v220.css?v=2.20">
+<link rel="stylesheet" href="assets/eventbook/eventbook.css?v=2.21">
+<link rel="stylesheet" href="assets/eventbook/eventbook-v221.css?v=2.21">
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1467,9 +1467,9 @@ body{
   </div>
 </div>
   <div class="pc-top-logo" aria-label="NEWT WORLD 로고">
-    <div id="nwLogoMainRoom" class="pc-logo-room"></div>
+    
     <img class="pc-logo-art" src="assets/branding/newtworld-top-logo.png" alt="NEWT WORLD">
-    <div id="nwLogoTradeRoom" class="pc-logo-room"></div>
+    
   </div>
   <div class="pc-top-spacer">
     <button class="nw-weather-widget nw-weather-widget-pc" id="nwWeatherWidgetPC" type="button" aria-label="현재 위치 날씨 상세보기">
@@ -3007,6 +3007,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 })();
 </script>
 <div id="nwEventAdmin" class="event-admin-wrap"><section id="nwEventAdminDialog" class="event-admin" role="dialog" aria-modal="true" aria-labelledby="nwEventAdminTitle"><h3 id="nwEventAdminTitle">🎁 월간 이벤트 사진 관리</h3><p class="event-admin-note">선택한 월의 사진만 공개됩니다. 사진을 업로드하면 바로 반영됩니다. 순서 변경·삭제는 ‘목록 저장’을 눌러주세요.</p><label for="nwEventMonth">이벤트 월</label><div class="event-admin-row"><input type="month" id="nwEventMonth"><button type="button" id="nwEventReload">목록 다시 불러오기</button></div><label for="nwEventFiles">사진 선택 (월별 최대 20장)</label><div class="event-admin-row"><input type="file" id="nwEventFiles" accept="image/*" multiple><button type="button" id="nwEventUpload">선택 사진 업로드</button></div><ol id="nwEventAdminList" class="event-admin-list"></ol><div class="event-admin-row"><button type="button" id="nwEventSave">목록 저장</button><button type="button" id="nwEventAdminClose">닫기</button></div><div id="nwEventAdminStatus" class="event-upload-status" role="status" aria-live="polite"></div></section></div>
-<script src="assets/eventbook/eventbook.js?v=2.20" defer></script><script>
-(()=>{const rooms=document.querySelector('.hub-primary .primary-rooms'),main=document.getElementById('nwLogoMainRoom'),trade=document.getElementById('nwLogoTradeRoom');if(!rooms||!main||!trade)return;const cards=[...rooms.children].filter(n=>n.classList.contains('room-card'));if(cards.length!==2)return;const desktop=matchMedia('(min-width:1041px)');function place(){if(desktop.matches){main.appendChild(cards[0]);trade.appendChild(cards[1]);}else{rooms.append(cards[0],cards[1]);}}desktop.addEventListener('change',place);place();})();
+<script src="assets/eventbook/eventbook.js?v=2.21" defer></script><script>
+(()=>{const rooms=document.querySelector('.hub-primary .primary-rooms'),column=document.querySelector('.pc-hub-right');if(!rooms||!column)return;const panel=document.createElement('aside');panel.className='partner-panel partner-right pc-room-links';panel.setAttribute('aria-label','뉴트월드 오픈톡방');[...rooms.querySelectorAll('.room-card')].forEach((original,i)=>{const link=document.createElement('a');link.className='partner-card nw-community-room';link.href=original.href;link.target='_blank';link.rel='noopener noreferrer';const logo=document.createElement('div');logo.className='partner-logo-wrap';const img=original.querySelector('img');if(img)logo.appendChild(img.cloneNode(true));const copy=document.createElement('div');copy.className='partner-copy';const title=document.createElement('b');title.textContent=i===0?'뉴트월드 메인방':'뉴트월드 거래방';const label=document.createElement('span');label.textContent=i===0?'함께 소통하는 커뮤니티':'분양 · 거래 오픈톡방';copy.append(title,label);link.append(logo,copy);panel.appendChild(link);});column.prepend(panel);})();
 </script></body></html>
