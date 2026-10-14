@@ -1496,6 +1496,12 @@ body{
 .nw-ai-banner:focus-visible{outline:2px solid #e6c991;outline-offset:4px}
 @media(max-width:1040px){.pc-hub-center .nw-ai-banner{gap:14px;padding:20px}.nw-ai-banner>img{flex-basis:88px;width:88px;height:88px;border-radius:16px}.nw-ai-banner h2{font-size:21px}.nw-ai-banner p{font-size:14px}.nw-ai-banner small{font-size:9px;letter-spacing:1.5px}}
 @media(max-width:390px){.pc-hub-center .nw-ai-banner{padding:15px;gap:12px}.nw-ai-banner>img{flex-basis:72px;width:72px;height:72px}.nw-ai-banner h2{font-size:18px}.nw-ai-banner p{font-size:13px}.nw-ai-banner small{letter-spacing:1px;font-size:8px}}
+</style><style>
+.pc-hub-center .nw-ai-banner{cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,background .18s ease}
+@media(hover:hover) and (pointer:fine){.pc-hub-center .nw-ai-banner:hover{transform:translateY(-3px);border-color:#d7bd86;box-shadow:0 12px 36px #0006,0 0 20px rgba(215,189,134,.19);background:linear-gradient(145deg,#253c2e,#14291f)}}
+@media(max-width:720px){.pc-hub-center .nw-ai-banner{padding:16px;gap:12px}.nw-ai-banner p{font-size:13px;line-height:1.55;margin-top:7px}.nw-ai-banner p br{display:none}.nw-ai-banner p{text-wrap:balance}.nw-ai-banner small{margin-bottom:6px}.nw-ai-banner h2{font-size:20px}.nw-ai-banner>img{flex-basis:80px;width:80px;height:80px}.nw-ai-banner>div{flex:1}}
+@media(max-width:390px){.pc-hub-center .nw-ai-banner{padding:14px;gap:10px}.nw-ai-banner>img{flex-basis:64px;width:64px;height:64px}.nw-ai-banner p{font-size:12px}.nw-ai-banner h2{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.pc-hub-center .nw-ai-banner{transition:none}.pc-hub-center .nw-ai-banner:hover{transform:none}}
 </style></head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1649,9 +1655,9 @@ body{
 </a>
 
 
-</div><a id="nwAiOpen" class="nw-ai-banner" href="ai.html?v=2.43" aria-label="뉴트월드 전문AI비서 · 회원 전용">
+</div><a id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문AI비서 · 회원 전용">
 <img src="assets/ai/assistant.webp" width="140" height="140" loading="lazy" decoding="async" alt="뉴트월드 전문AI비서">
-<div><small>NEWTWORLD AI ASSISTANT</small><h2>뉴트월드 전문AI비서</h2><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로,<br>사육과 생태에 대한 궁금증을 함께 풀어드려요.</p></div></a></div>
+<div><small>NEWTWORLD AI ASSISTANT</small><h2>뉴트월드 전문AI비서</h2><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로, <br>사육과 생태에 대한 궁금증을 함께 풀어드려요.</p></div></a></div>
     <div class="hub-challenges">
 <div class="attendance-quick">
   <a class="quick-link" href="#attendance" id="nwAttendanceOpen">
@@ -2186,9 +2192,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
-  function openPage(page,label,hash){const profileFresh=/^(?:profile|members|attendance|workout)\.html(?:[?#]|$)/.test(page)?'&v=2.42&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
+  function openPage(page,label,hash){const profileFresh=/^(?:profile|members|attendance|workout|ai)\.html(?:[?#]|$)/.test(page)?'&v=2.44&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
   window.NWOpenPage=openPage;
-  function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members'].includes(location.hash))history.back();}
+  // Apps Script HTML replies target top; forward only trusted AI replies to the embedded page.
+  window.addEventListener('message',e=>{if(/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin)&&e.data?.channel==='nw-ai'&&typeof e.data.nonce==='string')frame.contentWindow?.postMessage(e.data,location.origin);});
+  document.getElementById('nwAiOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('ai.html','뉴트월드 전문AI비서','#ai');});
+  function closePage(fromPop=false){overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members','#ai'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
   document.getElementById('nwPartnerOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('partner.html','🤝 제휴샵 파트너센터','#partner')});
   document.getElementById('nwMyPageBtn')?.addEventListener('click',e=>{e.preventDefault();openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
@@ -2221,9 +2230,9 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(e.target?.id==='nwMemberAuthGoProfile'){closeMemberAuth();openPage('profile.html','👤 뉴트월드 내 페이지','#profile');return;}
     const d=getMemberAuthDialog();if(d&&e.target===d)closeMemberAuth();
   });
-  document.getElementById('nwAppClose')?.addEventListener('click',()=>closePage(false));window.addEventListener('message',e=>{if(e.data==='nw-close-page')closePage(false)});
-  window.addEventListener('hashchange',()=>{if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#members'){if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
-  if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');
+  document.getElementById('nwAppClose')?.addEventListener('click',()=>closePage(false));window.addEventListener('message',e=>{if(e.data==='nw-close-page')closePage(false);if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data==='nw-ai-open-profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
+  window.addEventListener('hashchange',()=>{if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문AI비서','#ai');else if(location.hash==='#members'){if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
+  if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문AI비서','#ai');if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');
 
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
   document.querySelectorAll('.partner-left .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
