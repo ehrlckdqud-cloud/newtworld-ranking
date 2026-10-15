@@ -1547,6 +1547,15 @@ body{
 @media(max-width:720px){.nw-event-heading{align-items:flex-start;gap:8px}.nw-event-countdown{padding:6px 9px;gap:4px 9px}.nw-event-heading h2{flex:1 1 100%}.nw-event-countdown-day,.nw-event-countdown-clock{font-size:12px}}
 </style>
 <style>#nwEventCountdown[hidden]{display:none}</style>
+<style>
+/* v2.66: separate affiliate website panel, outside the affiliate shops panel. */
+.partner-site-panel{margin-top:12px;min-width:0;border-color:#59492c;background:linear-gradient(180deg,#211d14,#111b1a)}
+.partner-site-panel .partner-heading{grid-column:1/-1;border-bottom-color:#51462d}
+.partner-site-panel .partner-card{grid-column:1/-1;min-height:72px;background:#171d17;border-color:#4b452e}
+.partner-site-panel .partner-card:hover{border-color:#c9aa65;background:#22291e}
+.partner-site-panel .partner-logo-wrap{background:transparent;border-radius:13px}
+.partner-site-panel .partner-copy b{font-size:12.5px}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1673,6 +1682,13 @@ body{
   <small>🤝 PARTNER CENTER</small>
   <b>제휴샵 성과 대시보드</b>
   <span>제휴샵 전용 로그인 · 유입 · 잔존 · 클릭 통계 →</span>
+</a>
+</aside>
+<aside class="partner-panel partner-site-panel" aria-label="제휴사이트">
+<div class="partner-heading"><b>🌐 제휴사이트</b><span>뉴트월드와 함께하는 사이트</span></div>
+<a class="partner-card partner-isopod-wiki" data-shop="등각위키" target="_blank" href="https://isopod-market.vercel.app/" rel="noopener noreferrer">
+<div class="partner-logo-wrap partner-isopod-logo"><img loading="lazy" decoding="async" width="220" height="220" alt="등각위키 로고" src="assets/partners/isopod-wiki-v266.png"></div>
+<div class="partner-copy"><b>등각위키</b><span>클릭하여 사이트 방문 ↗</span></div>
 </a>
 </aside></div>
   </div>
@@ -2283,7 +2299,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');
 
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
-  document.querySelectorAll('.partner-left .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
+  document.querySelectorAll('.partner-left .partner-card[data-shop],.partner-site-panel .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
 
   // 관리자 허브 + 계절 테마
   const adminBtn=document.getElementById('nwAdminLoginBtn');
