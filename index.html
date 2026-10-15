@@ -1522,6 +1522,16 @@ body{
 <style>
 .nw-ranking-staff-star{display:inline-block;margin-left:5px;font-size:.9em;line-height:1;vertical-align:baseline;white-space:nowrap}
 </style>
+<style>
+/* v2.59: collapsed player now-playing ticker */
+#nwMusicTicker{display:none;position:absolute;top:-29px;left:0;right:calc(var(--nw-collapse-width,118px) + 17px);height:25px;align-items:center;overflow:hidden;border:1px solid rgba(115,190,220,.23);border-bottom:0;border-radius:9px 9px 0 0;background:rgba(7,22,30,.96);color:#c8e4ee;font-size:11px;pointer-events:none;contain:paint}
+#nwMusicDock.nw-music-collapsed #nwMusicTicker:not([hidden]){display:flex}
+.nw-ticker-track{display:flex;width:max-content;animation:nw-song-ticker var(--nw-ticker-duration,16s) linear infinite;animation-play-state:paused}
+#nwMusicDock.nw-music-collapsed #nwMusicTicker[data-playing="true"] .nw-ticker-track{animation-play-state:running}
+.nw-ticker-copy{display:block;flex-shrink:0;white-space:nowrap;padding:0 44px 0 12px;line-height:24px}
+@keyframes nw-song-ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){#nwMusicTicker .nw-ticker-track{animation:none;width:100%}#nwMusicTicker .nw-ticker-copy:first-child{overflow:hidden;text-overflow:ellipsis;padding-right:8px}#nwMusicTicker .nw-ticker-copy[aria-hidden]{display:none}}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -2012,6 +2022,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <div id="nwMusicDock" aria-label="뉴트월드 배경음악 플레이어">
+  <div id="nwMusicTicker" hidden aria-label="현재 곡"><div class="nw-ticker-track"><span class="nw-ticker-copy"></span><span class="nw-ticker-copy" aria-hidden="true"></span></div></div>
   <button class="nw-collapse-btn" id="nwCollapseBtn" type="button">플레이어 접기</button>
   <div class="nw-music-shell">
     <div class="nw-music-main" id="nwMusicMain">
@@ -2720,6 +2731,52 @@ window.NWConfigReady.then(function(){
  banner.addEventListener('focus',start);banner.addEventListener('blur',()=>{if(!banner.matches(':hover'))stop();});
  window.addEventListener('resize',()=>{if(!eligible())stop();else if(running)measure();else if(engaged())start();});
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(engaged())start();});
+})();
+</script>
+
+<script id="nwMusicTickerScript">
+(function(){
+  const dock=document.getElementById('nwMusicDock'),ticker=document.getElementById('nwMusicTicker');
+  const button=document.getElementById('nwCollapseBtn'),title=document.getElementById('nwTrackTitle'),artist=document.getElementById('nwTrackArtist');
+  if(!dock||!ticker||!button||!title||!artist)return;
+  const copies=ticker.querySelectorAll('.nw-ticker-copy'),track=ticker.querySelector('.nw-ticker-track');
+  let lastText='',boundAudio=null,frame=0;
+  function measure(){
+    dock.style.setProperty('--nw-collapse-width',Math.ceil(button.getBoundingClientRect().width)+'px');
+    if(ticker.hidden||!ticker.clientWidth)return;
+    copies.forEach(copy=>copy.style.minWidth=ticker.clientWidth+'px');
+    const duration=Math.max(10,copies[0].getBoundingClientRect().width/28);
+    track.style.setProperty('--nw-ticker-duration',duration.toFixed(2)+'s');
+  }
+  function scheduleMeasure(){if(!frame)frame=requestAnimationFrame(()=>{frame=0;measure();});}
+  function playback(){ticker.dataset.playing=String(!!boundAudio&&!boundAudio.paused&&!boundAudio.ended);}
+  function bindAudio(){
+    const audio=window.NWMusicAdminAPI&&window.NWMusicAdminAPI.audio;
+    if(audio===boundAudio)return;
+    if(boundAudio)['play','pause','ended','emptied'].forEach(event=>boundAudio.removeEventListener(event,playback));
+    boundAudio=audio||null;
+    if(boundAudio)['play','pause','ended','emptied'].forEach(event=>boundAudio.addEventListener(event,playback));
+    playback();
+  }
+  function sync(){
+    const name=title.textContent.trim(),singer=artist.textContent.trim();
+    const ready=!!name&&name!=='BGM 준비 중';
+    const text=ready?name+(singer?' · '+singer:''):'';
+    if(text!==lastText){
+      lastText=text;copies.forEach(copy=>copy.textContent=text);
+      ticker.setAttribute('aria-label',text?'현재 곡: '+text:'현재 곡');
+      ticker.hidden=!ready;scheduleMeasure();
+    }
+    bindAudio();
+  }
+  new MutationObserver(sync).observe(title,{childList:true,characterData:true,subtree:true});
+  new MutationObserver(sync).observe(artist,{childList:true,characterData:true,subtree:true});
+  new MutationObserver(scheduleMeasure).observe(dock,{attributes:true,attributeFilter:['class']});
+  if(window.ResizeObserver){const observer=new ResizeObserver(scheduleMeasure);observer.observe(button);observer.observe(ticker);}
+  else window.addEventListener('resize',scheduleMeasure);
+  window.addEventListener('nw-music-ready',sync);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(scheduleMeasure);
+  sync();scheduleMeasure();
 })();
 </script>
 </body></html>
