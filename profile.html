@@ -17,6 +17,9 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
 .connection-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #294758}.connection-row>div{min-width:0}.connection-row .btn{flex-shrink:0}.connection-code{font-size:21px;letter-spacing:.03em;overflow-wrap:anywhere;user-select:all}.connection-actions{display:flex;gap:8px;flex-wrap:wrap}
 @media(max-width:600px){.connection-row{align-items:flex-start}.connection-code{font-size:17px}}
 #rank[data-staff="true"]{color:#f3cf7a}
+
+/* v2.73 representative-photo upload */
+#profileAvatar{overflow:hidden;flex-shrink:0}#profileAvatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}.avatar-editor{display:flex;align-items:center;gap:16px;padding:14px;border:1px solid #294758;border-radius:13px;background:#08141c}.avatar-preview{width:86px;height:86px;flex:0 0 86px;border-radius:50%;overflow:hidden;display:grid;place-items:center;font-size:42px;border:1px solid #416c7c;background:#102a35}.avatar-preview img{width:100%;height:100%;object-fit:cover}.avatar-editor .profile-actions{margin-top:0}.avatar-editor .hint{line-height:1.7}#avatarStatus{color:#85dfba;margin-bottom:0}@media(max-width:600px){.avatar-editor{align-items:flex-start;gap:12px}.avatar-preview{width:64px;height:64px;flex-basis:64px;font-size:34px}.avatar-editor .profile-actions .btn{font-size:11px;padding:9px 10px}}
 </style>
 </head>
 <body>
@@ -55,7 +58,7 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
   </section>
   <main id="profileView" class="hidden">
     <section class="card hero">
-      <div class="avatar">🐸</div>
+      <div class="avatar" id="profileAvatar">🐸</div>
       <div><div class="tag" id="memberId">-</div><div class="name" id="nicknameView">-</div><div class="meta"><span id="firstJoin">-</span> 가입 · <span class="alive"><i class="dot"></i>재실 중</span></div></div>
       <div class="actions"><button class="btn danger" id="logoutBtn">이 기기 연결 해제</button></div>
     </section>
@@ -88,9 +91,9 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
         <div class="field wide"><label>보유종 · 마릿수 · 종별 사육경력 · 번식경험</label><div class="species-head"><span>보유종</span><span>마릿수</span><span>사육경력</span><span>번식경험</span><span></span></div><div class="species-list" id="speciesList"></div><button class="btn" type="button" id="addSpeciesBtn" style="margin-top:8px">+ 보유종 추가</button></div>
         <div class="field wide"><label>관심종</label><input id="interests" maxlength="300" placeholder="쉼표로 구분 · 예: 카이저뉴트, 마블뉴트"></div>
         <div class="field wide"><label>한줄소개</label><textarea id="introProfile" maxlength="180" placeholder="사육 스타일이나 관심 분야를 간단히 적어주세요."></textarea></div>
-        <div class="field wide"><label>대표 이미지 URL (선택)</label><input id="imageUrl" maxlength="500" placeholder="https://... 형식의 이미지 주소"></div>
+        <div class="field wide"><label>내 대표이미지</label><div class="avatar-editor"><div id="avatarPreview" class="avatar-preview">🐸</div><div><input id="imageUrl" type="hidden"><input id="avatarFile" type="file" accept="image/jpeg,image/png,image/webp" hidden><div class="profile-actions"><button class="btn primary" type="button" id="avatarUploadBtn">사진 파일 업로드</button><button class="btn" type="button" id="avatarRemoveBtn">기본 이미지로</button></div><p class="hint">JPG·PNG·WEBP, 10MB 이하 · 가운데를 정사각형으로 잘라 자동 저장해요.<br>대표이미지 공개를 켜면 회원허브와 생존 추첨 구슬에 표시돼요. 사진 업로드 시 이 공개 설정도 함께 적용해요.</p><p id="avatarStatus" class="hint" role="status"></p></div></div></div>
         <div class="field wide"><label>다른 로그인 회원에게 공개할 정보</label><div class="privacy-grid" id="privacyGrid">
-          <label><input type="checkbox" data-v="region" checked> 지역</label><label><input type="checkbox" data-v="species" checked> 보유종</label><label><input type="checkbox" data-v="counts" checked> 마릿수</label><label><input type="checkbox" data-v="interests" checked> 관심종</label><label><input type="checkbox" data-v="keepingYears" checked> 종별 사육경력</label><label><input type="checkbox" data-v="breeding" checked> 종별 번식경험</label><label><input type="checkbox" data-v="intro" checked> 한줄소개</label><label><input type="checkbox" data-v="image" checked> 대표이미지</label>
+          <label><input type="checkbox" data-v="region" checked> 지역</label><label><input type="checkbox" data-v="species" checked> 보유종</label><label><input type="checkbox" data-v="counts" checked> 마릿수</label><label><input type="checkbox" data-v="interests" checked> 관심종</label><label><input type="checkbox" data-v="keepingYears" checked> 종별 사육경력</label><label><input type="checkbox" data-v="breeding" checked> 종별 번식경험</label><label><input type="checkbox" data-v="intro" checked> 한줄소개</label><label><input type="checkbox" data-v="image" checked> 대표이미지 (회원허브·생존 추첨)</label>
         </div></div>
       </div>
       <div class="profile-actions"><button class="btn primary" id="saveProfileBtn">프로필 저장</button><button class="btn member-hub-btn" id="memberHubBtn2">회원 검색 · 지도 · 통계 보기</button></div>
@@ -168,7 +171,7 @@ window.NWConfigReady.then(()=>{
     setAuthRestart(false);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');show('authView');loadCandidates();
   }
   async function recoverExisting(){const d=await jsonp('profileRecover',{device:device()});if(d?.ok&&d.auth&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return true;}return false;}
-  const coreCacheKey='nwMyProfileCoreV257';
+  const coreCacheKey='nwMyProfileCoreV273';
   function clearCoreCache(){try{localStorage.removeItem(coreCacheKey);sessionStorage.removeItem('nwMyProfileCore');}catch(_){}}
   function saveCoreCache(profile){try{localStorage.setItem(coreCacheKey,JSON.stringify({savedAt:Date.now(),token:localStorage.getItem('nwProfileToken'),device:device(),profile}));}catch(_){}}
   async function loadProfile(){
@@ -207,10 +210,60 @@ window.NWConfigReady.then(()=>{
   function renderRecent(p){const arr=[];(p.recentAttendance||[]).forEach(x=>arr.push({date:x.date,label:'출석체크',tag:'+50점'}));(p.recentWorkout||[]).forEach(x=>arr.push({date:x.date,label:'오운완',tag:'기록'}));arr.sort((a,b)=>String(b.date).localeCompare(String(a.date)));$('recentList').innerHTML=(arr.slice(0,8).map(x=>`<div class="row"><span>${x.label}</span><span>${x.date} <i class="tag">${x.tag}</i></span></div>`).join('')||'<div class="hint">표시할 최근 기록이 없습니다.</div>');}
   async function loadProfileExtras(){const t=localStorage.getItem('nwProfileToken');if(!t)return;const d=await jsonp('profileExtras',{token:t,device:device()});if(!d?.ok)return;if(d.workoutCount!=null){$('workout').textContent=fmt(d.workoutCount)+'회';$('goalWorkout').textContent=d.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,d.workoutCount/10*100)+'%';}renderHistory(d.rankHistory||[]);renderRecent({recentAttendance:d.recentAttendance||[],recentWorkout:d.recentWorkout||[]});try{const c=JSON.parse(localStorage.getItem(coreCacheKey)||'null');if(c&&c.token===t){Object.assign(c.profile,{workoutCount:d.workoutCount,rankHistory:d.rankHistory,recentAttendance:d.recentAttendance,recentWorkout:d.recentWorkout});saveCoreCache(c.profile);}}catch(_){} }
 
+  // v2.73 profile photos: write only the logged-in member's own image.
+  const avatarReplies=new Map(),avatarImages=new Map();let avatarGeneration=0,avatarBusy=false;
+  function avatarRef(v){return /^nw-avatar:[a-f0-9-]{36}$/i.test(String(v||''));}
+  function avatarClearCache(){clearCoreCache();try{sessionStorage.removeItem('nwMemberHubSnapshot');}catch(_){}}
+  function avatarSetImage(target,src){target.replaceChildren();if(!src){target.textContent='🐸';return;}const img=document.createElement('img');img.alt='내 대표이미지';img.src=src;img.onerror=()=>{target.textContent='🐸';};target.append(img);}
+  async function renderOwnAvatar(ref){
+    const generation=++avatarGeneration;
+    if(!avatarRef(ref)){const src=/^https:\/\//i.test(ref||'')?ref:'';avatarSetImage($('profileAvatar'),src);avatarSetImage($('avatarPreview'),src);return;}
+    if(!avatarImages.has(ref))avatarImages.set(ref,jsonp('memberAvatar',{token:localStorage.getItem('nwProfileToken')||'',device:device(),ref}));
+    const result=await avatarImages.get(ref);if(generation!==avatarGeneration)return;
+    if(!result?.ok)avatarImages.delete(ref);
+    const src=result?.ok&&/^data:image\/jpeg;base64,/.test(result.src||'')?result.src:'';
+    avatarSetImage($('profileAvatar'),src);avatarSetImage($('avatarPreview'),src);
+  }
+  window.addEventListener('message',event=>{
+    const trusted=(event.origin===location.origin&&event.source===window.parent)||/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(event.origin);
+    if(!trusted||event.data?.channel!=='nw-avatar')return;const resolve=avatarReplies.get(event.data.nonce);if(resolve)resolve(event.data.result);
+  });
+  function avatarPost(params){return new Promise(resolve=>{
+    const nonce=crypto.randomUUID(),iframe=document.createElement('iframe'),form=document.createElement('form'),payload=document.createElement('textarea');let done=false;
+    iframe.name='nw_avatar_'+nonce;iframe.hidden=true;form.method='POST';form.action=APP;form.target=iframe.name;form.hidden=true;payload.name='payload';payload.value=JSON.stringify({...params,action:'memberAvatarSave',nonce});form.append(payload);document.body.append(iframe,form);
+    const finish=result=>{if(done)return;done=true;clearTimeout(timer);avatarReplies.delete(nonce);form.remove();iframe.remove();resolve(result);};
+    const timer=setTimeout(()=>finish({ok:false,error:'사진 저장 응답이 지연됐어요. 내페이지를 다시 열어 저장 여부를 확인해주세요.'}),45000);avatarReplies.set(nonce,finish);form.submit();
+  });}
+  async function avatarPrepareFile(file){
+    if(!file||file.size>10*1024*1024||!/^image\/(?:jpeg|png|webp)$/i.test(file.type))throw new Error('10MB 이하의 JPG·PNG·WEBP 사진을 선택해주세요.');
+    const url=URL.createObjectURL(file),img=new Image();
+    try{await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('사진을 읽지 못했어요. JPG·PNG 사진으로 다시 선택해주세요.'));img.src=url;});
+      if(!img.naturalWidth||img.naturalWidth*img.naturalHeight>40000000)throw new Error('해상도가 너무 큰 사진이에요. 4천만 화소 이하로 줄여주세요.');
+      const side=Math.min(img.naturalWidth,img.naturalHeight),sx=(img.naturalWidth-side)/2,sy=(img.naturalHeight-side)/2;
+      function jpeg(size,maxBytes){const c=document.createElement('canvas');c.width=c.height=size;const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,size,size);ctx.drawImage(img,sx,sy,side,side,0,0,size,size);for(const quality of [.78,.65,.5,.35,.22]){const data=c.toDataURL('image/jpeg',quality).split(',')[1];if(data&&Math.ceil(data.length*3/4)<=maxBytes)return data;}throw new Error('사진 용량을 줄이지 못했어요. 다른 사진으로 다시 선택해주세요.');}
+      return{base64:jpeg(256,24000),thumbnail:jpeg(64,4000)};
+    }finally{URL.revokeObjectURL(url);}
+  }
+  async function saveAvatar(file,remove=false){
+    if(avatarBusy)return;const token=localStorage.getItem('nwProfileToken');if(!token)return;
+    avatarBusy=true;$('avatarUploadBtn').disabled=$('avatarRemoveBtn').disabled=true;$('avatarStatus').textContent=remove?'기본 이미지로 변경 중…':'사진을 준비하고 저장하는 중…';
+    try{
+      const images=remove?{}:await avatarPrepareFile(file),result=await avatarPost({token,device:device(),previous:$('imageUrl').value,publicImage:collectVisibility().image!==false,mode:remove?'remove':'upload',...images});
+      if(token!==localStorage.getItem('nwProfileToken'))return;
+      if(!result?.ok)throw new Error(result?.error||'사진을 저장하지 못했어요.');
+      $('imageUrl').value=result.imageUrl||'';avatarClearCache();avatarGeneration++;
+      if(result.imageUrl)avatarImages.set(result.imageUrl,Promise.resolve({ok:true,src:result.src}));
+      avatarSetImage($('profileAvatar'),result.src||'');avatarSetImage($('avatarPreview'),result.src||'');$('avatarStatus').textContent=remove?'기본 개구리 이미지로 변경했어요.':'대표이미지를 저장했어요. 공개 설정이 켜져 있으면 생존 추첨에도 표시돼요.';
+    }catch(error){$('avatarStatus').textContent=error.message||'사진을 저장하지 못했어요.';}finally{avatarBusy=false;$('avatarUploadBtn').disabled=$('avatarRemoveBtn').disabled=false;$('avatarFile').value='';}
+  }
+  $('avatarUploadBtn').onclick=()=>$('avatarFile').click();
+  $('avatarFile').onchange=event=>{const file=event.target.files?.[0];if(file)void saveAvatar(file);};
+  $('avatarRemoveBtn').onclick=()=>{if($('imageUrl').value&&confirm('대표이미지를 지우고 기본 개구리 이미지로 바꿀까요?'))void saveAvatar(null,true);};
+
   function addSpeciesRow(item={}){const box=document.createElement('div');box.className='species-row';const e=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');box.innerHTML=`<input class="sp-name" maxlength="80" placeholder="종 이름 전체명" value="${e(item.name||'')}"><input class="sp-count" type="number" min="0" max="99999" placeholder="마릿수" value="${item.count??''}"><input class="sp-exp" maxlength="30" placeholder="사육경력 예: 3년" value="${e(item.experience||'')}"><select class="sp-breed"><option value="">번식경험 미입력</option><option value="없음">없음</option><option value="있음">있음</option><option value="현재 번식 중">현재 번식 중</option></select><button type="button" aria-label="삭제">×</button>`;box.querySelector('.sp-breed').value=item.breeding||'';box.querySelector('button').onclick=()=>box.remove();$('speciesList').appendChild(box);}
   function collectVisibility(){const o={};document.querySelectorAll('#privacyGrid [data-v]').forEach(x=>o[x.dataset.v]=x.checked);return o;}
-  async function loadEditableProfile(prefetched){let p=prefetched;if(!p){const token=localStorage.getItem('nwProfileToken');if(!token)return;const d=await jsonp('memberOwnProfile',{token,device:device()});if(!d?.ok)return;p=d.profile||{};}$('region').value=p.region||'';$('district').value=p.district||'';$('interests').value=p.interests||'';$('introProfile').value=p.intro||'';$('imageUrl').value=p.imageUrl||'';$('speciesList').innerHTML='';(p.species||[]).forEach(addSpeciesRow);if(!(p.species||[]).length)addSpeciesRow();const v=p.visibility||{};document.querySelectorAll('#privacyGrid [data-v]').forEach(x=>x.checked=v[x.dataset.v]!==false);}
-  async function saveEditableProfile(){const token=localStorage.getItem('nwProfileToken');if(!token)return;const species=[...document.querySelectorAll('.species-row')].map(r=>({name:r.querySelector('.sp-name').value.trim(),count:r.querySelector('.sp-count').value===''?null:Number(r.querySelector('.sp-count').value),experience:r.querySelector('.sp-exp').value.trim(),breeding:r.querySelector('.sp-breed').value})).filter(x=>x.name);const data={region:$('region').value,district:$('district').value.trim(),interests:$('interests').value.trim(),intro:$('introProfile').value.trim(),imageUrl:$('imageUrl').value.trim(),species,visibility:collectVisibility()};const b=$('saveProfileBtn');b.disabled=true;$('profileSaved').textContent='저장 중…';const d=await jsonp('memberProfileSave',{token,device:device(),data:JSON.stringify(data)});b.disabled=false;if(d?.ok){clearCoreCache();try{sessionStorage.removeItem('nwMemberHubSnapshot')}catch(_){}}$('profileSaved').textContent=d?.ok?'프로필이 저장되었습니다.':(d?.error||'저장에 실패했습니다.');}
+  async function loadEditableProfile(prefetched){let p=prefetched;if(!p){const token=localStorage.getItem('nwProfileToken');if(!token)return;const d=await jsonp('memberOwnProfile',{token,device:device()});if(!d?.ok)return;p=d.profile||{};}$('region').value=p.region||'';$('district').value=p.district||'';$('interests').value=p.interests||'';$('introProfile').value=p.intro||'';$('imageUrl').value=p.imageUrl||'';void renderOwnAvatar(p.imageUrl||'');$('speciesList').innerHTML='';(p.species||[]).forEach(addSpeciesRow);if(!(p.species||[]).length)addSpeciesRow();const v=p.visibility||{};document.querySelectorAll('#privacyGrid [data-v]').forEach(x=>x.checked=v[x.dataset.v]!==false);}
+  async function saveEditableProfile(){const token=localStorage.getItem('nwProfileToken');if(!token)return;const species=[...document.querySelectorAll('.species-row')].map(r=>({name:r.querySelector('.sp-name').value.trim(),count:r.querySelector('.sp-count').value===''?null:Number(r.querySelector('.sp-count').value),experience:r.querySelector('.sp-exp').value.trim(),breeding:r.querySelector('.sp-breed').value})).filter(x=>x.name);const data={region:$('region').value,district:$('district').value.trim(),interests:$('interests').value.trim(),intro:$('introProfile').value.trim(),imageUrl:$('imageUrl').value.trim(),species,visibility:collectVisibility()};const b=$('saveProfileBtn');b.disabled=true;$('profileSaved').textContent='저장 중…';const d=await jsonp('memberProfileSave',{token,device:device(),data:JSON.stringify(data)});b.disabled=false;if(d?.ok){clearCoreCache();if(d.profile){$('imageUrl').value=d.profile.imageUrl||'';void renderOwnAvatar(d.profile.imageUrl||'');}try{sessionStorage.removeItem('nwMemberHubSnapshot')}catch(_){}}$('profileSaved').textContent=d?.ok?'프로필이 저장되었습니다.':(d?.error||'저장에 실패했습니다.');}
   $('addSpeciesBtn').onclick=()=>addSpeciesRow();$('saveProfileBtn').onclick=saveEditableProfile;
   $('startBtn').onclick=start;$('checkBtn').onclick=check;$('resetBtn').onclick=restartAuth;$('logoutBtn').onclick=async()=>{if(!window.confirm('정말 해제하시겠습니까?\n이 기기 연결을 해제하면 다시 회원식별 인증이 필요합니다.'))return;const token=localStorage.getItem('nwProfileToken');if(token)await jsonp('profileLogout',{token,device:device()});clearConnectionCredentials();$('profileLoadStatus').textContent='';show('authView');loadCandidates();};
   let activeLinkCode='', activeLinkUntil=0, activeLinkToken='', linkingBusy=false;
