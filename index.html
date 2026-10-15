@@ -1556,6 +1556,10 @@ body{
 .partner-site-panel .partner-logo-wrap{background:transparent;border-radius:13px}
 .partner-site-panel .partner-copy b{font-size:12.5px}
 </style>
+<style>
+.nw-rank-movement{display:inline-block;vertical-align:middle;margin-left:6px;font-size:10px;line-height:1.3;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+.nw-rank-up{color:#74e4b0}.nw-rank-down{color:#91bfff}.nw-rank-new{color:#f8d280;font-size:9px;letter-spacing:.02em}.nw-rank-same,.nw-rank-baseline{color:#8197a4}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1855,6 +1859,21 @@ function roleOf(x){
   return OPERATOR_ROLES[(x&&x.name)||'']||'회원';
 }
 function isStaff(x){return roleOf(x)!=='회원';}
+function rankMovementBadge(x){
+ if(isStaff(x))return '';
+ const now=new Date(Date.now()+9*3600000),month=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
+ let kind=x.rankMovementType||'baseline',text='—',label='직전 업데이트 비교 기준 수집 중';
+ if(x.rankMovementMonth!==month||x.rankMovementRank!==x.rank)kind='baseline';
+ if(kind==='new'){text='NEW';label='직전 업데이트에 없던 신규 순위 진입';}
+ else if(['up','down','same'].includes(kind)&&x.rankMovementPrevious>0){
+  const delta=x.rankMovementPrevious-x.rank;
+  kind=delta>0?'up':delta<0?'down':'same';
+  text=delta>0?'▲'+delta:delta<0?'▼'+Math.abs(delta):'—';
+  label=delta>0?'직전 업데이트보다 '+delta+'계단 상승':delta<0?'직전 업데이트보다 '+Math.abs(delta)+'계단 하락':'직전 업데이트와 순위 동일';
+ }
+ return '<span class="nw-rank-movement nw-rank-'+kind+'" title="'+label+'" aria-label="'+label+'">'+text+'</span>';
+}
+
 function staffStar(x){return isStaff(x)?'<span class="nw-ranking-staff-star" role="img" aria-label="운영진">⭐</span>':'';}
 let gradedOnly=false, refreshTimer=null;
 function num(v){if(v===null||v===undefined||v==='')return 0;const n=Number(String(v).replace(/,/g,'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0;}
@@ -1874,7 +1893,8 @@ function sheetRowsToData(rows){
         cStatus=findCol(h,['회원상태','상태','재실상태']),
         cChat=findCol(h,['채팅']),cPhoto=findCol(h,['사진']),cVideo=findCol(h,['영상']),cIntro=findCol(h,['소개']),cAttendance=findCol(h,['출석횟수','출석']),
         cSeason=findCol(h,['시즌총점','월간총점','총점']),cCarry=findCol(h,['전월누적점수','이월누적점수','전월누적']),cLife=findCol(h,['누적점수','영구누적점수']),
-        cGrade=findCol(h,['활동등급','영구등급']);
+        cGrade=findCol(h,['활동등급','영구등급']),
+        cMovePrev=findCol(h,['직전업데이트순위']),cMoveType=findCol(h,['순위변동구분']),cMoveRank=findCol(h,['변동기준순위']),cMoveMonth=findCol(h,['순위비교월']);
   if(cName<0)throw new Error('「현재 닉네임」 열을 찾지 못했습니다.');
   const out=[],seenIds=new Set(); let missingId=0;
   for(let r=1;r<rows.length;r++){
@@ -1896,7 +1916,7 @@ function sheetRowsToData(rows){
           life=cLife>=0&&String(a[cLife]||'').trim()!==''?num(a[cLife]):carry+season,
           grade=cGrade>=0?String(a[cGrade]||'').trim():'';
     if(status==='퇴장'||status==='강퇴')continue;
-    out.push({key:memberId||`legacy-row-${r}`,memberId,prevName:prev,rank:null,role,status:status||'재실',date:cDate>=0?String(a[cDate]||''):'',name,chat,photo,video,intro,attendance,seasonTotal:season,lifetimeTotal:life,grade});
+    out.push({key:memberId||`legacy-row-${r}`,memberId,prevName:prev,rank:null,role,status:status||'재실',date:cDate>=0?String(a[cDate]||''):'',name,chat,photo,video,intro,attendance,seasonTotal:season,lifetimeTotal:life,grade,rankMovementPrevious:cMovePrev>=0?num(a[cMovePrev]):0,rankMovementType:cMoveType>=0?String(a[cMoveType]||''):'',rankMovementRank:cMoveRank>=0?num(a[cMoveRank]):0,rankMovementMonth:cMoveMonth>=0?String(a[cMoveMonth]||''):''});
   }
   const members=out.filter(x=>!isStaff(x)).sort((a,b)=>b.seasonTotal-a.seasonTotal||b.lifetimeTotal-a.lifetimeTotal||(a.memberId||a.name).localeCompare(b.memberId||b.name,'ko'));
   members.forEach((x,i)=>x.rank=i+1);
@@ -2017,11 +2037,11 @@ function renderRanking(){
   document.getElementById('tb').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
     const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
+    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}${rankMovementBadge(x)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
+    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
   }).join('');
   const top=members[0]||{name:'-',seasonTotal:0};
   document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
