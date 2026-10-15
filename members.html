@@ -18,6 +18,24 @@
 .map-hotspots button:hover,.map-hotspots button.active{z-index:4}
 @media(min-width:1100px){.kmap-wrap{grid-template-columns:minmax(0,1.65fr) minmax(260px,1fr)}}
 @media(max-width:900px){.map-image-wrap{width:760px;min-width:760px;margin-left:0}.realmap{min-height:0}}
+
+/* v2.61: shrink the map and the region markers together on mobile. */
+@media(max-width:900px){
+ .shell,.kmap-wrap,.map-results{min-width:0;max-width:100%}
+ .kmap-wrap{grid-template-columns:minmax(0,1fr)}
+ .realmap{overflow:visible;min-width:0;min-height:0;padding:10px}
+ .map-image-wrap{width:100%;max-width:620px;min-width:0;margin:0 auto;flex-shrink:1;container-type:inline-size}
+ .korea-map-image{max-width:100%}
+ .map-hotspots button,.map-hotspots button[data-region="세종"],.map-hotspots button[data-region="대전"],.map-hotspots button[data-region="서울"],.map-hotspots button[data-region="인천"]{
+  width:28px!important;height:28px!important;min-width:0;min-height:0;
+  width:clamp(26px,8cqw,44px)!important;height:clamp(26px,8cqw,44px)!important;
+  font-size:10px!important;font-size:clamp(10px,3cqw,14px)!important;line-height:1.05;padding:0;
+ }
+ .map-hotspots button small{font-size:9px!important;font-size:clamp(9px,2.6cqw,11px)!important;line-height:1.05}
+ .map-credit{overflow-wrap:anywhere;line-height:1.5}
+ .map-results{max-height:none;overflow:visible}
+ .map-results .member{min-width:0;overflow-wrap:anywhere}
+}
 </style>
 </head>
 <body><div class="shell">
