@@ -1535,6 +1535,18 @@ body{
 @keyframes nw-song-ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){#nwMusicTicker .nw-ticker-track{animation:none;width:100%}#nwMusicTicker .nw-ticker-copy:first-child{overflow:hidden;text-overflow:ellipsis;padding-right:8px}#nwMusicTicker .nw-ticker-copy[aria-hidden]{display:none}}
 </style>
+<style>
+/* v2.64: monthly event countdown, Asia/Seoul. */
+.nw-event-heading{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;flex-wrap:wrap;margin-bottom:5px}
+.nw-event-countdown{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;max-width:100%;padding:7px 10px;border:1px solid rgba(224,186,101,.3);border-radius:11px;background:linear-gradient(125deg,rgba(105,76,26,.19),rgba(19,35,33,.65));box-shadow:inset 0 1px rgba(255,238,190,.04)}
+.nw-event-countdown time{font-size:10px;font-weight:600;color:#d5c5a1;white-space:nowrap}
+.nw-event-countdown-value{display:inline-flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.2}
+.nw-event-countdown-day{color:#ffe0a0;font-size:13px;font-weight:900}
+.nw-event-countdown-clock{color:#edf6ee;font-size:13px;font-weight:700;letter-spacing:.04em}
+.nw-event-countdown[data-started="true"] .nw-event-countdown-day{color:#8ee3bd}
+@media(max-width:720px){.nw-event-heading{align-items:flex-start;gap:8px}.nw-event-countdown{padding:6px 9px;gap:4px 9px}.nw-event-heading h2{flex:1 1 100%}.nw-event-countdown-day,.nw-event-countdown-clock{font-size:12px}}
+</style>
+<style>#nwEventCountdown[hidden]{display:none}</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1666,7 +1678,7 @@ body{
   </div>
   <div class="pc-hub-column pc-hub-center">
     <div class="hub-primary"><section id="nwEventBook" class="nw-eventbook" aria-label="월간 추첨이벤트 사진책">
-<h2 id="nwEventTitle">🎁 월간 추첨이벤트</h2><p class="event-intro">이번 달 이벤트 상품을 책처럼 넘겨보세요!</p>
+<div class="nw-event-heading"><h2 id="nwEventTitle">🎁 월간 추첨이벤트</h2><div id="nwEventCountdown" class="nw-event-countdown" role="timer" aria-live="off" hidden><time id="nwEventDate"></time><span class="nw-event-countdown-value"><span id="nwEventDays" class="nw-event-countdown-day"></span><span id="nwEventClock" class="nw-event-countdown-clock"></span></span></div></div><p class="event-intro">이번 달 이벤트 상품을 책처럼 넘겨보세요!</p>
 <div id="nwEventStage" class="event-stage" aria-label="좌우 방향키나 스와이프로 사진 넘기기"><div id="nwEventPages" class="event-pages"><div class="event-empty">이벤트 소식을 불러오는 중…</div></div></div>
 <div class="event-controls"><button type="button" id="nwEventPrev" aria-label="이전 페이지" disabled>◀</button><span id="nwEventCount" class="event-count" aria-live="polite">준비 중</span><button type="button" id="nwEventNext" aria-label="다음 페이지" disabled>▶</button><button type="button" id="nwEventAuto" hidden>⏸ 자동 넘김 정지</button></div>
 <div id="nwEventAutoNote" class="event-auto-note"></div></section><div class="primary-rooms">
@@ -2790,6 +2802,42 @@ window.NWConfigReady.then(function(){
   window.addEventListener('nw-music-ready',sync);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(scheduleMeasure);
   sync();scheduleMeasure();
+})();
+</script>
+
+<script id="nwEventCountdownScript">
+(function(){
+ 'use strict';
+ // Fixed UTC+9 arithmetic also works on devices in other time zones.
+ function eventClockState(now){
+  const seoul=new Date(now+9*60*60*1000),year=seoul.getUTCFullYear(),month=seoul.getUTCMonth()+1;
+  const last=new Date(Date.UTC(year,month,0)),day=last.getUTCDate(),weekday='일월화수목금토'[last.getUTCDay()];
+  const target=Date.UTC(year,month-1,day,13,0,0);
+  const total=Math.max(0,Math.ceil((target-now)/1000));
+  return {year,month,day,weekday,target,started:now>=target,
+   days:Math.floor(total/86400),hours:Math.floor(total%86400/3600),minutes:Math.floor(total%3600/60),seconds:total%60};
+ }
+ const box=document.getElementById('nwEventCountdown'),date=document.getElementById('nwEventDate'),days=document.getElementById('nwEventDays'),clock=document.getElementById('nwEventClock'),title=document.getElementById('nwEventTitle');
+ if(!box||!date||!days||!clock)return;
+ const pad=n=>String(n).padStart(2,'0');
+ let monthKey='';
+ function render(){
+  const state=eventClockState(Date.now()),key=state.year+'-'+state.month;
+  if(key!==monthKey){
+   monthKey=key;
+   date.textContent=state.month+'/'+state.day+'('+state.weekday+') 오후 10시';
+   date.dateTime=state.year+'-'+pad(state.month)+'-'+pad(state.day)+'T22:00:00+09:00';
+   if(title)title.textContent='🎁 '+state.month+'월 월간 추첨이벤트';
+  }
+  box.hidden=false;box.dataset.started=String(state.started);
+  days.textContent=state.started?'이벤트 시작!':'D-'+state.days;
+  clock.textContent=state.started?'':pad(state.hours)+':'+pad(state.minutes)+':'+pad(state.seconds);
+  box.setAttribute('aria-label',state.year+'년 '+state.month+'월 '+state.day+'일 오후 10시, 한국시간. '+(state.started?'이벤트 시작 시간이 되었습니다.':state.days+'일 '+state.hours+'시간 '+state.minutes+'분 '+state.seconds+'초 남음'));
+ }
+ render();
+ setInterval(()=>{if(!document.hidden)render();},1000);
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
+ window.addEventListener('pageshow',render);
 })();
 </script>
 </body></html>
