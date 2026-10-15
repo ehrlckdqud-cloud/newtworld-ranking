@@ -1506,6 +1506,26 @@ body{
 #nwAiOpen .nw-ai-hours{display:block;margin-top:9px;color:#d7bd86;font:500 12px/1.6 system-ui,sans-serif;letter-spacing:0;word-break:keep-all}
 @media(max-width:720px){#nwAiOpen .nw-ai-hours{margin-top:7px;font-size:11px}}
 </style>
+<style id="nwAiGoldOrbitV252">
+/* Light follows the actual rounded rectangular border; no circular rotation. */
+#nwAiOpen>.nw-ai-gold-orbit{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;opacity:0;z-index:1;transition:opacity .18s ease;filter:drop-shadow(0 0 3px rgba(255,199,62,.85)) drop-shadow(0 0 7px rgba(255,184,33,.45))}
+#nwAiOpen>.nw-ai-gold-orbit rect{width:calc(100% - 4px);height:calc(100% - 4px);fill:none;vector-effect:non-scaling-stroke;stroke-linecap:round}
+#nwAiOpen .nw-ai-gold-tail{stroke:#e8b33c;stroke-width:2.5;stroke-opacity:.62;stroke-dasharray:18 82;stroke-dashoffset:0}
+#nwAiOpen .nw-ai-gold-head{stroke:#fff3b2;stroke-width:3;stroke-dasharray:4 96;stroke-dashoffset:-14}
+@media(min-width:1041px) and (any-hover:hover){
+ #nwAiOpen:is(:hover,:focus-visible)>.nw-ai-gold-orbit{opacity:1}
+ #nwAiOpen:is(:hover,:focus-visible) .nw-ai-gold-tail{animation:nwAiGoldTail 2.4s linear infinite}
+ #nwAiOpen:is(:hover,:focus-visible) .nw-ai-gold-head{animation:nwAiGoldHead 2.4s linear infinite}
+}
+@keyframes nwAiGoldTail{from{stroke-dashoffset:0}to{stroke-dashoffset:-100}}
+@keyframes nwAiGoldHead{from{stroke-dashoffset:-14}to{stroke-dashoffset:-114}}
+@media(max-width:1040px){#nwAiOpen>.nw-ai-gold-orbit{display:none}}
+@media(prefers-reduced-motion:reduce){
+ #nwAiOpen>.nw-ai-gold-orbit{transition:none}
+ #nwAiOpen .nw-ai-gold-orbit rect{animation:none!important;stroke-dasharray:none}
+ #nwAiOpen .nw-ai-gold-head{display:none}
+}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1660,6 +1680,7 @@ body{
 
 
 </div><a id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문 AI비서 · 회원 전용">
+<svg class="nw-ai-gold-orbit" aria-hidden="true" focusable="false" width="100%" height="100%"><rect class="nw-ai-gold-tail" x="2" y="2" rx="20" pathLength="100"/><rect class="nw-ai-gold-head" x="2" y="2" rx="20" pathLength="100"/></svg>
 <img src="assets/ai/assistant.webp" width="140" height="140" loading="lazy" decoding="async" alt="뉴트월드 전문 AI비서">
 <div><small>NEWTWORLD AI ASSISTANT</small><h2>뉴트월드 전문 AI비서</h2><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로, 사육과 생태에 대한 궁금증을 함께 풀어드려요.</p><span class="nw-ai-hours">🕐 보통 오후 1시 ~ 다음 날 새벽 2시 운영</span></div></a></div>
     <div class="hub-challenges">
