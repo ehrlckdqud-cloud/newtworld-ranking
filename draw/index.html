@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang=ko><script type=importmap>{"imports":{"ao29o":"./Box2D.simd.8376b81f.js","b21ls":"./Box2D.b9b16b27.wasm","dRxiZ":"./Box2D.2004e6b9.js","g5g75":"./ff.7fdc9e82.svg","ikqOI":"./Box2D.simd.dd31b167.wasm"}}</script><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name=theme-color content=#071511><title>뉴트월드 생존 추첨</title><meta name=description content="구슬을 굴려 마지막 생존자를 뽑는 뉴트월드 월간 추첨 게임"><link rel=stylesheet href=newtworld-draw-source.092ca304.css><body>
+<header class=topbar><a class=brand href=# id=back><span class=brand-mark aria-hidden=true>N<span>✦</span></span><div><small>NEWTWORLD MONTHLY EVENT</small><h1>뉴트월드 <em>생존 추첨</em></h1></div></a><div class=head-actions><span class=local-tag>진행자 화면</span><button id=focus type=button aria-pressed=false>화면 크게</button><button id=exit type=button>닫기</button></div></header>
+<main class=workspace>
+<aside class=controls aria-label="추첨 설정"><div class=panel-heading><span class=eyebrow>LET LUCK ROLL</span><h2>이번 달의 행운은 누구에게?</h2><p>끝까지 남은 구슬이 주인공이 됩니다.</div>
+<label class=field-label for=names>참가자 명단 <span id=count>0명 · 0개</span></label>
+<textarea id=names rows=7 placeholder="이름을 줄바꿈이나 쉼표로 구분해주세요.
+예: 셀리, 김하영, 조희승" spellcheck=false maxlength=30000></textarea>
+<div class=input-actions><button id=sample type=button class=text-btn>예시 명단</button><button id=clear type=button class=text-btn>비우기</button></div>
+<label class=toggle-line><input id=copies type=checkbox><span>동일 이름의 여러 구슬 허용<small>체크하면 이름*2 형식으로 개수를 지정할 수 있어요.</small></span></label>
+<div class=divider></div><label class=field-label for=map>코스 선택</label><select id=map disabled><option>엔진 준비 중…</select>
+<div class=rules-grid><div><label class=field-label for=mode>당첨 방식</label><select id=mode><option value=last>마지막 생존<option value=first>먼저 도착</select></div><div><label class=field-label for=winnerCount>당첨 구슬 수</label><div class=number-wrap><input id=winnerCount type=number value=1 min=1 max=300 inputmode=numeric><span>개</span></div></div></div>
+<p class=rule-hint id=ruleHint>마지막까지 남은 1개 구슬이 당첨돼요.</p>
+<label class=toggle-line><input id=skills type=checkbox checked><span>역전 스킬<small>충격파로 주변 구슬을 밀어내요.</small></span></label>
+<label class=toggle-line><input id=record type=checkbox><span>게임 화면 녹화<small>지원하는 브라우저에서 종료 후 영상으로 저장해요.</small></span></label>
+<p class=form-error id=error role=alert><div class=start-actions><button id=shuffle type=button disabled aria-label="구슬 배치 다시 섞기">↻ 섞기</button><button id=start type=button class=primary disabled>엔진 준비 중…</button></div>
+<p class=privacy-note>명단과 최근 결과는 이 브라우저에만 저장돼요.<br>화면 공유로 함께 관람해주세요.</p>
+<details id=history><summary>최근 추첨 기록 <span id=historyCount>0</span></summary><ol id=historyList></ol><button id=clearHistory type=button class=text-btn>기록 지우기</button></details>
+</aside>
+<section class=game-shell aria-label="추첨 경기장"><div class=game-top><div><span class=status-dot></span><span id=status role=status>게임 엔진을 불러오고 있어요</span></div><span id=progress>READY</span></div><div id=arena><div class=loading id=loading><span class=loader></span><b>행운의 구슬을 준비하고 있어요</b><p>처음에는 잠시 시간이 걸릴 수 있어요.</div><div class=countdown id=countdown hidden aria-live=assertive></div><div class=paused-label id=pausedLabel hidden>잠시 멈췄어요</div></div>
+<div class=game-bottom><span id=gameHint>좌측은 전체 코스 · 우측은 진행 순위</span><div class=play-actions><label for=speed>속도</label><select id=speed aria-label="게임 속도"><option value=1>1×<option value=1.5>1.5×<option value=2>2×</select><button id=pause type=button disabled>일시정지</button><button id=reset type=button disabled>처음으로</button></div></div>
+<div class=game-caption><span>✦ 운명이 뒤집히는 순간, 끝까지 지켜보세요.</span><span>NEWTWORLD SURVIVAL DRAW</span></div></section>
+</main>
+<footer>Based on Marble Roulette by <a href=https://github.com/lazygyu/roulette target=_blank rel=noopener>lazygyu</a> · <a href=licenses.html target=_blank rel=noopener>오픈소스 라이선스</a><span>뉴트월드 전용 에디션 · v2.71</span></footer>
+<dialog id=result><form method=dialog><button class=dialog-close aria-label="결과창 닫기">✕</button></form><span class=eyebrow>THE LUCKY SURVIVOR</span><div class=trophy aria-hidden=true>🏆</div><h2>이번 추첨의 주인공</h2><p id=resultMeta><ol id=resultNames></ol><p id=copyStatus role=status><div class=result-actions><button id=copy type=button>명단 복사</button><button id=download type=button>결과 저장</button><button id=again class=primary type=button>다음 추첨 준비</button></div><small>같은 이름의 여러 구슬을 허용하면 중복 당첨될 수 있어요.</small></dialog>
+<div id=toast role=status hidden></div><script type=module src=newtworld-draw-source.141acb94.js></script>
