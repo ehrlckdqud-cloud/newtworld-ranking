@@ -1519,6 +1519,9 @@ body{
 @media(max-width:1040px){#nwAiOpen>.nw-ai-gold-orbit{display:none}}
 @media(prefers-reduced-motion:reduce){#nwAiOpen>.nw-ai-gold-orbit{transition:none}}
 </style>
+<style>
+.nw-ranking-staff-star{display:inline-block;margin-left:5px;font-size:.9em;line-height:1;vertical-align:baseline;white-space:nowrap}
+</style>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1807,10 +1810,11 @@ const OPERATOR_ROLES={
 };
 function roleOf(x){
   const raw=String((x&&x.role)||'').trim();
-  if(raw==='방장'||raw==='부방장'||raw==='운영진') return raw;
+  if(raw==='방장'||raw==='부방장'||raw==='운영진'||raw==='회원') return raw;
   return OPERATOR_ROLES[(x&&x.name)||'']||'회원';
 }
 function isStaff(x){return roleOf(x)!=='회원';}
+function staffStar(x){return isStaff(x)?'<span class="nw-ranking-staff-star" role="img" aria-label="운영진">⭐</span>':'';}
 let gradedOnly=false, refreshTimer=null;
 function num(v){if(v===null||v===undefined||v==='')return 0;const n=Number(String(v).replace(/,/g,'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0;}
 function cleanName(v){return String(v||'').trim().replace(/^\[/,'').replace(/\]$/,'');}
@@ -1972,11 +1976,11 @@ function renderRanking(){
   document.getElementById('tb').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
     const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span></td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
+    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td>${fmt(x.lifetimeTotal)}</td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
+    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade">${memberBadge(x.lifetimeTotal)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br>영구 누적점수 ${fmt(x.lifetimeTotal)}점</div></div>`;
   }).join('');
   const top=members[0]||{name:'-',seasonTotal:0};
   document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
