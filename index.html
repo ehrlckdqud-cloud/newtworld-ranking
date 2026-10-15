@@ -1523,9 +1523,12 @@ body{
 .nw-ranking-staff-star{display:inline-block;margin-left:5px;font-size:.9em;line-height:1;vertical-align:baseline;white-space:nowrap}
 </style>
 <style>
-/* v2.59: collapsed player now-playing ticker */
-#nwMusicTicker{display:none;position:absolute;top:-29px;left:0;right:calc(var(--nw-collapse-width,118px) + 17px);height:25px;align-items:center;overflow:hidden;border:1px solid rgba(115,190,220,.23);border-bottom:0;border-radius:9px 9px 0 0;background:rgba(7,22,30,.96);color:#c8e4ee;font-size:11px;pointer-events:none;contain:paint}
+/* v2.60: collision-safe collapsed player ticker with fixed music note */
+#nwMusicTicker{display:none;position:absolute;top:-29px;left:var(--nw-ticker-left,160px);right:calc(var(--nw-collapse-width,118px) + 17px);height:25px;align-items:center;overflow:hidden;border:1px solid rgba(115,190,220,.23);border-bottom:0;border-radius:9px 9px 0 0;background:rgba(7,22,30,.96);color:#c8e4ee;font-size:11px;pointer-events:none;contain:paint}
 #nwMusicDock.nw-music-collapsed #nwMusicTicker:not([hidden]){display:flex}
+#nwMusicTicker[data-cramped="true"]{visibility:hidden}
+.nw-ticker-note{flex:0 0 22px;width:22px;text-align:center;color:#d8bdff;font-size:13px;line-height:24px}
+.nw-ticker-viewport{flex:1;min-width:0;height:24px;overflow:hidden}
 .nw-ticker-track{display:flex;width:max-content;animation:nw-song-ticker var(--nw-ticker-duration,16s) linear infinite;animation-play-state:paused}
 #nwMusicDock.nw-music-collapsed #nwMusicTicker[data-playing="true"] .nw-ticker-track{animation-play-state:running}
 .nw-ticker-copy{display:block;flex-shrink:0;white-space:nowrap;padding:0 44px 0 12px;line-height:24px}
@@ -2022,7 +2025,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <div id="nwMusicDock" aria-label="뉴트월드 배경음악 플레이어">
-  <div id="nwMusicTicker" hidden aria-label="현재 곡"><div class="nw-ticker-track"><span class="nw-ticker-copy"></span><span class="nw-ticker-copy" aria-hidden="true"></span></div></div>
+  <div id="nwMusicTicker" hidden aria-label="현재 곡"><span class="nw-ticker-note" aria-hidden="true">♪</span><div class="nw-ticker-viewport"><div class="nw-ticker-track"><span class="nw-ticker-copy"></span><span class="nw-ticker-copy" aria-hidden="true"></span></div></div></div>
   <button class="nw-collapse-btn" id="nwCollapseBtn" type="button">플레이어 접기</button>
   <div class="nw-music-shell">
     <div class="nw-music-main" id="nwMusicMain">
@@ -2739,12 +2742,22 @@ window.NWConfigReady.then(function(){
   const dock=document.getElementById('nwMusicDock'),ticker=document.getElementById('nwMusicTicker');
   const button=document.getElementById('nwCollapseBtn'),title=document.getElementById('nwTrackTitle'),artist=document.getElementById('nwTrackArtist');
   if(!dock||!ticker||!button||!title||!artist)return;
-  const copies=ticker.querySelectorAll('.nw-ticker-copy'),track=ticker.querySelector('.nw-ticker-track');
+  const copies=ticker.querySelectorAll('.nw-ticker-copy'),track=ticker.querySelector('.nw-ticker-track'),viewport=ticker.querySelector('.nw-ticker-viewport');
+  const profile=document.getElementById('nwMyPageBtn'),admin=document.getElementById('nwAdminLoginBtn');
   let lastText='',boundAudio=null,frame=0;
   function measure(){
-    dock.style.setProperty('--nw-collapse-width',Math.ceil(button.getBoundingClientRect().width)+'px');
-    if(ticker.hidden||!ticker.clientWidth)return;
-    copies.forEach(copy=>copy.style.minWidth=ticker.clientWidth+'px');
+    const dockRect=dock.getBoundingClientRect(),buttonRect=button.getBoundingClientRect();
+    let safeLeft=dockRect.left;
+    [profile,admin].forEach(control=>{
+      if(!control)return;
+      const rect=control.getBoundingClientRect();
+      if(rect.width&&rect.bottom>buttonRect.top&&rect.top<buttonRect.bottom)safeLeft=Math.max(safeLeft,rect.right+8);
+    });
+    dock.style.setProperty('--nw-collapse-width',Math.ceil(buttonRect.width)+'px');
+    dock.style.setProperty('--nw-ticker-left',Math.max(0,Math.ceil(safeLeft-dockRect.left))+'px');
+    ticker.dataset.cramped=String(buttonRect.left-8-safeLeft<30);
+    if(ticker.hidden||!viewport.clientWidth)return;
+    copies.forEach(copy=>copy.style.minWidth=viewport.clientWidth+'px');
     const duration=Math.max(10,copies[0].getBoundingClientRect().width/28);
     track.style.setProperty('--nw-ticker-duration',duration.toFixed(2)+'s');
   }
@@ -2772,8 +2785,8 @@ window.NWConfigReady.then(function(){
   new MutationObserver(sync).observe(title,{childList:true,characterData:true,subtree:true});
   new MutationObserver(sync).observe(artist,{childList:true,characterData:true,subtree:true});
   new MutationObserver(scheduleMeasure).observe(dock,{attributes:true,attributeFilter:['class']});
-  if(window.ResizeObserver){const observer=new ResizeObserver(scheduleMeasure);observer.observe(button);observer.observe(ticker);}
-  else window.addEventListener('resize',scheduleMeasure);
+  if(window.ResizeObserver){const observer=new ResizeObserver(scheduleMeasure);[button,ticker,profile,admin].filter(Boolean).forEach(element=>observer.observe(element));}
+  window.addEventListener('resize',scheduleMeasure);
   window.addEventListener('nw-music-ready',sync);
   if(document.fonts&&document.fonts.ready)document.fonts.ready.then(scheduleMeasure);
   sync();scheduleMeasure();
