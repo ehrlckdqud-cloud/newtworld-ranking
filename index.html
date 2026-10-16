@@ -1603,6 +1603,7 @@ body{
 (function(){
  'use strict';
  var verified=null,validUntil=0,pending=false,timer=0,expiry=0,attempted=0,failed=false;
+ function cached(){try{var c=JSON.parse(localStorage.getItem('nwRankMeta297')||'null');if(c&&c.app===(window.NW_CONFIG||{}).appScriptUrl&&Date.now()-c.at>=0&&Date.now()-c.at<120000&&Array.isArray(c.data.verifiedIds)){verified=new Set(c.data.verifiedIds);validUntil=c.at+120000;window.NWRankMovements297=c.data.movements||[];paint();expiry=setTimeout(function(){failed=true;paint();},Math.max(0,validUntil-Date.now()));}}catch(_){} }
  function label(id){
   if(!id)return '<span class="nw-verification-unknown">확인 필요</span>';
   if(!verified||Date.now()>=validUntil)return '<span class="nw-verification-unknown">'+(failed?'확인 불가':'확인 중')+'</span>';
@@ -1619,17 +1620,20 @@ body{
    if(done)return;done=true;pending=false;clearTimeout(timeout);script.remove();window[name]=function(){};setTimeout(function(){delete window[name]},60000);
    if(data&&data.ok===true&&Array.isArray(data.verifiedIds)&&data.verifiedIds.length<=10000&&data.verifiedIds.every(function(id){return typeof id==='string'&&id.length>0&&id.length<=160;})){
     verified=new Set(data.verifiedIds);validUntil=Date.now()+120000;failed=false;clearTimeout(expiry);
+    window.NWRankMovements297=Array.isArray(data.movements)?data.movements:[];
+    try{localStorage.setItem('nwRankMeta297',JSON.stringify({app:app,at:Date.now(),data:data}));}catch(_){}
+    window.NWPaintRankMovements297?.();
     expiry=setTimeout(function(){failed=true;paint()},120000);
    }else failed=true;
    paint();schedule();
   }
   window[name]=finish;script.async=true;script.onerror=function(){finish(null)};timeout=setTimeout(function(){finish(null)},15000);
-  script.src=app+(app.indexOf('?')<0?'?':'&')+'action=rankingVerification&callback='+encodeURIComponent(name)+'&_='+attempted;document.head.appendChild(script);
+  script.src=app+(app.indexOf('?')<0?'?':'&')+'action=rankingMeta&callback='+encodeURIComponent(name)+'&_='+attempted;document.head.appendChild(script);
  }
  function resume(){if(Date.now()>=validUntil)paint();if(!document.hidden&&Date.now()-attempted>=15000)poll();else schedule();}
  document.addEventListener('visibilitychange',function(){if(document.hidden)clearTimeout(timer);else resume();});
  window.addEventListener('focus',resume);window.addEventListener('pageshow',resume);
- if(window.NWConfigReady&&typeof window.NWConfigReady.then==='function')window.NWConfigReady.then(poll);else poll();
+ if(window.NWConfigReady&&typeof window.NWConfigReady.then==='function')window.NWConfigReady.then(function(){cached();poll();});else{cached();poll();}
 })();
 
 </script>
@@ -1684,10 +1688,12 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 @media(max-width:390px){.nw-ranking-avatar-mobile{width:28px;height:28px;flex-basis:28px}.nw-ranking-avatar-mobile .nw-ranking-avatar-button{width:28px;height:28px}.card-head-right{gap:5px}}
 </style>
-<script src="assets/ranking-avatars-v292.js" defer></script>
+<script src="assets/ranking-avatars-v297.js" defer></script>
 <link rel="stylesheet" href="assets/badge-hover-v294.css">
 <script src="assets/badge-hover-v294.js" defer></script>
-</head>
+<style id="nwRankingMovement297">
+@media(min-width:721px){.table-wrap td.name{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.65}.table-wrap td.name>span:first-child{overflow-wrap:anywhere}.table-wrap td.name .nw-rank-movement{display:inline-block;white-space:nowrap}}
+</style></head>
 <body>
 <div class="season-panorama" aria-hidden="true">
   <video id="nwSeasonVideo" class="season-panorama-video" autoplay muted loop playsinline preload="metadata" poster="">
@@ -1990,7 +1996,11 @@ function isStaff(x){return roleOf(x)!=='회원';}
 function rankMovementBadge(x){
  if(isStaff(x))return '';
  const now=new Date(Date.now()+9*3600000),month=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
+ const live=(window.NWRankMovements297||[]).find(v=>v.id===x.memberId);
+ if(live)x={...x,rankMovementType:live.type,rankMovementPrevious:Number(live.previous),rankMovementRank:Number(live.rank),rankMovementMonth:live.month};
  let kind=x.rankMovementType||'baseline',text='—',label='직전 업데이트 비교 기준 수집 중';
+ const mm=String(x.rankMovementMonth||'').trim().match(/^(\d{4})[-/.](\d{1,2})(?:\D|$)/);
+ if(mm)x.rankMovementMonth=mm[1]+'-'+mm[2].padStart(2,'0');
  if(x.rankMovementMonth!==month||x.rankMovementRank!==x.rank)kind='baseline';
  if(kind==='new'){text='NEW';label='직전 업데이트에 없던 신규 순위 진입';}
  else if(['up','down','same'].includes(kind)&&x.rankMovementPrevious>0){
@@ -1999,9 +2009,10 @@ function rankMovementBadge(x){
   text=delta>0?'▲'+delta:delta<0?'▼'+Math.abs(delta):'—';
   label=delta>0?'직전 업데이트보다 '+delta+'계단 상승':delta<0?'직전 업데이트보다 '+Math.abs(delta)+'계단 하락':'직전 업데이트와 순위 동일';
  }
- return '<span class="nw-rank-movement nw-rank-'+kind+'" title="'+label+'" aria-label="'+label+'">'+text+'</span>';
+ return '<span data-rank-movement="'+encodeURIComponent(x.memberId||'')+'" class="nw-rank-movement nw-rank-'+kind+'" title="'+label+'" aria-label="'+label+'">'+text+'</span>';
 }
 
+window.NWPaintRankMovements297=function(){document.querySelectorAll('[data-rank-movement]').forEach(node=>{const id=decodeURIComponent(node.dataset.rankMovement),x=DATA.find(v=>v.memberId===id);if(x)node.outerHTML=rankMovementBadge(x);});};
 function staffStar(x){return isStaff(x)?'<span class="nw-ranking-staff-star" role="img" aria-label="운영진">⭐</span>':'';}
 let gradedOnly=false, refreshTimer=null;
 function num(v){if(v===null||v===undefined||v==='')return 0;const n=Number(String(v).replace(/,/g,'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0;}
@@ -2306,7 +2317,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
   let id=localStorage.getItem('nwVisitorId');
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
-  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  function showVisit(d,cached){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');['nwVisitToday','nwVisitTotal'].forEach(k=>document.getElementById(k).title=cached?'최근 확인값 · 갱신 중':'방금 확인한 방문자 수');}
+  const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  try{const c=JSON.parse(localStorage.getItem('nwVisit297')||'null');if(c&&c.app===url&&c.data.date===day&&Date.now()-c.at>=0&&Date.now()-c.at<86400000)showVisit(c.data,true);}catch(_){}
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){showVisit(d,false);try{localStorage.setItem('nwVisit297',JSON.stringify({app:url,data:d,at:Date.now()}));}catch(_){}}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
 })();
 
