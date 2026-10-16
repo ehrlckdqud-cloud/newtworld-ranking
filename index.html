@@ -1513,20 +1513,7 @@ body{
 @media(max-width:720px){#nwAiOpen .nw-ai-hours{margin-top:7px;font-size:11px}}
 </style>
 <style id="nwAiGoldOrbitV254">
-#nwAiOpen>.nw-ai-gold-orbit{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;opacity:0;z-index:1;transition:opacity .25s ease}
-#nwAiOpen .nw-ai-orbit-outline{fill:none;stroke:#edc36b;stroke-width:1.25;opacity:.68;pointer-events:none}
-#nwAiOpen .nw-ai-orbit-outline-glow{stroke-width:3.5;opacity:.28;filter:blur(2.5px)}
-#nwAiOpen .nw-ai-orbit-path{fill:none;stroke:none}
-/* v2.85: luminous tapered ribbons, symmetric on the exact CSS border centre. */
-#nwAiOpen .nw-ai-ribbon-line{fill:none;stroke:#ffd66d;stroke-linecap:round;stroke-linejoin:round}
-#nwAiOpen .nw-ai-ribbon-core{fill:none;stroke:#fff5d2;stroke-linecap:round;stroke-linejoin:round}
-#nwAiOpen .nw-ai-ribbon-halo{fill:none;stroke:#ffbd39;stroke-linecap:round;stroke-linejoin:round;filter:blur(2.4px)}
-#nwAiOpen .nw-ai-ribbon{pointer-events:none}
-#nwAiOpen .nw-ai-ribbon path{animation:nw-ai-ribbon-orbit 5s linear infinite;animation-play-state:paused}
-@keyframes nw-ai-ribbon-orbit{from{stroke-dashoffset:var(--nw-ribbon-start)}to{stroke-dashoffset:calc(var(--nw-ribbon-start) - 1000)}}
-@media(min-width:1041px) and (any-hover:hover){#nwAiOpen:is(:hover,:focus-visible) .nw-ai-ribbon path{animation-play-state:running}}
-/* A gentler speed replaces v2.82's full stop for reduced-motion settings. */
-@media(prefers-reduced-motion:reduce){#nwAiOpen .nw-ai-ribbon path{animation-duration:10s}}
+#nwAiOpen>.nw-ai-gold-orbit{position:absolute;pointer-events:none;opacity:0;z-index:1;transition:opacity .25s ease}
 @media(min-width:1041px) and (any-hover:hover){#nwAiOpen:is(:hover,:focus-visible)>.nw-ai-gold-orbit{opacity:1}}
 @media(max-width:1040px){#nwAiOpen>.nw-ai-gold-orbit{display:none}}
 @media(prefers-reduced-motion:reduce){#nwAiOpen>.nw-ai-gold-orbit{transition:none}}
@@ -1743,7 +1730,7 @@ body{
 
 </div><a id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문 AI비서 · 회원 전용">
 <span id="nwAiPresence" class="nw-ai-presence" data-online="false" role="status" aria-live="polite" aria-atomic="true"><span class="nw-ai-presence-dot" aria-hidden="true"></span><span id="nwAiPresenceText">휴식 중</span></span>
-<svg class="nw-ai-gold-orbit" aria-hidden="true" focusable="false" width="100%" height="100%"><path class="nw-ai-orbit-outline nw-ai-orbit-outline-glow"/><path class="nw-ai-orbit-outline"/><path class="nw-ai-orbit-path"/><g class="nw-ai-ribbon"/><g class="nw-ai-ribbon"/></svg>
+<canvas class="nw-ai-gold-orbit" aria-hidden="true"></canvas>
 <img src="assets/ai/assistant.webp" width="140" height="140" loading="lazy" decoding="async" alt="뉴트월드 전문 AI비서">
 <div><small>NEWTWORLD AI ASSISTANT</small><h2>뉴트월드 전문 AI비서</h2><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로, 사육과 생태에 대한 궁금증을 함께 풀어드려요.</p><span class="nw-ai-hours">🕐 보통 오후 1시 ~ 다음 날 새벽 2시 운영</span></div></a></div>
     <div class="hub-challenges">
@@ -2782,43 +2769,77 @@ window.NWConfigReady.then(function(){
 (()=>{const rooms=document.querySelector('.hub-primary .primary-rooms'),column=document.querySelector('.pc-hub-right');if(!rooms||!column)return;const panel=document.createElement('aside');panel.className='partner-panel partner-right pc-room-links';panel.setAttribute('aria-label','뉴트월드 오픈톡방');[...rooms.querySelectorAll('.room-card')].forEach((original,i)=>{const link=document.createElement('a');link.className='partner-card nw-community-room'+(i===1?' nw-community-trade':'');link.href=original.href;link.target='_blank';link.rel='noopener noreferrer';const logo=document.createElement('div');logo.className='partner-logo-wrap';const img=original.querySelector('img');if(img)logo.appendChild(img.cloneNode(true));const copy=document.createElement('div');copy.className='partner-copy';const title=document.createElement('b');title.textContent=i===0?'뉴트월드 메인방':'뉴트월드 거래방';const label=document.createElement('span');label.textContent=i===0?'함께 소통하는 커뮤니티':'분양 · 거래 오픈톡방';copy.append(title,label);link.append(logo,copy);panel.appendChild(link);});column.prepend(panel);})();
 </script><script id="nwAiGoldOrbitControllerV254">
 (()=>{
- const banner=document.getElementById('nwAiOpen'),svg=banner&&banner.querySelector('.nw-ai-gold-orbit');if(!svg)return;
- const track=svg.querySelector('.nw-ai-orbit-path'),outlines=[...svg.querySelectorAll('.nw-ai-orbit-outline')];
- const groups=[...svg.querySelectorAll('.nw-ai-ribbon')],NS='http://www.w3.org/2000/svg';
- const count=64,tailLength=300;
- // One border track, identical motion and a half-perimeter phase separation.
- const ribbons=groups.map((group,index)=>Array.from({length:count},(_,i)=>{
-  const t=i/(count-1),strength=Math.pow(t,.85),width=.12+3.68*Math.pow(t,1.8),step=tailLength/count;
-  const nodes=[];
-  for(const [kind,opacity,strokeWidth] of [['halo',strength*.42,width+4],['line',strength*.95,width],['core',strength*.92,width*.32]]){
-   const node=document.createElementNS(NS,'path');
-   node.setAttribute('class','nw-ai-ribbon-'+kind);
-   node.setAttribute('pathLength','1000');node.setAttribute('stroke-dasharray','4.74 995.26');
-   node.setAttribute('stroke-width',String(strokeWidth));node.setAttribute('opacity',String(opacity));
-   node.style.setProperty('--nw-ribbon-start',String(tailLength-step*i-index*500));
-   group.append(node);nodes.push(node);
+ const banner=document.getElementById('nwAiOpen'),canvas=banner&&banner.querySelector('.nw-ai-gold-orbit');
+ if(!canvas||!canvas.getContext)return;
+ const ctx=canvas.getContext('2d');if(!ctx)return;
+ const pad=18,count=128,forced=canvas.hasAttribute('data-preview');
+ let w=0,h=0,r=0,length=0,ratio=1,frame=0,epoch=0,lastPaint=-Infinity,hovered=banner.matches(':hover'),focused=banner.matches(':focus-visible');
+ function point(distance){
+  let d=((distance%length)+length)%length;
+  const x=w-2*r,y=h-2*r,a=Math.PI*r/2;
+  if(d<=x)return{x:r+d,y:0};d-=x;
+  if(d<=a){const t=-Math.PI/2+d/r;return{x:w-r+r*Math.cos(t),y:r+r*Math.sin(t)};}d-=a;
+  if(d<=y)return{x:w,y:r+d};d-=y;
+  if(d<=a){const t=d/r;return{x:w-r+r*Math.cos(t),y:h-r+r*Math.sin(t)};}d-=a;
+  if(d<=x)return{x:w-r-d,y:h};d-=x;
+  if(d<=a){const t=Math.PI/2+d/r;return{x:r+r*Math.cos(t),y:h-r+r*Math.sin(t)};}d-=a;
+  if(d<=y)return{x:0,y:h-r-d};d-=y;
+  const t=Math.PI+d/r;return{x:r+r*Math.cos(t),y:r+r*Math.sin(t)};
+ }
+ function outline(){
+  ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(w-r,0);ctx.arc(w-r,r,r,-Math.PI/2,0);
+  ctx.lineTo(w,h-r);ctx.arc(w-r,h-r,r,0,Math.PI/2);ctx.lineTo(r,h);
+  ctx.arc(r,h-r,r,Math.PI/2,Math.PI);ctx.lineTo(0,r);ctx.arc(r,r,r,Math.PI,Math.PI*1.5);ctx.closePath();
+ }
+ function paint(now){
+  ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,w+2*pad,h+2*pad);ctx.save();ctx.translate(pad,pad);
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#edc36b';ctx.lineWidth=1.25;ctx.globalAlpha=.64;ctx.shadowColor='#edc36b';ctx.shadowBlur=4;outline();ctx.stroke();
+  const duration=5000/1.5,front=(((now-epoch)%duration+duration)%duration)/duration*length,tail=length*.30;
+  // Both ribbons use this ONE front value. The second is always exactly L/2 ahead.
+  for(let ribbon=0;ribbon<2;ribbon++){
+   const head=front+ribbon*length/2;
+   const samples=Array.from({length:count+1},(_,i)=>{
+    const t=i/count,d=head-tail+tail*t,p=point(d),before=point(d-.05),after=point(d+.05),dx=after.x-before.x,dy=after.y-before.y,norm=Math.hypot(dx,dy)||1;
+    return{x:p.x,y:p.y,nx:-dy/norm,ny:dx/norm,width:3.8*Math.pow(t,1.8)};
+   });
+   // One continuous filled shape per layer avoids dots from overlapping stroke caps.
+   for(const layer of ['halo','line','core']){
+    const factor=layer==='halo'?1.5:layer==='line'?1:.32;
+    ctx.globalAlpha=layer==='halo'?.32:layer==='line'?.96:.90;
+    ctx.fillStyle=layer==='halo'?'#ffb72e':layer==='line'?'#ffd66d':'#fff5d2';
+    ctx.shadowBlur=layer==='halo'?7:0;ctx.shadowColor='#ffbc35';
+    ctx.beginPath();
+    samples.forEach((p,i)=>{const half=p.width*factor/2;ctx[i?'lineTo':'moveTo'](p.x+p.nx*half,p.y+p.ny*half);});
+    const tip=samples[count],angle=Math.atan2(tip.ny,tip.nx);
+    ctx.arc(tip.x,tip.y,tip.width*factor/2,angle,angle-Math.PI,true);
+    for(let i=count;i>=0;i--){const p=samples[i],half=p.width*factor/2;ctx.lineTo(p.x-p.nx*half,p.y-p.ny*half);}
+    ctx.closePath();ctx.fill();
+   }
   }
-  return nodes;
- }));
+  ctx.restore();
+ }
  function measure(){
-  // Absolute-positioned SVG starts at the border's inner edge. Move its origin to
-  // the CSS border centre, including fractional border widths and hover scaling.
   const style=getComputedStyle(banner),left=parseFloat(style.borderLeftWidth)||0,right=parseFloat(style.borderRightWidth)||0,
         top=parseFloat(style.borderTopWidth)||0,bottom=parseFloat(style.borderBottomWidth)||0;
-  const boxWidth=parseFloat(style.width),boxHeight=parseFloat(style.height),borderBox=style.boxSizing==='border-box';
-  const outerW=borderBox&&Number.isFinite(boxWidth)?boxWidth:banner.clientWidth+left+right,
-        outerH=borderBox&&Number.isFinite(boxHeight)?boxHeight:banner.clientHeight+top+bottom;
-  const w=Math.max(8,outerW-(left+right)/2),h=Math.max(8,outerH-(top+bottom)/2),radius=parseFloat(style.borderTopLeftRadius)||22,
-        r=Math.max(0,Math.min(radius-(left+top)/4,w/2,h/2));
-  svg.style.left=(-left/2)+'px';svg.style.top=(-top/2)+'px';svg.style.right='auto';svg.style.bottom='auto';
-  svg.style.width=w+'px';svg.style.height=h+'px';svg.setAttribute('viewBox','0 0 '+w+' '+h);
-  // Circular corner arcs match CSS border-radius instead of quadratic approximations.
-  const d='M'+r+' 0 H'+(w-r)+' A'+r+' '+r+' 0 0 1 '+w+' '+r+' V'+(h-r)+' A'+r+' '+r+' 0 0 1 '+(w-r)+' '+h+' H'+r+' A'+r+' '+r+' 0 0 1 0 '+(h-r)+' V'+r+' A'+r+' '+r+' 0 0 1 '+r+' 0 Z';
-  [track,...outlines,...ribbons.flat(2)].forEach(node=>node.setAttribute('d',d));
+  const width=parseFloat(style.width),height=parseFloat(style.height),borderBox=style.boxSizing==='border-box';
+  const outerW=borderBox&&Number.isFinite(width)?width:banner.clientWidth+left+right,
+        outerH=borderBox&&Number.isFinite(height)?height:banner.clientHeight+top+bottom;
+  w=Math.max(8,outerW-(left+right)/2);h=Math.max(8,outerH-(top+bottom)/2);
+  r=Math.max(.5,Math.min((parseFloat(style.borderTopLeftRadius)||22)-(left+top)/4,w/2,h/2));
+  length=2*(w+h-4*r)+2*Math.PI*r;ratio=Math.min(3,window.devicePixelRatio||1);
+  canvas.style.left=(-left/2-pad)+'px';canvas.style.top=(-top/2-pad)+'px';canvas.style.right='auto';canvas.style.bottom='auto';
+  canvas.style.width=(w+2*pad)+'px';canvas.style.height=(h+2*pad)+'px';canvas.width=Math.ceil((w+2*pad)*ratio);canvas.height=Math.ceil((h+2*pad)*ratio);
+  paint(performance.now());
  }
- measure();
+ function active(){return !document.hidden&&(forced||(window.innerWidth>=1041&&window.matchMedia('(any-hover:hover)').matches&&(hovered||focused)));}
+ function tick(now){frame=0;if(!active())return;if(now-lastPaint>=30){paint(now);lastPaint=now;}frame=requestAnimationFrame(tick);}
+ function sync(){if(active()){if(!frame){epoch=performance.now();lastPaint=-Infinity;paint(epoch);frame=requestAnimationFrame(tick);}}else if(frame){cancelAnimationFrame(frame);frame=0;}}
+ banner.addEventListener('pointerenter',()=>{hovered=true;sync();});banner.addEventListener('pointerleave',()=>{hovered=false;sync();});
+ banner.addEventListener('focus',()=>{focused=true;sync();});banner.addEventListener('blur',()=>{focused=false;sync();});
+ document.addEventListener('visibilitychange',sync);window.addEventListener('pageshow',sync);
+ window.addEventListener('resize',()=>{measure();sync();});
  if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(banner);
- window.addEventListener('resize',measure);
+ measure();sync();
 })();
 
 </script>
