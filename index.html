@@ -1641,6 +1641,44 @@ body{
 .card-lifetime-text{color:#e2cca0;font-weight:650}
 .card-meta .lifetime-bar{margin-top:4px}
 </style>
+<style id="nwRankingPhotoStyle">
+/* v2.92 ranking photo column and readable headers. */
+.nw-ranking-avatar-slot{display:inline-grid;place-items:center;width:32px;height:32px;color:#516b7a;vertical-align:middle;flex:0 0 32px}
+.nw-ranking-avatar-slot[hidden]{display:none!important}.nw-ranking-avatar-loading{border-radius:50%;background:#1b303a}
+.nw-ranking-avatar-button{display:block;width:32px;height:32px;padding:0;border:1px solid #779c9366;border-radius:50%;background:#152b32;cursor:zoom-in;overflow:hidden;box-shadow:0 2px 7px #0003}
+.nw-ranking-avatar-button img{display:block;width:100%;height:100%;object-fit:cover}.nw-ranking-avatar-button:hover{border-color:#edcd85;box-shadow:0 0 9px #edcd8533}.nw-ranking-avatar-button:focus-visible{outline:2px solid #edcd85;outline-offset:3px}
+.ranking-photo-col,.ranking-photo-head{text-align:center!important}
+body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!important}
+.nw-photo-lightbox{position:fixed;inset:0;z-index:100000;display:grid;place-items:center;padding:24px;background:#02090fe8;backdrop-filter:blur(7px)}
+.nw-photo-lightbox-panel{position:relative;width:min(100%,390px);max-height:90dvh;overflow:auto;box-sizing:border-box;padding:48px 24px 24px;background:linear-gradient(145deg,#182c30,#0b1822);border:1px solid #d7bd8655;border-radius:20px;box-shadow:0 24px 80px #0008;text-align:center}
+.nw-photo-lightbox-close{position:absolute;right:12px;top:10px;border:1px solid #7da79b55;border-radius:9px;padding:6px 9px;background:#132d36;color:#eef7f0;cursor:pointer;font:700 12px system-ui}
+.nw-photo-lightbox h2{margin:0 0 16px;font-size:17px;color:#f0e3c0}.nw-photo-lightbox img{display:block;max-width:100%;width:256px;height:auto;margin:0 auto;border-radius:12px;object-fit:contain;background:#0c1821}.nw-photo-lightbox img:not([src]){display:none}.nw-photo-lightbox p{font-size:11px;color:#9bb5bd;margin:12px 0 0}.nw-photo-lightbox p:empty{display:none}
+@media(min-width:721px){
+ .table-wrap table{min-width:1080px}
+ .table-wrap thead th{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:12px;letter-spacing:-.15px;padding:12px 6px}
+ .table-wrap tbody td{padding:10px 6px;font-size:12px}
+ .table-wrap td.rank{font-size:14px;padding-left:4px;padding-right:4px}
+ .table-wrap thead .ranking-photo-head{font-size:11px;padding-left:2px;padding-right:2px}
+ .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:5%}
+ .table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:5%}
+ .table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:11%}
+ .table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:14%}
+ .table-wrap th:nth-child(5),.table-wrap td:nth-child(5){width:9%}
+ .table-wrap th:nth-child(6),.table-wrap td:nth-child(6){width:8%}
+ .table-wrap th:nth-child(7),.table-wrap td:nth-child(7){width:9%}
+ .table-wrap th:nth-child(8),.table-wrap td:nth-child(8){width:5%}
+ .table-wrap th:nth-child(9),.table-wrap td:nth-child(9){width:4.5%}
+ .table-wrap th:nth-child(10),.table-wrap td:nth-child(10){width:4.5%}
+ .table-wrap th:nth-child(11),.table-wrap td:nth-child(11){width:4.5%}
+ .table-wrap th:nth-child(12),.table-wrap td:nth-child(12){width:4.5%}
+ .table-wrap th:nth-child(13),.table-wrap td:nth-child(13){width:8%}
+ .table-wrap th:nth-child(14),.table-wrap td:nth-child(14){width:8%}
+
+ .table-wrap th:nth-child(2),.table-wrap td:nth-child(2),.table-wrap th:nth-child(3),.table-wrap td:nth-child(3),.table-wrap th:nth-child(5),.table-wrap td:nth-child(5),.table-wrap th:nth-child(6),.table-wrap td:nth-child(6){overflow:visible;text-overflow:clip}
+}
+@media(max-width:390px){.nw-ranking-avatar-mobile{width:28px;height:28px;flex-basis:28px}.nw-ranking-avatar-mobile .nw-ranking-avatar-button{width:28px;height:28px}.card-head-right{gap:5px}}
+</style>
+<script src="assets/ranking-avatars-v292.js" defer></script>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -1914,7 +1952,7 @@ body{
 </div>
 <div class="table-wrap">
 <table>
-<thead><tr><th>순위 / 구분</th><th>영구등급</th><th>이름</th><th class="verification-col-head">회원 인증</th><th class="detail-col-head">상세</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적점수</th></tr></thead>
+<thead><tr><th>순위</th><th class="ranking-photo-head">대표사진</th><th>등급</th><th>이름</th><th class="verification-col-head">회원 인증</th><th class="detail-col-head">상세</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적점수</th></tr></thead>
 <tbody id="tb"></tbody>
 </table>
 </div>
@@ -2103,6 +2141,7 @@ function badgeIndexFor(score){let idx=-1;BADGES.forEach((b,i)=>{if(score>=b.thre
 function unlockState(){const maxLife=DATA.length?Math.max(...DATA.map(x=>x.lifetimeTotal||0)):0;return BADGES.map(b=>maxLife>=b.threshold);}
 function renderBadgeLadder(){const unlocked=unlockState(),grid=document.getElementById('badgeGrid');grid.innerHTML=BADGES.map((b,i)=>{const on=unlocked[i],ach=DATA.filter(x=>x.lifetimeTotal>=b.threshold);return `<div class="badge-card ${on?'unlocked':'locked'}"><div class="badge-art"><img src="data:image/png;base64,${BADGE_IMG[i]}" alt="${b.name}"><div class="lockmark">?</div></div><div class="badge-name">${b.emoji} ${b.name}</div><div class="badge-th">${fmt(b.threshold)}점+</div><div class="badge-state">${on?`해금 완료 · 현재 달성 ${ach.length}명`:'🔒 미해금 · 최초 달성자를 기다리는 중'}</div></div>`;}).join('');document.getElementById('unlockCount').textContent=unlocked.filter(Boolean).length+' / '+BADGES.length;}
 function memberBadge(score){const idx=badgeIndexFor(score),unlocked=unlockState();if(idx<0)return `<span class="no-grade">미획득</span>`;if(!unlocked[idx])return `<span class="no-grade">미해금</span>`;const b=BADGES[idx];return `<div class="member-grade"><img src="data:image/png;base64,${BADGE_IMG[idx]}"><span>${b.name}</span></div>`;}
+function rankingAvatarSlot(member,mobile=false){return `<span class="nw-ranking-avatar-slot ${mobile?'nw-ranking-avatar-mobile':''}" data-ranking-avatar="${encodeURIComponent(member.memberId||'')}" ${mobile?'hidden':''}>${mobile?'':'—'}</span>`;}
 function renderRanking(){
   const q=document.getElementById('q').value.trim().toLowerCase(),limitVal=document.getElementById('limit').value;
   const members=DATA.filter(x=>!isStaff(x));
@@ -2120,12 +2159,13 @@ function renderRanking(){
   document.getElementById('tb').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
     const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}${rankMovementBadge(x)}</td><td class="verification-col">${window.NWMemberVerificationHTML(x.memberId)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td class="lifetime-total">${fmt(x.lifetimeTotal)}<div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></td></tr>`;
+    return `<tr class="${rowClass}"><td class="rank">${firstCell}</td><td class="ranking-photo-col">${rankingAvatarSlot(x)}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}${rankMovementBadge(x)}</td><td class="verification-col">${window.NWMemberVerificationHTML(x.memberId)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td class="lifetime-total">${fmt(x.lifetimeTotal)}<div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적점수 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></div></div>`;
+    return `<div class="card"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적점수 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></div></div>`;
   }).join('');
+  window.NWPaintRankingAvatars?.();
   const top=members[0]||{name:'-',seasonTotal:0};
   document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
   document.getElementById('cut10').textContent=members[9]?fmt(members[9].seasonTotal)+'점':'-';
