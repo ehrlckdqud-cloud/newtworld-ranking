@@ -1658,10 +1658,16 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
  .table-wrap thead th{overflow:visible;text-overflow:clip;white-space:nowrap;font-size:12px;letter-spacing:-.15px;padding:12px 6px}
  .table-wrap tbody td{padding:10px 6px;font-size:12px}
  .table-wrap td.rank{font-size:14px;padding-left:4px;padding-right:4px}
- .table-wrap thead .ranking-photo-head{font-size:11px;padding-left:2px;padding-right:2px}
- .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:5%}
+ /* Same typography for all headers; symmetric rank/grade widths center the photo between them. */
+ .table-wrap thead .ranking-photo-head{padding:12px 6px}
+ .table-wrap th:nth-child(-n+3),.table-wrap td:nth-child(-n+3){text-align:center;vertical-align:middle}
+ .table-wrap td.rank{padding-left:6px;padding-right:6px}
+ .table-wrap .ranking-photo-col .nw-ranking-avatar-slot{display:grid;margin-inline:auto}
+ .table-wrap td:nth-child(3) .member-grade{justify-content:center;gap:6px}
+ .table-wrap td:nth-child(3) .member-grade img{width:36px;height:42px}
+ .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:8%}
  .table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:5%}
- .table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:11%}
+ .table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:8%}
  .table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:14%}
  .table-wrap th:nth-child(5),.table-wrap td:nth-child(5){width:9%}
  .table-wrap th:nth-child(6),.table-wrap td:nth-child(6){width:8%}
