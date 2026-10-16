@@ -1517,10 +1517,16 @@ body{
 #nwAiOpen .nw-ai-orbit-outline{fill:none;stroke:#edc36b;stroke-width:1.25;opacity:.68;pointer-events:none}
 #nwAiOpen .nw-ai-orbit-outline-glow{stroke-width:3.5;opacity:.28;filter:blur(2.5px)}
 #nwAiOpen .nw-ai-orbit-path{fill:none;stroke:none}
-#nwAiOpen .nw-ai-star-trail{fill:none;stroke:url(#nwAiTailGoldV254);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-#nwAiOpen .nw-ai-star-halo{fill:none;stroke:url(#nwAiTailGoldV254);stroke-width:4;stroke-linecap:round;stroke-linejoin:round;opacity:.42;filter:blur(2px)}
-#nwAiOpen .nw-ai-star-head{filter:drop-shadow(0 0 2px #ffe3a1) drop-shadow(0 0 6px rgba(255,188,46,.8))}
-#nwAiOpen .nw-ai-star-dust{fill:#ffe8a7;filter:drop-shadow(0 0 2px rgba(255,199,69,.7))}
+/* v2.85: luminous tapered ribbons, symmetric on the exact CSS border centre. */
+#nwAiOpen .nw-ai-ribbon-line{fill:none;stroke:#ffd66d;stroke-linecap:round;stroke-linejoin:round}
+#nwAiOpen .nw-ai-ribbon-core{fill:none;stroke:#fff5d2;stroke-linecap:round;stroke-linejoin:round}
+#nwAiOpen .nw-ai-ribbon-halo{fill:none;stroke:#ffbd39;stroke-linecap:round;stroke-linejoin:round;filter:blur(2.4px)}
+#nwAiOpen .nw-ai-ribbon{pointer-events:none}
+#nwAiOpen .nw-ai-ribbon path{animation:nw-ai-ribbon-orbit 5s linear infinite;animation-play-state:paused}
+@keyframes nw-ai-ribbon-orbit{from{stroke-dashoffset:var(--nw-ribbon-start)}to{stroke-dashoffset:calc(var(--nw-ribbon-start) - 1000)}}
+@media(min-width:1041px) and (any-hover:hover){#nwAiOpen:is(:hover,:focus-visible) .nw-ai-ribbon path{animation-play-state:running}}
+/* A gentler speed replaces v2.82's full stop for reduced-motion settings. */
+@media(prefers-reduced-motion:reduce){#nwAiOpen .nw-ai-ribbon path{animation-duration:10s}}
 @media(min-width:1041px) and (any-hover:hover){#nwAiOpen:is(:hover,:focus-visible)>.nw-ai-gold-orbit{opacity:1}}
 @media(max-width:1040px){#nwAiOpen>.nw-ai-gold-orbit{display:none}}
 @media(prefers-reduced-motion:reduce){#nwAiOpen>.nw-ai-gold-orbit{transition:none}}
@@ -1737,7 +1743,7 @@ body{
 
 </div><a id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문 AI비서 · 회원 전용">
 <span id="nwAiPresence" class="nw-ai-presence" data-online="false" role="status" aria-live="polite" aria-atomic="true"><span class="nw-ai-presence-dot" aria-hidden="true"></span><span id="nwAiPresenceText">휴식 중</span></span>
-<svg class="nw-ai-gold-orbit" aria-hidden="true" focusable="false" width="100%" height="100%"><defs><linearGradient id="nwAiTailGoldV254" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#bd791b" stop-opacity="0"/><stop offset=".35" stop-color="#dca332" stop-opacity=".12"/><stop offset=".7" stop-color="#f3c861" stop-opacity=".65"/><stop offset="1" stop-color="#fff3c5"/></linearGradient><radialGradient id="nwAiGoldenLightV255"><stop offset="0" stop-color="#fffef0"/><stop offset=".16" stop-color="#fff2c0"/><stop offset=".38" stop-color="#ffd36b" stop-opacity=".95"/><stop offset=".68" stop-color="#eeb241" stop-opacity=".35"/><stop offset="1" stop-color="#e5a32e" stop-opacity="0"/></radialGradient></defs><rect class="nw-ai-orbit-outline nw-ai-orbit-outline-glow" x="2" y="2" rx="20"/><rect class="nw-ai-orbit-outline" x="2" y="2" rx="20"/><rect class="nw-ai-orbit-path" x="2" y="2" rx="20"/><path class="nw-ai-star-halo"/><path class="nw-ai-star-trail"/><path class="nw-ai-star-dust" d="M0 -8 C1.1 -2.2 1.6 -1.4 6.6 0 C1.6 1.4 1.1 2.2 0 8 C-1.1 2.2 -1.6 1.4 -6.6 0 C-1.6 -1.4 -1.1 -2.2 0 -8 Z"/><path class="nw-ai-star-dust" d="M0 -8 C1.1 -2.2 1.6 -1.4 6.6 0 C1.6 1.4 1.1 2.2 0 8 C-1.1 2.2 -1.6 1.4 -6.6 0 C-1.6 -1.4 -1.1 -2.2 0 -8 Z"/><path class="nw-ai-star-dust" d="M0 -8 C1.1 -2.2 1.6 -1.4 6.6 0 C1.6 1.4 1.1 2.2 0 8 C-1.1 2.2 -1.6 1.4 -6.6 0 C-1.6 -1.4 -1.1 -2.2 0 -8 Z"/><path class="nw-ai-star-dust" d="M0 -8 C1.1 -2.2 1.6 -1.4 6.6 0 C1.6 1.4 1.1 2.2 0 8 C-1.1 2.2 -1.6 1.4 -6.6 0 C-1.6 -1.4 -1.1 -2.2 0 -8 Z"/><g class="nw-ai-star-head"><circle r="9" fill="url(#nwAiGoldenLightV255)"/><circle r="1.2" fill="#fffdf0" opacity=".9"/></g></svg>
+<svg class="nw-ai-gold-orbit" aria-hidden="true" focusable="false" width="100%" height="100%"><path class="nw-ai-orbit-outline nw-ai-orbit-outline-glow"/><path class="nw-ai-orbit-outline"/><path class="nw-ai-orbit-path"/><g class="nw-ai-ribbon"/><g class="nw-ai-ribbon"/></svg>
 <img src="assets/ai/assistant.webp" width="140" height="140" loading="lazy" decoding="async" alt="뉴트월드 전문 AI비서">
 <div><small>NEWTWORLD AI ASSISTANT</small><h2>뉴트월드 전문 AI비서</h2><p>양서·파충류 전문서적 수십 권의 지식을 바탕으로, 사육과 생태에 대한 궁금증을 함께 풀어드려요.</p><span class="nw-ai-hours">🕐 보통 오후 1시 ~ 다음 날 새벽 2시 운영</span></div></a></div>
     <div class="hub-challenges">
@@ -2776,35 +2782,45 @@ window.NWConfigReady.then(function(){
 (()=>{const rooms=document.querySelector('.hub-primary .primary-rooms'),column=document.querySelector('.pc-hub-right');if(!rooms||!column)return;const panel=document.createElement('aside');panel.className='partner-panel partner-right pc-room-links';panel.setAttribute('aria-label','뉴트월드 오픈톡방');[...rooms.querySelectorAll('.room-card')].forEach((original,i)=>{const link=document.createElement('a');link.className='partner-card nw-community-room'+(i===1?' nw-community-trade':'');link.href=original.href;link.target='_blank';link.rel='noopener noreferrer';const logo=document.createElement('div');logo.className='partner-logo-wrap';const img=original.querySelector('img');if(img)logo.appendChild(img.cloneNode(true));const copy=document.createElement('div');copy.className='partner-copy';const title=document.createElement('b');title.textContent=i===0?'뉴트월드 메인방':'뉴트월드 거래방';const label=document.createElement('span');label.textContent=i===0?'함께 소통하는 커뮤니티':'분양 · 거래 오픈톡방';copy.append(title,label);link.append(logo,copy);panel.appendChild(link);});column.prepend(panel);})();
 </script><script id="nwAiGoldOrbitControllerV254">
 (()=>{
- const banner=document.getElementById('nwAiOpen'),svg=banner?.querySelector('.nw-ai-gold-orbit');if(!svg)return;
- const track=svg.querySelector('.nw-ai-orbit-path'),head=svg.querySelector('.nw-ai-star-head'),dust=[...svg.querySelectorAll('.nw-ai-star-dust')];
- const outlines=[...svg.querySelectorAll('.nw-ai-orbit-outline')];
- const trail=svg.querySelector('.nw-ai-star-trail'),halo=svg.querySelector('.nw-ai-star-halo'),gradient=svg.querySelector('linearGradient');
- let frame=0,started=0,length=0,running=false;
- const eligible=()=>window.innerWidth>=1041&&window.matchMedia('(any-hover:hover)').matches&&!document.hidden;
- const engaged=()=>banner.matches(':hover')||banner.matches(':focus-visible');
- const point=d=>track.getPointAtLength((d%length+length)%length);
- function measure(){const w=Math.max(4,svg.clientWidth||banner.clientWidth),h=Math.max(4,svg.clientHeight||banner.clientHeight);[track,...outlines].forEach(p=>{p.setAttribute('width',w-4);p.setAttribute('height',h-4);});length=track.getTotalLength();}
- function draw(now){
-  if(!running)return;if(!eligible()||!engaged()){stop();return;}
-  if(length>0){
-   const elapsed=now-started,front=(elapsed/8000%1)*length,tailLength=Math.min(220,length*.135),points=[];
-   for(let i=0;i<=36;i++)points.push(point(front-tailLength+tailLength*i/36));
-   const d=points.map((p,i)=>(i?'L':'M')+p.x.toFixed(2)+' '+p.y.toFixed(2)).join(' ');
-   trail.setAttribute('d',d);halo.setAttribute('d',d);
-   gradient.setAttribute('x1',points[0].x);gradient.setAttribute('y1',points[0].y);gradient.setAttribute('x2',points[36].x);gradient.setAttribute('y2',points[36].y);
-   const tip=points[36],pulse=1+.065*Math.sin(elapsed/500);head.setAttribute('transform','translate('+tip.x+' '+tip.y+') scale('+pulse+')');
-   dust.forEach((p,i)=>{const fraction=(i+1)/5,at=point(front-tailLength*fraction),shine=.6+.4*Math.sin(elapsed/800+i*1.7);p.setAttribute('transform','translate('+at.x+' '+at.y+') scale('+(.12+.12*(1-fraction))+')');p.setAttribute('opacity',String((1-fraction)*.62*shine));});
+ const banner=document.getElementById('nwAiOpen'),svg=banner&&banner.querySelector('.nw-ai-gold-orbit');if(!svg)return;
+ const track=svg.querySelector('.nw-ai-orbit-path'),outlines=[...svg.querySelectorAll('.nw-ai-orbit-outline')];
+ const groups=[...svg.querySelectorAll('.nw-ai-ribbon')],NS='http://www.w3.org/2000/svg';
+ const count=64,tailLength=300;
+ // One border track, identical motion and a half-perimeter phase separation.
+ const ribbons=groups.map((group,index)=>Array.from({length:count},(_,i)=>{
+  const t=i/(count-1),strength=Math.pow(t,.85),width=.12+3.68*Math.pow(t,1.8),step=tailLength/count;
+  const nodes=[];
+  for(const [kind,opacity,strokeWidth] of [['halo',strength*.42,width+4],['line',strength*.95,width],['core',strength*.92,width*.32]]){
+   const node=document.createElementNS(NS,'path');
+   node.setAttribute('class','nw-ai-ribbon-'+kind);
+   node.setAttribute('pathLength','1000');node.setAttribute('stroke-dasharray','4.74 995.26');
+   node.setAttribute('stroke-width',String(strokeWidth));node.setAttribute('opacity',String(opacity));
+   node.style.setProperty('--nw-ribbon-start',String(tailLength-step*i-index*500));
+   group.append(node);nodes.push(node);
   }
-  frame=requestAnimationFrame(draw);
+  return nodes;
+ }));
+ function measure(){
+  // Absolute-positioned SVG starts at the border's inner edge. Move its origin to
+  // the CSS border centre, including fractional border widths and hover scaling.
+  const style=getComputedStyle(banner),left=parseFloat(style.borderLeftWidth)||0,right=parseFloat(style.borderRightWidth)||0,
+        top=parseFloat(style.borderTopWidth)||0,bottom=parseFloat(style.borderBottomWidth)||0;
+  const boxWidth=parseFloat(style.width),boxHeight=parseFloat(style.height),borderBox=style.boxSizing==='border-box';
+  const outerW=borderBox&&Number.isFinite(boxWidth)?boxWidth:banner.clientWidth+left+right,
+        outerH=borderBox&&Number.isFinite(boxHeight)?boxHeight:banner.clientHeight+top+bottom;
+  const w=Math.max(8,outerW-(left+right)/2),h=Math.max(8,outerH-(top+bottom)/2),radius=parseFloat(style.borderTopLeftRadius)||22,
+        r=Math.max(0,Math.min(radius-(left+top)/4,w/2,h/2));
+  svg.style.left=(-left/2)+'px';svg.style.top=(-top/2)+'px';svg.style.right='auto';svg.style.bottom='auto';
+  svg.style.width=w+'px';svg.style.height=h+'px';svg.setAttribute('viewBox','0 0 '+w+' '+h);
+  // Circular corner arcs match CSS border-radius instead of quadratic approximations.
+  const d='M'+r+' 0 H'+(w-r)+' A'+r+' '+r+' 0 0 1 '+w+' '+r+' V'+(h-r)+' A'+r+' '+r+' 0 0 1 '+(w-r)+' '+h+' H'+r+' A'+r+' '+r+' 0 0 1 0 '+(h-r)+' V'+r+' A'+r+' '+r+' 0 0 1 '+r+' 0 Z';
+  [track,...outlines,...ribbons.flat(2)].forEach(node=>node.setAttribute('d',d));
  }
- function start(){if(running||!eligible())return;measure();if(!(length>0))return;running=true;started=performance.now();draw(started);}
- function stop(){running=false;if(frame)cancelAnimationFrame(frame);frame=0;}
- banner.addEventListener('pointerenter',start);banner.addEventListener('pointerleave',()=>{if(!banner.matches(':focus-visible'))stop();});
- banner.addEventListener('focus',start);banner.addEventListener('blur',()=>{if(!banner.matches(':hover'))stop();});
- window.addEventListener('resize',()=>{if(!eligible())stop();else if(running)measure();else if(engaged())start();});
- document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();else if(engaged())start();});
+ measure();
+ if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(banner);
+ window.addEventListener('resize',measure);
 })();
+
 </script>
 
 <script id="nwMusicTickerScript">
