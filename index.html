@@ -1568,6 +1568,7 @@ body{
 #nwAiOpen>div>small{padding-right:74px}
 @media(max-width:720px){#nwAiOpen .nw-ai-presence{right:10px;top:9px;font-size:10px;gap:5px;padding:3px 7px}#nwAiOpen>div>small{padding-right:64px}}
 </style>
+<script src="assets/member-avatar-v289.js" defer></script>
 </head>
 <body>
 <div class="season-panorama" aria-hidden="true">
@@ -2064,7 +2065,11 @@ document.getElementById('limit').onchange=renderRanking;
 document.getElementById('allBtn').onclick=()=>{gradedOnly=false;allBtn.classList.add('active');gradedBtn.classList.remove('active');renderRanking();};
 document.getElementById('gradedBtn').onclick=()=>{gradedOnly=true;gradedBtn.classList.add('active');allBtn.classList.remove('active');renderRanking();};
 document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSheet(DEFAULT_SHEET_URL,false));
-function nwOpenMemberDetail(memberId){if(!memberId)return;const page='members.html?member='+encodeURIComponent(memberId);if(typeof window.NWOpenPage==='function')window.NWOpenPage(page,'👥 회원 상세');else location.href=page;}
+function nwOpenMemberDetail(memberId){if(!memberId)return;void window.NWMemberAvatar?.prefetch(memberId);const page='members.html?member='+encodeURIComponent(memberId);if(typeof window.NWOpenPage==='function')window.NWOpenPage(page,'👥 회원 상세');else location.href=page;}
+// v2.89: warm only the detail button being hovered/focused, never all member photos.
+let nwAvatarHoverTimer=0;
+['pointerover','focusin'].forEach(event=>document.addEventListener(event,e=>{const button=e.target.closest?.('.nw-member-detail-btn');if(!button)return;clearTimeout(nwAvatarHoverTimer);nwAvatarHoverTimer=setTimeout(()=>{void window.NWMemberAvatar?.prefetch(button.dataset.memberId);},120);}));
+document.addEventListener('pointerout',e=>{if(e.target.closest?.('.nw-member-detail-btn')&&!e.target.contains?.(e.relatedTarget))clearTimeout(nwAvatarHoverTimer);});
 ['tb','cards'].forEach(id=>document.getElementById(id)?.addEventListener('click',e=>{const b=e.target.closest('[data-member-id]');if(!b)return;e.preventDefault();e.stopPropagation();nwOpenMemberDetail(b.dataset.memberId);}));
 renderAll();
 loadSheet(DEFAULT_SHEET_URL,false);
