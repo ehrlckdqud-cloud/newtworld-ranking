@@ -2959,12 +2959,15 @@ window.NWConfigReady.then(function(){
   function finish(data){
    if(done)return;done=true;pending=false;cancel=null;clearTimeout(timeout);script.remove();
    window[name]=function(){};setTimeout(function(){delete window[name];},60000);
-   var remaining=data&&data.ok===true&&data.online===true&&typeof data.validForMs==='number'&&Number.isFinite(data.validForMs)?Math.min(45000,data.validForMs)-(Date.now()-started):0;
-   if(remaining>0&&navigator.onLine!==false){clearTimeout(expiry);deadline=Date.now()+remaining;show(true);expiry=setTimeout(rest,remaining);}else rest();
+   var remaining=data&&data.ok===true&&data.online===true&&typeof data.validForMs==='number'&&Number.isFinite(data.validForMs)?Math.min(90000,data.validForMs)-(Date.now()-started):0;
+   if(remaining>0&&navigator.onLine!==false){clearTimeout(expiry);deadline=Date.now()+remaining;show(true);expiry=setTimeout(rest,remaining);}
+   else if((data&&data.ok===true&&typeof data.online==='boolean')||navigator.onLine===false||!deadline||Date.now()>=deadline)rest();
+   // An inconclusive poll never extends the last verified deadline. Explicit
+   // offline responses and expired heartbeats still turn the badge off.
    schedule();
   }
   cancel=function(){finish(null);};window[name]=finish;
-  timeout=setTimeout(function(){finish(null);},8000);
+  timeout=setTimeout(function(){finish(null);},12000);
   script.async=true;script.onerror=function(){finish(null);};
   script.src=url+(url.indexOf('?')===-1?'?':'&')+'action=aiPresence&callback='+encodeURIComponent(name)+'&_='+started;
   document.head.appendChild(script);
