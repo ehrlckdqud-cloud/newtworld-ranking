@@ -1,0 +1,6 @@
+/* Unlocked cards retain their ordinary look until hover/focus. */
+.badge-card.unlocked{cursor:default;transform-origin:center;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.badge-card.unlocked:focus-visible{outline:2px solid #eacb87;outline-offset:4px}
+.badge-card>.nw-badge-orbit{position:absolute;pointer-events:none;opacity:0;z-index:0;transition:opacity .25s ease}
+.badge-card>:not(.nw-badge-orbit){position:relative;z-index:1}
+@media(min-width:721px) and (any-hover:hover){.badge-card.unlocked:is(:hover,:focus-visible){z-index:3;transform:translateY(-6px) scale(1.025);border-color:#d7bd86;box-shadow:0 12px 36px #0006,0 0 20px #d7bd8633;background:linear-gradient(145deg,#253b2d,#12251d)}.badge-card.unlocked:is(:hover,:focus-visible)>.nw-badge-orbit{opacity:1}}
