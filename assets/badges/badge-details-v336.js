@@ -1,6 +1,23 @@
 /* Enlarge only badges which have been unlocked; never expose a locked original. */
 (function(){
  'use strict';
+ // Upgrade rendered grade controls without changing the public HTML payload.
+ const rankRoots=['tb','cards'].map(id=>document.getElementById(id)).filter(Boolean);
+ function hydrateRankingBadges(){
+  rankRoots.forEach(root=>root.querySelectorAll('.member-grade:not(button)').forEach(node=>{
+   const src=node.querySelector('img')?.getAttribute('src');
+   const index=window.NWGrades?.levels.findIndex(b=>b.image===src);
+   if(index==null||index<0)return;
+   const button=document.createElement('button');button.type='button';button.className='member-grade nw-member-grade-zoom';button.dataset.badgeIndex=index;
+   button.setAttribute('aria-label',window.NWGrades.levels[index].name+' 등급 배지 확대');button.setAttribute('aria-haspopup','dialog');
+   button.append(...node.childNodes);node.replaceWith(button);
+  }));
+ }
+ hydrateRankingBadges();
+ if(typeof MutationObserver==='function'){
+  const observer=new MutationObserver(hydrateRankingBadges);
+  rankRoots.forEach(root=>observer.observe(root,{childList:true}));
+ }
  const grid=document.getElementById('badgeGrid');
  if(!grid)return;
  const dialog=document.createElement('dialog');dialog.className='nw-badge-zoom';dialog.setAttribute('aria-labelledby','nwBadgeZoomTitle');
@@ -10,17 +27,18 @@
  let origin=null,openedIndex=-1,previousOverflow='';
  function open(card){
   const index=Number(card.dataset.badgeIndex),badge=window.NWGrades?.levels[index];
-  if(!badge||!card.classList.contains('unlocked')||!window.unlockState?.()[index])return;
+  if(!badge||!window.unlockState?.()[index])return;
   origin=card;openedIndex=index;title.textContent=badge.name+' 등급 배지';caption.textContent=Number(badge.threshold).toLocaleString('ko-KR')+'점 이상 · 해금 완료';
   image.alt=badge.name+' 등급 배지 전체 이미지';image.src=badge.image;
   if(!dialog.open){previousOverflow=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';dialog.showModal();}
  }
  function activate(event){
-  const card=event.target.closest?.('.badge-card.unlocked[data-badge-index]');if(!card||!grid.contains(card))return;
+  const selector=event.type==='keydown'?'.badge-card.unlocked[data-badge-index]':'.badge-card.unlocked[data-badge-index],button.nw-member-grade-zoom[data-badge-index]';
+  const card=event.target.closest?.(selector);if(!card)return;
   if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
   event.preventDefault();open(card);
  }
- grid.addEventListener('click',activate);grid.addEventListener('keydown',activate);
+ document.addEventListener('click',activate);document.addEventListener('keydown',activate);
  close.addEventListener('click',()=>dialog.close());
  dialog.addEventListener('click',event=>{if(event.target!==dialog)return;const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();});
  dialog.addEventListener('close',()=>{

@@ -20,3 +20,14 @@
 #tb tr[data-rank-tier="3"]:hover,#tb tr[data-rank-tier="4"]:hover,#tb tr[data-rank-tier="5"]:hover,#tb tr[data-rank-tier="6"]:hover,#tb tr[data-rank-tier="7"]:hover{background:radial-gradient(ellipse at 0% 50%,rgba(var(--tier-rgb),.29),transparent 75%),linear-gradient(100deg,rgba(var(--tier-rgb),.14),rgba(var(--tier-rgb),.05))}
 #cards>.card[data-rank-tier="3"],#cards>.card[data-rank-tier="4"],#cards>.card[data-rank-tier="5"],#cards>.card[data-rank-tier="6"],#cards>.card[data-rank-tier="7"]{background:radial-gradient(ellipse at 100% 0,rgba(var(--tier-rgb),.19),transparent 65%),linear-gradient(120deg,rgba(var(--tier-rgb),.09),transparent 60%),#0e1922;border-color:rgba(var(--tier-rgb),.4);box-shadow:inset 3px 0 rgba(var(--tier-light),.6)}
 @media(max-width:700px){.nw-badge-zoom{padding:14px;border-radius:17px}.nw-badge-zoom-head h2{font-size:16px}.nw-badge-zoom-image{height:min(65dvh,560px)}}
+
+/* Every earned badge is a native zoom button. Large tiers use 2x image boxes. */
+button.nw-member-grade-zoom{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:zoom-in;max-width:100%}
+button.nw-member-grade-zoom:focus-visible{outline:2px solid #f1cf79;outline-offset:3px;border-radius:8px}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade{flex-direction:column;justify-content:center;gap:3px;height:auto;min-height:100px;overflow:visible;white-space:normal}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade img{width:72px;height:84px;max-width:none}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) td:nth-child(3){overflow:visible}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade{flex-direction:column;gap:3px;white-space:normal}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade img{width:84px;height:84px;max-width:none}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .card-head{flex-wrap:wrap;gap:10px}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .card-head>div:first-child{min-width:0;flex:1 1 90px;overflow-wrap:anywhere}
