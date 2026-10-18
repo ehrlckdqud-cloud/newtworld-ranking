@@ -1603,7 +1603,7 @@ body{
 (function(){
  'use strict';
  var verified=null,validUntil=0,pending=false,timer=0,expiry=0,attempted=0,failed=false;
- function cached(){try{var c=JSON.parse(localStorage.getItem('nwRankMeta297')||'null');if(c&&c.app===(window.NW_CONFIG||{}).appScriptUrl&&Date.now()-c.at>=0&&Date.now()-c.at<120000&&Array.isArray(c.data.verifiedIds)){verified=new Set(c.data.verifiedIds);validUntil=c.at+120000;window.NWRankMovements297=c.data.movements||[];paint();expiry=setTimeout(function(){failed=true;paint();},Math.max(0,validUntil-Date.now()));}}catch(_){} }
+ function cached(){try{var c=JSON.parse(localStorage.getItem('nwRankMeta297')||'null');if(c&&c.app===(window.NW_CONFIG||{}).appScriptUrl&&Date.now()-c.at>=0&&Date.now()-c.at<120000&&Array.isArray(c.data.verifiedIds)){verified=new Set(c.data.verifiedIds);validUntil=c.at+120000;window.NWRankMovements297=c.data.movements||[];window.NWLatestRankingMeta330=c.data;window.NWApplyRankingMeta330?.(c.data);paint();expiry=setTimeout(function(){failed=true;paint();},Math.max(0,validUntil-Date.now()));}}catch(_){} }
  function label(id){
   if(!id)return '<span class="nw-verification-unknown">확인 필요</span>';
   if(!verified||Date.now()>=validUntil)return '<span class="nw-verification-unknown">'+(failed?'확인 불가':'확인 중')+'</span>';
@@ -1621,6 +1621,7 @@ body{
    if(data&&data.ok===true&&Array.isArray(data.verifiedIds)&&data.verifiedIds.length<=10000&&data.verifiedIds.every(function(id){return typeof id==='string'&&id.length>0&&id.length<=160;})){
     verified=new Set(data.verifiedIds);validUntil=Date.now()+120000;failed=false;clearTimeout(expiry);
     window.NWRankMovements297=Array.isArray(data.movements)?data.movements:[];
+    window.NWLatestRankingMeta330=data;window.NWApplyRankingMeta330?.(data);
     try{localStorage.setItem('nwRankMeta297',JSON.stringify({app:app,at:Date.now(),data:data}));}catch(_){}
     window.NWPaintRankMovements297?.();
     expiry=setTimeout(function(){failed=true;paint()},120000);
@@ -2011,17 +2012,19 @@ function rankMovementBadge(x){
  const now=new Date(Date.now()+9*3600000),month=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
  const live=(window.NWRankMovements297||[]).find(v=>v.id===x.memberId);
  if(live)x={...x,rankMovementType:live.type,rankMovementPrevious:Number(live.previous),rankMovementRank:Number(live.rank),rankMovementMonth:live.month};
- let kind=x.rankMovementType||'baseline',text='—',label='직전 업데이트 비교 기준 수집 중';
+ const comparisonDay=window.NWLatestRankingMeta330&&window.NWLatestRankingMeta330.movementBaseDate;
+ let kind=x.rankMovementType||'baseline',text='—',label='이전 날짜 집계 비교 기준 수집 중';
  const mm=String(x.rankMovementMonth||'').trim().match(/^(\d{4})[-/.](\d{1,2})(?:\D|$)/);
  if(mm)x.rankMovementMonth=mm[1]+'-'+mm[2].padStart(2,'0');
  if(x.rankMovementMonth!==month||x.rankMovementRank!==x.rank)kind='baseline';
- if(kind==='new'){text='NEW';label='직전 업데이트에 없던 신규 순위 진입';}
+ if(kind==='new'){text='NEW';label='비교 기준일에 없던 신규 순위 진입';}
  else if(['up','down','same'].includes(kind)&&x.rankMovementPrevious>0){
   const delta=x.rankMovementPrevious-x.rank;
   kind=delta>0?'up':delta<0?'down':'same';
   text=delta>0?'▲'+delta:delta<0?'▼'+Math.abs(delta):'—';
-  label=delta>0?'직전 업데이트보다 '+delta+'계단 상승':delta<0?'직전 업데이트보다 '+Math.abs(delta)+'계단 하락':'직전 업데이트와 순위 동일';
+  label=delta>0?'전일 마지막 집계보다 '+delta+'계단 상승':delta<0?'전일 마지막 집계보다 '+Math.abs(delta)+'계단 하락':'전일 마지막 집계와 순위 동일';
  }
+ if(/^\d{4}-\d{2}-\d{2}$/.test(comparisonDay||''))label+=' ('+comparisonDay.replace(/-/g,'.')+' 마지막 집계 기준)';
  return '<span data-rank-movement="'+encodeURIComponent(x.memberId||'')+'" class="nw-rank-movement nw-rank-'+kind+'" title="'+label+'" aria-label="'+label+'">'+text+'</span>';
 }
 
@@ -2444,7 +2447,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data?.channel==='nw-draw-state')nwDrawRunning=e.data.running===true;});
   function showDrawPicker(){
     let dialog=document.getElementById('nwDrawPicker');
-    if(!dialog){dialog=document.createElement('dialog');dialog.id='nwDrawPicker';dialog.className='nw-draw-picker';dialog.setAttribute('aria-labelledby','nwDrawPickerTitle');dialog.innerHTML=`<div class="picker-top"><span>NEWTWORLD LUCKY GAMES</span><button type="button" aria-label="게임 선택 닫기">×</button></div><h2 id="nwDrawPickerTitle">오늘의 행운, 어떤 게임으로 만날까요?</h2><p>대표사진과 함께 즐기는 뉴트월드 회원 전용 추첨</p><div class="picker-grid"><a class="picker-card" href="draw/index.html?v=3.29"><div class="picker-art picker-marble" aria-hidden="true"><i></i><i></i><i></i></div><span class="picker-copy"><small>MARBLE SURVIVAL</small><b>마블 생존추첨</b><p>다양한 코스와 움직이는 장치들.<br>익숙한 구슬 추첨의 짜릿함!</p><em>기존 5개 코스에서 추첨하기 ↗</em></span></a><a class="picker-card" href="draw/pond.html?v=3.29"><div class="picker-art picker-pond" aria-hidden="true"><i></i><i></i><i></i></div><span class="picker-copy"><small>개발중 · 관리자 전용</small><b>생존연못(개발중)</b><p>내 대표사진이 올라탄 작은 연잎.<br>현재 개발중으로 관리자만 이용할 수 있어요.</p><em>🔒 관리자 인증 후 입장 ↗</em></span></a></div><p class="picker-note">마블 생존추첨은 회원 전용, 생존연못(개발중)은 관리자 전용입니다. 음악과 설정은 각 기기의 브라우저에 보관됩니다.</p>`;document.body.append(dialog);dialog.querySelector('button').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});dialog.addEventListener('close',()=>{if(location.hash==='#draw')history.replaceState(null,'',location.pathname+location.search);document.getElementById('nwDrawOpen')?.focus();});}
+    if(!dialog){dialog=document.createElement('dialog');dialog.id='nwDrawPicker';dialog.className='nw-draw-picker';dialog.setAttribute('aria-labelledby','nwDrawPickerTitle');dialog.innerHTML=`<div class="picker-top"><span>NEWTWORLD LUCKY GAMES</span><button type="button" aria-label="게임 선택 닫기">×</button></div><h2 id="nwDrawPickerTitle">오늘의 행운, 어떤 게임으로 만날까요?</h2><p>대표사진과 함께 즐기는 뉴트월드 회원 전용 추첨</p><div class="picker-grid"><a class="picker-card" href="draw/index.html?v=3.30"><div class="picker-art picker-marble" aria-hidden="true"><i></i><i></i><i></i></div><span class="picker-copy"><small>MARBLE SURVIVAL</small><b>마블 생존추첨</b><p>다양한 코스와 움직이는 장치들.<br>익숙한 구슬 추첨의 짜릿함!</p><em>기존 5개 코스에서 추첨하기 ↗</em></span></a><a class="picker-card" href="draw/pond.html?v=3.30"><div class="picker-art picker-pond" aria-hidden="true"><i></i><i></i><i></i></div><span class="picker-copy"><small>개발중 · 관리자 전용</small><b>생존연못(개발중)</b><p>내 대표사진이 올라탄 작은 연잎.<br>현재 개발중으로 관리자만 이용할 수 있어요.</p><em>🔒 관리자 인증 후 입장 ↗</em></span></a></div><p class="picker-note">마블 생존추첨은 회원 전용, 생존연못(개발중)은 관리자 전용입니다. 음악과 설정은 각 기기의 브라우저에 보관됩니다.</p>`;document.body.append(dialog);dialog.querySelector('button').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});dialog.addEventListener('close',()=>{if(location.hash==='#draw')history.replaceState(null,'',location.pathname+location.search);document.getElementById('nwDrawOpen')?.focus();});}
     const ua=navigator.userAgent||'',mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);dialog.querySelectorAll('a').forEach(link=>{link.target=mobile?'_self':'_blank';link.rel='noopener';});
     if(!dialog.open)dialog.showModal();
   }
@@ -2894,26 +2897,27 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script>window.NWConfigReady.then(function(){
 (function(){
   let pending=false;
+  window.NWApplyRankingMeta330=function(data){
+    const dateEl=document.getElementById('nwRankingAsOf'),titleEl=document.getElementById('nwRankingTitle');
+    if(!dateEl||!data||!data.ok||!/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate||''))return false;
+    const time=/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.latestChatTime||'')?' '+data.latestChatTime:'';
+    dateEl.textContent=data.latestChatDate.replace(/-/g,'.')+time+' 기준';dateEl.dataset.loaded='1';
+    if(titleEl&&/^\d{4}-\d{2}$/.test(data.month||''))titleEl.textContent='📊 '+Number(data.month.slice(5))+'월 활동왕 실시간 순위';
+    return true;
+  };
   window.NWRefreshRankingMeta=function(){
     if(pending)return;
-    const dateEl=document.getElementById('nwRankingAsOf'),titleEl=document.getElementById('nwRankingTitle');
-    const app=window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl;
-    if(!app||app.includes('PASTE_WEB_APP_URL_HERE')){dateEl.textContent='집계 기준일 확인 불가';return;}
+    if(window.NWApplyRankingMeta330(window.NWLatestRankingMeta330))return;
+    const dateEl=document.getElementById('nwRankingAsOf'),app=window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl;
+    if(!dateEl||!app||app.includes('PASTE_WEB_APP_URL_HERE'))return;
     pending=true;
-    const cb='nwRankMeta_'+Date.now()+'_'+Math.random().toString(36).slice(2);
-    const script=document.createElement('script');let timer;
+    const cb='nwRankMeta_'+Date.now()+'_'+Math.random().toString(36).slice(2),script=document.createElement('script');let timer,done=false;
     function finish(data){
-      clearTimeout(timer);delete window[cb];script.remove();pending=false;
-      if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate)){
-        const time=/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.latestChatTime||'')?' '+data.latestChatTime:'';
-        dateEl.textContent=data.latestChatDate.replace(/-/g,'.')+time+' 기준';
-        if(/^\d{4}-\d{2}$/.test(data.month))titleEl.textContent='📊 '+Number(data.month.slice(5))+'월 활동왕 실시간 순위';
-      }else if(!dateEl.dataset.loaded){dateEl.textContent='집계 기준일 확인 불가';return;}
-      if(data&&data.ok&&/^\d{4}-\d{2}-\d{2}$/.test(data.latestChatDate))dateEl.dataset.loaded='1';
+      if(done)return;done=true;clearTimeout(timer);window[cb]=function(){};setTimeout(()=>delete window[cb],60000);script.remove();pending=false;
+      if(!window.NWApplyRankingMeta330(data)&&!dateEl.dataset.loaded)dateEl.textContent='집계 정보 연결 재시도 중…';
     }
-    window[cb]=finish;script.onerror=()=>finish(null);timer=setTimeout(()=>finish(null),12000);
-    script.src=app+(app.includes('?')?'&':'?')+new URLSearchParams({action:'rankingMeta',callback:cb,_:Date.now()});
-    document.head.appendChild(script);
+    window[cb]=finish;script.onerror=()=>finish(null);timer=setTimeout(()=>finish(null),15000);
+    script.src=app+(app.includes('?')?'&':'?')+new URLSearchParams({action:'rankingMeta',callback:cb,_:Date.now()});document.head.appendChild(script);
   };
   window.NWRefreshRankingMeta();
 })();
