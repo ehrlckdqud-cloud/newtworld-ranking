@@ -2008,7 +2008,7 @@ function roleOf(x){
 }
 function isStaff(x){return roleOf(x)!=='회원';}
 function rankMovementBadge(x){
- if(isStaff(x))return '';
+ if(isStaff(x)||!(Number(x.seasonTotal)>=1))return '';
  const now=new Date(Date.now()+9*3600000),month=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
  const live=(window.NWRankMovements297||[]).find(v=>v.id===x.memberId);
  if(live)x={...x,rankMovementType:live.type,rankMovementPrevious:Number(live.previous),rankMovementRank:Number(live.rank),rankMovementMonth:live.month};
