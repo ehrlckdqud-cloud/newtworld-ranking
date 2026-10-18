@@ -1,0 +1,33 @@
+/* Keep the existing gold hover orbit while making unlocked cards accessible. */
+.badge-card.unlocked[role="button"]{cursor:zoom-in}
+.badge-card.unlocked[role="button"]:focus-visible{outline:2px solid #f1cf79;outline-offset:4px}
+.nw-badge-zoom{box-sizing:border-box;width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:18px;border:1px solid #b6954c99;border-radius:22px;background:radial-gradient(ellipse at 50% 35%,#24303a,#09131c 75%);color:#eef8ff;box-shadow:0 22px 80px #000b;overflow:auto}
+.nw-badge-zoom::backdrop{background:#02070de6;backdrop-filter:blur(8px)}
+.nw-badge-zoom-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.nw-badge-zoom-head h2{margin:0;font-family:inherit;font-size:18px;font-weight:700;line-height:1.4}
+.nw-badge-zoom-close{flex:none;border:1px solid #4b5b64;border-radius:10px;background:#15232e;color:#eef8ff;padding:9px 12px;font:inherit;cursor:pointer}
+.nw-badge-zoom-close:focus-visible{outline:2px solid #f1cf79;outline-offset:3px}
+.nw-badge-zoom-image{display:block;width:100%;height:min(68dvh,660px);object-fit:contain;margin:10px auto;filter:drop-shadow(0 8px 20px #0007)}
+.nw-badge-zoom-caption{text-align:center;color:#c9b47e;font-size:13px;margin:6px 0 0}
+/* A continuous row-wide tint on desktop and the whole member card on mobile.
+   Colors follow the lily pond, fire, sapphire dragon and golden crown artwork. */
+#tb tr[data-rank-tier="3"],#cards>.card[data-rank-tier="3"]{--tier-rgb:88,196,141;--tier-light:193,232,154}
+#tb tr[data-rank-tier="4"],#cards>.card[data-rank-tier="4"]{--tier-rgb:226,103,39;--tier-light:255,192,91}
+#tb tr[data-rank-tier="5"],#cards>.card[data-rank-tier="5"]{--tier-rgb:63,141,230;--tier-light:151,208,255}
+#tb tr[data-rank-tier="6"],#cards>.card[data-rank-tier="6"]{--tier-rgb:66,91,218;--tier-light:225,197,125}
+#tb tr[data-rank-tier="7"],#cards>.card[data-rank-tier="7"]{--tier-rgb:219,170,62;--tier-light:255,226,150}
+#tb tr[data-rank-tier="3"],#tb tr[data-rank-tier="4"],#tb tr[data-rank-tier="5"],#tb tr[data-rank-tier="6"],#tb tr[data-rank-tier="7"]{background:radial-gradient(ellipse at 0% 50%,rgba(var(--tier-rgb),.22),transparent 65%),linear-gradient(100deg,rgba(var(--tier-rgb),.10),rgba(var(--tier-rgb),.025));box-shadow:inset 3px 0 rgba(var(--tier-light),.65)}
+#tb tr[data-rank-tier="3"]:hover,#tb tr[data-rank-tier="4"]:hover,#tb tr[data-rank-tier="5"]:hover,#tb tr[data-rank-tier="6"]:hover,#tb tr[data-rank-tier="7"]:hover{background:radial-gradient(ellipse at 0% 50%,rgba(var(--tier-rgb),.29),transparent 75%),linear-gradient(100deg,rgba(var(--tier-rgb),.14),rgba(var(--tier-rgb),.05))}
+#cards>.card[data-rank-tier="3"],#cards>.card[data-rank-tier="4"],#cards>.card[data-rank-tier="5"],#cards>.card[data-rank-tier="6"],#cards>.card[data-rank-tier="7"]{background:radial-gradient(ellipse at 100% 0,rgba(var(--tier-rgb),.19),transparent 65%),linear-gradient(120deg,rgba(var(--tier-rgb),.09),transparent 60%),#0e1922;border-color:rgba(var(--tier-rgb),.4);box-shadow:inset 3px 0 rgba(var(--tier-light),.6)}
+@media(max-width:700px){.nw-badge-zoom{padding:14px;border-radius:17px}.nw-badge-zoom-head h2{font-size:16px}.nw-badge-zoom-image{height:min(65dvh,560px)}}
+
+/* Every earned badge is a native zoom button. Large tiers use 2x image boxes. */
+button.nw-member-grade-zoom{font:inherit;color:inherit;background:none;border:0;padding:0;text-align:left;cursor:zoom-in;max-width:100%}
+button.nw-member-grade-zoom:focus-visible{outline:2px solid #f1cf79;outline-offset:3px;border-radius:8px}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade{flex-direction:column;justify-content:center;gap:3px;height:auto;min-height:100px;overflow:visible;white-space:normal}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade img{width:72px;height:84px;max-width:none}
+#tb tr:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) td:nth-child(3){overflow:visible}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade{flex-direction:column;gap:3px;white-space:normal}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .member-grade img{width:84px;height:84px;max-width:none}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .card-head{flex-wrap:wrap;gap:10px}
+#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .card-head>div:first-child{min-width:0;flex:1 1 90px;overflow-wrap:anywhere}
