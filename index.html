@@ -2333,10 +2333,10 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(!url||url.includes('PASTE_WEB_APP_URL_HERE')) return;
   let id=localStorage.getItem('nwVisitorId');
   if(!id){id='nwv-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);localStorage.setItem('nwVisitorId',id);}
-  function showVisit(d,cached){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');['nwVisitToday','nwVisitTotal'].forEach(k=>document.getElementById(k).title=cached?'최근 확인값 · 갱신 중':'방금 확인한 방문자 수');}
+  function showVisit(d,cached){document.getElementById('nwVisitToday').textContent=Number(d.today||0).toLocaleString('ko-KR');document.getElementById('nwVisitTotal').textContent=Number(d.total||0).toLocaleString('ko-KR');['nwVisitToday','nwVisitTotal'].forEach(k=>document.getElementById(k).title=cached?'최근 확인값 · 갱신 중':(k==='nwVisitToday'?'오늘 방문 수 · 같은 브라우저 하루 1회':'날짜별 방문 수를 모두 합산한 누적 방문 수'));}
   const day=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-  try{const c=JSON.parse(localStorage.getItem('nwVisit297')||'null');if(c&&c.app===url&&c.data.date===day&&Date.now()-c.at>=0&&Date.now()-c.at<86400000)showVisit(c.data,true);}catch(_){}
-  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){showVisit(d,false);try{localStorage.setItem('nwVisit297',JSON.stringify({app:url,data:d,at:Date.now()}));}catch(_){}}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
+  try{const c=JSON.parse(localStorage.getItem('nwVisit332')||'null');if(c&&c.app===url&&c.data.date===day&&Date.now()-c.at>=0&&Date.now()-c.at<86400000)showVisit(c.data,true);}catch(_){}
+  const cb='nwVisitCb_'+Date.now(); window[cb]=function(d){try{if(d&&d.ok){showVisit(d,false);try{localStorage.setItem('nwVisit332',JSON.stringify({app:url,data:d,at:Date.now()}));}catch(_){}}}finally{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();}};
   const s=document.createElement('script');s.id=cb;s.src=url+(url.includes('?')?'&':'?')+'action=visit&visitor='+encodeURIComponent(id)+'&callback='+encodeURIComponent(cb)+'&_='+Date.now();document.body.appendChild(s);
 })();
 
