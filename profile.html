@@ -151,20 +151,39 @@ window.NWConfigReady.then(()=>{
     status.textContent=copied?'복사했어요! 톡방에 그대로 붙여넣어 주세요.':'복사하지 못했어요. 위 인증 문구 전체를 길게 눌러 복사해 주세요.';
   }
   $('copyAuthBtn').onclick=copyAuthPhrase;
-  async function check(){
-    setAuthRestart(false);const id=localStorage.getItem('nwProfileRequestId');if(!id){show('authView');return;}
-    const d=await jsonp('profileStatus',{requestId:id,device:device()});
-    if(localStorage.getItem('nwProfileRequestId')!==id)return;
-    if(!d?.ok){$('pendingStatus').textContent=d?.error||'확인 실패 · 잠시 후 다시 확인해주세요.';return;}
-    if(d.status==='approved'&&d.token){localStorage.setItem('nwProfileToken',d.token);localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');return loadProfile();}
-    if(d.status==='expired'||d.status==='rejected'){
-      setAuthRestart(true);$('copyAuthBtn').disabled=true;
-      $('pendingText').textContent=d.status==='expired'?'코드가 만료되었습니다. 유효시간 안에 톡방에 올렸다면 대화집계 후 다시 상태를 확인해주세요. 새 코드가 필요하면 아래에서 신청할 수 있습니다.':'인증 신청이 거절되었습니다. 필요한 내용을 확인한 뒤 새 인증을 신청해주세요.';
-      $('pendingStatus').textContent=d.message||'새 인증을 신청할 수 있습니다.';return;
-    }
-    $('copyAuthBtn').disabled=!/^인증 NW-[A-Z2-9]{6}$/.test($('codeText').textContent.trim());
-    $('pendingText').textContent=d.status==='awaiting_admin'?'카톡 코드 확인이 완료되었습니다. 관리자 승인까지 기존 신청이 유지됩니다.':'다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.';
-    $('pendingStatus').textContent=d.message||d.status;
+  // v3.27: coalesce status checks and retain a pending request until its token is saved.
+  let authStatusJob=null;
+  function saveApprovedConnection327(token,id){
+    if(typeof token!=='string'||!token)throw new Error('승인된 로그인 정보가 올바르지 않습니다. 다시 확인해주세요.');
+    try{localStorage.setItem('nwProfileToken',token);if(localStorage.getItem('nwProfileToken')!==token)throw new Error('not saved');}
+    catch(_){throw new Error('이 브라우저에서 로그인 정보를 저장하지 못했어요. 일반 브라우저에서 사이트 저장을 허용한 뒤 다시 확인해주세요.');}
+    if(localStorage.getItem('nwProfileRequestId')===id){localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');}
+  }
+  function check(){
+    if(authStatusJob)return authStatusJob;
+    const button=$('checkBtn');button.disabled=true;
+    authStatusJob=(async()=>{
+      setAuthRestart(false);const id=localStorage.getItem('nwProfileRequestId');if(!id){if(localStorage.getItem('nwProfileToken'))return loadProfile();show('authView');return;}
+      const params={requestId:id,device:device()};let d=await jsonp('profileStatus',params);
+      if(localStorage.getItem('nwProfileRequestId')!==id)return;
+      if(d?.ok&&d.status==='approved_claimed'){
+        $('pendingStatus').textContent='승인된 기기 연결을 복구하고 있어요…';
+        d=await jsonp('profileApprovedRecover',params);
+        if(localStorage.getItem('nwProfileRequestId')!==id)return;
+        if(!d?.ok||d.status!=='approved'||!d.token){$('pendingStatus').textContent=d?.error||'승인은 완료됐지만 연결 복구를 마치지 못했어요. 잠시 후 다시 확인해주세요.';return;}
+      }
+      if(!d?.ok){$('pendingStatus').textContent=d?.error||'확인 실패 · 잠시 후 다시 확인해주세요.';return;}
+      if(d.status==='approved'&&d.token){$('pendingStatus').textContent='승인 완료 · 내페이지로 연결하고 있어요…';saveApprovedConnection327(d.token,id);return loadProfile();}
+      if(d.status==='expired'||d.status==='rejected'){
+        setAuthRestart(true);$('copyAuthBtn').disabled=true;
+        $('pendingText').textContent=d.status==='expired'?'코드가 만료되었습니다. 유효시간 안에 톡방에 올렸다면 대화집계 후 다시 상태를 확인해주세요. 새 코드가 필요하면 아래에서 신청할 수 있습니다.':'인증 신청이 거절되었습니다. 필요한 내용을 확인한 뒤 새 인증을 신청해주세요.';
+        $('pendingStatus').textContent=d.message||'새 인증을 신청할 수 있습니다.';return;
+      }
+      $('copyAuthBtn').disabled=!/^인증 NW-[A-Z2-9]{6}$/.test($('codeText').textContent.trim());
+      $('pendingText').textContent=d.status==='awaiting_admin'?'카톡 코드 확인이 완료되었습니다. 관리자 승인까지 기존 신청이 유지됩니다.':'다음 카카오톡 대화내보내기 집계에서 코드가 확인되면 관리자 승인 대기 상태가 됩니다.';
+      $('pendingStatus').textContent=d.message||d.status;
+    })().catch(e=>{$('pendingStatus').textContent=e?.message||'기기 연결이 잠시 지연됐어요. 다시 확인해주세요.';}).finally(()=>{authStatusJob=null;button.disabled=false;});
+    return authStatusJob;
   }
   async function restartAuth(){
     if(!canRestartAuth)return;
