@@ -16,19 +16,35 @@
  function seenKey(member,event){return 'nwPromotionSeen337:'+encodeURIComponent(member)+':'+encodeURIComponent(event);}
  function claim(key){const now=Date.now(),leaseKey=key+':lease';try{const old=JSON.parse(read(leaseKey)||'null');if(old&&old.until>now&&old.owner!==owner)return false;}catch(_){}write(leaseKey,JSON.stringify({owner,until:now+300000}));return true;}
  function release(key){try{const k=key+':lease',old=JSON.parse(read(k)||'null');if(old?.owner===owner)localStorage.removeItem(k);}catch(_){}}
- function played(){if(!audio||audio.state!=='running')return false;const start=audio.currentTime+.015;[[523.25,0,.18],[659.25,.10,.20],[783.99,.20,.22],[1046.5,.34,.62]].forEach(([hz,delay,duration])=>{const o=audio.createOscillator(),g=audio.createGain();o.type='triangle';o.frequency.value=hz;g.gain.setValueAtTime(0,start+delay);g.gain.linearRampToValueAtTime(.10,start+delay+.025);g.gain.exponentialRampToValueAtTime(.001,start+delay+duration);o.connect(g);g.connect(audio.destination);o.start(start+delay);o.stop(start+delay+duration+.03)});return true;}
- function unlockAudio(){try{const Audio=window.AudioContext||window.webkitAudioContext;if(!Audio)return;if(!audio)audio=new Audio();if(audio.state==='suspended')void audio.resume().catch(()=>{});}catch(_){}}
+ function played(){if(!audio)return false;try{audio.pause();audio.currentTime=0;Promise.resolve(audio.play()).then(()=>{if(dialog.open)note.textContent='';}).catch(()=>{if(dialog.open)note.textContent='소리와 움직임을 다시 보려면 버튼을 눌러주세요.'});return true;}catch(_){return false;}}
+ function unlockAudio(){try{if(!audio&&typeof Audio==='function'){audio=new Audio('assets/badges/promotion-fanfare-v338.mp3');audio.preload='auto';audio.volume=.85;}}catch(_){}}
  document.addEventListener('pointerdown',unlockAudio,{passive:true});document.addEventListener('keydown',unlockAudio);
- function celebrate(force=false){if(active?.celebrated&&!force)return;if(active)active.celebrated=true;dialog.removeAttribute('data-celebrate');void dialog.offsetWidth;dialog.setAttribute('data-celebrate','');note.textContent=played()?'':'소리가 들리지 않으면 ‘효과 다시 보기’를 눌러주세요.';}
+ function animateBadge338(panel,explicit){
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(reduced&&!explicit)return;
+  panel.toggleAttribute?.('data-play-motion',Boolean(explicit));
+  const badge=panel.querySelector('img');
+  const bounce=[{transform:'translateY(56px) scale(.12) rotate(-12deg)',opacity:0,offset:0},{transform:'translateY(-8px) scale(1.38) rotate(4deg)',opacity:1,offset:.32},{transform:'translateY(5px) scale(.86) rotate(-3deg)',opacity:1,offset:.58},{transform:'translateY(-2px) scale(1.07) rotate(1deg)',opacity:1,offset:.78},{transform:'translateY(0) scale(1) rotate(0)',opacity:1,offset:1}];
+  badge.getAnimations?.().forEach(a=>a.cancel());
+  if(badge.animate)badge.animate(bounce,{duration:1800,easing:'cubic-bezier(.2,.7,.25,1)',fill:'both'});
+  panel.querySelectorAll?.('.nw-promo-star').forEach((star,i)=>{
+   star.getAnimations?.().forEach(a=>a.cancel());
+   const sx=star.style.getPropertyValue('--sx'),sy=star.style.getPropertyValue('--sy');
+   star.animate?.([{transform:'translate(-50%,-50%) scale(.1)',opacity:0,offset:0},{transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.12},{transform:'translate(calc(-50% + '+sx+'),calc(-50% + '+sy+')) scale(.3) rotate(100deg)',opacity:0,offset:1}],{duration:1900,delay:350+i%5*35,easing:'ease-out',fill:'both'});
+  });
+ }
+ function celebrate(force=false){if(!dialog.open||document.hidden)return;if(active?.celebrated&&!force)return;if(active)active.celebrated=true;dialog.removeAttribute('data-celebrate');void dialog.offsetWidth;dialog.setAttribute('data-celebrate','');animateBadge338(dialog,force);note.textContent=played()?'':'소리가 들리지 않으면 ‘효과 다시 보기’를 눌러주세요.';}
  function close(){if(dialog.open)dialog.close();}
- dialog.querySelector('.nw-promo-replay').addEventListener('click',()=>{unlockAudio();setTimeout(()=>celebrate(true),50)});
+ dialog.querySelector('.nw-promo-replay').addEventListener('click',()=>{unlockAudio();celebrate(true)});
  dialog.querySelector('.nw-promo-confirm').addEventListener('click',close);
  dialog.addEventListener('close',()=>{
+  if(audio){audio.pause();audio.currentTime=0;}image.getAnimations?.().forEach(a=>a.cancel());
   document.documentElement.style.overflow=overflow;
   if(active){if(!active.cancelled&&same(active.auth)){memory.add(active.key);write(active.key,'1');}release(active.key);active=null;}
   dialog.removeAttribute('data-celebrate');image.removeAttribute('src');if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});schedule();
  });
  function show(data,auth){
+  if(document.hidden)return;
   const event=data.event,level=event&&Number(event.level),badge=window.NWGrades?.levels[level-1];
   if(!badge||!Number.isInteger(level)||!data.memberId||!event.id||!same(auth))return;
   const key=seenKey(data.memberId,event.id);if(memory.has(key)||read(key)||!claim(key))return;
@@ -52,7 +68,7 @@
    const run=()=>show(data,auth);if(navigator.locks?.request)await navigator.locks.request('nwPromotion337:'+auth.device,{mode:'exclusive'},run);else run();
   }}finally{pending=false;schedule()}
  }
- function resume(){if(!document.hidden&&Date.now()-lastCheck>15000)void check();else schedule()}
- document.addEventListener('visibilitychange',()=>{if(document.hidden)clearTimeout(timer);else resume()});window.addEventListener('pageshow',resume);window.addEventListener('focus',resume);window.addEventListener('storage',event=>{if(active&&(event.key==='nwProfileToken'||event.key==='nwProfileDevice')&&!same(active.auth)){active.cancelled=true;close();}});
+ function resume(){if(!document.hidden&&active&&!active.celebrated&&image.complete&&image.naturalWidth)celebrate();if(!document.hidden&&Date.now()-lastCheck>15000)void check();else schedule()}
+ document.addEventListener('visibilitychange',()=>{dialog.getAnimations?.({subtree:true}).forEach(a=>{if(document.hidden&&a.playState==='running')a.pause();else if(!document.hidden&&a.playState==='paused')a.play()});if(document.hidden){clearTimeout(timer);audio?.pause()}else resume()});window.addEventListener('pageshow',resume);window.addEventListener('focus',resume);window.addEventListener('storage',event=>{if(active&&(event.key==='nwProfileToken'||event.key==='nwProfileDevice')&&!same(active.auth)){active.cancelled=true;close();}});
  Promise.resolve(window.NWConfigReady).then(check);
 })();

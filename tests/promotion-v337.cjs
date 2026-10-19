@@ -22,3 +22,10 @@ async function harness({auth=true,event=true}={}){
  h=await harness();h.state.store.set('nwProfileToken','different');h.state.storage({key:'nwProfileToken'});assert(!h.dialog.open);assert(!h.state.store.has('nwPromotionSeen337:a:a%3A1'));
  console.log('Frontend: unauthenticated suppression, no historical event, earned first badge, animation, acknowledgement, no repeat, logout cancellation passed');
 })().catch(e=>{console.error(e);process.exitCode=1});
+// Explicit replay must animate once even under reduced automatic motion.
+{
+ const src=fs.readFileSync('assets/badges/promotion-v337.js','utf8'),start=src.indexOf(' function animateBadge338('),end=src.indexOf(' function celebrate(',start);let count=0,options;
+ const panel={toggleAttribute(){},querySelector:()=>({getAnimations:()=>[],animate:(frames,opt)=>{count++;options=opt;assert.equal(frames[1].transform,'translateY(-8px) scale(1.38) rotate(4deg)')}}),querySelectorAll:()=>[]};
+ const c={window:{matchMedia:()=>({matches:true})}};vm.createContext(c);vm.runInContext(src.slice(start,end),c);c.animateBadge338(panel,false);assert.equal(count,0);c.animateBadge338(panel,true);assert.equal(count,1);assert.equal(options.duration,1800);
+ console.log('Explicit replay uses Web Animations for 1.8-second full bounce despite reduced automatic motion');
+}
