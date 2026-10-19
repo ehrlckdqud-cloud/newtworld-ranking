@@ -4,7 +4,7 @@
  if(window.NWPromotion337Loaded)return;window.NWPromotion337Loaded=true;
  const style=document.createElement('link');style.rel='stylesheet';style.href='assets/badges/promotion-v337.css';document.head.append(style);
  const dialog=document.createElement('dialog');dialog.className='nw-promotion';dialog.setAttribute('aria-labelledby','nwPromotionTitle337');
- dialog.innerHTML='<p class="nw-promo-kicker">NEWT WORLD · LEVEL UP</p><h2 id="nwPromotionTitle337"></h2><p class="nw-promo-name"></p><div class="nw-promo-stage"><img alt=""></div><p class="nw-promo-threshold"></p><div class="nw-promo-actions"><button type="button" class="nw-promo-replay">효과 다시 보기 · ♪</button><button type="button" class="nw-promo-confirm" autofocus>확인</button></div><p class="nw-promo-audio-note"></p>';
+ dialog.innerHTML='<p class="nw-promo-kicker">NEWT WORLD · LEVEL UP</p><h2 id="nwPromotionTitle337"></h2><p class="nw-promo-name"></p><div class="nw-promo-stage"><img alt=""></div><p class="nw-promo-threshold"></p><div class="nw-promo-actions"><button type="button" class="nw-promo-replay">재생</button><button type="button" class="nw-promo-confirm" autofocus>확인</button></div><p class="nw-promo-audio-note"></p>';
  document.body.append(dialog);
  const image=dialog.querySelector('img'),stage=dialog.querySelector('.nw-promo-stage'),note=dialog.querySelector('.nw-promo-audio-note');
  for(let i=0;i<22;i++){const star=document.createElement('i');star.className='nw-promo-star';star.textContent=i%3?'✦':'✧';star.setAttribute('aria-hidden','true');const a=i/22*Math.PI*2;star.style.setProperty('--sx',Math.cos(a)*(95+i%4*15)+'px');star.style.setProperty('--sy',Math.sin(a)*(90+i%4*12)+'px');star.style.setProperty('--delay',i%5*30+'ms');stage.append(star);}
@@ -16,8 +16,8 @@
  function seenKey(member,event){return 'nwPromotionSeen337:'+encodeURIComponent(member)+':'+encodeURIComponent(event);}
  function claim(key){const now=Date.now(),leaseKey=key+':lease';try{const old=JSON.parse(read(leaseKey)||'null');if(old&&old.until>now&&old.owner!==owner)return false;}catch(_){}write(leaseKey,JSON.stringify({owner,until:now+300000}));return true;}
  function release(key){try{const k=key+':lease',old=JSON.parse(read(k)||'null');if(old?.owner===owner)localStorage.removeItem(k);}catch(_){}}
- function played(){if(!audio)return false;try{audio.pause();audio.currentTime=0;Promise.resolve(audio.play()).then(()=>{if(dialog.open)note.textContent='';}).catch(()=>{if(dialog.open)note.textContent='소리와 움직임을 다시 보려면 버튼을 눌러주세요.'});return true;}catch(_){return false;}}
- function unlockAudio(){try{if(!audio&&typeof Audio==='function'){audio=new Audio('assets/badges/promotion-fanfare-v338.mp3');audio.preload='auto';audio.volume=.85;}}catch(_){}}
+ function played(){if(!audio)return false;try{audio.pause();audio.currentTime=0;Promise.resolve(audio.play()).then(()=>{if(dialog.open)note.textContent='';}).catch(()=>{if(dialog.open)note.textContent='소리가 재생되지 않으면 ‘재생’을 눌러주세요.'});return true;}catch(_){return false;}}
+ function unlockAudio(){try{if(!audio&&typeof Audio==='function'){audio=new Audio('assets/badges/promotion-fanfare-v339.mp3');audio.preload='auto';audio.volume=1;}}catch(_){}}
  document.addEventListener('pointerdown',unlockAudio,{passive:true});document.addEventListener('keydown',unlockAudio);
  function animateBadge338(panel,explicit){
   const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -33,7 +33,7 @@
    star.animate?.([{transform:'translate(-50%,-50%) scale(.1)',opacity:0,offset:0},{transform:'translate(-50%,-50%) scale(1.4)',opacity:1,offset:.12},{transform:'translate(calc(-50% + '+sx+'),calc(-50% + '+sy+')) scale(.3) rotate(100deg)',opacity:0,offset:1}],{duration:1900,delay:350+i%5*35,easing:'ease-out',fill:'both'});
   });
  }
- function celebrate(force=false){if(!dialog.open||document.hidden)return;if(active?.celebrated&&!force)return;if(active)active.celebrated=true;dialog.removeAttribute('data-celebrate');void dialog.offsetWidth;dialog.setAttribute('data-celebrate','');animateBadge338(dialog,force);note.textContent=played()?'':'소리가 들리지 않으면 ‘효과 다시 보기’를 눌러주세요.';}
+ function celebrate(force=false){if(!dialog.open||document.hidden)return;if(active?.celebrated&&!force)return;if(active)active.celebrated=true;dialog.removeAttribute('data-celebrate');void dialog.offsetWidth;dialog.setAttribute('data-celebrate','');animateBadge338(dialog,force);note.textContent=played()?'':'소리가 들리지 않으면 ‘재생’를 눌러주세요.';}
  function close(){if(dialog.open)dialog.close();}
  dialog.querySelector('.nw-promo-replay').addEventListener('click',()=>{unlockAudio();celebrate(true)});
  dialog.querySelector('.nw-promo-confirm').addEventListener('click',close);
@@ -51,8 +51,8 @@
   if(document.querySelector('dialog[open]')){release(key);return;}
   active={key,auth};previousFocus=document.activeElement;overflow=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';
   dialog.querySelector('h2').textContent='축하합니다! '+badge.name+' 달성!';dialog.querySelector('.nw-promo-name').textContent=(data.nickname||'회원')+'님';dialog.querySelector('.nw-promo-threshold').textContent='누적 '+Number(event.score||badge.threshold).toLocaleString('ko-KR')+'점 · 새로운 등급을 달성했어요';
-  image.alt=badge.name+' 등급 배지';image.onload=()=>{if(active?.key===key&&dialog.open)celebrate()};image.onerror=()=>{note.textContent='배지를 불러오지 못했어요. 효과 다시 보기를 눌러주세요.'};image.src=badge.image;
-  dialog.showModal();if(image.complete&&image.naturalWidth)celebrate();
+  image.alt=badge.name+' 등급 배지';image.onload=()=>{if(active?.key===key&&dialog.open)celebrate()};image.onerror=()=>{note.textContent='배지를 불러오지 못했어요. 재생을 눌러주세요.'};image.src=badge.image;
+  unlockAudio();dialog.showModal();if(image.complete&&image.naturalWidth)celebrate();
  }
  function request(auth){return new Promise(resolve=>{
   const app=window.NW_CONFIG?.appScriptUrl;if(!app){resolve(null);return;}
