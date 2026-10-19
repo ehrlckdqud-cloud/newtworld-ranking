@@ -10,3 +10,7 @@
 
 /* Shared entry point used by both ranking and My Page, including installed apps. */
 (function(){function load(){if(window.NWPromotion337Loaded||document.getElementById('nwPromotionLoader337'))return;const s=document.createElement('script');s.id='nwPromotionLoader337';s.src='assets/badges/promotion-v337.js?v=340';document.head.append(s);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();})();
+
+
+/* Attribute authenticated TODAY entries for the private Sheets-only report. */
+(function(){function load(){if(window.NWMemberVisit341)return;const s=document.createElement('script');s.src='assets/member-visit-v341.js';document.head.append(s);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();})();
