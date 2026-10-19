@@ -1,0 +1,27 @@
+.nw-promotion{box-sizing:border-box;width:min(440px,calc(100% - 24px));max-height:calc(100dvh - 24px);overflow:auto;margin:auto;padding:28px 22px 22px;border:1px solid #d8b76b99;border-radius:24px;background:radial-gradient(ellipse at 50% 42%,#234332,#0b1a20 74%);color:#eef8ef;box-shadow:0 24px 90px #000b;text-align:center;font-family:inherit}
+.nw-promotion::backdrop{background:#02080cdb;backdrop-filter:blur(7px)}
+.nw-promotion .nw-promo-kicker{margin:0;color:#e9cd8c;font-size:12px;letter-spacing:.15em}
+.nw-promotion h2{font-size:24px;line-height:1.35;margin:10px 0 6px;color:#fff2d2}
+.nw-promotion .nw-promo-name{margin:0;color:#c4d4ca;font-size:14px;overflow-wrap:anywhere}
+.nw-promotion .nw-promo-stage{position:relative;isolation:isolate;height:300px;display:grid;place-items:center;margin:8px 0}
+.nw-promotion .nw-promo-stage img{position:relative;z-index:2;width:220px;height:220px;max-width:100%;object-fit:contain;filter:drop-shadow(0 8px 20px #dfb54b44)}
+.nw-promotion .nw-promo-stage::before{content:'';position:absolute;inset:4px;background:repeating-conic-gradient(from 0deg,#ebc77724 0deg 7deg,transparent 7deg 24deg);mask-image:radial-gradient(ellipse,#000 12%,transparent 69%);border-radius:50%}
+.nw-promotion .nw-promo-star{position:absolute;left:50%;top:50%;z-index:3;color:#ffe6a2;font-style:normal;font-size:18px;opacity:0;pointer-events:none;text-shadow:0 0 10px #ffd460}
+.nw-promotion[data-celebrate] .nw-promo-stage img{animation:nwBadgeBounce337 1.8s cubic-bezier(.2,.7,.25,1) both}
+.nw-promotion[data-celebrate] .nw-promo-star{animation:nwBadgeSpark337 1.6s ease-out var(--delay,0ms) both}
+.nw-promotion[data-celebrate] .nw-promo-stage::before{animation:nwBadgeRays337 1.5s ease-out both}
+.nw-promotion .nw-promo-threshold{color:#d6c390;font-size:13px;margin:0 0 18px}
+.nw-promotion .nw-promo-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.nw-promotion button{font:inherit;font-size:14px;padding:12px 16px;border-radius:12px;border:1px solid #547363;background:#172e27;color:#eef8ef;cursor:pointer}
+.nw-promotion button.nw-promo-confirm{background:#d4b76e;color:#17221b;border-color:#e4c983;font-weight:700;min-width:120px}
+.nw-promotion .nw-promo-audio-note{font-size:11px;color:#aabdaf;margin:12px 0 0}
+@keyframes nwBadgeBounce337{0%{transform:translateY(56px) scale(.12) rotate(-12deg);opacity:0}32%{transform:translateY(-8px) scale(1.38) rotate(4deg);opacity:1}58%{transform:translateY(5px) scale(.86) rotate(-3deg)}78%{transform:translateY(-2px) scale(1.07) rotate(1deg)}100%{transform:translateY(0) scale(1) rotate(0);opacity:1}}
+@keyframes nwBadgeSpark337{0%{transform:translate(-50%,-50%) scale(.1);opacity:0}15%{opacity:1}80%{opacity:.8}100%{transform:translate(calc(-50% + var(--sx)),calc(-50% + var(--sy))) scale(.35) rotate(80deg);opacity:0}}
+@keyframes nwBadgeRays337{0%{opacity:0;transform:scale(.4) rotate(-12deg)}45%{opacity:1}100%{opacity:.55;transform:scale(1.05) rotate(8deg)}}
+@media(max-width:420px){.nw-promotion{padding:22px 16px 18px}.nw-promotion .nw-promo-stage{height:270px}.nw-promotion .nw-promo-stage img{width:195px;height:195px}}
+@media(prefers-reduced-motion:reduce){.nw-promotion[data-celebrate] .nw-promo-stage img,.nw-promotion[data-celebrate] .nw-promo-star,.nw-promotion[data-celebrate] .nw-promo-stage::before{animation:none!important}.nw-promotion .nw-promo-star{display:none}}
+
+/* An explicit replay requests one full animation even when OS automatic motion is reduced. */
+.nw-promotion[data-play-motion] .nw-promo-star{display:block!important}
+.nw-promotion[data-play-motion][data-celebrate] .nw-promo-stage img{animation:nwBadgeBounce337 1.8s cubic-bezier(.2,.7,.25,1) both!important}
+.nw-promotion[data-play-motion][data-celebrate] .nw-promo-stage::before{animation:nwBadgeRays337 2.1s ease-out both!important}
