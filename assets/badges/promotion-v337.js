@@ -73,7 +73,7 @@
   const app=window.NW_CONFIG?.appScriptUrl;if(!app){resolve(null);return;}
   const cb='nwPromotion337_'+Date.now()+'_'+Math.random().toString(36).slice(2),script=document.createElement('script');let done=false,timeout;
   function finish(data){if(done)return;done=true;clearTimeout(timeout);script.remove();window[cb]=()=>{};setTimeout(()=>{delete window[cb]},60000);resolve(data)}
-  window[cb]=finish;script.onerror=()=>finish(null);script.src=app+(app.includes('?')?'&':'?')+new URLSearchParams({action:'gradePromotion',callback:cb,...auth,_:Date.now()});timeout=setTimeout(()=>finish(null),18000);document.head.append(script);
+  window[cb]=finish;script.onerror=()=>finish(null);script.src=app+(app.includes('?')?'&':'?')+new URLSearchParams({action:'gradePromotion',pv:'340',callback:cb,...auth,_:Date.now()});timeout=setTimeout(()=>finish(null),18000);document.head.append(script);
  });}
  function schedule(){clearTimeout(timer);if(!document.hidden)timer=setTimeout(check,60000)}
  async function check(){
