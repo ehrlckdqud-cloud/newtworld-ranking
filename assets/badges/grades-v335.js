@@ -6,3 +6,7 @@
  function next(score){score=Math.max(0,Number(score)||0);const b=levels.find(b=>score<b.threshold)||levels[levels.length-1];return{name:b.name,threshold:b.threshold,remaining:Math.max(0,b.threshold-score),progress:Math.max(0,Math.min(100,score/b.threshold*100))};}
  window.NWGrades=Object.freeze({levels:Object.freeze(levels),index,next});
 })();
+
+
+/* Shared entry point used by both ranking and My Page, including installed apps. */
+(function(){function load(){if(window.NWPromotion337Loaded||document.getElementById('nwPromotionLoader337'))return;const s=document.createElement('script');s.id='nwPromotionLoader337';s.src='assets/badges/promotion-v337.js';document.head.append(s);}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',load,{once:true});else load();})();
