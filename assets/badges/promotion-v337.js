@@ -52,7 +52,10 @@
   active={key,auth};previousFocus=document.activeElement;overflow=document.documentElement.style.overflow;document.documentElement.style.overflow='hidden';
   dialog.querySelector('h2').textContent='축하합니다! '+badge.name+' 달성!';dialog.querySelector('.nw-promo-name').textContent=(data.nickname||'회원')+'님';dialog.querySelector('.nw-promo-threshold').textContent='누적 '+Number(event.score||badge.threshold).toLocaleString('ko-KR')+'점 · 새로운 등급을 달성했어요';
   image.alt=badge.name+' 등급 배지';image.onload=()=>{if(active?.key===key&&dialog.open)celebrate()};image.onerror=()=>{note.textContent='배지를 불러오지 못했어요. 재생을 눌러주세요.'};image.src=badge.image;
-  unlockAudio();dialog.showModal();if(image.complete&&image.naturalWidth)celebrate();
+  unlockAudio();dialog.showModal();
+  // Record a successful display immediately, including refresh/exit before confirmation.
+  memory.add(key);write(key,'1');
+  if(image.complete&&image.naturalWidth)celebrate();
  }
  function request(auth){return new Promise(resolve=>{
   const app=window.NW_CONFIG?.appScriptUrl;if(!app){resolve(null);return;}
