@@ -2009,25 +2009,35 @@ function roleOf(x){
   return OPERATOR_ROLES[(x&&x.name)||'']||'회원';
 }
 function isStaff(x){return roleOf(x)!=='회원';}
+/* v3.42: keep import-time daily movements until the next import.
+   rankingMeta can roll its comparison day forward before the ranking sheet changes. */
+function rankMovementState342(x){
+ const meta=window.NWLatestRankingMeta330||{};
+ function monthOf(v){const m=String(v||'').trim().match(/^(\d{4})[-/.](\d{1,2})(?:\D|$)/);return m&&Number(m[2])>=1&&Number(m[2])<=12?m[1]+'-'+m[2].padStart(2,'0'):'';}
+ const now=new Date(Date.now()+9*3600000),fallbackMonth=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
+ // The sheet is the current ranking batch, even before the first import of a new day/month.
+ const month=monthOf(x.rankMovementMonth)||monthOf(meta.month)||fallbackMonth;
+ const latestDay=/^\d{4}-\d{2}-\d{2}$/.test(meta.latestChatDate||'')?meta.latestChatDate:'';
+ const baseDay=/^\d{4}-\d{2}-\d{2}$/.test(meta.movementBaseDate||'')?meta.movementBaseDate:'';
+ function valid(v){return v&&['up','down','same','new'].includes(v.type)&&monthOf(v.month)===month&&Number(v.rank)===Number(x.rank)&&(v.type==='new'||Number(v.previous)>0);}
+ const sheet={type:x.rankMovementType,previous:x.rankMovementPrevious,rank:x.rankMovementRank,month:x.rankMovementMonth};
+ const live=(window.NWRankMovements297||[]).find(v=>v.id===x.memberId);
+ // An older/equal import comparison must never be replaced by a self-comparison after midnight.
+ const liveValid=latestDay&&baseDay&&baseDay<latestDay&&monthOf(latestDay)===month&&valid(live);
+ const source=valid(sheet)?'sheet':liveValid?'live':'baseline',value=source==='sheet'?sheet:source==='live'?live:null;
+ let kind='baseline',text='—',label='이전 날짜 집계 비교 기준 수집 중';
+ if(value){
+  if(value.type==='new'){kind='new';text='NEW';label='비교 기준일에 없던 신규 순위 진입';}
+  else{const delta=Number(value.previous)-Number(x.rank);kind=delta>0?'up':delta<0?'down':'same';text=delta>0?'▲'+delta:delta<0?'▼'+Math.abs(delta):'—';label=delta>0?'전일 마지막 집계보다 '+delta+'계단 상승':delta<0?'전일 마지막 집계보다 '+Math.abs(delta)+'계단 하락':'전일 마지막 집계와 순위 동일';}
+ }
+ // Use an API date label only when it describes a valid cross-day comparison.
+ if(value&&liveValid&&Number(live.previous)===Number(value.previous)&&live.type===value.type)label+=' ('+baseDay.replace(/-/g,'.')+' 마지막 집계 기준)';
+ return {kind,text,label,source};
+}
 function rankMovementBadge(x){
  if(isStaff(x)||!(Number(x.seasonTotal)>=1))return '';
- const now=new Date(Date.now()+9*3600000),month=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0');
- const live=(window.NWRankMovements297||[]).find(v=>v.id===x.memberId);
- if(live)x={...x,rankMovementType:live.type,rankMovementPrevious:Number(live.previous),rankMovementRank:Number(live.rank),rankMovementMonth:live.month};
- const comparisonDay=window.NWLatestRankingMeta330&&window.NWLatestRankingMeta330.movementBaseDate;
- let kind=x.rankMovementType||'baseline',text='—',label='이전 날짜 집계 비교 기준 수집 중';
- const mm=String(x.rankMovementMonth||'').trim().match(/^(\d{4})[-/.](\d{1,2})(?:\D|$)/);
- if(mm)x.rankMovementMonth=mm[1]+'-'+mm[2].padStart(2,'0');
- if(x.rankMovementMonth!==month||x.rankMovementRank!==x.rank)kind='baseline';
- if(kind==='new'){text='NEW';label='비교 기준일에 없던 신규 순위 진입';}
- else if(['up','down','same'].includes(kind)&&x.rankMovementPrevious>0){
-  const delta=x.rankMovementPrevious-x.rank;
-  kind=delta>0?'up':delta<0?'down':'same';
-  text=delta>0?'▲'+delta:delta<0?'▼'+Math.abs(delta):'—';
-  label=delta>0?'전일 마지막 집계보다 '+delta+'계단 상승':delta<0?'전일 마지막 집계보다 '+Math.abs(delta)+'계단 하락':'전일 마지막 집계와 순위 동일';
- }
- if(/^\d{4}-\d{2}-\d{2}$/.test(comparisonDay||''))label+=' ('+comparisonDay.replace(/-/g,'.')+' 마지막 집계 기준)';
- return '<span data-rank-movement="'+encodeURIComponent(x.memberId||'')+'" class="nw-rank-movement nw-rank-'+kind+'" title="'+label+'" aria-label="'+label+'">'+text+'</span>';
+ const state=rankMovementState342(x);
+ return '<span data-rank-movement="'+encodeURIComponent(x.memberId||'')+'" class="nw-rank-movement nw-rank-'+state.kind+'" title="'+state.label+'" aria-label="'+state.label+'">'+state.text+'</span>';
 }
 
 window.NWPaintRankMovements297=function(){document.querySelectorAll('[data-rank-movement]').forEach(node=>{const id=decodeURIComponent(node.dataset.rankMovement),x=DATA.find(v=>v.memberId===id);if(x)node.outerHTML=rankMovementBadge(x);});};
