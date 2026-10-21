@@ -2491,25 +2491,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const getMemberAuthDialog=()=>document.getElementById('nwMemberAuthDialog');
   const closeMemberAuth=()=>{const d=getMemberAuthDialog();d?.classList.remove('open');d?.setAttribute('aria-hidden','true');};
   const openMemberAuth=()=>{const d=getMemberAuthDialog();if(!d)return;d.classList.add('open');d.setAttribute('aria-hidden','false');};
-  memberHubOpen?.addEventListener('click',e=>{
-    e.preventDefault();
-    const token=localStorage.getItem('nwProfileToken')||'';
+  // Member hub always checks the server; a missing local token may still have an approved device.
+  async function verifyMemberHubConnection(){
     const device=localStorage.getItem('nwProfileDevice')||'';
-    if(!token||!device){
-      if(token&&!device)localStorage.removeItem('nwProfileToken');
-      openMemberAuth();
-      return;
+    if(!device)return false;
+    const request=(action,params)=>new Promise(resolve=>NWJsonp(action,params,resolve));
+    const token=localStorage.getItem('nwProfileToken')||'';
+    if(token){
+      const result=await request('profileData',{token,device});
+      if(result?.ok&&result.auth)return true;
+      if(result?.auth!==false)throw new Error('회원 연결을 확인하지 못했어요. 잠시 후 다시 눌러주세요.');
     }
-    // v2.9: localStorage에 토큰 문자열이 있다는 이유만으로 인증으로 간주하지 않는다.
-    // 서버에 현재 토큰+기기 세션을 확인한 뒤 유효할 때만 회원 허브를 연다.
-    NWJsonp('profileData',{token,device},d=>{
-      if(d&&d.ok&&d.auth){
-        openPage('members.html','👤 뉴트월드 회원 허브','#members');
-      }else{
-        localStorage.removeItem('nwProfileToken');
-        openMemberAuth();
-      }
-    });
+    const recovered=await request('profileRecover',{device});
+    if(recovered?.ok&&recovered.auth&&recovered.token){
+      localStorage.setItem('nwProfileToken',recovered.token);
+      localStorage.removeItem('nwProfileRequestId');localStorage.removeItem('nwProfileCode');
+      return true;
+    }
+    if(recovered?.auth===false){localStorage.removeItem('nwProfileToken');return false;}
+    throw new Error('회원 연결을 확인하지 못했어요. 잠시 후 다시 눌러주세요.');
+  }
+  let memberHubChecking=false;
+  memberHubOpen?.addEventListener('click',async e=>{
+    e.preventDefault();if(memberHubChecking)return;memberHubChecking=true;
+    try{
+      if(await verifyMemberHubConnection())openPage('members.html','👤 뉴트월드 회원 허브','#members');
+      else openMemberAuth();
+    }catch(error){alert(error.message||'회원 연결을 확인하지 못했어요. 잠시 후 다시 눌러주세요.');}
+    finally{memberHubChecking=false;}
   });
   document.addEventListener('click',e=>{
     if(e.target?.id==='nwMemberAuthClose'){closeMemberAuth();return;}
@@ -3203,3 +3212,4 @@ window.NWConfigReady.then(function(){
 })();
 </script>
 </body></html>
+

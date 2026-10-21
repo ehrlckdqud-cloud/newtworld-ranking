@@ -199,10 +199,13 @@ window.NWConfigReady.then(()=>{
   async function loadProfile(){
     let token=localStorage.getItem('nwProfileToken');const status=$('profileLoadStatus');
     if(!token){
-      const req=localStorage.getItem('nwProfileRequestId');
-      if(req){status.textContent='';renderPending(localStorage.getItem('nwProfileCode'),'인증 상태를 확인하고 있어요.');return check();}
+      // A newer pending request must not mask a restored approval on this same device.
       if(await recoverExisting())token=localStorage.getItem('nwProfileToken');
-      else{status.textContent='';show('authView');loadCandidates();return;}
+      else{
+        const req=localStorage.getItem('nwProfileRequestId');
+        if(req){status.textContent='';renderPending(localStorage.getItem('nwProfileCode'),'인증 상태를 확인하고 있어요.');return check();}
+        status.textContent='';show('authView');loadCandidates();return;
+      }
     }
     let cached=null;try{cached=JSON.parse(localStorage.getItem(coreCacheKey)||'null');}catch(_){}
     if(cached&&cached.token===token&&cached.device===device()&&cached.profile&&Date.now()-Number(cached.savedAt||0)<86400000){
@@ -366,3 +369,4 @@ window.NWConfigReady.then(()=>{
 </script>
 </body>
 </html>
+
