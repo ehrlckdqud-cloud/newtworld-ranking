@@ -6,7 +6,7 @@ const renderer=html.slice(html.indexOf('function renderMembers('),html.indexOf('
 function context(response={ok:true,verifiedIds:['NW0014']}){
  const cache=new Map(),timers=new Map();let clock=1000,timer=0;
  const ctx={HUB:{},APP:'https://example.test/app',Set,JSON,Number,String,Math,console,
-  Date:{now:()=>clock},document:{hidden:false,querySelectorAll:()=>[],addEventListener(){}},window:{addEventListener(){}},
+  Date:{now:()=>clock},document:{getElementById:()=>null,hidden:false,querySelectorAll:()=>[],addEventListener(){}},window:{addEventListener(){}},
   localStorage:{getItem:k=>cache.get(k)||null,setItem:(k,v)=>cache.set(k,v)},
   setTimeout:(fn,ms)=>{timers.set(++timer,{fn,ms});return timer},clearTimeout:id=>timers.delete(id),
   jsonp:async action=>{ctx.action=action;return ctx.response},response,fmt:n=>String(n),openDetailLocal(){}};
