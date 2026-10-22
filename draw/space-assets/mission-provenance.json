@@ -1,0 +1,31 @@
+{
+  "schema": "newtworld-original-final-mission-v1",
+  "start": {
+    "label": "FINAL MISSION START!",
+    "pixels": "Native caption controller 0x33edc, stage argument 5, native child glyph actors, sprite ROM, converted palettes, two original VRAM passes and supplied NeoGeo zoom LUT",
+    "voice_command": "0x1136"
+  },
+  "complete": {
+    "label": "FINAL MISSION COMPLETE!",
+    "pixels": "Native caption controller 0x33ee4, stage argument 5; FINAL MISSION COMPLETE! before later results screen",
+    "voice_command": "0x1137",
+    "music_command": "0x20"
+  },
+  "audio_method": "Original M1 executable and V ROM executed with Z80 and YMFM YM2610, 64-cycle CPU quantum; no generated speech or replacement composition",
+  "video_comparison": {
+    "start_voice_at_seconds": 23.5924,
+    "complete_voice_at_seconds": 164.9443,
+    "music_at_seconds": 164.9025,
+    "music_correlation_3s_window": 0.4681,
+    "music_correlation_note": "One-second window starting three seconds into native score; corroborates original supplied recording, not a claim of sample-identical full recording."
+  },
+  "visual_scope": "Full native entrance, rotation, hold, flash and exit captured and rendered at 59.18560606060606Hz; no video background extraction, browser font, or recreated tween.",
+  "sha256": {
+    "mission-complete-music.mp3": "d355360a11964d5dec905a222470cecea7554d2b47b08b8011ec73d2eb7244b6",
+    "mission-complete-voice.mp3": "f1c814e389c76a696e02516d9b72e84e1112c7f8465b42352e924850c88eb13d",
+    "mission-start-voice.mp3": "ea68085e84d3593c0470b34fef389c062bbf0b7176a3772a772ea73e44de0f05",
+    "mission-complete-atlas.png": "5b636d3f5db7bd00efd6f42487cc05552aafe539d5edaa8a0d02c6d183cd7825",
+    "mission-start-atlas.png": "5bbda0c418a978c9307b6191de2cf517aa54a0763265e8c26ba43bd0d1b26819",
+    "mission-frames.json": "5827d19f694bf03d56ad383a1b347a83d013b6bb989518632fea3ee88d115485"
+  }
+}
