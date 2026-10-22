@@ -1,9 +1,41 @@
 {
-  "schema": "newtworld-original-final-mission-v1",
+  "schema": "newtworld-original-final-mission-v2",
   "start": {
     "label": "FINAL MISSION START!",
     "pixels": "Native caption controller 0x33edc, stage argument 5, native child glyph actors, sprite ROM, converted palettes, two original VRAM passes and supplied NeoGeo zoom LUT",
-    "voice_command": "0x1136"
+    "voice_command": "0x1135",
+    "native_sequence": [
+      "A_531_8A2600-8A4AFF.wav",
+      "A_536_8AD500-8AF8FF.wav",
+      "A_537_8AF900-8B1CFF.wav"
+    ],
+    "source_controller_sound": "Caption controller 0x33edc, argument 5, emits 0x1135 at frame 0. Native M1 schedules the three source phrases, with one START key-on. 0x1136 is only START and is not queued separately.",
+    "render": {
+      "command": "0x1135",
+      "path": "/workspace/scratch/native-boss-sounds/1135/space-expanded-sounds-fifo-q64/1135.wav",
+      "sha256": "bbc90803aa8ab3c6daf6a2b01465639e51f3292f254cd50f06de869e9086b8de",
+      "quantum_cpu_cycles": 64,
+      "source_clock_hz": 4000000,
+      "ym_clock_hz": 8000000,
+      "native_sample_rate": 500000,
+      "trimmed_leading_seconds": 0.028178,
+      "samples_at_48k": 128409,
+      "command_begin_cpu_cycle": 2081344,
+      "native_M68000_FIFO_bytes": [
+        {
+          "cpu_cycle": 2081344,
+          "byte": 17
+        },
+        {
+          "cpu_cycle": 2148928,
+          "byte": 53
+        }
+      ],
+      "native_frame_cpu_cycles": 67584,
+      "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+      "status": "rendered_from_original_M1_and_YM2610",
+      "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347"
+    }
   },
   "complete": {
     "label": "FINAL MISSION COMPLETE!",
@@ -26,6 +58,7 @@
     "mission-start-voice.mp3": "ea68085e84d3593c0470b34fef389c062bbf0b7176a3772a772ea73e44de0f05",
     "mission-complete-atlas.png": "5b636d3f5db7bd00efd6f42487cc05552aafe539d5edaa8a0d02c6d183cd7825",
     "mission-start-atlas.png": "5bbda0c418a978c9307b6191de2cf517aa54a0763265e8c26ba43bd0d1b26819",
-    "mission-frames.json": "5827d19f694bf03d56ad383a1b347a83d013b6bb989518632fea3ee88d115485"
+    "mission-frames.json": "5827d19f694bf03d56ad383a1b347a83d013b6bb989518632fea3ee88d115485",
+    "mission-start-voice-v10.mp3": "09ca8525e56d0a3fa350f33617c7b0523646a6bb6e791866fa2afd95165a4b8a"
   }
 }

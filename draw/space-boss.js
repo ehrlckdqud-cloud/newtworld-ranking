@@ -1,21 +1,21 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=9.2';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=9.2';
-import {SpaceEscorts} from './space-escorts.js?v=9.2';
-import {markHit,hitFeedback} from './space-hit.js?v=9.2';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=10.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=10.0';
+import {SpaceEscorts} from './space-escorts.js?v=10.0';
+import {markHit,hitFeedback} from './space-hit.js?v=10.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
 export class SpaceBoss{
- constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.maxHp=scaledEnemyHp(1400,ships);this.hp=this.maxHp;}
+ constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.media.bossData.clips.first.loop_end=260;this.maxHp=scaledEnemyHp(1400,ships);this.hp=this.maxHp;}
  get clip(){return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
  get seconds(){return Math.max(0,this.time-this.stageAt);}
- transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.retreat(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,at:time});}
+ transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.retreat(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
  step(time,dt,alive,bounds,selectionReady,targets=[]){this.time=time;this.bounds=bounds;this.selectionReady=selectionReady;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
   if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(1400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
   if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(2400,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
-  if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
+  if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.loop_end||clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,toFrame:n,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
   this.escortFleet.step(time,bounds,this.port(),targets,this.stage,this.attackState());
  }
  attackState(seconds=this.seconds){
@@ -29,7 +29,7 @@ export class SpaceBoss{
   for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=p.from.x+(p.to.x-p.from.x)*u,y=p.from.y+(p.to.y-p.from.y)*u;if(this.media.electricHit(f,(x-tr.x)/tr.scale,(y-tr.y)/tr.scale,p.r/tr.scale))hits.add(p.id);}}
   return [...hits];
  }
- sourceFrame(){return this.media.nativeFrame(this.clip,this.seconds,{loop:['first','second'].includes(this.stage)});}
+ sourceFrame(){return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
  geometry(frame=this.sourceFrame()){
   const parts=frame.parts,meta=this.media.bossData.proof.native_parts,textures=this.media.bossData.textures,roof=[],exit=[];
   for(const p of parts){const m=meta[p[0]],pointer=Number(m.pointer),box={left:p[1],top:p[2],right:p[1]+p[4],bottom:p[2]+textures[p[0]][3]};if(pointer===0x190000)roof.push(box);if(['0xd8','0xd9'].includes(m.palette_at_submission))exit.push(box);}
@@ -38,8 +38,8 @@ export class SpaceBoss{
  }
  transform(){
   const {W,H}=this.bounds,base=Math.min(W/320,H/224);let scale=base,x=(W-320*scale)/2,y=0;
-  if(['second','collapse','orbs','complete'].includes(this.stage)){
-   const {roof,exit}=this.geometry();if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
+  if(['fusion','second','collapse','orbs','complete'].includes(this.stage)){
+   const {roof,exit}=this.geometry(this.stage==='fusion'?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
   }
   return {x,y,scale};
  }
@@ -61,10 +61,12 @@ export class SpaceBoss{
  get ceasefire(){return ['collapse','orbs','complete'].includes(this.stage);}
  get finished(){return this.stage==='complete';}
  orbProgress(index,total){return clamp((this.time-(this.orbsAt??this.stageAt)-index/Math.max(1,total)*1.9)/3.8,0,1);}
- orbPosition(start,index,total){const p=this.orbProgress(index,total),e=ease(p),tr=this.transform(),x=tr.x+160*tr.scale,y=tr.y+42*tr.scale,r=Math.sin(p*Math.PI)*Math.min(this.bounds.W*.12,90);return{x:start.x*(1-e)+x*e+Math.cos(p*Math.PI*3+index*2.4)*r,y:start.y*(1-e)+y*e+Math.sin(p*Math.PI*3+index*2.4)*r*.3,p};}
+ entryLip(){const tr=this.transform();return tr.y+70*tr.scale;}
+ orbPosition(start,index,total){const p=this.orbProgress(index,total),e=ease(p),tr=this.transform(),x=tr.x+160*tr.scale,y=this.entryLip()-2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28)*1.5;return{x:start.x*(1-e)+x*e,y:start.y*(1-e)+y*e,p};}
+
  draw(ctx,media){
   if(this.stage==='approach')return;
-  const tr=this.transform(),seconds=this.stage==='complete'?6.4:this.seconds;
+  const tr=this.transform(),seconds=['orbs','complete'].includes(this.stage)?0:this.seconds;
   media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash});
   this.escortFleet.draw(ctx,media);
  }
