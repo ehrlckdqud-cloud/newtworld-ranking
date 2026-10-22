@@ -13,10 +13,11 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
  boss.step(34,2,2,bounds,false,[{x:400,y:500}]);assert.equal(boss.shots.length,2);assert(boss.shots.every(s=>s.owner!==target.id));assert.equal(boss.hulls().length,3);
  const ctx={save(){},restore(){},translate(){},scale(){},drawImage(...args){this.calls.push(args);},clip(){throw Error('Original viewport clip must not be used');},calls:[]};
  assert(bossData.world_parts);
- for(const [name,seconds]of [['first',2.5],['second',2.6]]){
+ for(const [name,seconds]of [['first',3.5],['second',2.6]]){
   const f=media.nativeFrame(name,seconds),all=new Map(f.escorts.map(e=>[e.id,{dead:false,flash:false}]));
-  ctx.calls=[];media.drawNative(ctx,name,seconds,0,0,1,{escorts:all});assert.equal(ctx.calls.length,f.parts.length);assert(ctx.calls.some(a=>a[5]<0||a[5]+a[7]>320||a[6]<0||a[6]+a[8]>224),'Full offscreen parts must survive extraction and rendering');
-  const dead=f.escorts[0].id;all.get(dead).dead=true;ctx.calls=[];media.drawNative(ctx,name,seconds,0,0,1,{escorts:all});assert.equal(ctx.calls.length,f.parts.filter(p=>p[6]!==dead).length);
+  ctx.calls=[];media.drawNative(ctx,name,seconds,0,0,1,{escorts:all});assert.equal(ctx.calls.length,f.parts.filter(p=>!media.recordedEscortShots.has(p[0])).length);assert(ctx.calls.some(a=>a[5]<0||a[5]+a[7]>320||a[6]<0||a[6]+a[8]>224),'Full offscreen parts must survive extraction and rendering');
+  assert(media.recordedEscortShots.size>0);assert(f.parts.some(p=>media.recordedEscortShots.has(p[0])),'Fixture must contain the orphan recorded projectiles being suppressed');
+  const dead=f.escorts[0].id;all.get(dead).dead=true;ctx.calls=[];media.drawNative(ctx,name,seconds,0,0,1,{escorts:all});assert.equal(ctx.calls.length,f.parts.filter(p=>p[6]!==dead&&!media.recordedEscortShots.has(p[0])).length);
  }
  boss.transition('fusion',34);boss.step(35,.01,2,bounds,false);assert(boss.escorts.get(target.id).dead,'Destroyed escort cannot reappear during fusion');boss.step(41,.01,2,bounds,false,[{x:400,y:500}]);assert.equal(boss.stage,'second');assert(boss.escorts.get(target.id).dead);assert.equal(boss.hulls().length,3);
  const entering=new NativeEncounters(media,audio,[]);entering.spawn({key:'entry-hit',type:2,at:10,side:0,s:{}},0);assert(entering.hurt(entering.entities[0].id,7.1),'Visible entering enemies must accept hits immediately');assert.equal(entering.hulls(7.1).length,1);
