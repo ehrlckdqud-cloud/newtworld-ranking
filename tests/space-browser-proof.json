@@ -5,14 +5,14 @@
     "participants": 20,
     "winnerCount": 1,
     "finished": true,
-    "nativeAudioEnabled": false,
+    "nativeAudioEnabled": true,
     "playbackSpeed": 3,
-    "baseDuration": 120
+    "baseDuration": 45
   },
-  "scope": "Chrome internal QA with separate local member/admin fixture, not deployed; actual administrator credentials and physical mobile not exercised",
+  "scope": "Chrome internal QA with local member/admin fixture; continuous original game round with effects enabled, observed at both boss stages and run through result. Production administrator credentials and physical mobile not exercised.",
   "publicEntry": "Main picker displays administrator-only development card next to pond",
   "deployment": "User authorized original replacement and administrator-only deployment",
-  "version": 6,
+  "version": 7,
   "roster": "comma and asterisk input expanded to 41 ships; test high-resolution representative photo applied",
   "music": "Real MP3 added to shared nw-draw-music-v1; both waiting/game queues saved and played",
   "viewport": {
@@ -33,8 +33,7 @@
   },
   "limits": [
     "Actual production administrator credentials not entered",
-    "Physical mobile and 4K60 load not exercised",
-    "Version 6 fixed-stage screenshot freezes the immediate hit/death frame; it is an internal module QA harness, not the production UI."
+    "Physical mobile and 4K60 load not exercised"
   ],
   "camera": {
     "minimumZoomPercent": 55,
@@ -43,7 +42,8 @@
     "backgroundFilledAtMinimumZoom": true,
     "atmosphereRectangleRemoved": true,
     "zeroSizedCanvasGuarded": true,
-    "verifiedAtVersion": 5
+    "verifiedAtVersion": 7,
+    "finalBossObservedAt55PercentInContinuousRound": true
   },
   "boss": {
     "nativeTimelineFrames": {
@@ -60,15 +60,19 @@
     "nativeBossAssemblyVerified": true,
     "nativeEffectsAndSoundCommandsRecovered": true,
     "sourceProvenance": "draw/space-assets/native-boss.json",
-    "browserRound": "Version 6: 20 tickets to 1 survivor at 3x; completed. Separate fixed-stage controls verified nonfatal escort 5->4 HP and independent destruction in both boss stages.",
+    "browserRound": "Continuous 20-to-1 round at 3x completed. First-stage launch: two visible independent escorts at 80/80 and 79/80 HP. Final-stage launch: three visible escorts at 30/80, 51/80 and 40/80 HP, with actual fire sprites and effects enabled.",
     "qaOnlyAuthentication": true,
     "pixelChecksVerifiedAtVersion": 5,
     "worldPartsUnclipped": true,
-    "independentEscorts": true
+    "independentEscorts": true,
+    "cameraCompositionCases": 27,
+    "undersideArtworkEdgeKeptOutsideView": true,
+    "newLaunchInstancesPerBattleStage": 3,
+    "sourceRecordedEscortSoundsSuppressed": true
   },
   "meteor": {
-    "hp": 90,
-    "previousHp": 8,
+    "hp": 900,
+    "previousHp": 90,
     "largePer32SyntheticMeteorEvents": 4,
     "previousLargePer32": 16
   },
@@ -80,5 +84,15 @@
     "syntheticOrangeOverlayRemoved": true,
     "paintClockSeparatedFromSimulation": true,
     "browserNonfatalHitFrameObserved": true
-  }
+  },
+  "enemyHealth": {
+    "small": 30,
+    "large": 900,
+    "ufo": 60,
+    "ring": 30,
+    "alien": 80,
+    "escort": 80,
+    "bossHealthUnchanged": true
+  },
+  "qaObserver": "Local mirror only: displays actual round stage and live escort HP, clicks the normal pause control at first/final launch checkpoints. Not deployed; no production authentication bypass."
 }
