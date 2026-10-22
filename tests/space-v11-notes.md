@@ -1,0 +1,15 @@
+# Space Escape v11 — thirteen follow-up requests
+
+- Final survivor count cannot settle until the last four nominal seconds and the final boss is ready to fall. Larger rosters retain a combat reserve, thinned over eight seconds near the boss's last quarter. This preserves suspense in extended boss fights too. Full-round tests assert final count is reached within five simulation seconds of final boss defeat.
+- Ordinary enemy waves and hatch escorts emit two copies; small-rock waves emit four. The ordinary active cap is 112, previously 28. Spawn requests that are already out of schedule do not accumulate into an endless post-timer backlog; living enemies never expire because of age.
+- Small rocks descend on a three-second transit, previously twelve seconds. UFOs enter from above in 0.55 seconds, fire the original beam while holding altitude, then clear a side edge in 1.45 seconds.
+- Weighted tickets remain weighted. A shuffled ticket order chooses at most one finalist per normalized nickname. Other tickets from that nickname can be eliminated. Winner count is limited to distinct nicknames.
+- Entry still requires the existing server-validated member/admin checks. Successful entry is retained for the current page session, without thirty-second polling or focus-triggered reauthentication. Explicit member credential changes still close the session.
+- First boss and fusion use an identical camera-aware transform. First-boss base health is 4200 at fifty starting craft, previously 1400; participant scaling remains intact.
+- Large debris stops being admitted at fusion. Existing living debris exits naturally during fusion and stays outside during the final boss battle.
+- Earth moves down out of view, simulating continued upward flight. A fixed spatial mask blends the sky edge into the stars; there is no time-based whole-Earth opacity fade.
+- Native intro command 0x1135 is rendered through 360 original FIFO frames, retaining the complete release tail. The 2.112-second caption no longer pauses the approximately 2.717-second announcement.
+- Final survivors receive a circular blue shield enclosing their hull. Incoming hits still update the native impact/flash feedback, with no HP loss.
+- Black-hole asset: `draw/space-assets/black-hole-v11.webp`. Created with the built-in image tool from the supplied reference, then converted to a 512-pixel WebP with its alpha preserved. Prompt: refine the reference into one centered isolated black-hole game VFX sprite, opaque black event horizon, warm ivory/gold diagonal accretion disk and gravitationally lensed arch, fine hot plasma filaments; remove all rectangular star background, keep genuine transparency, no text/border/watermark.
+
+Validation: space-v11.cjs, space-v10.cjs, space-mission.cjs, space-score.cjs, space-live-combat.cjs, space-combat-rules.cjs and fifteen complete battles in space-escape-integration.cjs. Four of those battles use repeated nickname tickets. Browser checks cover the moving Earth transition and the new black hole/blue shields. Local QA control and authorization fixtures are not published.

@@ -1,17 +1,17 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=10.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=10.0';
-import {SpaceEscorts} from './space-escorts.js?v=10.0';
-import {markHit,hitFeedback} from './space-hit.js?v=10.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=11.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=11.0';
+import {SpaceEscorts} from './space-escorts.js?v=11.0';
+import {markHit,hitFeedback} from './space-hit.js?v=11.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
 export class SpaceBoss{
- constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.media.bossData.clips.first.loop_end=260;this.maxHp=scaledEnemyHp(1400,ships);this.hp=this.maxHp;}
+ constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.media.bossData.clips.first.loop_end=260;this.maxHp=scaledEnemyHp(4200,ships);this.hp=this.maxHp;}
  get clip(){return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
  get seconds(){return Math.max(0,this.time-this.stageAt);}
  transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.retreat(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
  step(time,dt,alive,bounds,selectionReady,targets=[]){this.time=time;this.bounds=bounds;this.selectionReady=selectionReady;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
-  if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(1400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
+  if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(4200,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
   if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(2400,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
@@ -38,8 +38,8 @@ export class SpaceBoss{
  }
  transform(){
   const {W,H}=this.bounds,base=Math.min(W/320,H/224);let scale=base,x=(W-320*scale)/2,y=0;
-  if(['fusion','second','collapse','orbs','complete'].includes(this.stage)){
-   const {roof,exit}=this.geometry(this.stage==='fusion'?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
+  if(['first','fusion','second','collapse','orbs','complete'].includes(this.stage)){
+   const {roof,exit}=this.geometry(['first','fusion'].includes(this.stage)?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
   }
   return {x,y,scale};
  }
