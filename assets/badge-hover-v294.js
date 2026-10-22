@@ -85,4 +85,4 @@ function attachBadgeOrbit(banner){
 })();
 
 // Game picker artwork and shared close-button alignment.
-import('./space-picker-v9.js?v=13.0').catch(error=>console.error('Game picker enhancement failed',error));
+import('./space-picker-v9.js?v=14.0').catch(error=>console.error('Game picker enhancement failed',error));
