@@ -3,14 +3,14 @@
   "memberAndAdminGate": "Both are required before importing original runtime; start/visibility/30s recheck",
   "gameRound": {
     "participants": 20,
-    "winnerCount": 3,
+    "winnerCount": 1,
     "finished": true,
     "nativeAudioEnabled": true
   },
   "scope": "Chrome internal QA with separate local member/admin fixture, not deployed; actual administrator credentials and physical mobile not exercised",
   "publicEntry": "Main picker displays administrator-only development card next to pond",
   "deployment": "User authorized original replacement and administrator-only deployment",
-  "version": 4,
+  "version": 5,
   "roster": "comma and asterisk input expanded to 41 ships; test high-resolution representative photo applied",
   "music": "Real MP3 added to shared nw-draw-music-v1; both waiting/game queues saved and played",
   "viewport": {
@@ -26,29 +26,37 @@
     "previewPlayed": true,
     "nativeFileDownloadVerified": false,
     "downloadLimit": "Cloud browser Blob downloads failed; preview and retry link available",
-    "audioTracks": 1
+    "audioTracks": 1,
+    "verifiedAtVersion": 3
   },
   "limits": [
     "Actual production administrator credentials not entered",
     "Physical mobile and 4K60 load not exercised"
   ],
   "camera": {
-    "wheelZoomInPercent": 149,
-    "wheelZoomOutPercent": 67,
-    "resetPercent": 100
+    "minimumZoomPercent": 55,
+    "smoothIntermediateZoomObserved": true,
+    "resetPercent": 100,
+    "backgroundFilledAtMinimumZoom": true,
+    "atmosphereRectangleRemoved": true,
+    "zeroSizedCanvasGuarded": true
   },
   "boss": {
-    "originalBodySprites": [
-      "0x3ba71e",
-      "0x3bab2a",
-      "0x3d3f58"
-    ],
-    "fusionObserved": true,
-    "secondPhaseObserved": true,
-    "orangeHitObserved": true,
-    "portraitOrbEntryObserved": true,
-    "resultAfterEntryObserved": true,
-    "browserRound": "20 tickets to 1 survivor",
+    "nativeTimelineFrames": {
+      "first": 1200,
+      "fusion": 296,
+      "second": 605,
+      "collapse": 149,
+      "entry": 300
+    },
+    "wholeViewportPixelChecks": 10,
+    "pixelDifferences": 0,
+    "naturalThresholdGeometryEqualityFrames": 1500,
+    "originalExitChild": "0xac062",
+    "nativeBossAssemblyVerified": true,
+    "nativeEffectsAndSoundCommandsRecovered": true,
+    "sourceProvenance": "draw/space-assets/native-boss.json",
+    "browserRound": "20 tickets to 1 survivor; completed with effects enabled",
     "qaOnlyAuthentication": true
   },
   "meteor": {
@@ -56,5 +64,12 @@
     "previousHp": 8,
     "largePer32SyntheticMeteorEvents": 4,
     "previousLargePer32": 16
+  },
+  "originalHits": {
+    "sourceCounter": "0x1a7fa ORI.B #6,$17(A2)",
+    "sourceFrameHz": 59.18560606060606,
+    "palettePairsVerified": true,
+    "largeMeteorNativeDamageShapes": 4,
+    "syntheticOrangeOverlayRemoved": true
   }
 }

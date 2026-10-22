@@ -1,0 +1,172 @@
+[
+  {
+    "command": "0x102d",
+    "path": "/workspace/scratch/native-boss-sounds/102d/space-expanded-sounds-fifo-q8/102d.wav",
+    "sha256": "cfb429fb066397f86f22067f9ed9eea2a1ca52b9ef4b8d509104f9e6bf66ad53",
+    "quantum_cpu_cycles": 8,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.027638,
+    "samples_at_48k": 51272,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 45
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 0.9999990774038553,
+    "samplewise_quantum_convergence": true
+  },
+  {
+    "command": "0x10a7",
+    "path": "/workspace/scratch/native-boss-sounds/10a7/space-expanded-sounds-fifo-q1/10a7.wav",
+    "sha256": "bb3e7aad94ed06401b0d2c9175529b597ac2301759e1178156adca499000dc9e",
+    "quantum_cpu_cycles": 1,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.031508,
+    "samples_at_48k": 128249,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 167
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 0.18217478915536808,
+    "samplewise_quantum_convergence": false,
+    "validation_note": "Original M1/YM2610 render selected at one-cycle scheduling. Waveform is sensitive to scheduler quantum; samplewise convergence is not claimed."
+  },
+  {
+    "command": "0x1075",
+    "path": "/workspace/scratch/native-boss-sounds/1075/space-expanded-sounds-fifo-q8/1075.wav",
+    "sha256": "aaa9eae9101781bcec76461ae0db40827f417047966894e6ac4809f681d59450",
+    "quantum_cpu_cycles": 8,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.027584,
+    "samples_at_48k": 29984,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 117
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 0.999998547485143,
+    "samplewise_quantum_convergence": true
+  },
+  {
+    "command": "0x10cd",
+    "path": "/workspace/scratch/native-boss-sounds/10cd/space-expanded-sounds-fifo-q1/10cd.wav",
+    "sha256": "454d918eccefc36543a924cfedf626ec241c28a2531636f662e704cc61ae91de",
+    "quantum_cpu_cycles": 1,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.084554,
+    "samples_at_48k": 125703,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 205
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 0.009319862092908115,
+    "samplewise_quantum_convergence": false,
+    "validation_note": "Original M1/YM2610 render selected at one-cycle scheduling. Waveform is sensitive to scheduler quantum; samplewise convergence is not claimed."
+  },
+  {
+    "command": "0x10ce",
+    "path": "/workspace/scratch/native-boss-sounds/10ce/space-expanded-sounds-fifo-q8/10ce.wav",
+    "sha256": "19612e0d17848b4dc22f9bf966e3df0474b3f327481e40fab78c9d8d7b0226cf",
+    "quantum_cpu_cycles": 8,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.027152,
+    "samples_at_48k": 74061,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 206
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 1.0,
+    "samplewise_quantum_convergence": true
+  },
+  {
+    "command": "0x1033",
+    "path": "/workspace/scratch/native-boss-sounds/1033/space-expanded-sounds-fifo-q8/1033.wav",
+    "sha256": "e01fd2dde8019e726bd380610cc6009e9af82d54119bf35cfdb3b85ecd409b25",
+    "quantum_cpu_cycles": 8,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.028988,
+    "samples_at_48k": 128370,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 51
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347",
+    "q8_q4_sample_correlation": 0.9999999781678637,
+    "samplewise_quantum_convergence": true
+  }
+]

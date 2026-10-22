@@ -1,0 +1,306 @@
+{
+  "checks": [
+    {
+      "clip": "first",
+      "frame": 70,
+      "source_frame": 70,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 11,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 57,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "919699c23f8d647cee564c456410ec097a382a21d3bfdb917aaa9275af906367",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 165,
+        "vram_trace_sha256": "f0bff4b6743cf238c86c954aeac6b28eea325c2a865239cf2c3892b75eb00317",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "first",
+      "frame": 145,
+      "source_frame": 145,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 14,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 77,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "55490248c99a992df7738e877d0922e906d5f71965a53ca9f8114322ec97737c",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 246,
+        "vram_trace_sha256": "2b650f87124ceafa383e12e0f21cf2b1cc7077f8caa0a2ccb8ebf2ebff5a39f2",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "fusion",
+      "frame": 10,
+      "source_frame": 160,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 16,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 90,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "2b2d1485b90dff0f4876ee50be9eacd9bf1fc5e8fc76ed34212d0632b6ac1bc7",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 337,
+        "vram_trace_sha256": "047ee97e1a0e0f98cbabc37fcf1ac260d69e6e66ca0deb925c21bae4723f8b83",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "fusion",
+      "frame": 30,
+      "source_frame": 180,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 21,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 130,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "fa33e10b20d1f80cce535b9ad45e75733f110731583b23339b25949f7aa4a003",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 460,
+        "vram_trace_sha256": "327798cc27e14076494afbe08938940f827db46d8062b4749054493b320516c6",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "fusion",
+      "frame": 150,
+      "source_frame": 300,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 43,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 172,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "e649a0dcaa24268ddec4440d1fa7d406f4590a6b9b696a90dfd04a7f3d5a7df6",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 711,
+        "vram_trace_sha256": "d5decaba957c788d0925eb5465dd43b340ababb7bf68ea435b90a2addae222db",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "fusion",
+      "frame": 190,
+      "source_frame": 340,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 44,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 202,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "cc5344a8bfa1a4a0b56a87b4bc4c75fc5548acb1c97c742eebfead0e150ec1cb",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 694,
+        "vram_trace_sha256": "d7ea4690f3eac30fb5a3812af91ac5372d8a2d7ccc397393416fdafb8ad91b3f",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "second",
+      "frame": 104,
+      "source_frame": 550,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 52,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 220,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "bac5b399d481610f96d5ae60aa91a7ed943674213f987985fd1d0f5dee9095d0",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 856,
+        "vram_trace_sha256": "5eabe50a9cb4d584c6ee27fdb540702071020871efdcdf9f47e4c80857631c25",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "second",
+      "frame": 154,
+      "source_frame": 600,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 52,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 244,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "093329b5566f2258d01fc08d41eba7caf6ce53befd9d0f411dac65272921f723",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 934,
+        "vram_trace_sha256": "d45658f3a0915d73be4e69b6a50ad35e1c36e935715aef1cf0a304c7ae9becdf",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "collapse",
+      "frame": 14,
+      "source_frame": 1065,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 47,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 191,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "78b313b97ba9d6715182bb6af553ef296ed846697015957e0e70dcea87d2a0a7",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 807,
+        "vram_trace_sha256": "21f184d8154728f7b0675506f9f34e44d55b989619c1a2968e220fe3da466d4f",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    },
+    {
+      "clip": "entry",
+      "frame": 0,
+      "source_frame": 1200,
+      "pixel_differences": 0,
+      "source_replay": {
+        "max_active_strips": 36,
+        "animated_tile_substitutions": [],
+        "visible_tile_count": 200,
+        "hardware_zoom_pairs": [
+          [
+            15,
+            255
+          ]
+        ],
+        "pixel_sha256": "85d889d93125df10f0f9be63b12a3d568df8315535e24a84bd56bea56c02cfd3",
+        "zoom_lut_sha256": "6f01090a5022916154a0eb1cc4eb3a15d6f6da00c0ee6ea73d67830974aa691a",
+        "rendering_basis": "Original ROM writes to VRAM plus source-referenced NeoGeo scanline renderer and supplied ng-lo.rom lookup",
+        "vram_word_writes": 577,
+        "vram_trace_sha256": "85a5a92d7ab3f5208aa45ce7fb8353ba770838b7a5f4dd81c50e407e3eec988b",
+        "both_native_passes": [
+          "0x14d58",
+          "0x14e9c"
+        ],
+        "anchor_screen": [
+          160,
+          112
+        ]
+      }
+    }
+  ],
+  "all_pixels_equal": true,
+  "scope": "Representative original whole viewport replays through original queue passes and the source-referenced NeoGeo scanline renderer, with actual final converted palette RAM; compared to exported atlas commands."
+}
