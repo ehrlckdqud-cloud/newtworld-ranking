@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=12.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=12.0';
-import {SpaceEscorts} from './space-escorts.js?v=12.0';
-import {markHit,hitFeedback} from './space-hit.js?v=12.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=13.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=13.0';
+import {SpaceEscorts} from './space-escorts.js?v=13.0';
+import {markHit,hitFeedback} from './space-hit.js?v=13.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -16,6 +16,7 @@ export class SpaceBoss{
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
   if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.loop_end||clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,toFrame:n,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
+  if(this.stage==='first'){const f=this.sourceFrame(),a=1-Math.exp(-12*dt);this.firstPose??={x:f.hull[0],y:f.hull[1]};this.firstPose.x+=(f.hull[0]-this.firstPose.x)*a;this.firstPose.y+=(f.hull[1]-this.firstPose.y)*a;}
   this.escortFleet.step(time,bounds,this.port(),targets,this.stage,this.attackState());
  }
  attackState(seconds=this.seconds){
@@ -41,9 +42,9 @@ export class SpaceBoss{
   if(['first','fusion','second','collapse','orbs','complete'].includes(this.stage)){
    const {roof,exit}=this.geometry(['first','fusion'].includes(this.stage)?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
   }
-  return {x,y,scale};
+  if(this.stage==='first'&&this.firstPose){const f=this.sourceFrame();x+=(this.firstPose.x-f.hull[0])*scale;y+=(this.firstPose.y-f.hull[1])*scale;}return {x,y,scale};
  }
- port(){if(this.stage==='approach')return {x:this.bounds.W/2,y:0};const tr=this.transform(),exit=this.geometry().exit;return {x:tr.x+(exit?(exit.left+exit.right)/2:160)*tr.scale,y:tr.y+(exit?exit.bottom:65)*tr.scale};}
+ port(){if(this.stage==='approach')return {x:this.bounds.W/2,y:0};const tr=this.transform(),exit=this.geometry().exit;if(this.stage==='first'){const f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}return {x:tr.x+(exit?(exit.left+exit.right)/2:160)*tr.scale,y:tr.y+(exit?exit.bottom:65)*tr.scale};}
  get escorts(){return this.escortFleet.entities;}
  get escortKills(){return this.escortFleet.kills;}
  hulls(){
