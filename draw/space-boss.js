@@ -1,5 +1,6 @@
-import {SpaceEscorts} from './space-escorts.js?v=7.0';
-import {markHit,hitFeedback} from './space-hit.js?v=7.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=8.0';
+import {SpaceEscorts} from './space-escorts.js?v=8.0';
+import {markHit,hitFeedback} from './space-hit.js?v=8.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -14,7 +15,18 @@ export class SpaceBoss{
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
   if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
-  this.escortFleet.step(time,bounds,this.port(),targets,this.stage);
+  this.escortFleet.step(time,bounds,this.port(),targets,this.stage,this.attackState());
+ }
+ attackState(seconds=this.seconds){
+  if(!['first','second'].includes(this.stage))return {open:false,electric:false,launches:[]};
+  const {index,cycle}=sourceFrameIndex(this.media.bossData.clips[this.clip],seconds,true),timeline=BOSS_TIMELINE[this.stage],hatch=timeline.hatches.find(w=>index>=w.start&&index<w.end),electric=(timeline.electric||[]).some(([a,b])=>index>=a&&index<b);
+  return {frame:index,cycle,open:!!hatch&&!electric,electric,launches:hatch&&!electric?hatch.launches.filter(e=>index>=e.at).map(e=>({...e,key:this.stageAt+'/'+this.stage+'/'+cycle+'/'+e.at,age:(index-e.at)/this.media.bossData.hz})):[]};
+ }
+ get firstElectricFinished(){return ['collapse','orbs','complete'].includes(this.stage)||(this.stage==='second'&&this.seconds>=BOSS_TIMELINE.second.electric[0][1]/this.media.bossData.hz);}
+ electricContacts(from,to,targets){
+  if(this.stage!=='second'||!targets.length)return[];const hz=this.media.bossData.hz,tr=this.transform(),hits=new Set,start=Math.floor(Math.max(0,from-this.stageAt)*hz),end=Math.floor(Math.max(0,to-this.stageAt)*hz);
+  for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=p.from.x+(p.to.x-p.from.x)*u,y=p.from.y+(p.to.y-p.from.y)*u;if(this.media.electricHit(f,(x-tr.x)/tr.scale,(y-tr.y)/tr.scale,p.r/tr.scale))hits.add(p.id);}}
+  return [...hits];
  }
  sourceFrame(){return this.media.nativeFrame(this.clip,this.seconds,{loop:['first','second'].includes(this.stage)});}
  geometry(frame=this.sourceFrame()){
