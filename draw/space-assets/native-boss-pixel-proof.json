@@ -302,5 +302,7 @@
     }
   ],
   "all_pixels_equal": true,
-  "scope": "Representative original whole viewport replays through original queue passes and the source-referenced NeoGeo scanline renderer, with actual final converted palette RAM; compared to exported atlas commands."
+  "scope": "Representative original whole viewport replays through original queue passes and the source-referenced NeoGeo scanline renderer, with actual final converted palette RAM; compared to exported atlas commands.",
+  "verifiedAtVersion": 5,
+  "scopeNote": "Historical source-viewport replay proof. Version 6 deliberately expands world parts and makes escort combat live; its current checks are in tests/space-live-combat.cjs."
 }
