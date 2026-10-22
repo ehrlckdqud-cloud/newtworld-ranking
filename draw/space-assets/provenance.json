@@ -1,0 +1,13 @@
+{
+  "originalPartImages": 411,
+  "pixelExactAtlasPatches": 411,
+  "atlasSize": [
+    2048,
+    506
+  ],
+  "sourceManifest": "dad013d1f78c5df6cc481fab40aea9588e76c01663cf8d3351efba9197b4005c",
+  "atlasSHA256": "965741daf1af0e8200e1b735eb682ea530dfbd1c3d79388f9dfbc5ddb45e052d",
+  "clips": 18,
+  "sounds": 8,
+  "HDropExcluded": true
+}

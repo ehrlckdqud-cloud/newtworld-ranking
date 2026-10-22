@@ -1714,6 +1714,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
  #nwOpeningDays p{margin:0;padding:0}
 }
 </style>
+<style>.nw-draw-picker .picker-card-space{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;background:#102034}.picker-space{background:radial-gradient(ellipse at 50% 110%,#214866,#070e20);height:100%;min-height:150px}.picker-space svg{display:block;width:100%;height:100%;max-height:190px}@media(max-width:600px){.nw-draw-picker .picker-card-space{grid-template-columns:1fr}.picker-space{height:150px}}</style>
 </head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
@@ -1864,7 +1865,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <div class="nw-event-heading"><h2 id="nwEventTitle">🎁 월간 추첨이벤트</h2><div id="nwEventCountdown" class="nw-event-countdown" role="timer" aria-live="off" hidden><time id="nwEventDate"></time><span class="nw-event-countdown-value"><span id="nwEventDays" class="nw-event-countdown-day"></span><span id="nwEventClock" class="nw-event-countdown-clock"></span></span></div></div><p class="event-intro">이번 달 이벤트 상품을 책처럼 넘겨보세요!</p>
 <div id="nwEventStage" class="event-stage" aria-label="좌우 방향키나 스와이프로 사진 넘기기"><div id="nwEventPages" class="event-pages"><div class="event-empty">이벤트 소식을 불러오는 중…</div></div></div>
 <div class="event-controls"><button type="button" id="nwEventPrev" aria-label="이전 페이지" disabled>◀</button><span id="nwEventCount" class="event-count" aria-live="polite">준비 중</span><button type="button" id="nwEventNext" aria-label="다음 페이지" disabled>▶</button><button type="button" id="nwEventAuto" hidden>⏸ 자동 넘김 정지</button></div>
-<div id="nwEventAutoNote" class="event-auto-note"></div><a id="nwDrawOpen" class="nw-draw-open" href="#draw"><span><b>🎲 뉴트월드 생존 추첨</b><small>마블 생존추첨 · 생존연못(개발중·관리자 전용) 중 선택하세요.</small></span><span aria-hidden="true">↗</span></a></section><div class="primary-rooms">
+<div id="nwEventAutoNote" class="event-auto-note"></div><a id="nwDrawOpen" class="nw-draw-open" href="#draw"><span><b>🎲 뉴트월드 생존 추첨</b><small>마블 생존추첨 · 우주탈출 · 생존연못 중 선택하세요.</small></span><span aria-hidden="true">↗</span></a></section><div class="primary-rooms">
 <a class="room-card" href="https://open.kakao.com/o/gHSfUKXh" rel="noopener noreferrer" target="_blank">
 <img loading="lazy" decoding="async" fetchpriority="low" alt="뉴트월드 메인방" src="assets/home-media/image-6ce4bc15b30500a6-v241.webp"/>
 <div class="room-tag">OPEN CHAT ↗</div>
@@ -2377,6 +2378,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <p>관리자 전용 기능입니다. 계절 테마는 모든 방문자에게 공통 적용되며, 자동을 선택하면 3~5월 봄 · 6~8월 여름 · 9~11월 가을 · 12~2월 겨울로 전환됩니다.</p>
     <div class="nw-admin-actions"><button class="nw-admin-action" id="nwOpenEventBookAdmin" type="button"><b>🎁 월간 이벤트 사진 관리</b><br><small>월별 사진 업로드 · 순서 변경 · 삭제</small></button>
       <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>음악 타임코드 수정 및 전체 적용</small></button>
+<a class="nw-admin-action" href="draw/space.html?v=1.1">🚀 우주탈출 · 관리자 테스트</a>
       <button class="nw-admin-action" id="nwPreviewAutoTheme" type="button"><b>🌿 현재 테마 확인</b><br><small>사이트 계절 테마를 즉시 미리보기</small></button>
     </div>
     <div class="nw-theme-box">
