@@ -1,0 +1,243 @@
+{
+  "native_collision_counter": {
+    "pc": "0x1a7fa",
+    "operation": "ORI.B #6,$17(A2)"
+  },
+  "native_animation_decrement": {
+    "pc": "0x1b82c",
+    "operation": "positive counter decremented once before native animation rendering"
+  },
+  "natural_first_phase_threshold": 2700,
+  "first_hit_fixture_hp": 2699,
+  "second_hit_fixture_hp": 2698,
+  "explicit_final_fatal_damage_frame": 1050,
+  "authentic_capture_sha256": "20773ac2cf420804c4ffbc90df2aedfa9fe52b1054c16dd2c6ec552ef5a91b87",
+  "geometry_equal_frames_to_export_capture": 1500,
+  "boss_palette_samples": [
+    {
+      "source_frame": 149,
+      "hp": 7200,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x19343e",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19230e",
+          "palette": "0xd8"
+        }
+      ]
+    },
+    {
+      "source_frame": 150,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x1934e6",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x1922fe",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 151,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x1934e6",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x1922fe",
+          "palette": "0xd8"
+        }
+      ]
+    },
+    {
+      "source_frame": 152,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x19358e",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x1922fe",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 153,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x19358e",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x1922fe",
+          "palette": "0xd8"
+        }
+      ]
+    },
+    {
+      "source_frame": 154,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x193636",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19230e",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 155,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x193636",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19230e",
+          "palette": "0xd8"
+        }
+      ]
+    },
+    {
+      "source_frame": 799,
+      "hp": 2699,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x1938d6",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xd9"
+        }
+      ]
+    },
+    {
+      "source_frame": 800,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x1938d6",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 801,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x19397e",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xd9"
+        }
+      ]
+    },
+    {
+      "source_frame": 802,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x19397e",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 803,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x193a26",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xd9"
+        }
+      ]
+    },
+    {
+      "source_frame": 804,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x193a26",
+          "palette": "0xda"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xdb"
+        }
+      ]
+    },
+    {
+      "source_frame": 805,
+      "hp": 2698,
+      "parts": [
+        {
+          "generation": 0,
+          "pointer": "0x193ace",
+          "palette": "0xd7"
+        },
+        {
+          "generation": 1,
+          "pointer": "0x19431e",
+          "palette": "0xd9"
+        }
+      ]
+    }
+  ],
+  "scope": "Native actor-list fixtures. Damage-result HP/flags/counter injected at the exact source collision result fields; source callbacks, child parts and palettes remain original."
+}
