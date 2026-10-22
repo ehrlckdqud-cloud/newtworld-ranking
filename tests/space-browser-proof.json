@@ -1,17 +1,13 @@
 {
-  "memberGate": "Unauthenticated production page blocks game controls; no QA flags in production code.",
+  "source": "User-shared newtworld-space-effects.html, recovered original; replaces PR13 runtime",
+  "memberAndAdminGate": "Both are required before importing original runtime; start/visibility/30s recheck",
   "gameRound": {
-    "participants": 12,
+    "participants": 20,
     "winnerCount": 3,
-    "eliminated": 9,
-    "shieldObserved": true,
-    "dockingObserved": true,
-    "finishedWinnerList": 3,
+    "finished": true,
     "nativeAudioEnabled": true
   },
-  "pause": "18s remained18s through inspection; resume advanced combat.",
-  "reset": "Prior results/hazards cleared; new round began at00:00.",
-  "scope": "Chrome on internal preview with local test authentication response; production member session, actual member-avatar backend and physical mobile device not exercised.",
-  "console": "No application-origin errors observed in reviewed log window; unrelated extension metadata errors present.",
-  "productionDeployed": false
+  "scope": "Chrome internal QA with separate local member/admin fixture, not deployed; actual administrator credentials and physical mobile not exercised",
+  "publicEntry": "Main picker displays administrator-only development card next to pond",
+  "deployment": "User authorized original replacement and administrator-only deployment"
 }
