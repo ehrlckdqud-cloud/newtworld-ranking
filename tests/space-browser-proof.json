@@ -10,7 +10,7 @@
   "scope": "Chrome internal QA with separate local member/admin fixture, not deployed; actual administrator credentials and physical mobile not exercised",
   "publicEntry": "Main picker displays administrator-only development card next to pond",
   "deployment": "User authorized original replacement and administrator-only deployment",
-  "version": 3,
+  "version": 4,
   "roster": "comma and asterisk input expanded to 41 ships; test high-resolution representative photo applied",
   "music": "Real MP3 added to shared nw-draw-music-v1; both waiting/game queues saved and played",
   "viewport": {
@@ -31,5 +31,30 @@
   "limits": [
     "Actual production administrator credentials not entered",
     "Physical mobile and 4K60 load not exercised"
-  ]
+  ],
+  "camera": {
+    "wheelZoomInPercent": 149,
+    "wheelZoomOutPercent": 67,
+    "resetPercent": 100
+  },
+  "boss": {
+    "originalBodySprites": [
+      "0x3ba71e",
+      "0x3bab2a",
+      "0x3d3f58"
+    ],
+    "fusionObserved": true,
+    "secondPhaseObserved": true,
+    "orangeHitObserved": true,
+    "portraitOrbEntryObserved": true,
+    "resultAfterEntryObserved": true,
+    "browserRound": "20 tickets to 1 survivor",
+    "qaOnlyAuthentication": true
+  },
+  "meteor": {
+    "hp": 90,
+    "previousHp": 8,
+    "largePer32SyntheticMeteorEvents": 4,
+    "previousLargePer32": 16
+  }
 }
