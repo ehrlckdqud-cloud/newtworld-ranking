@@ -1,5 +1,5 @@
-import {ENEMY_STATS,drawEnemyHealth} from './space-enemy-stats.js?v=7.0';
-import {markHit,hitFeedback} from './space-hit.js?v=7.0';
+import {ENEMY_STATS,drawEnemyHealth} from './space-enemy-stats.js?v=8.0';
+import {markHit,hitFeedback} from './space-hit.js?v=8.0';
 // The original game's shuffled winners and timed participant damage remain authoritative.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -21,7 +21,7 @@ export class NativeEncounters{
  step(time,dt,ships,position,bounds,announced=false){this.time=time;this.nativeTicks+=dt*59.18560606060606;const nativeTicks=Math.floor(this.nativeTicks);this.nativeTicks-=nativeTicks;for(const e of this.entities)e.hitCounter=Math.max(0,e.hitCounter-nativeTicks);this.position=position;this.bounds=bounds;if(announced||this.stopped){this.ceasefire();return;}
   this.events.forEach((e,i)=>{if(e.type!==1&&time>=e.at-3&&time<e.at+4.5&&!this.spawned.has(e.key)){this.spawned.add(e.key);this.spawn(e,i);}});
   for(const e of this.entities){if(!e.dead)Object.assign(e,this.pose(e,time));if(!e.dead&&!e.shot&&['ufo','ring','alien'].includes(e.type)&&time>=e.event.at-1.4){e.shot=true;e.chargedAt=time;const delay=e.type==='alien'?10/60:0,p=position(e.event.s,e.event.at);this.enemyShots.push({id:'shot-'+e.id,type:e.type,from:{x:e.x,y:e.y},to:p,at:time+delay,end:Math.max(time+delay+.1,e.event.at)});const sound=e.type==='alien'?'ym-10d1':e.type==='ufo'?'ym-11d4':null;if(sound)this.audio.add({kind:'sound',id:'fire-'+e.id,sound,at:time});}}
-  if(time>=6.2){this.clock+=dt;if(this.clock>=.2){this.clock%=.2;const targets=this.hulls(time);if(targets.length)for(const s of ships.filter(s=>!s.dead).slice(0,24)){const h=targets[this.cursor++%targets.length],p=position(s,time),dx=h.x-p.x,dy=h.y-(p.y-30),length=Math.hypot(dx,dy)||1;this.bullets.push({id:++this.serial,x:p.x,y:p.y-30,vx:dx/length*700,vy:dy/length*700,life:Math.max(1.8,length/700+.4)});}}}
+  if(time>=6.2){this.clock+=dt;if(this.clock>=.2){this.clock%=.2;const targets=this.hulls(time);if(targets.length)for(const s of ships.filter(s=>!s.dead).slice(0,24)){const h=targets[this.cursor++%targets.length],p=position(s,time),aimX=h.boss?h.x+Math.sin(this.cursor*2.4)*h.r*.65:h.x,aimY=h.boss?h.y+h.r*.35:h.y,dx=aimX-p.x,dy=aimY-(p.y-30),length=Math.hypot(dx,dy)||1;this.bullets.push({id:++this.serial,x:p.x,y:p.y-30,vx:dx/length*700,vy:dy/length*700,life:Math.max(1.8,length/700+.4)});}}}
   const collisionHulls=this.hulls(time);for(const b of this.bullets){const next={x:b.x+b.vx*dt,y:b.y+b.vy*dt};let hit=null;for(const h of collisionHulls){if(h.entity?.dead||h.boss&&!this.boss.hulls().length)continue;const u=sweptHit(b,next,h);if(u!==null&&(!hit||u<hit.u))hit={u,h};}if(hit){this.hurt(hit.h.key,time);b.life=0;}else{b.x=next.x;b.y=next.y;b.life-=dt;}}
   this.bullets=this.bullets.filter(b=>b.life>0).slice(-350);this.enemyShots=this.enemyShots.filter(s=>time<=s.end);this.entities=this.entities.filter(e=>e.dead?time-e.death<this.media.data.clips[e.type+'-death'].frames.length/60:time<e.event.at+(e.type==='large'?12:4.5));
  }
