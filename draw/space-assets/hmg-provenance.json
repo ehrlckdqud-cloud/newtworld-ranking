@@ -1,0 +1,42 @@
+{
+  "weapon_index": 5,
+  "source_initializer": "0xb1fda",
+  "source_animation": "0x3be91a",
+  "sprite_pointer": "0x1f238c",
+  "palette": "0x202",
+  "sprite_size": [
+    30,
+    5
+  ],
+  "sound_command": "0x10f4",
+  "sound_render": {
+    "command": "0x10f4",
+    "path": "analysis/space-expanded-sounds-fifo-q8/10f4.wav",
+    "sha256": "a25ebb184492484dd68d44d24edc127edf09e4e80e958a7a57f3760971218e14",
+    "quantum_cpu_cycles": 8,
+    "source_clock_hz": 4000000,
+    "ym_clock_hz": 8000000,
+    "native_sample_rate": 500000,
+    "trimmed_leading_seconds": 0.0278,
+    "samples_at_48k": 50114,
+    "command_begin_cpu_cycle": 2081344,
+    "native_M68000_FIFO_bytes": [
+      {
+        "cpu_cycle": 2081344,
+        "byte": 16
+      },
+      {
+        "cpu_cycle": 2148928,
+        "byte": 244
+      }
+    ],
+    "native_frame_cpu_cycles": 67584,
+    "chip_mixing": "YMFM left/right + same SSG output, unity gain; no normalization",
+    "status": "rendered_from_original_M1_and_YM2610",
+    "original_M1_sha256": "76ae674442bcabfa8cad03e8048d38a7755d916a3a9d3a2b9ca835091cec3347"
+  },
+  "quantum8_vs4_correlation": 0.9999996701233976,
+  "sprite_sha256": "f62c6d7b0dec83260dc77c07202e8a82d73181ac79c256a9ff64701393b00ae8",
+  "scope": "Original weapon5 projectile sprite/palette and native FIFO/M1/YM2610 sound; host trajectory rotated upward. Original full weapon AI not recreated.",
+  "weapon_index_reference": "https://github.com/r0ah/vitacheat/issues/122"
+}

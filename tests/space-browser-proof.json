@@ -9,5 +9,27 @@
   },
   "scope": "Chrome internal QA with separate local member/admin fixture, not deployed; actual administrator credentials and physical mobile not exercised",
   "publicEntry": "Main picker displays administrator-only development card next to pond",
-  "deployment": "User authorized original replacement and administrator-only deployment"
+  "deployment": "User authorized original replacement and administrator-only deployment",
+  "version": 3,
+  "roster": "comma and asterisk input expanded to 41 ships; test high-resolution representative photo applied",
+  "music": "Real MP3 added to shared nw-draw-music-v1; both waiting/game queues saved and played",
+  "viewport": {
+    "height": 936,
+    "gameHeightCinema": 884,
+    "nativeFullscreenDeniedInCloud": true,
+    "cinemaFallbackPassed": true
+  },
+  "recording": {
+    "generatedBlobBytes": 6701926,
+    "videoWidth": 1280,
+    "videoHeight": 720,
+    "previewPlayed": true,
+    "nativeFileDownloadVerified": false,
+    "downloadLimit": "Cloud browser Blob downloads failed; preview and retry link available",
+    "audioTracks": 1
+  },
+  "limits": [
+    "Actual production administrator credentials not entered",
+    "Physical mobile and 4K60 load not exercised"
+  ]
 }
