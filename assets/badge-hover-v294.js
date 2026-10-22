@@ -83,3 +83,6 @@ function attachBadgeOrbit(banner){
  };
  window.NWInitBadgeHover();
 })();
+
+// Game picker artwork and shared close-button alignment.
+import('./space-picker-v9.js?v=9.2').catch(error=>console.error('Game picker enhancement failed',error));

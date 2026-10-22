@@ -1,17 +1,18 @@
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=8.0';
-import {SpaceEscorts} from './space-escorts.js?v=8.0';
-import {markHit,hitFeedback} from './space-hit.js?v=8.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=9.2';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=9.2';
+import {SpaceEscorts} from './space-escorts.js?v=9.2';
+import {markHit,hitFeedback} from './space-hit.js?v=9.2';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
 export class SpaceBoss{
- constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio);this.maxHp=Math.max(70,Math.min(1800,ships*28));this.hp=this.maxHp;}
+ constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.maxHp=scaledEnemyHp(1400,ships);this.hp=this.maxHp;}
  get clip(){return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
  get seconds(){return Math.max(0,this.time-this.stageAt);}
- transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.destroyAll(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,at:time});}
+ transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.retreat(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,at:time});}
  step(time,dt,alive,bounds,selectionReady,targets=[]){this.time=time;this.bounds=bounds;this.selectionReady=selectionReady;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
-  if(this.stage==='approach'&&time>=this.duration*.48)this.transition('first',time);
-  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=Math.max(120,Math.min(2400,alive*70));this.hp=this.maxHp;this.transition('second',time);}
+  if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(1400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
+  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(2400,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
   if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
@@ -68,5 +69,5 @@ export class SpaceBoss{
   this.escortFleet.draw(ctx,media);
  }
 
- drawHud(ctx){if(!['first','fusion','second'].includes(this.stage))return;const {W}=this.bounds,w=Math.min(340,W*.55),x=(W-w)/2;ctx.save();ctx.fillStyle='#091321dd';ctx.fillRect(x-8,48,w+16,46);ctx.fillStyle='#e8f6ff';ctx.textAlign='center';ctx.font='600 13px system-ui';ctx.fillText(this.stage==='first'?'X 표식 거대우주선':this.stage==='fusion'?'거대 모선과 합체 중':'최종 거대 모선',W/2,65);ctx.fillStyle='#27374b';ctx.fillRect(x,76,w,8);ctx.fillStyle=this.stage==='first'?'#f49a49':'#5cd7f4';ctx.fillRect(x,76,w*(this.stage==='fusion'?0:this.hp/this.maxHp),8);ctx.restore();}
+ drawHud(){}
 }
