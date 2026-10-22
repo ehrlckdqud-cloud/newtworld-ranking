@@ -1,4 +1,4 @@
-import {SCORE_ASSETS} from './space-score-assets.js?v=13.0';
+import {SCORE_ASSETS} from './space-score-assets.js?v=14.0';
 // Bundled flight score is selectable; the final mothership score is fixed.
 // All audio is provided recording/native recovery, never synthesized here.
 export class SpaceScore{

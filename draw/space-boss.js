@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=13.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=13.0';
-import {SpaceEscorts} from './space-escorts.js?v=13.0';
-import {markHit,hitFeedback} from './space-hit.js?v=13.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=14.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=14.0';
+import {SpaceEscorts} from './space-escorts.js?v=14.0';
+import {markHit,hitFeedback} from './space-hit.js?v=14.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -25,9 +25,11 @@ export class SpaceBoss{
   return {frame:index,cycle,open:!!hatch&&!electric,electric,launches:hatch&&!electric?hatch.launches.filter(e=>index>=e.at).map(e=>({...e,key:this.stageAt+'/'+this.stage+'/'+cycle+'/'+e.at,age:(index-e.at)/this.media.bossData.hz})):[]};
  }
  get firstElectricFinished(){return ['collapse','orbs','complete'].includes(this.stage)||(this.stage==='second'&&this.seconds>=BOSS_TIMELINE.second.electric[0][1]/this.media.bossData.hz);}
+ electricAngle(seconds=this.seconds){if(this.stage!=='second')return 0;const {index,cycle}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),windows=BOSS_TIMELINE.second.electric;let n=windows.findIndex(([a,b])=>index>=a&&index<b);if(n<0)n=windows.findIndex(([a])=>a>index);if(n<0)n=0;return [0,-.55,-1.1,-1.65,-1.1,-.55][(n+cycle)%6];}
+ electricThreats(lead=.38){if(this.stage!=='second')return[];const future=this.seconds+lead;if(!this.attackState().electric&&!this.attackState(future).electric)return[];const seconds=this.attackState().electric?this.seconds:future,a=this.electricAngle(seconds),tr=this.transform(),x=tr.x+160*tr.scale,y=tr.y+65*tr.scale,dx=-160*Math.cos(a)-159*Math.sin(a),dy=-160*Math.sin(a)+159*Math.cos(a);return [{x,y,toX:x+dx*tr.scale,toY:y+dy*tr.scale,r:20*tr.scale,warning:!this.attackState().electric}];}
  electricContacts(from,to,targets){
   if(this.stage!=='second'||!targets.length)return[];const hz=this.media.bossData.hz,tr=this.transform(),hits=new Set,start=Math.floor(Math.max(0,from-this.stageAt)*hz),end=Math.floor(Math.max(0,to-this.stageAt)*hz);
-  for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=p.from.x+(p.to.x-p.from.x)*u,y=p.from.y+(p.to.y-p.from.y)*u;if(this.media.electricHit(f,(x-tr.x)/tr.scale,(y-tr.y)/tr.scale,p.r/tr.scale))hits.add(p.id);}}
+  for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=p.from.x+(p.to.x-p.from.x)*u,y=p.from.y+(p.to.y-p.from.y)*u,a=this.electricAngle(seconds),dx=(x-tr.x)/tr.scale-160,dy=(y-tr.y)/tr.scale-65,localX=160+dx*Math.cos(a)+dy*Math.sin(a),localY=65-dx*Math.sin(a)+dy*Math.cos(a);if(this.media.electricHit(f,localX,localY,p.r/tr.scale))hits.add(p.id);}}
   return [...hits];
  }
  sourceFrame(){return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
@@ -68,7 +70,7 @@ export class SpaceBoss{
  draw(ctx,media){
   if(this.stage==='approach')return;
   const tr=this.transform(),seconds=['orbs','complete'].includes(this.stage)?0:this.seconds;
-  media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash});
+  media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash,electricAngle:this.electricAngle()});
   this.escortFleet.draw(ctx,media);
  }
 
