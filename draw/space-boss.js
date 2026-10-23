@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=17.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=17.0';
-import {SpaceEscorts} from './space-escorts.js?v=17.0';
-import {markHit,hitFeedback} from './space-hit.js?v=17.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=18.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=18.0';
+import {SpaceEscorts} from './space-escorts.js?v=18.0';
+import {markHit,hitFeedback} from './space-hit.js?v=18.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -10,7 +10,7 @@ export class SpaceBoss{
  get clip(){return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
  get seconds(){return Math.max(0,this.time-this.stageAt);}
  transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.retreat(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
- step(time,dt,alive,bounds,selectionReady,targets=[]){this.time=time;this.bounds=bounds;this.selectionReady=selectionReady;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
+ step(time,dt,alive,bounds,selectionReady,targets=[]){this.time=time;this.bounds=bounds;this.selectionReady=selectionReady;this.aimTargets=targets;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
   if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(4200,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
   if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(2400,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
@@ -25,7 +25,13 @@ export class SpaceBoss{
   return {frame:index,cycle,open:!!hatch&&!electric,electric,launches:hatch&&!electric?hatch.launches.filter(e=>index>=e.at).map(e=>({...e,key:this.stageAt+'/'+this.stage+'/'+cycle+'/'+e.at,age:(index-e.at)/this.media.bossData.hz})):[]};
  }
  get firstElectricFinished(){return ['collapse','orbs','complete'].includes(this.stage)||(this.stage==='second'&&this.seconds>=BOSS_TIMELINE.second.electric[0][1]/this.media.bossData.hz);}
- electricDirection(seconds=this.seconds){const {index,cycle}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),windows=BOSS_TIMELINE.second.electric;let n=windows.findIndex(([a,b])=>index>=a&&index<b);if(n<0)n=windows.findIndex(([a])=>a>index);if(n<0)n=0;return [0,2,4,6,8,1,3,5,7][(n+cycle)%9];}
+ electricDirection(seconds=this.seconds){
+  const {index,cycle}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),windows=BOSS_TIMELINE.second.electric;let n=windows.findIndex(([a,b])=>index>=a&&index<b);if(n<0)n=windows.findIndex(([a])=>a>index);if(n<0)n=0;
+  const key=this.stageAt+'/'+cycle+'/'+n;this.electricAims??=new Map;if(this.electricAims.has(key))return this.electricAims.get(key);
+  const tr=this.transform(),origin={x:tr.x+159*tr.scale,y:tr.y+89*tr.scale},targets=(this.aimTargets||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>origin.y),reachable=targets.filter(p=>Math.abs(Math.atan2(p.x-origin.x,p.y-origin.y))<=Math.PI/4),pool=reachable.length?reachable:targets,target=pool[(cycle*windows.length+n)%Math.max(1,pool.length)],angle=target?Math.atan2(target.x-origin.x,target.y-origin.y):0,direction=clamp(Math.round(angle/(Math.PI/16))+4,0,8);
+  // Lock the native direction during warning and firing, allowing pilots to dodge it.
+  if(target)this.electricAims.set(key,direction);return direction;
+ }
  electricPose(seconds=this.seconds){if(this.stage!=='second')return null;const {index}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),win=BOSS_TIMELINE.second.electric.find(([a,b])=>index>=a&&index<b);return win?{direction:this.electricDirection(seconds),ticks:index-win[0]-24}:null;}
  electricThreats(lead=.38){if(this.stage!=='second')return[];let pose=this.electricPose();if(!pose)pose=this.electricPose(this.seconds+lead);if(!pose)return[];const a=(pose.direction-4)*Math.PI/16,tr=this.transform(),x=tr.x+159*tr.scale,y=tr.y+89*tr.scale;return[{x,y,toX:x+Math.sin(a)*240*tr.scale,toY:y+Math.cos(a)*240*tr.scale,r:18*tr.scale,warning:pose.ticks<0}];}
  electricContacts(from,to,targets){
