@@ -1,11 +1,11 @@
-import {FIRST_ATTACK_AT} from './space-branding.js?v=19.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=19.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=19.0';
-import {steerPilots} from './space-pilots.js?v=19.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=19.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=19.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=19.0';
-import {markHit,hitFeedback} from './space-hit.js?v=19.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=20.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=20.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=20.0';
+import {steerPilots} from './space-pilots.js?v=20.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=20.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=20.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=20.0';
+import {markHit,hitFeedback} from './space-hit.js?v=20.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -18,7 +18,7 @@ export class NativeEncounters{
  ceasefire(){this.hostileFire.clear();this.shaft.ceasefire();this.cWeapon.ceasefire();this.stopped=true;this.bullets=[];this.enemyShots=[];this.impacts=[];}
  view(){return this.bounds?.view||{left:0,top:0,right:this.bounds?.W||800,bottom:this.bounds?.H||610};}
  typeFor(event,index){return event.type===0?(index%8===1?'large':'small'):event.type===2?'ufo':event.type===3?'ring':'alien';}
- waveSize(event,index){const type=this.typeFor(event,index);return type==='small'?8:type==='ring'?10:2;}
+ waveSize(event,index){const type=this.typeFor(event,index);return type==='small'?16:type==='ring'?10:2;}
  pose(e,time){
   const age=Math.max(0,time-e.born),v=this.view(),pad=e.r+90,spanX=v.right-v.left+2*pad,spanY=v.bottom-v.top+2*pad;
   if(e.retirement){const r=e.retirement,z=clamp((time-r.at)/4.4,0,1);return{x:r.x+(r.exit-r.x)*z,y:r.y};}
@@ -29,11 +29,11 @@ export class NativeEncounters{
   return{x:side===0?v.left-pad+spanX*phase:v.right+pad-spanX*phase,y:e.origin.y+Math.sin(phase*Math.PI*2+e.member)*Math.min(55,(v.bottom-v.top)*.06)};
  }
  spawn(event,index){
-  const type=this.typeFor(event,index),v=this.view();if(type==='large'&&['fusion','second','collapse','orbs','complete'].includes(this.boss?.stage))return;
-  const copies=type==='small'?8:2;
+  const type=event.meteorWave?'small':this.typeFor(event,index),v=this.view();if(type==='small'&&(this.time??event.at-3)<BRANDING.start+BRANDING.duration)return;if(type==='large'&&['fusion','second','collapse','orbs','complete'].includes(this.boss?.stage))return;
+  const copies=type==='small'?16:2;
   for(let copy=0;copy<copies;copy++)for(let member=0;member<(type==='ring'?5:1);member++){
-   const stats=body[type],r=stats.r,p=this.position?.(event.s,event.at)||{x:(v.left+v.right)/2,y:(v.top+v.bottom)/2},side=['ufo','small'].includes(type)?2:(event.side+copy)%3,lane=type==='small'?(copy+.5)/8:clamp((p.x-v.left)/(v.right-v.left)+(copy?1:-1)*.12,.08,.92),origin=side===0?{x:v.left-r-90,y:clamp(p.y+(copy?60:-60),v.top,v.bottom)}:side===1?{x:v.right+r+90,y:clamp(p.y+(copy?60:-60),v.top,v.bottom)}:{x:type==='ring'?clamp(p.x+(member-2)*90+(copy?45:-45),v.left,v.right):v.left+(v.right-v.left)*lane,y:v.top-r-90-member*20},hp=scaledEnemyHp(stats.hp,this.rosterCount);
-   let aim;if(type==='small'){const live=(this.ships||[]).filter(s=>!s.dead),target=live.length?live[(index*8+copy)%live.length]:event.s,tp=this.position?.(target,this.time??event.at)||p,speed=(v.bottom-v.top+2*(r+90))/3*2,dx=tp.x-origin.x,dy=tp.y-origin.y,length=Math.hypot(dx,dy)||1;aim={vx:dx/length*speed,vy:dy/length*speed,target:target?.id};}
+   const stats=body[type],r=stats.r,p=this.position?.(event.s,event.at)||{x:(v.left+v.right)/2,y:(v.top+v.bottom)/2},side=['ufo','small'].includes(type)?2:(event.side+copy)%3,lane=type==='small'?(copy+.5)/16:clamp((p.x-v.left)/(v.right-v.left)+(copy?1:-1)*.12,.08,.92),origin=side===0?{x:v.left-r-90,y:clamp(p.y+(copy?60:-60),v.top,v.bottom)}:side===1?{x:v.right+r+90,y:clamp(p.y+(copy?60:-60),v.top,v.bottom)}:{x:type==='ring'?clamp(p.x+(member-2)*90+(copy?45:-45),v.left,v.right):v.left+(v.right-v.left)*lane,y:v.top-r-90-member*20},hp=scaledEnemyHp(stats.hp,this.rosterCount);
+   let aim;if(type==='small'){const live=(this.ships||[]).filter(s=>!s.dead),target=live.length?live[(index*16+copy)%live.length]:event.s,tp=this.position?.(target,this.time??event.at)||p,speed=(v.bottom-v.top+2*(r+90))/3*2,dx=tp.x-origin.x,dy=tp.y-origin.y,length=Math.hypot(dx,dy)||1;aim={vx:dx/length*speed,vy:dy/length*speed,target:target?.id};}
    this.entities.push({aim,id:event.key+'-'+copy+'-'+member,event,type,member,copy,side,exitSide:(index+copy)%2?-1:1,...stats,hp,maxHp:hp,origin,born:(this.time??event.at-3)+copy*.06,dead:false,shot:false,lastHit:-10,hitCounter:0,hitCount:0});
   }
  }
@@ -43,8 +43,11 @@ export class NativeEncounters{
  step(time,dt,ships,position,bounds,announced=false){this.time=time;this.hLoadout.step(time);this.nativeTicks+=dt*59.18560606060606;const nativeTicks=Math.floor(this.nativeTicks);this.nativeTicks-=nativeTicks;for(const e of this.entities)e.hitCounter=Math.max(0,e.hitCounter-nativeTicks);this.position=position;this.bounds=bounds;this.ships=ships;if(announced||this.stopped){this.ceasefire();return;}
   const finalApproach=['fusion','second','collapse','orbs','complete'].includes(this.boss?.stage),v=this.view();
   if(finalApproach)for(const e of this.entities)if(e.type==='large'&&!e.dead&&!e.retirement){const dx=e.x-(e.previous?.x??e.x),side=dx?Math.sign(dx):e.x<(v.left+v.right)/2?-1:1;e.retirement={at:time,x:e.x,y:e.y,exit:side<0?v.left-e.r-100:v.right+e.r+100};}
-  let admitted=this.entities.filter(e=>!e.dead&&!e.retirement).length;
-  this.events.forEach((event,i)=>{if((event.type===1||event.type===5)||time<event.at-3||this.spawned.has(event.key))return;if(time>event.at+2){this.spawned.add(event.key);return;}const type=this.typeFor(event,i),size=this.waveSize(event,i);if(finalApproach&&type==='large'){this.spawned.add(event.key);return;}if(admitted+size>112)return;this.spawned.add(event.key);this.spawn(event,i);admitted+=size;});
+  if(!this.meteorPlan){const base=this.events.map((event,index)=>({event,index})).filter(({event,index})=>event.type!==1&&event.type!==5&&this.typeFor(event,index)==='small').sort((a,b)=>a.event.at-b.event.at),shift=base.length?Math.max(0,BRANDING.start+BRANDING.duration-(base[0].event.at-3)):0;this.meteorPlan=base.flatMap(({event,index},i)=>{const interval=Math.max(.3,(base[i+1]?.event.at??(event.at+(i?event.at-base[i-1].event.at:3)))-event.at);return [0,1,2].map(n=>({event:{...event,meteorWave:true,key:event.key+'-meteor-'+n},index,at:event.at-3+shift+interval*n/3}));});}
+  let smallCount=this.entities.filter(e=>!e.dead&&e.type==='small').length;
+  for(const wave of this.meteorPlan){if(time<wave.at||this.spawned.has(wave.event.key)||smallCount+16>672)continue;this.spawned.add(wave.event.key);this.spawn(wave.event,wave.index);smallCount+=16;}
+  let admitted=this.entities.filter(e=>!e.dead&&!e.retirement&&e.type!=='small').length;
+  this.events.forEach((event,i)=>{if((event.type===1||event.type===5)||this.typeFor(event,i)==='small'||time<event.at-3||this.spawned.has(event.key))return;if(time>event.at+2){this.spawned.add(event.key);return;}const type=this.typeFor(event,i),size=this.waveSize(event,i);if(finalApproach&&type==='large'){this.spawned.add(event.key);return;}if(admitted+size>112)return;this.spawned.add(event.key);this.spawn(event,i);admitted+=size;});
   for(const e of this.entities){
    if(!e.dead){e.previous={x:e.x??e.origin.x,y:e.y??e.origin.y};Object.assign(e,this.pose(e,time));}
    if(e.type==='ufo'){const cycle=Math.floor(Math.max(0,time-e.born)/5);if(e.cycle!==cycle){e.cycle=cycle;e.shot=false;}}
