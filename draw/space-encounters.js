@@ -1,13 +1,13 @@
-import {CollisionGrid} from './space-collision-grid.js?v=25.0';
-import {SpaceFuel} from './space-fuel.js?v=25.0';
-import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=25.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=25.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=25.0';
-import {steerPilots} from './space-pilots.js?v=25.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=25.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=25.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=25.0';
-import {markHit,hitFeedback} from './space-hit.js?v=25.0';
+import {CollisionGrid} from './space-collision-grid.js?v=26.0';
+import {SpaceFuel} from './space-fuel.js?v=26.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=26.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=26.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=26.0';
+import {steerPilots} from './space-pilots.js?v=26.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=26.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=26.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=26.0';
+import {markHit,hitFeedback} from './space-hit.js?v=26.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -64,10 +64,10 @@ export class NativeEncounters{
   this.cWeapon.step(time,dt,ships,position,this);this.fuel.step(time,dt,ships,position,this);if(this.boss?.ceasefire)this.destroyRemaining(time);
   this.impacts=this.impacts.filter(e=>time-e.at<.3).slice(-220);this.bullets=this.bullets.filter(b=>b.life>0).slice(-Math.max(350,this.rosterCount*48));this.enemyShots=this.enemyShots.filter(s=>time<=s.end);this.entities=this.entities.filter(e=>(e.type!=='small'||time-e.born<8)&&(!e.dead||time-e.death<this.media.data.clips[e.type+'-death'].frames.length/60));
  }
- draw(ctx,time){this.hostileFire.draw(ctx,time);this.shaft.draw(ctx,time);this.hLoadout.draw(ctx,time,this.position,2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28));const view=this.view();for(const e of this.entities){if(!e.dead&&(e.x+e.r<view.left||e.x-e.r>view.right||e.y+e.r<view.top||e.y-e.r>view.bottom))continue;const feedback=hitFeedback(e),hurt=feedback.flash,clip=e.type+(e.dead?'-death':'-move'),age=e.dead?time-e.death:Math.max(0,time-e.event.at+3);if(!e.dead&&e.type==='large'&&feedback.age<18/59.18560606060606){const stream=e.hp<=e.maxHp/4?(e.hitCount&2?'3d2a6c':'3d2a78'):(e.hitCount&2?'3d2a54':'3d2a60');this.media.drawNative(ctx,'large-native-'+stream,feedback.age,e.x,e.y,e.scale,{body:true});}else this.media.draw(ctx,clip,age,e.x,e.y,e.scale,{loop:!e.dead,flash:hurt});if(!e.dead)drawEnemyHealth(ctx,e.x,e.y,e.r,e.hp,e.maxHp);if(!e.dead&&e.type==='alien'&&e.chargedAt!==undefined&&time-e.chargedAt<10/60){ctx.save();ctx.fillStyle='#baff85';ctx.shadowColor='#93ff4d';ctx.shadowBlur=14;ctx.beginPath();ctx.arc(e.x,e.y+15,4,0,Math.PI*2);ctx.fill();ctx.restore();}}
+ draw(ctx,time,view=this.view()){this.hostileFire.draw(ctx,time);this.shaft.draw(ctx,time);this.hLoadout.draw(ctx,time,this.position,2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28));for(const e of this.entities){if(!e.dead&&(e.x+e.r<view.left||e.x-e.r>view.right||e.y+e.r<view.top||e.y-e.r>view.bottom))continue;const feedback=hitFeedback(e),hurt=feedback.flash,clip=e.type+(e.dead?'-death':'-move'),age=e.dead?time-e.death:Math.max(0,time-e.event.at+3);if(!e.dead&&e.type==='large'&&feedback.age<18/59.18560606060606){const stream=e.hp<=e.maxHp/4?(e.hitCount&2?'3d2a6c':'3d2a78'):(e.hitCount&2?'3d2a54':'3d2a60');this.media.drawNative(ctx,'large-native-'+stream,feedback.age,e.x,e.y,e.scale,{body:true});}else this.media.draw(ctx,clip,age,e.x,e.y,e.scale,{loop:!e.dead,flash:hurt});if(!e.dead)drawEnemyHealth(ctx,e.x,e.y,e.r,e.hp,e.maxHp);if(!e.dead&&e.type==='alien'&&e.chargedAt!==undefined&&time-e.chargedAt<10/60){ctx.save();ctx.fillStyle='#baff85';ctx.shadowColor='#93ff4d';ctx.shadowBlur=14;ctx.beginPath();ctx.arc(e.x,e.y+15,4,0,Math.PI*2);ctx.fill();ctx.restore();}}
   for(const shot of this.enemyShots){if(time<shot.at)continue;if(shot.type==='ufo'){const e=this.entities.find(e=>e.id===shot.owner);this.media.drawUfoLaser?.(ctx,time-shot.at,e?.x??shot.from.x,e?.y??shot.from.y,2.7);continue;}const p=clamp((time-shot.at)/(shot.end-shot.at),0,1),x=shot.from.x+(shot.to.x-shot.from.x)*p,y=shot.from.y+(shot.to.y-shot.from.y)*p;ctx.save();ctx.translate(x,y);ctx.rotate(Math.atan2(shot.to.y-shot.from.y,shot.to.x-shot.from.x)-Math.PI);this.media.draw(ctx,shot.type+'-shot',time-shot.at,0,0,1,{loop:true});ctx.restore();}
   this.cWeapon.draw(ctx,time,this.position);this.fuel.draw(ctx,time,this.position);
   for(const impact of this.impacts)this.media.drawImpact?.(ctx,time-impact.at,impact.x,impact.y);
-  for(const b of this.bullets)this.media.drawHmg(ctx,b.x,b.y,Math.atan2(b.vy,b.vx),1.4);
+  for(const b of this.bullets){if(b.x+23<view.left||b.x-23>view.right||b.y+23<view.top||b.y-23>view.bottom)continue;this.media.drawHmg(ctx,b.x,b.y,Math.atan2(b.vy,b.vx),1.4);}
  }
 }
