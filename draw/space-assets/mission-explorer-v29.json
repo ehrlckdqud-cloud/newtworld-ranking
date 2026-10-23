@@ -1,0 +1,32 @@
+{
+  "version": 29,
+  "mission": {
+    "command": "0x1137",
+    "FIFO_bytes": [
+      17,
+      55
+    ],
+    "source": "68K completion controller 0x33ee4; table 0x33e9c, all five stages; sound dispatch 0x33f1c",
+    "method": "Original M1 Z80 driver YM2610 register trace rendered with YMFM. Preserve native ADPCM channel 5 through sample end, removing harness-generated early channel-volume mute.",
+    "sample_start": "0x8b1d00",
+    "sample_end": "0x8b68ff",
+    "trim_seconds": [
+      0.246,
+      2.51
+    ],
+    "gain": 2,
+    "duration": 2.264,
+    "asset": "mission-complete-voice-v29.wav",
+    "sha256": "1c3003924482728f9b2be9e21969fa11452dcaecafc7014ba66817d5e4da34ac"
+  },
+  "explorer_death": {
+    "reference": "mission5-3(1).mp4 around 118 seconds",
+    "clip": "ufo-death",
+    "frames": 29,
+    "hz": 60,
+    "sound": "ym-1021",
+    "command": "0x1021",
+    "position": "fixed at impact; no shrinking, falling or rotation",
+    "atlas_sha256": "965741daf1af0e8200e1b735eb682ea530dfbd1c3d79388f9dfbc5ddb45e052d"
+  }
+}
