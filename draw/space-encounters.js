@@ -1,10 +1,11 @@
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=18.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=18.0';
-import {steerPilots} from './space-pilots.js?v=18.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=18.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=18.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=18.0';
-import {markHit,hitFeedback} from './space-hit.js?v=18.0';
+import {FIRST_ATTACK_AT} from './space-branding.js?v=19.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=19.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=19.0';
+import {steerPilots} from './space-pilots.js?v=19.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=19.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=19.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=19.0';
+import {markHit,hitFeedback} from './space-hit.js?v=19.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -50,7 +51,7 @@ export class NativeEncounters{
    const age=Math.max(0,time-e.born),canFire=e.type==='ufo'?age%5>=.58&&age%5<1.08:time>=e.event.at-1.4;
    if(!e.dead&&!e.shot&&['ufo','ring','alien'].includes(e.type)&&canFire){e.shot=true;e.chargedAt=time;const delay=e.type==='alien'?10/60:0,p=e.type==='ufo'?{x:e.x,y:v.bottom+80}:position(e.event.s,e.event.at);this.enemyShots.push({id:'shot-'+e.id+'-'+(e.cycle||0),type:e.type,from:{x:e.x,y:e.y},to:p,at:time+delay,end:e.type==='ufo'?time+29/59.18560606060606:Math.max(time+delay+.1,e.event.at),owner:e.id});const sound=e.type==='alien'?'ym-10d1':e.type==='ufo'?'ym-11d4':null;if(sound)this.audio.add({kind:'sound',id:'fire-'+e.id+'-'+(e.cycle||0),sound,at:time});}
   }
-  if(time>=6.2){const cadence=1/18;this.clock+=dt;if(this.clock+1e-9>=cadence){this.clock=Math.max(0,this.clock-cadence)%cadence;const targets=this.hulls(time);for(const s of ships.filter(s=>!s.dead&&s.hReady!==false)){const bossTarget=targets.find(h=>h.boss),n=this.cursor++,p=position(s,time),h=(bossTarget&&(time>=this.boss.duration||n%2===0)?bossTarget:targets[Math.floor(n/2)%targets.length])||{x:p.x,y:v.top-120},radius=2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28),angle=Math.sin(time*1.5+(s.seed||0))*.08,aimX=h.boss?h.x+Math.sin(this.cursor*2.4)*h.r*.65:h.x,aimY=h.boss?h.y+h.r*.35:h.y;const cActive=this.cWeapon.active(s,time);s.hTipMuzzleAt=time;s.firingUntil=time+cadence*1.5;if(!cActive)s.hMuzzleAt=time;for(const side of cActive?[0]:[-1,0,1]){const mx=side*radius,my=-radius*(side?27:38)/24,x=p.x+mx*Math.cos(angle)-my*Math.sin(angle),y=p.y+mx*Math.sin(angle)+my*Math.cos(angle),dx=aimX-x,dy=aimY-y,length=Math.hypot(dx,dy)||1;this.bullets.push({id:++this.serial,x,y,vx:dx/length*1050,vy:dy/length*1050,life:Math.max(1.8,length/1050+.4)});}}}}
+  if(time>=FIRST_ATTACK_AT){const cadence=1/18;this.clock+=dt;if(this.clock+1e-9>=cadence){this.clock=Math.max(0,this.clock-cadence)%cadence;const targets=this.hulls(time);for(const s of ships.filter(s=>!s.dead&&s.hReady!==false)){const bossTarget=targets.find(h=>h.boss),n=this.cursor++,p=position(s,time),h=(bossTarget&&(time>=this.boss.duration||n%2===0)?bossTarget:targets[Math.floor(n/2)%targets.length])||{x:p.x,y:v.top-120},radius=2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28),angle=Math.sin(time*1.5+(s.seed||0))*.08,aimX=h.boss?h.x+Math.sin(this.cursor*2.4)*h.r*.65:h.x,aimY=h.boss?h.y+h.r*.35:h.y;const cActive=this.cWeapon.active(s,time);s.hTipMuzzleAt=time;s.firingUntil=time+cadence*1.5;if(!cActive)s.hMuzzleAt=time;for(const side of cActive?[0]:[-1,0,1]){const mx=side*radius,my=-radius*(side?27:38)/24,x=p.x+mx*Math.cos(angle)-my*Math.sin(angle),y=p.y+mx*Math.sin(angle)+my*Math.cos(angle),dx=aimX-x,dy=aimY-y,length=Math.hypot(dx,dy)||1;this.bullets.push({id:++this.serial,x,y,vx:dx/length*1050,vy:dy/length*1050,life:Math.max(1.8,length/1050+.4)});}}}}
   this.shaft.step(time,dt,ships,position,this);
   const collisionHulls=this.hulls(time);for(const b of this.bullets){const next={x:b.x+b.vx*dt,y:b.y+b.vy*dt};const left=Math.min(b.x,next.x),right=Math.max(b.x,next.x),top=Math.min(b.y,next.y),bottom=Math.max(b.y,next.y);let hit=null;for(const h of collisionHulls){if(h.x+h.r<left||h.x-h.r>right||h.y+h.r<top||h.y-h.r>bottom)continue;if(h.entity?.dead||h.boss&&!this.boss.hulls().length)continue;const u=sweptHit(b,next,h);if(u!==null&&(!hit||u<hit.u))hit={u,h};}if(hit){this.hurt(hit.h.key,time);this.impacts.push({at:time,x:b.x+(next.x-b.x)*hit.u,y:b.y+(next.y-b.y)*hit.u});b.life=0;}else{b.x=next.x;b.y=next.y;b.life-=dt;}}
   this.cWeapon.step(time,dt,ships,position,this);
