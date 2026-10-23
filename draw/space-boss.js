@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=43.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=43.0';
-import {SpaceEscorts} from './space-escorts.js?v=43.0';
-import {markHit,hitFeedback} from './space-hit.js?v=43.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=44.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=44.0';
+import {SpaceEscorts} from './space-escorts.js?v=44.0';
+import {markHit,hitFeedback} from './space-hit.js?v=44.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -28,7 +28,7 @@ export class SpaceBoss{
  electricDirection(seconds=this.seconds){
   const {index,cycle}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),windows=BOSS_TIMELINE.second.electric;let n=windows.findIndex(([a,b])=>index>=a&&index<b);if(n<0)n=windows.findIndex(([a])=>a>index);if(n<0)n=0;
   const key=this.stageAt+'/'+cycle+'/'+n;this.electricAims??=new Map;if(this.electricAims.has(key))return this.electricAims.get(key);
-  const tr=this.transform(),origin={x:tr.x+159*tr.scale,y:tr.y+89*tr.scale},targets=(this.aimTargets||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>origin.y),reachable=targets.filter(p=>Math.abs(Math.atan2(p.x-origin.x,p.y-origin.y))<=Math.PI/4),pool=reachable.length?reachable:targets,target=pool[(cycle*windows.length+n)%Math.max(1,pool.length)],angle=target?Math.atan2(target.x-origin.x,target.y-origin.y):0,direction=clamp(Math.round(angle/(Math.PI/16))+4,0,8);
+  const tr=this.transform(),origin={x:tr.x+159*tr.scale,y:tr.y+89*tr.scale},targets=(this.aimTargets||[]).filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)&&p.y>origin.y),reachable=targets.filter(p=>Math.abs(Math.atan2(p.x-origin.x,p.y-origin.y))<=Math.PI/4),available=reachable.length?reachable:targets,vulnerable=available.filter(p=>p.electricProtected===false&&!p.finalist),pool=vulnerable.length?vulnerable:available,target=pool[(cycle*windows.length+n)%Math.max(1,pool.length)],angle=target?Math.atan2(target.x-origin.x,target.y-origin.y):0,direction=clamp(Math.round(angle/(Math.PI/16))+4,0,8);
   // Lock the native direction during warning and firing, allowing pilots to dodge it.
   if(target)this.electricAims.set(key,direction);return direction;
  }
