@@ -1,4 +1,4 @@
-import {randomItemDriftSpeed} from './space-item-drift.js?v=43.0';
+import {randomItemDriftSpeed} from './space-item-drift.js?v=44.0';
 export const FUEL_RULES=Object.freeze({dropChance:.03,maxDrops:20,lifetime:35});
 export class SpaceFuel{
  constructor(media,audio,rng=Math.random){Object.assign(this,{media,audio,rng,drops:[],effects:[],killed:new Set,dropCount:0,serial:0,stopped:false});}

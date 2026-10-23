@@ -20,3 +20,11 @@ export function survivorReserve(time,duration,boss,total,target){
  if(boss?.finaleAt===undefined)return initial;
  return Math.min(initial,Math.max(Math.min(3,initial),Math.ceil(initial*(1-Math.min(1,(time-boss.finaleAt)/8)))));
 }
+
+// Electrical attacks may thin the ordinary combat reserve, but must leave
+// a smaller, stable group of losing craft until the final selection window.
+export function electricSurvivorReserve(time,duration,boss,total,target){
+ const reserve=survivorReserve(time,duration,boss,total,target);
+ if(finalSelectionOpen(time,duration,boss))return 0;
+ return Math.min(reserve,Math.max(1,Math.ceil(reserve*.3)));
+}
