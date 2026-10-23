@@ -1,12 +1,12 @@
-import {SpaceFuel} from './space-fuel.js?v=23.0';
-import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=23.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=23.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=23.0';
-import {steerPilots} from './space-pilots.js?v=23.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=23.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=23.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=23.0';
-import {markHit,hitFeedback} from './space-hit.js?v=23.0';
+import {SpaceFuel} from './space-fuel.js?v=24.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=24.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=24.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=24.0';
+import {steerPilots} from './space-pilots.js?v=24.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=24.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=24.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=24.0';
+import {markHit,hitFeedback} from './space-hit.js?v=24.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -17,7 +17,7 @@ export class NativeEncounters{
  steerPilots(time,dt,ships,position,bounds){steerPilots(time,dt,ships,position,bounds,this.cWeapon,this.boss,this.fuel);}
  sweptContact(a,b,h){return sweptHit(a,b,h);}
  destroyRemaining(time){if(this.clearedAt!==undefined)return;this.clearedAt=time;for(const e of this.entities){if(e.dead)continue;e.hp=0;e.dead=true;e.death=time;this.kills[e.type]++;this.audio.add({kind:'clip',id:'final-death-'+e.id,clip:e.type+'-death',at:time});}this.shaft.destroyAll(time);this.boss?.escortFleet.destroyAll(time);this.ceasefire();}
- killedEnemy(e,time){this.cWeapon.killedEnemy(e,time);this.fuel.killedEnemy(e,time);}
+ killedEnemy(e,time){this.cWeapon.killedEnemy(e,time);this.fuel.killedEnemy(e,time,this.boss?.duration??120);}
  ceasefire(){this.hostileFire.clear();this.fuel.ceasefire();this.shaft.ceasefire();this.cWeapon.ceasefire();this.stopped=true;this.bullets=[];this.enemyShots=[];this.impacts=[];}
  view(){return this.bounds?.view||{left:0,top:0,right:this.bounds?.W||800,bottom:this.bounds?.H||610};}
  typeFor(event,index){return event.type===0?(index%8===1?'large':'small'):event.type===2?'ufo':event.type===3?'ring':'alien';}

@@ -1,14 +1,14 @@
-import {FIRST_ATTACK_AT,updateBrandEncounter} from './space-branding.js?v=23.0';
-import {SpaceMusicUI} from './space-music.js?v=23.0';
-import {SpaceBranding} from './space-branding.js?v=23.0';
-import {uniqueNicknameCount,selectUniqueFinalists,finalSelectionOpen,survivorReserve} from './space-selection.js?v=23.0';
-import {resolveMeteorPush,resolveStructurePush} from './space-physics.js?v=23.0';
-import {SpaceScore} from './space-score.js?v=23.0';
-import {SpaceBlackHole} from './space-black-hole.js?v=23.0';
-import {SpaceBackdrop} from './space-backdrop.js?v=23.0';
-import {SpaceCamera} from './space-camera.js?v=23.0';
-import {SpaceBoss} from './space-boss.js?v=23.0';
-import {NativeEncounters} from './space-encounters.js?v=23.0';
+import {FIRST_ATTACK_AT,updateBrandEncounter} from './space-branding.js?v=24.0';
+import {SpaceMusicUI} from './space-music.js?v=24.0';
+import {SpaceBranding} from './space-branding.js?v=24.0';
+import {uniqueNicknameCount,selectUniqueFinalists,finalSelectionOpen,survivorReserve} from './space-selection.js?v=24.0';
+import {resolveMeteorPush,resolveStructurePush} from './space-physics.js?v=24.0';
+import {SpaceScore} from './space-score.js?v=24.0';
+import {SpaceBlackHole} from './space-black-hole.js?v=24.0';
+import {SpaceBackdrop} from './space-backdrop.js?v=24.0';
+import {SpaceCamera} from './space-camera.js?v=24.0';
+import {SpaceBoss} from './space-boss.js?v=24.0';
+import {NativeEncounters} from './space-encounters.js?v=24.0';
 import {sharedDrawServices} from './space-shared.js';
 import {expandRoster} from './space-roster.js';
 import {SpaceVideo} from './space-video.js';
@@ -23,7 +23,7 @@ try{const saved=JSON.parse(localStorage.getItem('nw-draw-recording-quality-v1')|
 q('spResolution').onchange=q('spFps').onchange=profileChanged;profileChanged();
 q('spRecord').onclick=async()=>{try{if(!await access()){onDenied();return;}if(video.active)video.stop();else await video.start(profile());}catch(e){toast(e.message||'이 브라우저에서는 녹화를 사용할 수 없어요.');}};
 function lockControls(locked){for(const id of ['spnames','spcount','spduration','spSample','spClear','spResolution','spFps','spAutoRecord'])q(id).disabled=locked;musicUI.setLocked(locked);q('spstart').disabled=locked;}
-function renderRoster(){const list=q('spRosterList'),summary=q('spRosterSummary');if(!list?.replaceChildren||!document.createElement)return;const alive=ships.filter(s=>!s.dead),dead=ships.filter(s=>s.dead).sort((a,b)=>a.deathOrder-b.deathOrder),fragment=document.createDocumentFragment(),fallen=document.createDocumentFragment();summary.textContent=`생존 ${alive.length} · 탈락 ${dead.length} / ${ships.length}척`;for(const ship of [...alive.sort((a,b)=>a.id-b.id),...dead]){const row=document.createElement('li'),ticket=document.createElement('small'),name=document.createElement('span'),state=document.createElement('strong');row.className=ship.dead?'roster-dead':'roster-alive';ticket.textContent='#'+(ship.id+1);name.textContent=ship.name;name.title=ship.name;state.textContent=ship.dead?`${ship.deathOrder}번째 탈락`:'생존';row.append(ticket,name,state);(ship.dead?fallen:fragment).append(row);}list.replaceChildren(fragment);q('spEliminatedList').replaceChildren(fallen);q('spEliminatedGroup').hidden=!dead.length;q('spAliveHeading').textContent=`생존 ${alive.length}척`;q('spEliminatedHeading').textContent=`탈락 순서 · ${dead.length}척`;}
+function renderRoster(){const list=q('spRosterList'),summary=q('spRosterSummary');if(!list?.replaceChildren||!document.createElement)return;const alive=ships.filter(s=>!s.dead),dead=ships.filter(s=>s.dead).sort((a,b)=>b.deathOrder-a.deathOrder),fragment=document.createDocumentFragment(),fallen=document.createDocumentFragment();summary.textContent=`생존 ${alive.length} · 탈락 ${dead.length} / ${ships.length}척`;for(const ship of [...alive.sort((a,b)=>a.id-b.id),...dead]){const row=document.createElement('li'),ticket=document.createElement('small'),name=document.createElement('span'),state=document.createElement('strong');row.className=ship.dead?'roster-dead':'roster-alive';ticket.textContent='#'+(ship.id+1);name.textContent=ship.name;name.title=ship.name;state.textContent=ship.dead?`${ship.deathOrder}번째 탈락`:'생존';row.append(ticket,name,state);(ship.dead?fallen:fragment).append(row);}list.replaceChildren(fragment);q('spEliminatedList').replaceChildren(fallen);q('spEliminatedList').scrollTop=0;q('spEliminatedGroup').hidden=!dead.length;q('spAliveHeading').textContent=`생존 ${alive.length}척`;q('spEliminatedHeading').textContent=`탈락 최신순 · ${dead.length}척`;}
 function syncRoster(){if(running)return;let names;try{names=expandRoster(q('spnames').value);q('sperror').textContent='';}catch(e){q('sperror').textContent=e.message;q('spRosterCount').textContent='명단을 확인해주세요.';return;}ships=names.map((name,id)=>({name,id,u:(id%Math.ceil(Math.sqrt(names.length*1.4))+.5)/Math.ceil(Math.sqrt(names.length*1.4)),v:(Math.floor(id/Math.ceil(Math.sqrt(names.length*1.4)))+.5)/Math.ceil(names.length/Math.ceil(Math.sqrt(names.length*1.4))),seed:id,hp:4,maxHp:4,dead:false,hReady:false}));t=0;announced=false;events=[];battle=null;boss=null;particles=[];deathSerial=0;blackHole.events=[];blackHole.active=[];renderRoster();q('spresult').hidden=true;q('spRosterCount').textContent=`${names.length}척 · ${uniqueNicknameCount(names)}명`;q('spstatus').textContent=names.length+'척 탑승';q('spphase').textContent='출격 대기';q('spcount').max=String(Math.max(1,uniqueNicknameCount(names)));if(Number(q('spcount').value)>uniqueNicknameCount(names)&&names.length)q('spcount').value=String(uniqueNicknameCount(names));const request=++rosterEpoch;clearTimeout(photoTimer);photoTimer=setTimeout(async()=>{q('spAvatarStatus').textContent='대표사진을 연결하고 있어요…';let result;try{result=await avatars.prepare([...new Set(names)]);}catch{if(request===rosterEpoch)q('spAvatarStatus').textContent='대표사진 연결이 지연돼 기본 조종석으로 표시해요.';return;}if(request!==rosterEpoch)return;memberPhotos.clear();for(const [name,image]of result.images)memberPhotos.set(name,image);q('spAvatarStatus').textContent=result.message;},220);try{localStorage.setItem('nw-space-setup-v3',JSON.stringify({names:q('spnames').value,count:q('spcount').value,duration:q('spduration').value}));}catch{}}
 q('spnames').oninput=syncRoster;q('spcount').onchange=q('spduration').onchange=syncRoster;
 q('spSample').onclick=()=>{q('spnames').value='닉네임*20,다른닉네임*20,참가자';syncRoster();};q('spClear').onclick=()=>{q('spnames').value='';syncRoster();};
