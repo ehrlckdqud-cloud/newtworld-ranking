@@ -1,4 +1,4 @@
-import {FIRST_ATTACK_AT} from './space-branding.js?v=23.0';
+import {FIRST_ATTACK_AT} from './space-branding.js?v=24.0';
 const TAU=Math.PI*2,angleDiff=(a,b)=>Math.atan2(Math.sin(a-b),Math.cos(a-b));
 export const C_WEAPON_RULES=Object.freeze({duration:20,dropChance:.015,maxDrops:9,cadence:.12,maxMissilesPerShip:12,damage:4});
 // Source C sprites, voice 1158, shot 10f5 and impact 1025. Movement adapts
