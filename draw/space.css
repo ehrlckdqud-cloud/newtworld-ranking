@@ -60,6 +60,8 @@ body.space-top-collapsed>nav>:not(.nav-tools),body.space-top-collapsed .nav-tool
 body.space-top-collapsed #nwspace{grid-template-rows:0 minmax(0,1fr)}
 body.space-top-collapsed #nwspace>header{display:none}
 #nwspace{grid-row:2}
+/* Keep gameplay in the flexible second row when the header is hidden. */
+#nwspace>.layout{grid-row:2}
 .music-bar{grid-row:3}
 #spMusicToggle{margin-left:auto;flex-shrink:0}
 body.space-music-collapsed .music-bar{position:fixed;right:0;bottom:0;z-index:100;min-height:0;height:24px;padding:0;border:0;background:transparent}
