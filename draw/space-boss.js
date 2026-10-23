@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=24.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=24.0';
-import {SpaceEscorts} from './space-escorts.js?v=24.0';
-import {markHit,hitFeedback} from './space-hit.js?v=24.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=25.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=25.0';
+import {SpaceEscorts} from './space-escorts.js?v=25.0';
+import {markHit,hitFeedback} from './space-hit.js?v=25.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -41,10 +41,11 @@ export class SpaceBoss{
  }
  sourceFrame(){return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
  geometry(frame=this.sourceFrame()){
+  this.geometryCache??=new WeakMap;const cached=this.geometryCache.get(frame);if(cached)return cached;
   const parts=frame.parts,meta=this.media.bossData.proof.native_parts,textures=this.media.bossData.textures,roof=[],exit=[];
   for(const p of parts){const m=meta[p[0]],pointer=Number(m.pointer),box={left:p[1],top:p[2],right:p[1]+p[4],bottom:p[2]+textures[p[0]][3]};if(pointer===0x190000)roof.push(box);if(['0xd8','0xd9'].includes(m.palette_at_submission))exit.push(box);}
   const rect=items=>items.length?{left:Math.min(...items.map(b=>b.left)),top:Math.min(...items.map(b=>b.top)),right:Math.max(...items.map(b=>b.right)),bottom:Math.max(...items.map(b=>b.bottom))}:null;
-  return {roof:rect(roof),exit:rect(exit)};
+  const geometry={roof:rect(roof),exit:rect(exit)};this.geometryCache.set(frame,geometry);return geometry;
  }
  transform(){
   const {W,H}=this.bounds,base=Math.min(W/320,H/224);let scale=base,x=(W-320*scale)/2,y=0;

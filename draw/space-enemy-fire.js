@@ -7,7 +7,7 @@ export class SpaceEnemyFire{
   const v=battle.view(),inside=p=>p.x>=v.left&&p.x<=v.right&&p.y>=v.top&&p.y<=v.bottom;
   const sources=[...battle.entities.filter(e=>!e.dead&&['alien','ring'].includes(e.type)).map(e=>({x:e.x,y:e.y,type:e.type,owner:e.id})),...[...(battle.boss?.escortFleet?.entities.values()||[])].filter(e=>!e.dead&&e.visible).map(e=>({x:e.x,y:e.y,type:'alien',owner:e.id}))];
   if(['first','second'].includes(battle.boss?.stage))sources.push({...battle.boss.port(),type:'alien',owner:'space-boss'});
-  return sources.filter(p=>inside(p)&&Math.hypot(p.x-target.x,p.y-target.y)>radius+90).sort((a,b)=>Math.hypot(a.x-target.x,a.y-target.y)-Math.hypot(b.x-target.x,b.y-target.y))[0];
+  let nearest=null,distance=Infinity;for(const p of sources){if(!inside(p))continue;const d=Math.hypot(p.x-target.x,p.y-target.y);if(d>radius+90&&d<distance){nearest=p;distance=d;}}return nearest;
  }
  step(time,dt,events,ships,position,radius,battle,damage,eligible){
   if(battle.stopped||battle.boss?.ceasefire){this.clear();return;}
