@@ -1,8 +1,9 @@
-import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=20.0';
+import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=21.0';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export class SpaceShaftEnemies{
  constructor(media,audio,count){Object.assign(this,{media,audio,count});this.entities=[];this.shots=[];this.spawned=new Set;this.wallCount=0;this.serial=0;this.kills={wall:0,eye:0};this.stopped=false;}
  get data(){return this.media.shaftData;}
+ destroyAll(time){for(const e of this.entities){if(e.dead)continue;e.hp=0;e.dead=true;e.death=time;this.kills[e.type]++;this.audio.add({kind:'clip',id:'shaft-final-death-'+e.id,clip:'shaft-'+e.type+'-death',at:time});}this.ceasefire();}
  ceasefire(){this.stopped=true;this.shots=[];}
  pose(e,time){const c=this.data.clips[e.type+'-move'],raw=Math.max(0,(time-e.born)*c.hz*(e.type==='eye'?.55:1)),i=Math.min(c.frames.length-1,Math.floor(raw)),f=c.frames[i],last=c.frames.at(-1).motion,prev=c.frames.at(-2).motion,extra=Math.max(0,raw-c.frames.length+1),dx=f.motion[0]+(last[0]-prev[0])*extra,dy=f.motion[1]+(last[1]-prev[1])*extra;return{x:e.origin.x+dx*e.scale*e.mirror,y:e.origin.y+dy*e.scale};}
  spawn(type,time,view,index=0){const scale=type==='wall'?Math.min(3.4,(view.right-view.left-36)/320):2.6,hp=scaledEnemyHp(type==='wall'?675:60,this.count),e={id:'shaft-'+type+'-'+(++this.serial),type,born:time,origin:{x:type==='wall'?(view.left+view.right)/2:view.left+(index%2?.72:.28)*(view.right-view.left),y:view.top-(type==='wall'?72:60)},scale,mirror:index%2?-1:1,hp,maxHp:hp,r:type==='wall'?36*scale:16*scale,dead:false,lastHit:-10,nextShot:0};Object.assign(e,this.pose(e,time));this.entities.push(e);if(type==='wall')this.wallCount++;return e;}
