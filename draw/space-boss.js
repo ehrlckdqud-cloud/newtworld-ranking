@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=25.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=25.0';
-import {SpaceEscorts} from './space-escorts.js?v=25.0';
-import {markHit,hitFeedback} from './space-hit.js?v=25.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=26.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=26.0';
+import {SpaceEscorts} from './space-escorts.js?v=26.0';
+import {markHit,hitFeedback} from './space-hit.js?v=26.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -71,9 +71,12 @@ export class SpaceBoss{
  }
  get ceasefire(){return ['collapse','orbs','complete'].includes(this.stage);}
  get finished(){return this.stage==='complete';}
- orbProgress(index,total){return clamp((this.time-(this.orbsAt??this.stageAt)-index/Math.max(1,total)*1.9)/3.8,0,1);}
+ orbProgress(index,total){return clamp((this.time-(this.orbsAt??this.stageAt)-2.5)/3.8,0,1);}
  entryLip(){const tr=this.transform();return tr.y+70*tr.scale;}
- orbPosition(start,index,total){const p=this.orbProgress(index,total),e=ease(p),tr=this.transform(),x=tr.x+160*tr.scale,y=this.entryLip()-2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28)*1.5;return{x:start.x*(1-e)+x*e,y:start.y*(1-e)+y*e,p};}
+ orbPosition(start,index,total){
+  const elapsed=this.time-(this.orbsAt??this.stageAt),gather=ease(elapsed/2),p=this.orbProgress(index,total),e=ease(p),tr=this.transform(),view=this.bounds.view||{left:0,top:0,right:this.bounds.W,bottom:this.bounds.H},radius=2*(this.rosterCount>150?10:this.rosterCount>100?13:this.rosterCount>50?16:this.rosterCount>25?21:28),columns=Math.ceil(Math.sqrt(Math.max(1,total))),rows=Math.ceil(total/columns),row=Math.floor(index/columns),rowCount=Math.min(columns,total-row*columns),spacingX=Math.min(radius*2.5,(view.right-view.left)*.55/Math.max(1,columns-1)),spacingY=Math.min(radius*2.5,(view.bottom-view.top)*.25/Math.max(1,rows-1)),x=tr.x+160*tr.scale,y=Math.max(this.entryLip()+radius*3,(view.top+view.bottom)/2),gx=x+(index%columns-(rowCount-1)/2)*spacingX,gy=y+(row-(rows-1)/2)*spacingY,entryY=this.entryLip()-radius*1.5;
+  return{x:(start.x+(gx-start.x)*gather)*(1-e)+x*e,y:(start.y+(gy-start.y)*gather)*(1-e)+entryY*e,p};
+ }
 
  draw(ctx,media){
   if(this.stage==='approach')return;
