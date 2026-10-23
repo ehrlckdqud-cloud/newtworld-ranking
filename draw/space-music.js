@@ -14,6 +14,6 @@ export class SpaceMusicUI{
  waiting(){}
  pauseGame(){}
  suspend(){for(const p of Object.values(this.players))p.pause();}
- async prepareRecordingAudio(...extra){if(!this.capture){const context=new AudioContext,destination=context.createMediaStreamDestination();this.capture={context,destination,sources:new Map};}const {context,destination,sources}=this.capture;await context.resume();for(const p of new Set([...Object.values(this.players),...extra])){if(!p||sources.has(p))continue;const source=context.createMediaElementSource(p);source.connect(destination);source.connect(context.destination);sources.set(p,source);}return destination.stream;}
+ async prepareRecordingAudio(...extra){if(!this.capture){const context=new AudioContext,destination=context.createMediaStreamDestination();this.capture={context,destination,sources:new Map};}const {context,destination,sources}=this.capture;await context.resume();for(const p of new Set([...Object.values(this.players),...extra])){if(!p||sources.has(p))continue;const source=context.createMediaElementSource(p);const gain=context.createGain();gain.gain.value=p.spaceEffectGain??1;source.connect(gain);gain.connect(destination);gain.connect(context.destination);sources.set(p,source);}return destination.stream;}
  destroy(){this.suspend();for(const source of this.capture?.sources.values()||[])source.disconnect();this.capture?.context.close();this.listeners.clear();}
 }
