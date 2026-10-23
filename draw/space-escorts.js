@@ -1,5 +1,5 @@
-import {markHit,hitFeedback} from './space-hit.js?v=37.0';
-import {ESCORT_HP,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=37.0';
+import {markHit,hitFeedback} from './space-hit.js?v=38.0';
+import {ESCORT_HP,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=38.0';
 const hz=59.18560606060606;
 export class SpaceEscorts{
  constructor(media,audio,rosterCount=50){Object.assign(this,{media,audio,rosterCount,entities:new Map,shots:[],serial:0,kills:0,emitted:new Set,lastFinalSpawn:-Infinity,lastFirstSpawn:-Infinity,sourcePorts:new WeakMap});this.profiles={};for(const [clip,ids]of [['first',[2,3,4]],['second',[56]]])this.profiles[clip]=ids.map(id=>{const frames=media.bossData.clips[clip].frames,start=frames.findIndex(f=>f.escorts?.some(a=>a.id===id));return {clip,id,start,origin:frames[start].escorts.find(a=>a.id===id).hull};});}

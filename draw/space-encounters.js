@@ -1,14 +1,14 @@
-import {populationSpawnPlan} from './space-spawn-plan.js?v=37.0';
-import {CollisionGrid} from './space-collision-grid.js?v=37.0';
-import {SpaceFuel} from './space-fuel.js?v=37.0';
-import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=37.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=37.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=37.0';
-import {steerPilots} from './space-pilots.js?v=37.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=37.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=37.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=37.0';
-import {markHit,hitFeedback} from './space-hit.js?v=37.0';
+import {populationSpawnPlan} from './space-spawn-plan.js?v=38.0';
+import {CollisionGrid} from './space-collision-grid.js?v=38.0';
+import {SpaceFuel} from './space-fuel.js?v=38.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=38.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=38.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=38.0';
+import {steerPilots} from './space-pilots.js?v=38.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=38.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=38.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=38.0';
+import {markHit,hitFeedback} from './space-hit.js?v=38.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);

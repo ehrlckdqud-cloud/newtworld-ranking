@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=37.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=37.0';
-import {SpaceEscorts} from './space-escorts.js?v=37.0';
-import {markHit,hitFeedback} from './space-hit.js?v=37.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=38.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=38.0';
+import {SpaceEscorts} from './space-escorts.js?v=38.0';
+import {markHit,hitFeedback} from './space-hit.js?v=38.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
@@ -12,7 +12,7 @@ export class SpaceBoss{
  transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.destroyAll(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
  step(time,dt,alive,bounds,selectionReady,targets=[],combatStarted=true){this.time=time;this.bounds=bounds;if(!combatStarted)return;this.selectionReady=selectionReady;this.aimTargets=targets;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
   if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(8400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
-  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(4800,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
+  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(9600,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
   if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.loop_end||clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,toFrame:n,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
