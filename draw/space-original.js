@@ -1,14 +1,14 @@
-import {FIRST_ATTACK_AT,updateBrandEncounter} from './space-branding.js?v=26.0';
-import {SpaceMusicUI} from './space-music.js?v=26.0';
-import {SpaceBranding} from './space-branding.js?v=26.0';
-import {uniqueNicknameCount,selectUniqueFinalists,finalSelectionOpen,survivorReserve} from './space-selection.js?v=26.0';
-import {resolveMeteorPush,resolveStructurePush} from './space-physics.js?v=26.0';
-import {SpaceScore} from './space-score.js?v=26.0';
-import {SpaceBlackHole} from './space-black-hole.js?v=26.0';
-import {SpaceBackdrop} from './space-backdrop.js?v=26.0';
-import {SpaceCamera} from './space-camera.js?v=26.0';
-import {SpaceBoss} from './space-boss.js?v=26.0';
-import {NativeEncounters} from './space-encounters.js?v=26.0';
+import {FIRST_ATTACK_AT,updateBrandEncounter} from './space-branding.js?v=27.0';
+import {SpaceMusicUI} from './space-music.js?v=27.0';
+import {SpaceBranding} from './space-branding.js?v=27.0';
+import {uniqueNicknameCount,selectUniqueFinalists,finalSelectionOpen,survivorReserve} from './space-selection.js?v=27.0';
+import {resolveMeteorPush,resolveStructurePush} from './space-physics.js?v=27.0';
+import {SpaceScore} from './space-score.js?v=27.0';
+import {SpaceBlackHole} from './space-black-hole.js?v=27.0';
+import {SpaceBackdrop} from './space-backdrop.js?v=27.0';
+import {SpaceCamera} from './space-camera.js?v=27.0';
+import {SpaceBoss} from './space-boss.js?v=27.0';
+import {NativeEncounters} from './space-encounters.js?v=27.0';
 import {sharedDrawServices} from './space-shared.js';
 import {expandRoster} from './space-roster.js';
 import {SpaceVideo} from './space-video.js';
@@ -31,9 +31,9 @@ function renderRoster(){
  for(const ship of dead){const entry=rows.get(ship);if(entry.dead)continue;entry.dead=true;entry.row.className='roster-dead';entry.state.textContent=`${ship.deathOrder}번째 탈락`;q('spEliminatedList').prepend(entry.row);changed=true;}
  summary.textContent=`생존 ${alive} · 탈락 ${dead.length} / ${ships.length}척`;if(changed)q('spEliminatedList').scrollTop=0;q('spEliminatedGroup').hidden=!dead.length;q('spAliveHeading').textContent=`생존 ${alive}척`;q('spEliminatedHeading').textContent=`탈락 최신순 · ${dead.length}척`;
 }
-function syncRoster(){if(running)return;nameLabels.clear();let names;try{names=expandRoster(q('spnames').value);q('sperror').textContent='';}catch(e){q('sperror').textContent=e.message;q('spRosterCount').textContent='명단을 확인해주세요.';return;}ships=names.map((name,id)=>({name,id,u:(id%Math.ceil(Math.sqrt(names.length*1.4))+.5)/Math.ceil(Math.sqrt(names.length*1.4)),v:(Math.floor(id/Math.ceil(Math.sqrt(names.length*1.4)))+.5)/Math.ceil(names.length/Math.ceil(Math.sqrt(names.length*1.4))),seed:id,hp:4,maxHp:4,dead:false,hReady:false}));aliveCount=ships.length;t=0;announced=false;events=[];battle=null;boss=null;particles=[];deathSerial=0;blackHole.events=[];blackHole.active=[];renderRoster();q('spresult').hidden=true;q('spRosterCount').textContent=`${names.length}척 · ${uniqueNicknameCount(names)}명`;q('spstatus').textContent=names.length+'척 탑승';q('spphase').textContent='출격 대기';q('spcount').max=String(Math.max(1,uniqueNicknameCount(names)));if(Number(q('spcount').value)>uniqueNicknameCount(names)&&names.length)q('spcount').value=String(uniqueNicknameCount(names));const request=++rosterEpoch;clearTimeout(photoTimer);photoTimer=setTimeout(async()=>{q('spAvatarStatus').textContent='대표사진을 연결하고 있어요…';let result;try{result=await avatars.prepare([...new Set(names)]);}catch{if(request===rosterEpoch)q('spAvatarStatus').textContent='대표사진 연결이 지연돼 기본 조종석으로 표시해요.';return;}if(request!==rosterEpoch)return;memberPhotos.clear();for(const [name,image]of result.images)memberPhotos.set(name,image);q('spAvatarStatus').textContent=result.message;},220);try{localStorage.setItem('nw-space-setup-v3',JSON.stringify({names:q('spnames').value,count:q('spcount').value,duration:q('spduration').value}));}catch{}}
-q('spnames').oninput=syncRoster;q('spcount').onchange=q('spduration').onchange=syncRoster;
-q('spSample').onclick=()=>{q('spnames').value='닉네임*20,다른닉네임*20,참가자';syncRoster();};q('spClear').onclick=()=>{q('spnames').value='';syncRoster();};
+function syncRoster(feedback=false){if(running)return;nameLabels.clear();let names;try{names=expandRoster(q('spnames').value);q('sperror').textContent='';}catch(e){q('sperror').textContent=e.message;q('spRosterCount').textContent='명단을 확인해주세요.';return;}const added=feedback===true&&names.length>ships.length;ships=names.map((name,id)=>({name,id,u:(id%Math.ceil(Math.sqrt(names.length*1.4))+.5)/Math.ceil(Math.sqrt(names.length*1.4)),v:(Math.floor(id/Math.ceil(Math.sqrt(names.length*1.4)))+.5)/Math.ceil(names.length/Math.ceil(Math.sqrt(names.length*1.4))),seed:id,hp:4,maxHp:4,dead:false,hReady:false}));if(added&&q('spsound').checked)nativeAudio.playUiSound?.('native-coin',()=>!running&&!disposed).catch(()=>{q('sperror').textContent='코인 효과음을 불러오지 못했어요. 소리 설정을 다시 켜주세요.';});aliveCount=ships.length;t=0;announced=false;events=[];battle=null;boss=null;particles=[];deathSerial=0;blackHole.events=[];blackHole.active=[];renderRoster();q('spresult').hidden=true;q('spRosterCount').textContent=`${names.length}척 · ${uniqueNicknameCount(names)}명`;q('spstatus').textContent=names.length+'척 탑승';q('spphase').textContent='출격 대기';q('spcount').max=String(Math.max(1,uniqueNicknameCount(names)));if(Number(q('spcount').value)>uniqueNicknameCount(names)&&names.length)q('spcount').value=String(uniqueNicknameCount(names));const request=++rosterEpoch;clearTimeout(photoTimer);photoTimer=setTimeout(async()=>{q('spAvatarStatus').textContent='대표사진을 연결하고 있어요…';let result;try{result=await avatars.prepare([...new Set(names)]);}catch{if(request===rosterEpoch)q('spAvatarStatus').textContent='대표사진 연결이 지연돼 기본 조종석으로 표시해요.';return;}if(request!==rosterEpoch)return;memberPhotos.clear();for(const [name,image]of result.images)memberPhotos.set(name,image);q('spAvatarStatus').textContent=result.message;},220);try{localStorage.setItem('nw-space-setup-v3',JSON.stringify({names:q('spnames').value,count:q('spcount').value,duration:q('spduration').value}));}catch{}}
+q('spnames').oninput=()=>syncRoster(true);q('spcount').onchange=q('spduration').onchange=syncRoster;
+q('spSample').onclick=()=>{q('spnames').value='닉네임*20,다른닉네임*20,참가자';syncRoster(true);};q('spClear').onclick=()=>{q('spnames').value='';syncRoster();};
 q('spReset').onclick=()=>{generation++;running=false;paused=false;countdown=0;score.stop();mission?.reset();video.stop();nativeAudio.reset();musicUI.music.waiting();lockControls(false);q('sppause').textContent='일시정지';q('spstart').textContent='우주로 출발';syncRoster();};
 q('spCopy').onclick=async()=>{if(!announced){toast('추첨이 끝나면 당첨 명단을 복사할 수 있어요.');return;}try{await navigator.clipboard.writeText(ships.filter(s=>!s.dead).map((s,i)=>`${i+1}. ${s.name}`).join('\n'));toast('당첨 명단을 복사했어요.');}catch{toast('당첨 명단을 직접 선택해 복사해주세요.');}};
 document.getElementById('spSettings').onclick=()=>root.classList.toggle('settings-open');
