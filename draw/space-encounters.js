@@ -1,13 +1,14 @@
-import {CollisionGrid} from './space-collision-grid.js?v=34.0';
-import {SpaceFuel} from './space-fuel.js?v=34.0';
-import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=34.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=34.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=34.0';
-import {steerPilots} from './space-pilots.js?v=34.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=34.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=34.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=34.0';
-import {markHit,hitFeedback} from './space-hit.js?v=34.0';
+import {populationSpawnPlan} from './space-spawn-plan.js?v=35.0';
+import {CollisionGrid} from './space-collision-grid.js?v=35.0';
+import {SpaceFuel} from './space-fuel.js?v=35.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=35.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=35.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=35.0';
+import {steerPilots} from './space-pilots.js?v=35.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=35.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=35.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=35.0';
+import {markHit,hitFeedback} from './space-hit.js?v=35.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -43,13 +44,13 @@ export class NativeEncounters{
 
  hurt(id,time){if(id.startsWith('shaft-'))return this.shaft.hurt(id,time,this);if(id==='space-boss'||id.startsWith('space-escort-')){const e=this.boss?.escortFleet?.entities.get(id),wasAlive=e&&!e.dead,stage=this.boss?.stage,hull=id==='space-boss'?this.boss?.hulls().find(h=>h.boss):null,hit=this.boss?.hurt(time,id)||false;if(wasAlive&&e.dead)this.killedEnemy(e,time);if(hull&&stage==='first'&&this.boss.stage==='fusion')this.killedEnemy({id:'space-boss-first',x:hull.x,y:hull.y},time);return hit;}const e=this.entities.find(e=>e.id===id);if(!e||e.dead)return false;e.hp--;markHit(e);e.lastHit=time;e.hitCounter|=6;e.hitCount++;if(e.hp<=0){e.dead=true;e.death=time;this.kills[e.type]++;this.killedEnemy(e,time);this.audio.add({kind:'clip',id:'death-'+e.id,clip:e.type+'-death',at:time});}return true;}
  hulls(time){return [...this.entities.filter(e=>!e.dead&&e.x+e.r>this.view().left&&e.x-e.r<this.view().right&&e.y+e.r>this.view().top&&e.y-e.r<this.view().bottom).map(e=>({x:e.x,y:e.y,r:e.r,key:e.id,entity:e})),...this.shaft.hulls(),...(this.boss?.hulls()||[])];}
- step(time,dt,ships,position,bounds,announced=false){this.time=time;this.hLoadout.step(time);this.nativeTicks+=dt*59.18560606060606;const nativeTicks=Math.floor(this.nativeTicks);this.nativeTicks-=nativeTicks;for(const e of this.entities)e.hitCounter=Math.max(0,e.hitCounter-nativeTicks);this.position=position;this.bounds=bounds;this.ships=ships;if(this.boss?.ceasefire)this.destroyRemaining(time);if(announced||this.stopped){this.ceasefire();return;}const canSpawn=this.firstShotAt!==null&&time>this.firstShotAt;
+ step(time,dt,ships,position,bounds,announced=false){this.time=time;this.hLoadout.step(time);this.nativeTicks+=dt*59.18560606060606;const nativeTicks=Math.floor(this.nativeTicks);this.nativeTicks-=nativeTicks;for(const e of this.entities)e.hitCounter=Math.max(0,e.hitCounter-nativeTicks);this.position=position;this.bounds=bounds;this.ships=ships;if(this.boss?.ceasefire)this.destroyRemaining(time);if(announced||this.stopped){this.ceasefire();return;}this.spawnEvents??=populationSpawnPlan(this.events,ships,this.boss?.duration??120);const canSpawn=this.firstShotAt!==null&&time>this.firstShotAt;
   const finalApproach=['fusion','second','collapse','orbs','complete'].includes(this.boss?.stage),v=this.view();
-  if(!this.meteorPlan){const base=this.events.map((event,index)=>({event,index})).filter(({event,index})=>event.type!==1&&event.type!==5&&this.typeFor(event,index)==='small').sort((a,b)=>a.event.at-b.event.at),shift=base.length?Math.max(0,BRANDING.start+BRANDING.duration-(base[0].event.at-3)):0;this.meteorPlan=base.flatMap(({event,index},i)=>{const interval=Math.max(.3,(base[i+1]?.event.at??(event.at+(i?event.at-base[i-1].event.at:3)))-event.at);return [0,1,2].map(n=>({event:{...event,meteorWave:true,key:event.key+'-meteor-'+n},index,at:event.at-3+shift+interval*n/3}));});}
+  if(!this.meteorPlan){const base=this.spawnEvents.map((event,index)=>({event,index})).filter(({event,index})=>event.type!==1&&event.type!==5&&this.typeFor(event,index)==='small').sort((a,b)=>a.event.at-b.event.at),shift=base.length?Math.max(0,BRANDING.start+BRANDING.duration-(base[0].event.at-3)):0;this.meteorPlan=base.flatMap(({event,index},i)=>{const interval=Math.max(.3,(base[i+1]?.event.at??(event.at+(i?event.at-base[i-1].event.at:3)))-event.at);return [0,1,2].map(n=>({event:{...event,meteorWave:true,key:event.key+'-meteor-'+n},index,at:event.at-3+shift+interval*n/3}));});}
   let smallCount=this.entities.filter(e=>!e.dead&&e.type==='small').length;
   for(const wave of this.meteorPlan){if(!canSpawn||time<wave.at||this.spawned.has(wave.event.key)||smallCount+16>672)continue;this.spawned.add(wave.event.key);this.spawn(wave.event,wave.index);smallCount+=16;}
   let admitted=this.entities.filter(e=>!e.dead&&e.type!=='small').length;
-  this.events.forEach((event,i)=>{const spawnAt=Math.max(event.at-3,(this.firstShotAt??Infinity));if(!canSpawn||(event.type===1||event.type===5)||this.typeFor(event,i)==='small'||time<spawnAt||this.spawned.has(event.key))return;if(time>spawnAt+5){this.spawned.add(event.key);return;}const type=this.typeFor(event,i),size=this.waveSize(event,i);if(finalApproach&&type==='large'){this.spawned.add(event.key);return;}if(admitted+size>112)return;this.spawned.add(event.key);this.spawn(event,i);admitted+=size;});
+  this.spawnEvents.forEach((event,i)=>{const spawnAt=Math.max(event.at-3,(this.firstShotAt??Infinity));if(!canSpawn||(event.type===1||event.type===5)||this.typeFor(event,i)==='small'||time<spawnAt||this.spawned.has(event.key))return;if(time>spawnAt+5){this.spawned.add(event.key);return;}const type=this.typeFor(event,i),size=this.waveSize(event,i);if(finalApproach&&type==='large'){this.spawned.add(event.key);return;}if(admitted+size>112)return;this.spawned.add(event.key);this.spawn(event,i);admitted+=size;});
   for(const e of this.entities){
    if(!e.dead){e.previous={x:e.x??e.origin.x,y:e.y??e.origin.y};Object.assign(e,this.pose(e,time));}
    if(e.type==='ufo'){const cycle=Math.floor(Math.max(0,time-e.born)/5);if(e.cycle!==cycle){e.cycle=cycle;e.shot=false;}}
