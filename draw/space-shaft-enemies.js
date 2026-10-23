@@ -1,4 +1,4 @@
-import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=34.0';
+import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=35.0';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export class SpaceShaftEnemies{
  constructor(media,audio,count){Object.assign(this,{media,audio,count});this.entities=[];this.shots=[];this.spawned=new Set;this.wallCount=0;this.serial=0;this.kills={wall:0,eye:0};this.stopped=false;}
@@ -9,7 +9,7 @@ export class SpaceShaftEnemies{
  spawn(type,time,view,index=0){const scale=type==='wall'?Math.min(3.4,(view.right-view.left-36)/320):2.6,hp=scaledEnemyHp(type==='wall'?675:60,this.count),e={id:'shaft-'+type+'-'+(++this.serial),type,born:time,origin:{x:type==='wall'?(view.left+view.right)/2:view.left+(index%2?.72:.28)*(view.right-view.left),y:view.top-(type==='wall'?72:60)},scale,mirror:index%2?-1:1,hp,maxHp:hp,r:type==='wall'?36*scale:16*scale,dead:false,lastHit:-10,nextShot:0};Object.assign(e,this.pose(e,time));this.entities.push(e);if(type==='wall')this.wallCount++;return e;}
  step(time,dt,ships,position,battle){if(!this.data||this.stopped)return;const view=battle.view(),duration=battle.boss?.duration||120;this.view=view;
   for(let i=0;i<5;i++){const at=9+duration*.145*i,key='wall-'+i;if(time>=at&&!this.spawned.has(key)){this.spawned.add(key);this.spawn('wall',time,view,i);}}
-  for(const event of battle.events){if(event.type!==5||time<event.at-3||this.spawned.has(event.key))continue;this.spawned.add(event.key);for(let i=0;i<2;i++)this.spawn('eye',time,view,i);}
+  for(const event of (battle.spawnEvents||battle.events)){if(event.type!==5||time<event.at-3||this.spawned.has(event.key))continue;this.spawned.add(event.key);for(let i=0;i<2;i++)this.spawn('eye',time,view,i);}
   for(const e of this.entities){if(e.dead)continue;e.previous={x:e.x,y:e.y};Object.assign(e,this.pose(e,time));const age=(time-e.born)*.55;
    if(e.type==='eye'&&e.nextShot<this.data.proof.eye.shot_ticks.length){const tick=this.data.proof.eye.shot_ticks[e.nextShot],fireAt=e.born+tick/this.data.hz/.55;e.charge=age*this.data.hz>=tick-9&&time<fireAt?Math.max(0,age-(tick-9)/this.data.hz):null;
     if(time>=fireAt){e.nextShot++;const live=ships.filter(s=>!s.dead);if(live.length){const target=live[(this.serial+e.nextShot)%live.length],p=position(target,time),dx=p.x-e.x,dy=p.y-e.y,len=Math.hypot(dx,dy)||1;this.shots.push({id:++this.serial,x:e.x,y:e.y,vx:dx/len*270,vy:dy/len*270,life:6,born:time,owner:e.id});this.audio.add({kind:'sound',id:'shaft-shot-'+this.serial,sound:'ym-11d4',at:time});}}
