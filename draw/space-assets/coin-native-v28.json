@@ -1,0 +1,35 @@
+{
+  "sounds": {
+    "native-coin": {
+      "url": "coin-insert-v27.wav",
+      "duration": 0.64,
+      "latency": 0,
+      "gain": 3
+    }
+  },
+  "proof": {
+    "command": "0x0f",
+    "source_call": "M1 system command 0x0f -> 0x12ee -> descriptor 0x1693 -> 0x41e0",
+    "FIFO_bytes": [
+      15
+    ],
+    "M1": "256d-m1.rom",
+    "CPU_clock": 4000000,
+    "YM2610_clock": 8000000,
+    "quantum": 8,
+    "command_at_cpu_tick": 1000000,
+    "method": "Original M1 Z80 instructions with native ROM banking; recorded YM writes rendered through YMFM. M1 timer A status supplied from original programmed period.",
+    "writes": 1124,
+    "sound_type": "Original M1 SSG coin arpeggio",
+    "dispatch": "0x11ec system dispatch table 0x120e: command 0x0f -> 0x12ee; IX=0x1693; jump 0x41e0",
+    "active_seconds": [
+      0.2568,
+      0.75596
+    ],
+    "trim_seconds": [
+      0.24,
+      0.88
+    ],
+    "audio_sha256": "6c4265c0676a883c44ee509d4b063d834e9ecd9689a8650003d0e2f0d123a8af"
+  }
+}
