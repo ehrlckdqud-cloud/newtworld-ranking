@@ -1,4 +1,4 @@
-import {finalSelectionOpen,survivorReserve} from './space-selection.js?v=42.0';
+import {finalSelectionOpen,survivorReserve} from './space-selection.js?v=43.0';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 // Steering changes flight offsets only; shuffled finalists and survival timing stay authoritative.
 export function steerPilots(time,dt,ships,position,bounds,cWeapon,boss,fuel){
