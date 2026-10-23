@@ -1,0 +1,9 @@
+# Space Escape v23
+
+Explorer hull damage is one bar per accepted contact, including attacks previously marked lethal. Only a craft already at one HP can be eliminated. That last bar is bright red (#ff303b), with a 0.6-second minimum critical display before a subsequent contact may eliminate it; repeated contacts have a 0.35-second damage cooldown. Existing finalist protection and late-game selection timing remain in place. A recorded death now includes its pre-hit HP for validation.
+
+Restored GAS item: original Metal Slug 3 stream 0x3cc434 from item initializer 0xc73dc/table 0xc76c6 + 22*8. Original interpreter output gives six unique frames over a 29-tick loop, using native palette data. Pickup cue 0x1124 is sourced from the original M1/V ROM and rendered through YM2610 (source calls include 0x7ae26 and shared pickup calls 0x22044/0x220c4/0x220e6). The bundled JSON records render pointers, palettes and the audio hash. No ROM is included.
+
+Each combat kill has a 3% fuel drop chance, capped at 20 drops per round. Ordinary enemies, structures and escorts use the same kill hook; final mass explosions do not spawn pickups. Fuel drifts slowly, expires after 35 seconds and is cleared at ceasefire. Only living damaged ships pursue and consume it, prioritizing healing over C pickups while electrical evasion takes precedence. Swept contact selects one recipient; it restores all four bars and plays the native OK cue once. Full-health ships neither chase nor consume fuel.
+
+Validation: `tests/space-v23.cjs` checks drop probability/cap, damaged-only pursuit, single-recipient full healing, sound, native animation metadata and cleanup. `tests/space-escape-integration.cjs` covers 15 full rounds, asserts every elimination began at one HP, verifies a lethal attack cannot skip green bars and checks final results/docking. v20/v21 regressions also pass. No new browser playthrough is claimed.
