@@ -1,4 +1,4 @@
-import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=17.0';
+import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=18.0';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export class SpaceShaftEnemies{
  constructor(media,audio,count){Object.assign(this,{media,audio,count});this.entities=[];this.shots=[];this.spawned=new Set;this.wallCount=0;this.serial=0;this.kills={wall:0,eye:0};this.stopped=false;}
