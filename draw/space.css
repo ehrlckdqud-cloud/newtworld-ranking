@@ -52,3 +52,22 @@ body.space-roster-resizing,body.space-roster-resizing *{cursor:col-resize!import
 #nwspace .space-roster h3,#nwspace .roster-group h4,#spRosterSummary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:850px){#nwspace .layout,#nwspace.settings-open .layout,#nwspace.space-cinema .layout{display:grid;grid-template-columns:minmax(0,1fr) var(--roster-width,145px)}}
 @media(max-width:640px){body>nav{grid-template-columns:1fr 180px 1fr;padding:0 4px;gap:2px}body>nav>a{white-space:normal;font-size:10px}.nav-tools{gap:3px;flex-wrap:wrap;justify-content:flex-end}.nav-tools button{font-size:10px;padding:3px 5px}.nav-tools>span{display:none}}
+
+/* Collapsed bars occupy no row: only their corner toggle remains. */
+body.space-top-collapsed{grid-template-rows:0 minmax(0,1fr) auto}
+body.space-top-collapsed>nav{position:fixed;top:0;right:0;width:auto;height:24px;z-index:100;justify-content:flex-end;background:transparent;border:0;padding:0}
+body.space-top-collapsed>nav>:not(.nav-tools),body.space-top-collapsed .nav-tools>:not(#spTopToggle){display:none!important}
+body.space-top-collapsed #nwspace{grid-template-rows:0 minmax(0,1fr)}
+body.space-top-collapsed #nwspace>header{display:none}
+#nwspace{grid-row:2}
+.music-bar{grid-row:3}
+#spMusicToggle{margin-left:auto;flex-shrink:0}
+body.space-music-collapsed .music-bar{position:fixed;right:0;bottom:0;z-index:100;min-height:0;height:24px;padding:0;border:0;background:transparent}
+body.space-music-collapsed .music-bar>:not(#spMusicToggle){display:none!important}
+body.space-music-collapsed #spMusicToggle,body.space-top-collapsed #spTopToggle{box-sizing:border-box;height:24px;padding:1px 12px;font-size:11px;line-height:20px;border-radius:5px}
+#nwspace .space-count-control{display:flex;align-items:stretch;gap:4px}
+#nwspace .space-count-control input{flex:1;min-width:0;appearance:textfield;-moz-appearance:textfield}
+#spcount::-webkit-inner-spin-button,#spcount::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#nwspace .space-count-buttons{display:flex;flex-direction:column;width:36px;gap:2px}
+#nwspace .space-count-buttons button{padding:0;min-height:20px;line-height:18px;font-size:11px;flex:1}
+#nwspace .space-count-buttons button:disabled{opacity:.35;cursor:default}

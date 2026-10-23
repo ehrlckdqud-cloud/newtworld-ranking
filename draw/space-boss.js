@@ -1,7 +1,7 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=38.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=38.0';
-import {SpaceEscorts} from './space-escorts.js?v=38.0';
-import {markHit,hitFeedback} from './space-hit.js?v=38.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=39.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=39.0';
+import {SpaceEscorts} from './space-escorts.js?v=39.0';
+import {markHit,hitFeedback} from './space-hit.js?v=39.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
