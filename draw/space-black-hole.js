@@ -1,5 +1,5 @@
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=v=>v*v*(3-2*v);
-export const BLACK_HOLE_RULES=Object.freeze({appearances:2,fadeOut:2.4,sizeMultiplier:3,lifetime:5.2*3});
+export const BLACK_HOLE_RULES=Object.freeze({appearances:2,fadeOut:2.4,sizeMultiplier:3,loopBlend:1.5,lifetime:5.2*3});
 // Uploaded movie frames have no audio track. The simulation clock controls playback,
 // including pause, replay and game speed; there is no independent video timer.
 export class SpaceBlackHole{
@@ -14,6 +14,16 @@ export class SpaceBlackHole{
    if(!nearest){const release=Math.exp(-1.8*dt);s.gravityX*=release;s.gravityY*=release;s.gravityScale=1;}else{const core=nearest.r*.44;s.gravityScale=1-(1-clamp(nearest.d/(core*1.4),.35,1))*nearest.fade;if(nearest.d<core*.72&&time-(s.lastGravityCapture??-10)>.7){s.lastGravityCapture=time;capture?.(s,time,{x:nearest.x,y:nearest.y});if(!s.dead)s.gravityOrbit=nearest.event;}}
   }
  }
- draw(ctx,x,y,r,time,opacity=1){if(!this.image||!this.movie)return;const m=this.movie,frame=Math.floor(Math.max(0,time)*m.fps)%m.frames,sx=frame%m.columns*m.width,sy=Math.floor(frame/m.columns)*m.height,w=r*3.3,h=w*m.height/m.width;ctx.save();ctx.globalAlpha=opacity;ctx.drawImage(this.image,sx,sy,m.width,m.height,x-w/2,y-h/2,w,h);ctx.restore();}
+ draw(ctx,x,y,r,time,opacity=1){if(!this.image||!this.movie)return;const m=this.movie,layers=blackHoleFrames(time,m),w=r*3.3,h=w*m.height/m.width;ctx.save();for(const layer of layers){const frame=layer.frame,sx=frame%m.columns*m.width,sy=Math.floor(frame/m.columns)*m.height;ctx.globalAlpha=opacity*layer.alpha;ctx.drawImage(this.image,sx,sy,m.width,m.height,x-w/2,y-h/2,w,h);}ctx.restore();}
  drawAll(ctx){for(const h of this.active)this.draw(ctx,h.x,h.y,h.r,h.age,h.fade);}
+}
+
+// Overlap the shrinking tail with the growing beginning, then continue after
+// the consumed head. Both sides of every loop boundary have the same frame.
+export function blackHoleFrames(time,m){
+ const duration=m.frames/m.fps,blend=Math.min(BLACK_HOLE_RULES.loopBlend,duration/2),period=duration-blend,age=Math.max(0,time),local=age<duration?age:blend+(age-duration)%period;
+ const frame=t=>Math.min(m.frames-1,Math.floor(t*m.fps));
+ if(local<period)return[{frame:frame(local),alpha:1}];
+ const z=(local-period)/blend,mix=ease(clamp(z,0,1));
+ return[{frame:frame(local),alpha:1-mix},{frame:frame(local-period),alpha:mix}];
 }
