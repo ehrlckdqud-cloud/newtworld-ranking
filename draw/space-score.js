@@ -1,4 +1,4 @@
-import {SCORE_ASSETS} from './space-score-assets.js?v=30.0';
+import {SCORE_ASSETS} from './space-score-assets.js?v=31.0';
 // All waiting, flight and boss scores are bundled; there is no custom playlist selection.
 export class SpaceScore{
  constructor(ui,{AudioClass=Audio,fetcher=(...args)=>fetch(...args),urlApi=URL}={}){this.ui=ui;this.music=ui.music;this.players={waiting:new AudioClass,flight:new AudioClass,boss:new AudioClass,complete:new AudioClass};for(const [name,p]of Object.entries(this.players)){p.preload='auto';p.loop=name!=='complete';}this.music.players=this.players;this.mode='waiting';this.elapsed=0;this.paused=false;this.urls=[];this.urlApi=urlApi;this.unsubscribe=this.music.subscribe(()=>this.sync());const prepare=this.music.prepareRecordingAudio.bind(this.music);this.music.prepareRecordingAudio=(...effects)=>prepare(...Object.values(this.players),...(this.missionPlayers||[]),...effects);this.ready=this.loadScores(fetcher);this.ready.then(()=>this.sync()).catch(()=>{});this.paint();}

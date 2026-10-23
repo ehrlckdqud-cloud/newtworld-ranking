@@ -31,3 +31,24 @@ body>nav .nav-tools{justify-self:end;white-space:nowrap}
 body{grid-template-rows:100px minmax(0,1fr) auto}
 body>nav .nav-brand{width:210px;height:100px}
 @media(max-width:760px){body{grid-template-rows:128px minmax(0,1fr) auto}body>nav{grid-template-columns:1fr 1fr;gap:0 8px;padding:0 14px}body>nav .nav-brand{grid-column:1/-1;grid-row:1;width:200px;height:96px}body>nav>a,body>nav .nav-tools{grid-row:2}}
+
+/* Crop only transparent logo padding; preserve the visible logo size. */
+body{grid-template-rows:72px minmax(0,1fr) auto}
+body>nav{grid-template-columns:minmax(0,1fr) 180px minmax(0,1fr);gap:8px;padding:0 14px}
+body>nav .nav-brand-crop{position:relative;display:block;width:180px;height:72px;overflow:hidden;grid-row:1;grid-column:2}
+body>nav .nav-brand{position:absolute;top:-10px;left:2px;width:176px;height:100px;max-width:none}
+body>nav>a{grid-row:1;grid-column:1}body>nav .nav-tools{grid-row:1;grid-column:3}
+body.space-top-collapsed{grid-template-rows:24px minmax(0,1fr) auto}
+body.space-top-collapsed>nav{display:flex;justify-content:center;height:24px;padding:0}
+body.space-top-collapsed>nav>a,body.space-top-collapsed .nav-brand-crop,body.space-top-collapsed .nav-tools>:not(#spTopToggle){display:none}
+body.space-top-collapsed #spTopToggle{height:22px;padding:1px 12px;font-size:11px}
+#nwspace .layout{grid-template-columns:250px minmax(0,1fr) var(--roster-width,210px)}
+#nwspace.settings-open .layout,#nwspace.space-cinema .layout,#nwspace:fullscreen .layout{grid-template-columns:minmax(0,1fr) var(--roster-width,210px)}
+#nwspace .space-roster{position:relative;padding-left:12px}
+#spRosterResize{position:absolute;left:0;top:0;bottom:0;width:8px;z-index:5;cursor:col-resize;touch-action:none;background:#253c52}
+#spRosterResize:after{content:'';position:absolute;top:45%;left:3px;width:2px;height:38px;border-radius:2px;background:#83a9be}
+#spRosterResize:hover,#spRosterResize:focus-visible{background:#3c708a;outline:none}
+body.space-roster-resizing,body.space-roster-resizing *{cursor:col-resize!important;user-select:none!important}
+#nwspace .space-roster h3,#nwspace .roster-group h4,#spRosterSummary{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:850px){#nwspace .layout,#nwspace.settings-open .layout,#nwspace.space-cinema .layout{display:grid;grid-template-columns:minmax(0,1fr) var(--roster-width,145px)}}
+@media(max-width:640px){body>nav{grid-template-columns:1fr 180px 1fr;padding:0 4px;gap:2px}body>nav>a{white-space:normal;font-size:10px}.nav-tools{gap:3px;flex-wrap:wrap;justify-content:flex-end}.nav-tools button{font-size:10px;padding:3px 5px}.nav-tools>span{display:none}}
