@@ -1,0 +1,36 @@
+{
+  "waiting": {
+    "source_name": "[Jay Kim] 메탈슬러그 BGM／OST - Assault Theme (W3Yf5Iv-7ic).mp3",
+    "source_sha256": "50667e5ac2f0d7f09c111c9809a4d308b17a1565c80f080a5ee22314c63fd790",
+    "source_seconds": 259.160816,
+    "web_encoding": "Opus 96 kbps, original full track, looped as waiting score only",
+    "stored_by": "space-score-assets.js / waiting"
+  },
+  "branding": {
+    "source_name": "#로고제거 입활짝.png",
+    "source_sha256": "d58c04cda142aa4beedc34b8b230dc18b4827e2d4c733a32b3b56a8386539364",
+    "web_sha256": "88de155b8524f43f4a2960bd4ed932d9dc503cb1663db09c35bdd2ae751fefb2",
+    "source_size": [
+      1353,
+      768
+    ],
+    "visible_bounds": [
+      84,
+      75,
+      1197,
+      546
+    ],
+    "conversion": "Lossless WebP. Verified identical visible RGBA pixels and complete alpha plane; hidden RGB at alpha zero may be normalized.",
+    "start_seconds": 5.5,
+    "duration_seconds": 6,
+    "direction": "top to bottom",
+    "maximum_view_width_fraction": 0.78
+  },
+  "firing": {
+    "H_bursts_per_second": 18,
+    "H_ports": 3,
+    "C_cadence_seconds": 0.12,
+    "C_simultaneous_limit": 6,
+    "C_visual": "Repeats original C muzzle cycle during held fire, including while missiles in flight occupy the launch slots. Tip H continues."
+  }
+}
