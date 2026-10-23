@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+(async()=>{
+ const {SpaceFuel,FUEL_RULES}=await import('../draw/space-fuel.js'),{steerPilots}=await import('../draw/space-pilots.js'),{sweptHit}=await import('../draw/space-encounters.js');const cues=[],audio={add:e=>cues.push(e)},f=new SpaceFuel({},audio,()=>0);
+ for(let i=0;i<100;i++)f.killedEnemy({id:i,x:400,y:300},10);assert.equal(f.dropCount,20);assert.equal(f.drops.length,20);f.killedEnemy({id:0,x:400,y:300},12);assert.equal(f.dropCount,20);
+ const none=new SpaceFuel({},audio,()=>.031);none.killedEnemy({id:1,x:0,y:0},0);assert.equal(none.dropCount,0);assert.equal(FUEL_RULES.dropChance,.03);
+ const ships=[{id:1,hp:4,maxHp:4},{id:2,hp:1,maxHp:4,criticalAt:2},{id:3,hp:2,maxHp:4}],pos=s=>({x:s.id===2?400:430,y:300}),bounds={W:800,H:610};f.drops=[{id:1,x:400,y:300,vx:0,vy:0,born:10}];const battle={view:()=>({left:0,top:0,right:800,bottom:610}),rosterCount:50,sweptContact:sweptHit};
+ steerPilots(11,.05,ships,()=>({x:200,y:300}),bounds,{drops:[]},null,f);assert.equal(ships[0].chasingFuel,undefined);assert.equal(ships[1].chasingFuel,1);assert.equal(ships[2].chasingFuel,1);assert(ships[1].pilotVX>0&&ships[2].pilotVX>0);
+ f.step(11,.05,ships,pos,battle);assert.equal(ships[1].hp,4);assert.equal(ships[2].hp,2);assert.equal(ships[1].criticalAt,undefined);assert.equal(f.drops.length,0);assert.equal(cues.filter(e=>e.sound==='ym-1124').length,1);
+ steerPilots(11.1,.05,ships,()=>({x:200,y:300}),bounds,{drops:[]},null,f);assert.equal(ships[1].chasingFuel,undefined);f.ceasefire();f.killedEnemy({id:101,x:400,y:300},12);assert.equal(f.drops.length,0);
+ const d=JSON.parse(fs.readFileSync('draw/space-assets/fuel-native-v23.json'));assert.equal(d.proof.stream,'0x3cc434');assert.equal(d.frames.length,29);assert.equal(d.proof.unique_frames,6);assert(d.sounds['ym-1124'].duration>.3);const src=fs.readFileSync('draw/space-original.js','utf8');assert(src.includes("s.hp===1?'#ff303b':'#7fe3c4'"));assert(!src.includes('next=lethal?0'));console.log('v23: fuel native animation/audio metadata, 3% probability, 20 cap, damaged-only pursuit, single-winner full heal, ceasefire passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});

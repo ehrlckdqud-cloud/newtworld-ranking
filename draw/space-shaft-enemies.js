@@ -1,4 +1,4 @@
-import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=22.0';
+import {scaledEnemyHp,drawEnemyHealth} from './space-enemy-stats.js?v=23.0';
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 export class SpaceShaftEnemies{
  constructor(media,audio,count){Object.assign(this,{media,audio,count});this.entities=[];this.shots=[];this.spawned=new Set;this.wallCount=0;this.serial=0;this.kills={wall:0,eye:0};this.stopped=false;}
@@ -23,7 +23,7 @@ export class SpaceShaftEnemies{
  hurt(id,time,battle){const e=this.entities.find(e=>e.id===id);if(!e||e.dead)return false;e.hp--;e.lastHit=time;
   // Native reception palette and existing restored H impact cue accompany actual contacts.
   if(time-(e.lastSound??-10)>.16){e.lastSound=time;this.audio.add({kind:'sound',id:'shaft-hit-'+id+'-'+Math.round(time*100),sound:'ym-1021',at:time});}
-  if(e.hp<=0){e.dead=true;e.death=time;this.kills[e.type]++;battle.cWeapon.killedEnemy(e,time);this.audio.add({kind:'clip',id:'shaft-death-'+id,clip:'shaft-'+e.type+'-death',at:time});}return true;}
+  if(e.hp<=0){e.dead=true;e.death=time;this.kills[e.type]++;battle.killedEnemy(e,time);this.audio.add({kind:'clip',id:'shaft-death-'+id,clip:'shaft-'+e.type+'-death',at:time});}return true;}
  contacts(ships,position,time,dt,r,battle,damage){if(this.stopped)return;for(const shot of this.shots){if(shot.life<=0)continue;let closest=null;for(const s of ships){if(s.dead)continue;const p=position(s,time),u=battle.sweptContact(shot.previous||shot,shot,{...p,r:r+9});if(u!==null&&(!closest||u<closest.u))closest={s,u};}if(closest){shot.life=0;damage(closest.s,time,{organic:true});}}
   for(const e of this.entities){if(e.dead||e.type!=='wall')continue;for(const s of ships){if(s.dead||time-(s.lastShaftHit??-10)<.7)continue;const p=position(s,time);if(Math.abs(p.x-e.x)<145*e.scale+r&&Math.abs(p.y-e.y)<23*e.scale+r){s.lastShaftHit=time;damage(s,time,{organic:true});}}}
  }
