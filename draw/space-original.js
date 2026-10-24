@@ -7,8 +7,8 @@ import {SpaceScore} from './space-score.js?v=62.1';
 import {SpaceBlackHole} from './space-black-hole.js?v=62.0';
 import {SpaceBackdrop} from './space-backdrop.js?v=62.0';
 import {SpaceCamera} from './space-camera.js?v=62.0';
-import {SpaceBoss} from './space-boss.js?v=62.0';
-import {NativeEncounters} from './space-encounters.js?v=62.0';
+import {SpaceBoss} from './space-boss.js?v=62.5';
+import {NativeEncounters} from './space-encounters.js?v=62.5';
 import {sharedDrawServices} from './space-shared.js';
 import {expandRoster} from './space-roster.js';
 import {SpaceVideo} from './space-video.js?v=62.1';
@@ -55,7 +55,7 @@ function flightPosition(s,time){
 function position(s,time){const flight=flightPosition(s,time),start={x:flight.x+(s.pushX||0)+(s.gravityX||0)+(s.pilotX||0),y:flight.y+(s.pushY||0)+(s.gravityY||0)+(s.pilotY||0)};if(!s.dead&&boss&&['orbs','complete'].includes(boss.stage)){if(!boss.dockingShips){boss.dockingShips=ships.filter(ship=>!ship.dead);boss.dockingShips.forEach((ship,i)=>{ship.dockIndex=i;ship.dockStart=null;});}s.dockStart??=start;return boss.orbPosition(s.dockStart,s.dockIndex,boss.dockingShips.length);}return start;}
 function setText(id,value){const node=q(id);if(node.textContent!==value)node.textContent=value;}
 function drawEnergyBar(ship,x,nameBaseline){
- const top=nameBaseline+16;c.save();c.fillStyle='#000000';c.fillRect(x-19,top,38,9);for(let k=0;k<4;k++){c.fillStyle=k<(ship.hp??4)?(ship.hp===1?'#f52235':'#16c65b'):'#334155';c.fillRect(x-17+k*9,top+2,7,5);}c.restore();
+ const top=nameBaseline+16;c.save();c.fillStyle='#000000';c.fillRect(x-19,top,38,9);for(let k=0;k<4;k++){c.fillStyle=k<(ship.hp??4)?(ship.hp===1?'#f52235':ship.hp===2?'#e6b800':'#16c65b'):'#334155';c.fillRect(x-17+k*9,top+2,7,5);}c.restore();
 }
 function drawName(name,x,y){
  let label=nameLabels.get(name);if(label===undefined&&document.createElement){const surface=document.createElement('canvas'),ctx=surface.getContext?.('2d');if(ctx){ctx.font='700 19.5px system-ui';const width=Math.ceil(ctx.measureText(name).width)+15,height=42,scale=3.75;if(width<=2048){surface.width=Math.ceil(width*scale);surface.height=height*scale;ctx.scale(scale,scale);ctx.font='700 19.5px system-ui';ctx.textAlign='center';ctx.lineJoin='round';ctx.lineWidth=6;ctx.strokeStyle='#000000';ctx.fillStyle='#ffe066';ctx.strokeText(name,width/2,28.5);ctx.fillText(name,width/2,28.5);label={surface,width,height};}else label=null;nameLabels.set(name,label);}}
