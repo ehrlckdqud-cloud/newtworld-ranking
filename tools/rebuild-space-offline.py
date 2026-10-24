@@ -15,5 +15,11 @@ encoded=json.dumps(modules,ensure_ascii=False,separators=(',',':')).replace('</s
 html=html[:start]+encoded+html[end:]
 version=re.search(r'v(\d+)-Offline',out.name)
 if version:html=re.sub(r'오프라인 v\d+', '오프라인 v'+version[1],html)
+shell=(repo/'draw/space.html').read_text()
+for control in ['spvolume','musicVolume']:
+ pattern=r'<input id="'+control+r'"[^>]*>'
+ html=re.sub(pattern,lambda _:re.search(pattern,shell)[0],html,count=1)
+pattern=r'<select id="spduration">.*?</select>'
+html=re.sub(pattern,lambda _:re.search(pattern,shell)[0],html,count=1)
 out.write_text(html)
 print(json.dumps({'output':str(out),'bytes':out.stat().st_size,'modules':len(modules)}))

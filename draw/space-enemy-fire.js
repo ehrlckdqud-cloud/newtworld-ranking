@@ -20,16 +20,17 @@ export class SpaceEnemyFire{
    this.audio.add({kind:'sound',id:'hostile-fire-'+shot.id,sound:'ym-10d1',at:time});
   }
   for(const shot of this.shots){
-   const e=shot.event;if(e.s.dead||time-shot.at>6){shot.done=true;e.inFlight=false;e.retryAt=time+.5;continue;}
-   if(e.s.evadingAttack)shot.ballistic=true;
+   if(time<=shot.at)continue;const e=shot.event;if(time-shot.at>6){shot.done=true;e.inFlight=false;e.retryAt=time+.5;continue;}
+   if(e.s.dead||e.s.evadingAttack)shot.ballistic=true;
    const p=position(e.s,time),previous=position(e.s,time-dt),dx=p.x-shot.x,dy=p.y-shot.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,shot.speed*dt),next=shot.ballistic?{x:shot.x+Math.cos(shot.angle)*shot.speed*dt,y:shot.y+Math.sin(shot.angle)*shot.speed*dt}:{x:shot.x+dx/d*travel,y:shot.y+dy/d*travel};if(!shot.ballistic)shot.angle=Math.atan2(dy,dx);
-   const hit=battle.sweptContact({x:shot.x-previous.x,y:shot.y-previous.y},{x:next.x-p.x,y:next.y-p.y},{x:0,y:0,r:radius*.65+7});
+   shot.passed??=new Set;
+   const contacts=[];for(const ship of ships){if(ship.dead||shot.passed.has(ship.id))continue;const to=position(ship,time),from=position(ship,time-dt),u=battle.sweptContact({x:shot.x-from.x,y:shot.y-from.y},{x:next.x-to.x,y:next.y-to.y},{x:0,y:0,r:radius*1.25+7});if(u!==null)contacts.push({ship,to,u});}
    Object.assign(shot,next);
-   if(hit!==null){
-    shot.done=true;e.inFlight=false;e.x=p.x;e.y=p.y;e.contactAt=time;
-    e.s.lastEnemyContact={time,shot:shot.id,source:shot.source.owner,launched:shot.at};
-    damage(e.s,time,{lethal:e.lethal,organic:shot.source.type==='alien',contact:e.s.lastEnemyContact});
-    e.fired=!e.lethal||e.s.dead;e.retryAt=time+.8;
+   for(const {ship,to} of contacts.sort((a,b)=>a.u-b.u)){
+    shot.passed.add(ship.id);const contact={time,shot:shot.id,source:shot.source.owner,launched:shot.at,type:shot.source.type};
+    const accepted=damage(ship,time,{lethal:e.lethal,organic:shot.source.type==='alien',contact});
+    if(!accepted){shot.ballistic=true;continue;}ship.lastEnemyContact=contact;shot.done=true;e.inFlight=false;battle.impacts?.push({at:time,x:to.x,y:to.y});
+    if(ship===e.s){e.x=to.x;e.y=to.y;e.contactAt=time;e.fired=!e.lethal||ship.dead;}e.retryAt=time+.8;break;
    }
   }
   this.shots=this.shots.filter(s=>!s.done);
