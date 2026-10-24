@@ -26,7 +26,7 @@ export class SpaceEscorts{
    else{if(!e.detach){e.detach={x:e.x??port.x,y:e.y??port.y};e.x=e.detach.x;e.y=e.detach.y;e.vx??=e.launchDirection*120;e.vy??=140;e.attached=false;}const blend=1-Math.exp(-2*dt);e.vx+=(e.launchDirection*(115+e.profile.id%3*20)-e.vx)*blend;e.vy+=(120-e.vy)*blend;e.x+=e.vx*dt;e.y+=e.vy*dt;e.direction=e.launchDirection;}e.lastStep=time;
 
    e.visible=e.x+e.r>view.left&&e.x-e.r<view.right&&e.y+e.r>view.top&&e.y-e.r<view.bottom&&(!e.attached||e.frontExit||e.y+e.r>e.lip+1);if(!e.attached&&this.outside(e,view))e.exited=true;
-   if(!e.exited&&e.visible&&targets.length&&time>=e.nextShot){e.nextShot=time+1.65;const target=targets[(this.serial+Math.floor(time))%targets.length];this.shots.push({owner:e.id,from:{x:e.x,y:e.y},to:{...target},at:time,end:time+1.1});this.audio.add({kind:'sound',id:'escort-shot-'+e.id+'-'+time,sound:'ym-10d1',at:time});}}
+   if(!e.exited&&!e.attached&&e.visible&&targets.length&&time>=e.nextShot){e.nextShot=time+1.65;const target=targets[(this.serial+Math.floor(time))%targets.length];this.shots.push({owner:e.id,from:{x:e.x,y:e.y},to:{...target},at:time,end:time+1.1});this.audio.add({kind:'sound',id:'escort-shot-'+e.id+'-'+time,sound:'ym-10d1',at:time});}}
   this.shots=this.shots.filter(s=>time<=s.end+2);this.entities.forEach((e,id)=>{if(e.exited||e.dead&&time-e.death>3)this.entities.delete(id);});
  }
  outside(e,view){if(!e.pose?.actor)return false;const [cx,cy]=e.pose.actor.hull,parts=e.pose.frame.parts.filter(p=>p[6]===e.pose.id);if(!parts.length)return false;return parts.every(p=>{const x=e.x+(p[1]-cx)*e.scale,y=e.y+(p[2]-cy)*e.scale,w=p[4]*e.scale,h=this.media.bossData.textures[p[0]][3]*e.scale;return x+w<view.left||x>view.right||y+h<view.top||y>view.bottom;});}
