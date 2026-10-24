@@ -1,26 +1,26 @@
 // Predict closest approach to visible ordinary attacks; never alter HP or winners.
 export function ordinaryThreats(battle,time,dt){
  if(!battle||battle.stopped)return[];const out=[];
- for(const b of battle.hostileFire?.shots||[])if(!b.done)out.push({x:b.x,y:b.y,vx:Math.cos(b.angle)*b.speed,vy:Math.sin(b.angle)*b.speed,r:12,target:b.event.s.id});
+ for(const b of battle.hostileFire?.shots||[])if(!b.done)out.push({x:b.x,y:b.y,vx:Math.cos(b.angle)*b.speed,vy:Math.sin(b.angle)*b.speed,r:12});
  for(const b of battle.shaft?.shots||[])if(b.life>0)out.push({...b,r:12});
- for(const b of battle.enemyShots||[]){if(time<b.at||time>b.end)continue;const span=Math.max(.01,b.end-b.at),age=(time-b.at)/span;if(b.type==='ufo'){out.push({x:b.from.x,y:b.from.y,vx:0,vy:0,r:20,beam:true});continue;}out.push({x:b.from.x+(b.to.x-b.from.x)*age,y:b.from.y+(b.to.y-b.from.y)*age,vx:(b.to.x-b.from.x)/span,vy:(b.to.y-b.from.y)/span,r:10});}
+ for(const b of [...(battle.enemyShots||[]),...(battle.boss?.escortFleet?.shots||[])]){if(time<b.at||time>b.end+(b.type==='ufo'?0:2))continue;const span=Math.max(.01,b.end-b.at),age=(time-b.at)/span;if(b.type==='ufo'){out.push({x:b.from.x,y:b.from.y,vx:0,vy:0,r:20,beam:true});continue;}out.push({x:b.from.x+(b.to.x-b.from.x)*age,y:b.from.y+(b.to.y-b.from.y)*age,vx:(b.to.x-b.from.x)/span,vy:(b.to.y-b.from.y)/span,r:10});}
  for(const e of battle.shaft?.entities||[])if(!e.dead&&e.type==='wall')out.push({x:e.x,y:e.y,vx:0,vy:e.previous?(e.y-e.previous.y)/Math.max(.001,dt):0,r:25*e.scale,halfW:150*e.scale});
  return out;
 }
 // Score complete routes, rather than dodging one projectile into another.
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const directions=Array.from({length:16},(_,i)=>({x:Math.cos(i*Math.PI/8),y:Math.sin(i*Math.PI/8)}));
-export function ordinaryEvasion(ship,p,threats,view,radius,strong){
+export function ordinaryEvasion(ship,p,threats,view,radius,strong,tactics=null){
  const horizon=strong?1.15:.9,speed=strong?600:480,pad=Math.max(40,radius+12),margin=28;
  const relevant=threats.filter(b=>(b.target===undefined||b.target===ship.id)&&
   (b.beam||Math.hypot(p.x-b.x,p.y-b.y)<(Math.hypot(b.vx,b.vy)+speed)*horizon+radius+b.r+(b.halfW||0)));
  if(!relevant.length)return null;
  // Include inertia and continuous segment contacts between prediction samples.
- function risk(vx,vy){
+ function risk(vx,vy,burst=Infinity){
   let sum=0,worst=0,x=p.x,y=p.y,pvx=ship.pilotVX||0,pvy=ship.pilotVY||0;
   const step=horizon/8,a=1-Math.exp(-24*step);
   for(let i=1;i<=8;i++){
-   pvx+=(vx-pvx)*a;pvy+=(vy-pvy)*a;
+   const moving=(i-1)*step<burst;pvx+=((moving?vx:0)-pvx)*a;pvy+=((moving?vy:0)-pvy)*a;
    const nx=clamp(x+pvx*step,view.left+pad,view.right-pad),ny=clamp(y+pvy*step,view.top+pad,view.bottom-pad),t=(i-1)*step;
    for(const b of relevant){
     const dx=x-b.x-b.vx*t,dy=y-b.y-b.vy*t,rx=nx-x-b.vx*step,ry=ny-y-b.vy*step;
@@ -41,6 +41,18 @@ export function ordinaryEvasion(ship,p,threats,view,radius,strong){
    x=nx;y=ny;
   }
   return worst*10+sum;
+ }
+ if(tactics){
+  // Evaluate short manoeuvres followed by braking, with actual swept safety first.
+  if(risk(tactics.returnVX,tactics.returnVY)<.001)return null;
+  let safest=null,safe=null;
+  for(const factor of [0,.25,.5,1])for(const dir of factor?directions:[{x:0,y:0}]){
+   const vx=dir.x*speed*factor,vy=dir.y*speed*factor,burst=.24,r=risk(vx,vy,burst),x=clamp(p.x+vx*burst,view.left+pad,view.right-pad),outside=Math.max(tactics.left-x,0,x-tactics.right),travel=Math.hypot(vx,vy)*burst,cost=outside*8+travel;
+   const candidate={vx,vy,burst,r,cost};if(!safest||r<safest.r-.001||Math.abs(r-safest.r)<.001&&cost<safest.cost)safest=candidate;
+   if(r<.001&&(!safe||cost<safe.cost))safe=candidate;
+  }
+  // Leaving the firing lane is permitted if that is the safe escape route.
+  return safe||safest;
  }
  const stopped=risk(0,0),current=risk(ship.pilotVX||0,ship.pilotVY||0);
  if(stopped<.001&&current<.001)return null;

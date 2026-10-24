@@ -1,8 +1,8 @@
 // Space escape uses only bundled scores. Other games' IndexedDB playlists are untouched.
 export class SpaceMusicUI{
- constructor(_running,toast){this.toast=toast;this.blocked=false;this.listeners=new Set;let saved={};try{saved=JSON.parse(localStorage.getItem('nw-space-music-v17')||'{}');}catch{}this.config={enabled:saved.enabled!==false,volume:Math.max(0,Math.min(1,saved.volume??.65))};this.music=this;this.players={};this.urls=[];const power=document.getElementById('musicPower'),volume=document.getElementById('musicVolume');power.onclick=()=>{this.config.enabled=this.blocked||!this.config.enabled;this.blocked=false;this.persist();this.notify();};volume.value=String(Math.round(this.config.volume*100));volume.oninput=()=>{this.config.volume=Number(volume.value)/100;this.persist();this.notify();};this.paint();}
+ constructor(_running,toast){this.toast=toast;this.blocked=false;this.listeners=new Set;let saved={};try{saved=JSON.parse(localStorage.getItem('nw-space-music-v52')||'{}');}catch{}this.config={enabled:saved.enabled!==false,volume:Math.max(0,Math.min(1,saved.volume??1))};this.music=this;this.players={};this.urls=[];const power=document.getElementById('musicPower'),volume=document.getElementById('musicVolume');power.onclick=()=>{this.config.enabled=this.blocked||!this.config.enabled;this.blocked=false;this.persist();this.notify();};volume.value=String(Math.round(this.config.volume*100));volume.oninput=()=>{this.config.volume=Number(volume.value)/100;this.persist();this.notify();};this.paint();}
  get isEnabled(){return this.config.enabled;}
- persist(){try{localStorage.setItem('nw-space-music-v17',JSON.stringify(this.config));}catch{}}
+ persist(){try{localStorage.setItem('nw-space-music-v52',JSON.stringify(this.config));}catch{}}
  paint(){const p=document.getElementById('musicPower');p.textContent=this.isEnabled&&!this.blocked?'♫ 음악 끄기':'♫ 음악 켜기';p.setAttribute?.('aria-pressed',String(this.isEnabled&&!this.blocked));}
  notify(){this.paint();for(const fn of this.listeners)fn();}
  subscribe(fn){this.listeners.add(fn);return()=>this.listeners.delete(fn);}

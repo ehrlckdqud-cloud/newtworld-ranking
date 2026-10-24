@@ -1,28 +1,33 @@
-import {scaledEnemyHp} from './space-enemy-stats.js?v=46.0';
-import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=46.0';
-import {SpaceEscorts} from './space-escorts.js?v=46.0';
-import {markHit,hitFeedback} from './space-hit.js?v=46.0';
+import {scaledEnemyHp} from './space-enemy-stats.js?v=62.0';
+import {BOSS_TIMELINE,sourceFrameIndex} from './space-boss-timeline.js?v=62.0';
+import {SpaceEscorts} from './space-escorts.js?v=62.0';
+import {markHit,hitFeedback} from './space-hit.js?v=62.0';
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x)),ease=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
 // Boss parts/effects retain original execution data. Escort poses are native;
 // their health, contacts, death and aimed projectiles are live game entities.
 export class SpaceBoss{
- constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.media.bossData.clips.first.loop_end=260;this.maxHp=scaledEnemyHp(8400,ships);this.hp=this.maxHp;}
- get clip(){return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
+ constructor(duration,ships,audio,media){Object.assign(this,{duration,audio,media,rosterCount:ships});this.stage='approach';this.firstEncounter=0;this.stageAt=duration*.48;this.time=0;this.counter=0;this.nativeTicks=0;this.queuedLoop=0;this.history=[];this.escortFleet=new SpaceEscorts(media,audio,ships);this.media.bossData.clips.first.loop_end=260;this.maxHp=scaledEnemyHp(8400,ships);this.hp=this.maxHp;}
+ get clip(){if(this.stage==='preludeExplosion')return 'first';return this.stage==='orbs'||this.stage==='complete'?'entry':this.stage;}
  get seconds(){return Math.max(0,this.time-this.stageAt);}
- transition(stage,time){this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.destroyAll(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
- step(time,dt,alive,bounds,selectionReady,targets=[],combatStarted=true){this.time=time;this.bounds=bounds;if(!combatStarted)return;this.selectionReady=selectionReady;this.aimTargets=targets;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
-  if(this.stage==='approach'&&time>=this.duration*.48){this.maxHp=scaledEnemyHp(8400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);}
-  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(20000,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
+ transition(stage,time){if(stage==='fusion'){const f=this.sourceFrame(),tr=this.transform();this.fusionStart={x:tr.x+f.hull[0]*tr.scale,y:tr.y+f.hull[1]*tr.scale,scale:tr.scale};}this.audio.cancelQueued?.('native-boss-',time);this.stage=stage;this.stageAt=time;if(stage==='collapse')this.escortFleet.destroyAll(time);this.queuedLoop=0;if(stage==='orbs')this.orbsAt=time;this.history.push({stage,time});const clip=this.media.bossData.clips[this.clip];if(clip&&stage!=='complete'&&stage!=='preludeExplosion')this.audio.add({kind:'clip',id:'native-boss-'+stage+'-'+time,clip:'boss-native-'+this.clip,toFrame:clip.loop_end,at:time});}
+ step(time,dt,alive,bounds,selectionReady,targets=[],combatStarted=true){this.time=time;this.bounds=bounds;if(!combatStarted)return;this.selectionReady=selectionReady;if(this.stage==='second'&&selectionReady&&time>=this.duration&&time-(this.pendingFinalHit??-Infinity)<=.35){this.pendingFinalHit=-Infinity;this.hurt(time);}this.aimTargets=targets;this.nativeTicks+=dt*this.media.bossData.hz;const ticks=Math.floor(this.nativeTicks);this.nativeTicks-=ticks;this.counter=Math.max(0,this.counter-ticks);
+  if(this.stage==='approach'&&time>=Math.min(this.duration*.48,55)){this.maxHp=scaledEnemyHp(8400,this.rosterCount);this.hp=this.maxHp;if(this.firstEncounter<2)this.prelude=[0,1].map(i=>({i,id:'space-prelude-'+i,hp:this.maxHp,maxHp:this.maxHp}));this.transition('first',time);}
+  if(this.prelude&&this.prelude.every(e=>e.dead&&time-e.death>=3.4)){
+   this.prelude=null;this.firstEncounter=2;this.firstPose=null;this.counter=0;this.maxHp=scaledEnemyHp(8400,this.rosterCount);this.hp=this.maxHp;this.transition('first',time);
+  }
+  if(this.stage==='fusion'&&this.seconds>=this.media.bossData.clips.fusion.frames.length/this.media.bossData.hz){this.maxHp=scaledEnemyHp(20000*2/3,this.rosterCount);this.hp=this.maxHp;this.transition('second',time);}
   if(this.stage==='collapse'&&this.seconds>=this.media.bossData.clips.collapse.frames.length/this.media.bossData.hz)this.transition('orbs',time);
   if(this.stage==='orbs'&&this.seconds>=6.4)this.transition('complete',time);
   if(['first','second'].includes(this.stage)){const clip=this.media.bossData.clips[this.clip],n=clip.loop_end||clip.frames.length,from=clip.loop_from||0,index=Math.floor(this.seconds*clip.hz),loop=index<n?0:1+Math.floor((index-n)/(n-from));if(loop>this.queuedLoop){this.queuedLoop=loop;this.audio.add({kind:'clip',id:'native-boss-loop-'+this.stageAt+'-'+loop,clip:'boss-native-'+this.clip,fromFrame:from,toFrame:n,at:this.stageAt+(n+(loop-1)*(n-from)-from)/clip.hz});}}
   if(this.stage==='first'){const f=this.sourceFrame(),a=1-Math.exp(-12*dt);this.firstPose??={x:f.hull[0],y:f.hull[1]};this.firstPose.x+=(f.hull[0]-this.firstPose.x)*a;this.firstPose.y+=(f.hull[1]-this.firstPose.y)*a;}
-  this.escortFleet.step(time,bounds,this.port(),targets,this.stage,this.attackState());
+  const attack=this.attackState();if(this.stage==='first')attack.firstPorts=this.firstPorts();this.escortFleet.step(time,bounds,this.port(),targets,this.stage,attack);
  }
+ firstPorts(){if(this.stage!=='first'||this.seconds<(this.prelude?1.5:6))return[];const f=this.sourceFrame();return (this.prelude?this.prelude.filter(e=>!e.dead).map(e=>({key:e.id,tr:this.preludeTransform(e)})):[{key:'space-first-third',tr:this.transform()}]).map(({key,tr})=>({key,x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale}));}
+ drawFirst(ctx,media,tr,key,flash){const f=this.sourceFrame(),frame=this.escortFleet.firstHatchFrame(key,this.time);media.drawFirstShip(ctx,this.time,frame,tr.x+f.hull[0]*tr.scale,tr.y+f.hull[1]*tr.scale,tr.scale,flash);}
  attackState(seconds=this.seconds){
   if(!['first','second'].includes(this.stage))return {open:false,electric:false,launches:[]};
   const {index,cycle}=sourceFrameIndex(this.media.bossData.clips[this.clip],seconds,true),timeline=BOSS_TIMELINE[this.stage],hatch=timeline.hatches.find(w=>index>=w.start&&index<w.end),electric=(timeline.electric||[]).some(([a,b])=>index>=a&&index<b);
-  return {frame:index,cycle,open:!!hatch&&!electric,electric,launches:hatch&&!electric?hatch.launches.filter(e=>index>=e.at).map(e=>({...e,key:this.stageAt+'/'+this.stage+'/'+cycle+'/'+e.at,age:(index-e.at)/this.media.bossData.hz})):[]};
+  return {openingKey:this.stageAt+'/'+this.stage+'/'+cycle+'/'+hatch?.start,frame:index,cycle,open:!!hatch&&!electric,electric,launches:hatch&&!electric?hatch.launches.filter(e=>index>=e.at).map(e=>({...e,key:this.stageAt+'/'+this.stage+'/'+cycle+'/'+e.at,age:(index-e.at)/this.media.bossData.hz})):[]};
  }
  get firstElectricFinished(){return ['collapse','orbs','complete'].includes(this.stage)||(this.stage==='second'&&this.seconds>=BOSS_TIMELINE.second.electric[0][1]/this.media.bossData.hz);}
  electricDirection(seconds=this.seconds){
@@ -39,7 +44,7 @@ export class SpaceBoss{
   for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),pose=this.electricPose(seconds),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=(p.from.x+(p.to.x-p.from.x)*u-tr.x)/tr.scale,y=(p.from.y+(p.to.y-p.from.y)*u-tr.y)/tr.scale,hit=this.media.electricData?this.media.electricSourceHit(pose.direction,pose.ticks,x-159,y-89,p.r/tr.scale):this.media.electricHit(f,x,y,p.r/tr.scale);if(hit)hits.add(p.id);}}
   return [...hits];
  }
- sourceFrame(){return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
+ sourceFrame(){if(this.stage==='preludeExplosion')return this.explodingFrame;return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
  geometry(frame=this.sourceFrame()){
   this.geometryCache??=new WeakMap;const cached=this.geometryCache.get(frame);if(cached)return cached;
   const parts=frame.parts,meta=this.media.bossData.proof.native_parts,textures=this.media.bossData.textures,roof=[],exit=[];
@@ -48,27 +53,38 @@ export class SpaceBoss{
   const geometry={roof:rect(roof),exit:rect(exit)};this.geometryCache.set(frame,geometry);return geometry;
  }
  transform(){
+  if(this.stage==='preludeExplosion')return this.explodingTransform;
+  if(this.stage==='first'&&!this.prelude){const v=this.bounds.view||{left:0,right:this.bounds.W,top:0,bottom:this.bounds.H},f=this.sourceFrame(),scale=Math.min((v.right-v.left)/320,(v.bottom-v.top)/224),cx=(v.left+v.right)/2,cy=v.top-100*scale+(100*scale+(v.bottom-v.top)*.23)*ease(this.seconds/6);return{x:cx-f.hull[0]*scale,y:cy-f.hull[1]*scale,scale};}
+
   const {W,H}=this.bounds,base=Math.min(W/320,H/224);let scale=base,x=(W-320*scale)/2,y=0;
   if(['first','fusion','second','collapse','orbs','complete'].includes(this.stage)){
-   const {roof,exit}=this.geometry(['first','fusion'].includes(this.stage)?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-(roof.left+roof.right)/2*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
+   const {roof,exit}=this.geometry(['first','fusion'].includes(this.stage)?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-159*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
   }
   if(this.stage==='first'&&this.firstPose){const f=this.sourceFrame();x+=(this.firstPose.x-f.hull[0])*scale;y+=(this.firstPose.y-f.hull[1])*scale;}return {x,y,scale};
  }
- port(){if(this.stage==='approach')return {x:this.bounds.W/2,y:0};const tr=this.transform(),exit=this.geometry().exit;if(this.stage==='first'){const f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}return {x:tr.x+(exit?(exit.left+exit.right)/2:160)*tr.scale,y:tr.y+(exit?exit.bottom:65)*tr.scale};}
+ port(){if(this.prelude){const live=this.prelude.filter(e=>!e.dead),e=live[Math.floor(this.time*4)%Math.max(1,live.length)]||this.prelude[0],tr=this.preludeTransform(e),f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}if(this.stage==='approach')return {x:this.bounds.W/2,y:0};const tr=this.transform(),exit=this.geometry().exit;if(this.stage==='first'){const f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}return {x:tr.x+(exit?(exit.left+exit.right)/2:160)*tr.scale,y:tr.y+(exit?exit.bottom:65)*tr.scale};}
  get escorts(){return this.escortFleet.entities;}
  get escortKills(){return this.escortFleet.kills;}
  hulls(){
-  if(this.stage==='approach'||this.ceasefire)return[];
+  if(this.stage==='approach'||this.stage==='preludeExplosion'||this.ceasefire)return[];
   const escorts=this.escortFleet.hulls();
+  if(this.prelude)return [...escorts,...this.prelude.filter(e=>!e.dead).map(e=>{const tr=this.preludeTransform(e),f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+f.hull[1]*tr.scale,r:f.hull[2]*tr.scale*.85,key:'space-prelude-'+e.i,boss:true,entity:e};})];
   if(!['first','second'].includes(this.stage))return escorts;
   const f=this.media.nativeFrame(this.clip,this.seconds,{loop:true}),tr=this.transform(),[x,y,r]=f.hull;
   if(y+r<0)return escorts;
   return [...escorts,{x:tr.x+x*tr.scale,y:tr.y+y*tr.scale,r:Math.max(12,r*tr.scale*.85),key:'space-boss',boss:true}];
  }
  hurt(time,key='space-boss'){
+  if(key.startsWith('space-prelude-')){const e=this.prelude?.find(e=>'space-prelude-'+e.i===key);if(!e||e.dead)return false;markHit(e);e.hp--;this.hp=this.prelude.reduce((n,p)=>n+p.hp,0);if(e.hp<=0){e.dead=true;e.death=time;e.frame=this.sourceFrame();e.transform=this.preludeTransform(e);e.x=e.transform.x+e.frame.hull[0]*e.transform.scale;e.y=e.transform.y+e.frame.hull[1]*e.transform.scale;for(let i=0;i<7;i++)this.audio.add({kind:'sound',id:'prelude-blast-'+e.i+'-'+i,sound:i===0?'ym-1033':'ym-102d',at:time+i*.16,priority:true,fullPlayback:true});}return true;}
   if(key.startsWith('space-escort-'))return !this.ceasefire&&this.escortFleet.hurt(key,time);
-  if(!['first','second'].includes(this.stage))return false;this.counter|=6;markHit(this);if(this.stage==='second'&&this.hp<=1&&(!this.selectionReady||time<this.duration))return true;this.hp=Math.max(0,this.hp-1);if(!this.hp)this.transition(this.stage==='first'?'fusion':'collapse',time);return true;
+  if(!['first','second'].includes(this.stage))return false;this.counter|=6;markHit(this);if(this.stage==='second'&&this.hp<=1&&(!this.selectionReady||time<this.duration))return true;this.hp=Math.max(0,this.hp-1);if(!this.hp){if(this.stage==='first'&&this.firstEncounter<2)this.explodePrelude(time);else this.transition(this.stage==='first'?'fusion':'collapse',time);}return true;
  }
+ explodePrelude(time){
+  this.explodingFrame=this.sourceFrame();this.explodingSeconds=this.seconds;this.explodingTransform={...this.transform()};this.escortFleet.destroyAll(time);this.transition('preludeExplosion',time);
+  // Native collapse sound cues, excluding recorded escort fire.
+  for(const [i,cue]of this.media.bossData.clips.collapse.sounds.entries())if(['ym-1033','ym-102d'].includes(cue.sound_id))this.audio.add({kind:'sound',id:'prelude-explosion-'+this.firstEncounter+'-'+i,sound:cue.sound_id,at:time+cue.frame/this.media.bossData.hz,priority:true,fullPlayback:cue.sound_id==='ym-1033'});
+ }
+ preludeTransform(e){const v=this.bounds.view||{left:0,right:this.bounds.W,top:0,bottom:this.bounds.H},f=this.sourceFrame(),width=v.right-v.left,scale=Math.min(width/400,(v.bottom-v.top)/280),cx=v.left+width*(e.i?.75:.25)+Math.sin(this.seconds*.55+e.i*Math.PI)*width*.075,cy=v.top+Math.min((v.bottom-v.top)*.23,90*scale)+Math.sin(this.seconds*.8+e.i*Math.PI)*12*scale;return{x:cx-f.hull[0]*scale,y:cy-f.hull[1]*scale-160*scale*(1-ease(this.seconds/1.5)),scale};}
  get ceasefire(){return ['collapse','orbs','complete'].includes(this.stage);}
  get finished(){return this.stage==='complete';}
  orbProgress(index,total){return clamp((this.time-(this.orbsAt??this.stageAt)-2.5)/3.8,0,1);}
@@ -80,8 +96,14 @@ export class SpaceBoss{
 
  draw(ctx,media){
   if(this.stage==='approach')return;
+  if(this.stage==='preludeExplosion'){this.media.drawPreludeExplosion?.(ctx,this.explodingFrame,this.explodingTransform,this.seconds);this.escortFleet.draw(ctx,media);return;}
+  if(this.prelude){for(const e of this.prelude){const tr=e.dead?e.transform:this.preludeTransform(e);if(e.dead)media.drawPreludeExplosion(ctx,e.frame,tr,this.time-e.death);else this.drawFirst(ctx,media,tr,e.id,hitFeedback(e).flash);}this.escortFleet.draw(ctx,media);return;}
+  if(this.stage==='first'){this.drawFirst(ctx,media,this.transform(),'space-first-third',hitFeedback(this).flash);this.escortFleet.draw(ctx,media);return;}
   const tr=this.transform(),seconds=['orbs','complete'].includes(this.stage)?0:this.seconds;
-  media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash});
+  const frames=this.media.bossData.clips.fusion.frames,tick=seconds*this.media.bossData.hz,travel=tick<188?tick:tick<198?188:188+(tick-198)*(frames.length-188)/(frames.length-198),u=ease(travel/frames.length),start=this.fusionStart;
+  // Retain the original latch recoil at frame 189, without restoring the sideways entry.
+  const recoil=tick>=180&&tick<=215?(this.sourceFrame().hull[1]-(frames[180].hull[1]+(frames[215].hull[1]-frames[180].hull[1])*(tick-180)/35))*tr.scale:0,movingHull=this.stage==='fusion'&&start?{x:start.x+(tr.x+159*tr.scale-start.x)*u,y:start.y+(tr.y+tr.scale-start.y)*u+recoil,scale:start.scale+(tr.scale-start.scale)*u}:null;
+  media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash,movingHull});
   const electric=this.electricPose();if(electric&&media.electricData)media.drawElectric(ctx,electric.direction,electric.ticks,tr.x+159*tr.scale,tr.y+89*tr.scale,tr.scale);
   this.escortFleet.draw(ctx,media);
  }

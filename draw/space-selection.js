@@ -11,7 +11,7 @@ export function selectUniqueFinalists(order,count){
 }
 // Keep suspense through long boss fights too, rather than only guarding the
 // nominal countdown. The final crafts settle just before the final combat ends.
-export function finalSelectionOpen(time,duration,boss){return time>=duration-4&&boss?.stage==='second'&&boss.hp<=1&&(boss.finaleAt===undefined||time>=boss.finaleAt+8);}
+export function finalSelectionOpen(time,duration,boss){return time>=duration-4&&boss?.stage==='second'&&boss.hp<=1&&boss.finisherReady!==false&&(boss.finaleAt===undefined||time>=boss.finaleAt+8);}
 // Keep enough combatants for a crowded battle, then thin this reserve over
 // eight seconds near the final boss's last quarter instead of dropping everyone at once.
 export function survivorReserve(time,duration,boss,total,target){
