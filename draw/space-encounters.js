@@ -1,14 +1,14 @@
-import {populationSpawnPlan} from './space-spawn-plan.js?v=44.0';
-import {CollisionGrid} from './space-collision-grid.js?v=44.0';
-import {SpaceFuel} from './space-fuel.js?v=44.0';
-import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=44.0';
-import {SpaceEnemyFire} from './space-enemy-fire.js?v=44.0';
-import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=44.0';
-import {steerPilots} from './space-pilots.js?v=44.0';
-import {SpaceHLoadout} from './space-h-loadout.js?v=44.0';
-import {SpaceCWeapon} from './space-c-weapon.js?v=44.0';
-import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=44.0';
-import {markHit,hitFeedback} from './space-hit.js?v=44.0';
+import {populationSpawnPlan} from './space-spawn-plan.js?v=45.0';
+import {CollisionGrid} from './space-collision-grid.js?v=45.0';
+import {SpaceFuel} from './space-fuel.js?v=45.0';
+import {FIRST_ATTACK_AT,BRANDING} from './space-branding.js?v=45.0';
+import {SpaceEnemyFire} from './space-enemy-fire.js?v=45.0';
+import {SpaceShaftEnemies} from './space-shaft-enemies.js?v=45.0';
+import {steerPilots} from './space-pilots.js?v=45.0';
+import {SpaceHLoadout} from './space-h-loadout.js?v=45.0';
+import {SpaceCWeapon} from './space-c-weapon.js?v=45.0';
+import {ENEMY_STATS,drawEnemyHealth,scaledEnemyHp} from './space-enemy-stats.js?v=45.0';
+import {markHit,hitFeedback} from './space-hit.js?v=45.0';
 // Shuffled finalists are preserved; scheduled damage now requires a visible enemy projectile contact.
 // Restored enemies have independent health; only actual swept bullet contacts destroy them.
 const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),ease=x=>x*x*(3-2*x);
@@ -16,7 +16,7 @@ const body=ENEMY_STATS;
 export function sweptHit(a,b,h){const dx=b.x-a.x,dy=b.y-a.y,ox=a.x-h.x,oy=a.y-h.y,A=dx*dx+dy*dy,C=ox*ox+oy*oy-h.r*h.r;if(C<=0)return 0;if(!A)return null;const B=2*(ox*dx+oy*dy),D=B*B-4*A*C;if(D<0)return null;const u=(-B-Math.sqrt(D))/(2*A);return u>=0&&u<=1?u:null;}
 export class NativeEncounters{
  constructor(media,audio,events,rosterCount=50){this.rosterCount=rosterCount;this.collisionGrid=new CollisionGrid;this.fuel=new SpaceFuel(media,audio);this.hostileFire=new SpaceEnemyFire(media,audio);this.shaft=new SpaceShaftEnemies(media,audio,rosterCount);this.cWeapon=new SpaceCWeapon(media,audio);this.hLoadout=new SpaceHLoadout(media,audio);this.media=media;this.audio=audio;this.events=events;this.entities=[];this.bullets=[];this.enemyShots=[];this.impacts=[];this.spawned=new Set;this.firstShotAt=null;this.clock=0;this.serial=0;this.cursor=0;this.stopped=false;this.time=0;this.nativeTicks=0;this.kills={small:0,large:0,ufo:0,ring:0,alien:0};}
- steerPilots(time,dt,ships,position,bounds){steerPilots(time,dt,ships,position,bounds,this.cWeapon,this.boss,this.fuel);}
+ steerPilots(time,dt,ships,position,bounds){steerPilots(time,dt,ships,position,bounds,this.cWeapon,this.boss,this.fuel,this);}
  sweptContact(a,b,h){return sweptHit(a,b,h);}
  destroyRemaining(time){if(this.clearedAt!==undefined)return;this.clearedAt=time;for(const e of this.entities){if(e.dead)continue;e.hp=0;e.dead=true;e.death=time;this.kills[e.type]++;this.audio.add({kind:'clip',id:'final-death-'+e.id,clip:e.type+'-death',at:time});}this.shaft.destroyAll(time);this.boss?.escortFleet.destroyAll(time);this.ceasefire();}
  killedEnemy(e,time){this.cWeapon.killedEnemy(e,time);this.fuel.killedEnemy(e,time,this.boss?.duration??120);}

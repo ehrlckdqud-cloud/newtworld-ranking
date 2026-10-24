@@ -21,7 +21,8 @@ export class SpaceEnemyFire{
   }
   for(const shot of this.shots){
    const e=shot.event;if(e.s.dead||time-shot.at>6){shot.done=true;e.inFlight=false;e.retryAt=time+.5;continue;}
-   const p=position(e.s,time),previous=position(e.s,time-dt),dx=p.x-shot.x,dy=p.y-shot.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,shot.speed*dt),next={x:shot.x+dx/d*travel,y:shot.y+dy/d*travel};shot.angle=Math.atan2(dy,dx);
+   if(e.s.evadingAttack)shot.ballistic=true;
+   const p=position(e.s,time),previous=position(e.s,time-dt),dx=p.x-shot.x,dy=p.y-shot.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,shot.speed*dt),next=shot.ballistic?{x:shot.x+Math.cos(shot.angle)*shot.speed*dt,y:shot.y+Math.sin(shot.angle)*shot.speed*dt}:{x:shot.x+dx/d*travel,y:shot.y+dy/d*travel};if(!shot.ballistic)shot.angle=Math.atan2(dy,dx);
    const hit=battle.sweptContact({x:shot.x-previous.x,y:shot.y-previous.y},{x:next.x-p.x,y:next.y-p.y},{x:0,y:0,r:radius*.65+7});
    Object.assign(shot,next);
    if(hit!==null){
