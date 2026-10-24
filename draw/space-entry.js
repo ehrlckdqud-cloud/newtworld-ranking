@@ -1,4 +1,4 @@
-import {installSpaceGuide} from './space-guide.js?v=62.7';
+import {installSpaceGuide} from './space-guide.js?v=62.8';
 import {initSpaceLayout} from './space-layout.js?v=62.0';
 import {isSpaceDesktop} from './space-platform.js?v=62.0';
 import {SpaceMission} from './space-mission.js?v=62.0';
