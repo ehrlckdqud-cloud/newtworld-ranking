@@ -3,7 +3,7 @@ import {SpaceMusicUI} from './space-music.js?v=62.0';
 import {SpaceBranding} from './space-branding.js?v=62.0';
 import {uniqueNicknameCount,selectUniqueFinalists,finalSelectionOpen,survivorReserve,electricSurvivorReserve} from './space-selection.js?v=62.0';
 import {resolveMeteorPush,resolveStructurePush} from './space-physics.js?v=62.0';
-import {SpaceScore} from './space-score.js?v=62.0';
+import {SpaceScore} from './space-score.js?v=62.1';
 import {SpaceBlackHole} from './space-black-hole.js?v=62.0';
 import {SpaceBackdrop} from './space-backdrop.js?v=62.0';
 import {SpaceCamera} from './space-camera.js?v=62.0';
@@ -11,7 +11,7 @@ import {SpaceBoss} from './space-boss.js?v=62.0';
 import {NativeEncounters} from './space-encounters.js?v=62.0';
 import {sharedDrawServices} from './space-shared.js';
 import {expandRoster} from './space-roster.js';
-import {SpaceVideo} from './space-video.js';
+import {SpaceVideo} from './space-video.js?v=62.1';
 
 export function startOriginalSpace({media,nativeAudio,access,onDenied,services=sharedDrawServices(access),Video=SpaceVideo,Score=SpaceScore,mission}){let battle,boss;const root=document.getElementById('nwspace'),controls=new Map,q=id=>{if(!controls.has(id))controls.set(id,root.querySelector('#'+id));return controls.get(id);},cv=q('spcanvas'),c=cv.getContext('2d');const branding=new SpaceBranding(media.brandImage),backdrop=new SpaceBackdrop,blackHole=media.blackHole||new SpaceBlackHole;const camera=new SpaceCamera(cv,q('spZoom'),q('spZoomReset'));let W=800,H=610,dpr=1,t=0,last=0,running=false,paused=false,ships=[],events=[],particles=[],duration=120,target=3,announced=false,countdown=0,flightStarted=false,lastBossStage=null,avatar=null,audio=null;const memberPhotos=new Map;let rosterEpoch=0,photoTimer,captureDestination,deathSerial=0,aliveCount=0,idleTime=0;const nameLabels=new Map;
 const toast=message=>{q('sperror').textContent=message;},musicUI=new SpaceMusicUI(()=>running,toast),avatars=new services.MemberAvatars;
