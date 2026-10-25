@@ -1,0 +1,36 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync(__dirname+'/../assets/content-access.js','utf8');
+const index=fs.readFileSync(__dirname+'/../index.html','utf8');
+const relayLine=index.split('\n').find(l=>l.includes("['nw-ai','nw-avatar','nw-content']"));
+assert.ok(relayLine,'main popup must relay content responses');
+let relay;
+const parent={},origin='https://ehrlckdqud-cloud.github.io',messages=[];
+vm.runInNewContext(relayLine,{window:{addEventListener:(t,f)=>relay=f},location:{origin},frame:{contentWindow:{postMessage:(data,target)=>messages.push({data,target})}}});
+const data={channel:'nw-content',nonce:'test',result:{ok:true}};
+relay({origin:'https://script.googleusercontent.com',data});
+assert.equal(messages.length,1);assert.equal(messages[0].target,origin);
+relay({origin:'https://evil.test',data});assert.equal(messages.length,1);
+let receive,submitted,domReady;
+const root={hidden:true,textContent:'',children:[],replaceChildren(){this.children=[]},append(...c){this.children.push(...c)}};
+const doc={currentScript:{src:origin+'/newtworld-ranking/assets/content-access.js'},addEventListener:(t,f)=>domReady=f,getElementById:()=>root,head:{append(){}},body:{append(){}},
+ createElement(tag){return {tag,style:{},children:[],append(...x){this.children.push(...x)},prepend(x){this.children.unshift(x)},setAttribute(){},remove(){},submit(){submitted=JSON.parse(this.children[0].value)}}}};
+const window={parent,NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener:(t,f)=>{if(t==='message')receive=f},removeEventListener(){},dispatchEvent(){}};
+const storage={getItem:k=>k==='nwProfileToken'?'member-token':k==='nwProfileDevice'?'device':'',setItem(){}};
+const ctx={window,document:doc,location:{origin,pathname:'/newtworld-ranking/profile.html'},URL,crypto:{randomUUID:()=>String(Math.random())},localStorage:storage,sessionStorage:storage,setTimeout,clearTimeout,CustomEvent:class{}};
+vm.runInNewContext(source,ctx);
+const tick=()=>new Promise(r=>setImmediate(r));
+(async()=>{
+ let settled=false;const p=window.NWContent.call('contentStatus').then(r=>{settled=true;return r});await tick();
+ const msg={channel:'nw-content',nonce:submitted.nonce,result:{ok:true}};
+ receive({origin,source:{},data:msg});await tick();assert.equal(settled,false,'unrelated same-origin window rejected');
+ receive({origin:'https://evil.test',source:parent,data:msg});await tick();assert.equal(settled,false);
+ receive({origin,source:parent,data:msg});assert.equal((await p).ok,true,'popup parent response accepted');
+ domReady();await tick();assert.equal(root.hidden,false);assert.match(root.textContent,/불러오는 중/);
+ assert.equal(submitted.adminToken,'');assert.equal(submitted.guestToken,'');
+ receive({origin,source:parent,data:{channel:'nw-content',nonce:submitted.nonce,result:{ok:false,error:'인증 확인 필요'}}});await tick();
+ assert.equal(root.hidden,false);assert.equal(root.textContent,'인증 확인 필요');assert.equal(root.children.at(-1).tag,'button');
+ root.children.at(-1).onclick();await tick();
+ receive({origin:'https://script.googleusercontent.com',data:{channel:'nw-content',nonce:submitted.nonce,result:{ok:true,kind:'member',config:{enabled:true},wallet:{balance:1000,history:[]}}}});await tick();
+ assert.equal(root.children[0].textContent,'내 뉴트젬');assert.equal(root.children[1].textContent,'1,000 젬');
+ console.log('PASS popup relay, origin/source validation, visible loading/error/retry, member wallet rendering');
+})().catch(e=>{console.error(e);process.exitCode=1});
