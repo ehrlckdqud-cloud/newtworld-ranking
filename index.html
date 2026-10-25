@@ -1715,6 +1715,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 </style>
 <style>.nw-draw-picker .picker-card-space{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;background:#102034}.picker-space{background:radial-gradient(ellipse at 50% 110%,#214866,#070e20);height:100%;min-height:150px}.picker-space svg{display:block;width:100%;height:100%;max-height:190px}@media(max-width:600px){.nw-draw-picker .picker-card-space{grid-template-columns:1fr}.picker-space{height:150px}}</style>
+<script src="assets/newt-ui.js"></script>
 </head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
@@ -2377,6 +2378,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <h3>🔐 뉴트월드 관리자</h3>
     <p>관리자 전용 기능입니다. 계절 테마는 모든 방문자에게 공통 적용되며, 자동을 선택하면 3~5월 봄 · 6~8월 여름 · 9~11월 가을 · 12~2월 겨울로 전환됩니다.</p>
     <div class="nw-admin-actions"><button class="nw-admin-action" id="nwOpenEventBookAdmin" type="button"><b>🎁 월간 이벤트 사진 관리</b><br><small>월별 사진 업로드 · 순서 변경 · 삭제</small></button>
+      <button class="nw-admin-action" id="nwExportGameDefaults" type="button">게임 기본설정 내보내기</button>
       <a class="nw-admin-action" href="content-admin.html">포인트 · 외부 고객 관리</a>
       <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>음악 타임코드 수정 및 전체 적용</small></button>
 
@@ -2572,7 +2574,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   async function adminLoginAndOpen(){
     let token=sessionStorage.getItem('nwAdminToken')||'';
     if(token){openAdminHub();return;}
-    const pw=prompt('뉴트월드 관리자 비밀번호를 입력하세요.');if(!pw)return;
+    const pw=await window.NWUI.password();if(!pw)return;
     const hash=await sha256(pw);
     NWJsonp('adminLogin',{hash},d=>{
       if(d&&d.ok){sessionStorage.setItem('nwAdminToken',d.token);openAdminHub();}
@@ -3214,5 +3216,6 @@ window.NWConfigReady.then(function(){
  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(fit);
 })();
 </script>
+<script src="assets/game-defaults-export.js"></script>
 </body></html>
 
