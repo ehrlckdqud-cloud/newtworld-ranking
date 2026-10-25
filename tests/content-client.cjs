@@ -9,7 +9,7 @@ const status={ok:true,auth:true,memberId:'member:one',kind:'member',config:{enab
 (async()=>{
  next=p=>p.action==='contentStatus'?status:{ok:true};assert.equal(await api.start('marble'),true);assert.equal(confirmCount,1);assert.equal(calls.filter(x=>x.action==='contentStart').length,1);const start=calls.find(x=>x.action==='contentStart');assert.equal(start.token,'member');assert.ok(start.requestId);assert.equal(start.price,undefined);
  calls=[];assert.equal(await api.start('factory'),false);assert.equal(calls.some(x=>x.action==='contentStart'),false);
- calls=[];const key='nwPendingRun:member:one:marble';sessionStorage.setItem(key,'pending-retry-123456');assert.equal(await api.start('marble'),true);assert.equal(calls.find(x=>x.action==='contentStart').requestId,'pending-retry-123456');assert.equal(sessionStorage.getItem(key),null);
+ calls=[];const key='nwPendingRun:member:one:member:marble';sessionStorage.setItem(key,'pending-retry-123456');assert.equal(await api.start('marble'),true);assert.equal(calls.find(x=>x.action==='contentStart').requestId,'pending-retry-123456');assert.equal(sessionStorage.getItem(key),null);
  next=p=>p.action==='contentStatus'?status:{ok:false,error:'잔액 부족'};assert.equal(await api.start('marble'),false);assert.equal(sessionStorage.getItem(key),null);assert.equal(alerts.at(-1),'잔액 부족');
  localStorage.setItem('nwCustomerToken','guest');assert.equal(api.credentials().guestToken,'guest');assert.equal(listeners.length,0);
  console.log('Client POST transport, numeric price confirmation, restricted map deny, retry request identity, failure cleanup and guest credentials passed.');

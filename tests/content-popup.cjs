@@ -12,7 +12,7 @@ assert.equal(messages.length,1);assert.equal(messages[0].target,origin);
 relay({origin:'https://evil.test',data});assert.equal(messages.length,1);
 let receive,submitted,domReady;
 const root={hidden:true,textContent:'',children:[],replaceChildren(){this.children=[]},append(...c){this.children.push(...c)}};
-const doc={currentScript:{src:origin+'/newtworld-ranking/assets/content-access.js'},addEventListener:(t,f)=>domReady=f,getElementById:()=>root,head:{append(){}},body:{append(){}},
+const doc={currentScript:{src:origin+'/newtworld-ranking/assets/content-access.js'},addEventListener:(t,f)=>domReady=f,getElementById:()=>null,head:{append(){}},body:{append(){}},
  createElement(tag){return {tag,style:{},children:[],append(...x){this.children.push(...x)},prepend(x){this.children.unshift(x)},setAttribute(){},remove(){},submit(){submitted=JSON.parse(this.children[0].value)}}}};
 const window={parent,NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener:(t,f)=>{if(t==='message')receive=f},removeEventListener(){},dispatchEvent(){}};
 const storage={getItem:k=>k==='nwProfileToken'?'member-token':k==='nwProfileDevice'?'device':'',setItem(){}};
