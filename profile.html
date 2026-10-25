@@ -66,7 +66,7 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
       <div class="actions"><button class="btn danger" id="logoutBtn">이 기기 연결 해제</button></div>
     </section>
 
-    <section class="card section" id="nwWallet" hidden></section>
+    <section class="card section" id="nwWallet" role="status">뉴트젬을 불러오는 중…</section>
     <section class="grid5">
       <div class="card stat"><div class="k">현재 순위</div><div class="v" id="rank">-</div><div class="s" id="rankCaption">월간 활동왕 순위</div></div>
       <div class="card stat"><div class="k">이번 달 점수</div><div class="v" id="seasonScore">-</div><div class="s">시즌 점수</div></div>
@@ -368,7 +368,7 @@ window.NWConfigReady.then(()=>{
 })();
 });
 </script>
-<script src="assets/content-access.js"></script>
+<script src="assets/content-access.js?v=20261025-relay"></script>
 </body>
 </html>
 

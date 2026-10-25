@@ -2484,7 +2484,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(nwDrawLink){nwDrawLink.href='#draw';nwDrawLink.removeAttribute('target');nwDrawLink.setAttribute('aria-haspopup','dialog');nwDrawLink.addEventListener('click',e=>{e.preventDefault();openMemberDraw();});}
 
   // Apps Script HTML replies target top; forward only trusted AI replies to the embedded page.
-  window.addEventListener('message',e=>{if(/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin)&&['nw-ai','nw-avatar'].includes(e.data?.channel)&&typeof e.data.nonce==='string')frame.contentWindow?.postMessage(e.data,location.origin);});
+  window.addEventListener('message',e=>{if(/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin)&&['nw-ai','nw-avatar','nw-content'].includes(e.data?.channel)&&typeof e.data.nonce==='string')frame.contentWindow?.postMessage(e.data,location.origin);});
   document.getElementById('nwAiOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('ai.html','뉴트월드 전문 AI비서','#ai');});
   function closePage(fromPop=false){if(nwDrawRunning&&!confirm('추첨이 진행 중이에요. 중단하고 닫을까요?')){if(fromPop)history.pushState({nwPage:'#draw'},'','#draw');return;}if(/\/draw\/index\.html/.test(frame.src)){frame.src='about:blank';nwDrawRunning=false;}overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members','#ai','#draw'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
