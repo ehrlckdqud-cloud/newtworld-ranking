@@ -23,6 +23,9 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
 
 .avatar-loading,.avatar-loading-placeholder{background:linear-gradient(110deg,#15313c,#254b57,#15313c);background-size:200% 100%;animation:avatarLoad 1.5s ease-in-out infinite}.avatar-loading-placeholder{display:block;width:100%;height:100%;border-radius:inherit}@keyframes avatarLoad{to{background-position:-200% 0}}@media(prefers-reduced-motion:reduce){.avatar-loading,.avatar-loading-placeholder{animation:none}}
 .gem-line{display:flex;align-items:center;gap:9px;padding:12px 18px;margin:10px 0;font-size:16px;font-weight:650;line-height:1.4}.gem-icon{width:28px;height:28px;flex:none;filter:drop-shadow(0 2px 3px #001f1880)}#nwGemBalance{font-variant-numeric:tabular-nums;color:#b2f5dc}
+
+button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left;cursor:pointer}button.gem-line:hover,button.gem-line:focus-visible{border-color:var(--green);outline:2px solid #5fd0a166;outline-offset:2px}
+#gemHistoryDialog{width:min(520px,calc(100% - 28px));max-height:80dvh;padding:20px;border:1px solid #478b71;border-radius:18px;color:#eafff4;background:linear-gradient(160deg,#143b2b,#091d17);box-shadow:0 20px 70px #0009}#gemHistoryDialog::backdrop{background:#00130dbb}#gemHistoryDialog .history-head{display:flex;justify-content:space-between;align-items:center;gap:12px}#gemHistoryDialog h2{font-size:19px;margin:0}#gemHistoryList{padding:0;list-style:none}.gem-history-row{display:grid;grid-template-columns:1fr auto;gap:6px 14px;padding:13px 0;border-bottom:1px solid #34654c}.gem-history-row time{grid-column:1/-1;font-size:12px;color:#9ebead}.gem-history-row span{overflow-wrap:anywhere}.gem-history-row b{white-space:nowrap}.gem-credit{color:#88e7af}.gem-debit{color:#ffc39e}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -67,9 +70,9 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
       <div class="actions"><button class="btn danger" id="logoutBtn">이 기기 연결 해제</button></div>
     </section>
 
-    <section class="card gem-line" id="nwWallet" role="status">
+    <button type="button" class="card gem-line" id="nwWallet" aria-haspopup="dialog" aria-controls="gemHistoryDialog" aria-label="내 뉴트젬 이용 내역 보기">
       <img class="gem-icon" src="assets/newt-gem.svg" alt=""><span>내 뉴트젬 : <strong id="nwGemBalance">—</strong>젬</span>
-    </section>
+    </button>
     <section class="grid5">
       <div class="card stat"><div class="k">월간 · 누적 순위</div><div class="v" id="rank">-</div><div class="s" id="rankCaption">월간 활동왕 순위</div><div class="s" style="margin-top:8px">누적 <b id="lifetimeRank">—</b></div></div>
       <div class="card stat"><div class="k">이번 달 점수</div><div class="v" id="seasonScore">-</div><div class="s">시즌 점수</div></div>
@@ -118,6 +121,7 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
   </main>
   <div class="footer">뉴트월드 회원ID 기반 · 퇴장/강퇴 시 다음 집계 후 내 페이지 인증이 자동 비활성화됩니다.</div>
 </div>
+<dialog id="gemHistoryDialog" aria-labelledby="gemHistoryTitle"><div class="history-head"><h2 id="gemHistoryTitle">뉴트젬 이용 내역</h2><button type="button" class="btn" id="gemHistoryClose">닫기</button></div><p id="gemHistoryStatus" role="status"></p><ul id="gemHistoryList"></ul><button type="button" class="btn" id="gemHistoryRetry" hidden>다시 불러오기</button></dialog>
 <script>
 window.NWConfigReady.then(()=>{
 (()=>{
@@ -133,6 +137,22 @@ window.NWConfigReady.then(()=>{
   });}
 
   function device(){let d=localStorage.getItem('nwProfileDevice');if(!d){d=(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2))+'-'+Math.random().toString(36).slice(2);localStorage.setItem('nwProfileDevice',d);}return d;}
+  let gemHistoryRequest=0;
+  async function openGemHistory(){
+    const dialog=$('gemHistoryDialog');if(!dialog.open)dialog.showModal();
+    const request=++gemHistoryRequest,token=localStorage.getItem('nwProfileToken')||'';
+    $('gemHistoryList').replaceChildren();$('gemHistoryRetry').hidden=true;$('gemHistoryStatus').textContent='이용 내역을 불러오는 중…';
+    const result=await jsonp('contentStatus',{token,device:device()},30000);
+    if(request!==gemHistoryRequest||!dialog.open||token!==localStorage.getItem('nwProfileToken'))return;
+    if(!result?.ok||!result.wallet){$('gemHistoryStatus').textContent=result?.error||'이용 내역을 불러오지 못했어요.';$('gemHistoryRetry').hidden=false;return;}
+    const wallet=result.wallet,entries=(wallet.history||[]).slice().sort((a,b)=>Number(b.at)-Number(a.at));
+    $('nwGemBalance').textContent=fmt(wallet.balance);
+    $('gemHistoryStatus').textContent='현재 '+fmt(wallet.balance)+'젬 · '+(entries.length?'최근 '+entries.length+'건 (최대 50건)':'아직 이용 내역이 없습니다.');
+    for(const entry of entries){const row=document.createElement('li'),date=document.createElement('time'),note=document.createElement('span'),amount=document.createElement('b');row.className='gem-history-row';date.textContent=new Date(entry.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});note.textContent=entry.note||'뉴트젬 변경';amount.textContent=(entry.amount>0?'+':'')+fmt(entry.amount)+'젬';amount.className=entry.amount<0?'gem-debit':'gem-credit';row.append(date,note,amount);$('gemHistoryList').append(row);}
+  }
+  $('nwWallet').onclick=openGemHistory;$('gemHistoryRetry').onclick=openGemHistory;
+  $('gemHistoryClose').onclick=()=>$('gemHistoryDialog').close();
+  $('gemHistoryDialog').addEventListener('close',()=>{gemHistoryRequest++;$('gemHistoryList').replaceChildren();$('nwWallet').focus();});
   function show(id){['authView','pendingView','profileView'].forEach(x=>$(x).classList.toggle('hidden',x!==id));$('linkEntrySection').classList.toggle('hidden',id==='profileView');}
   $('closeBtn').onclick=()=>{if(window.parent!==window)window.parent.postMessage('nw-close-page','*');else history.back();};
   function openMemberHub(){location.href='members.html?v=2.18&_='+Date.now();}
@@ -375,4 +395,5 @@ window.NWConfigReady.then(()=>{
 <script src="assets/content-access.js?v=20261025-total-gem"></script>
 </body>
 </html>
+
 
