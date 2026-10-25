@@ -5,7 +5,7 @@ const doc={currentScript:{src:'https://example.test/assets/content-access.js'},a
 const window={NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener:(t,f)=>{if(t==='message')listeners.push(f);},removeEventListener:(t,f)=>listeners=listeners.filter(x=>x!==f),dispatchEvent(){}};
 const ctx={window,document:doc,URL,localStorage,sessionStorage,crypto,setTimeout,clearTimeout,queueMicrotask,CustomEvent:class{},confirm:()=>{confirmCount++;return true;},alert:s=>alerts.push(s)};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/../assets/content-access.js','utf8'),ctx);const api=window.NWContent;
-const status={ok:true,auth:true,memberId:'member:one',kind:'member',config:{enabled:true,games:{marble:{price:100,public:true},factory:{price:100,public:false}}}};
+const status={ok:true,auth:true,memberId:'member:one',kind:'member',config:{enabled:true,games:{marble:{price:20,public:true},factory:{price:100,public:false}}}};
 (async()=>{
  next=p=>p.action==='contentStatus'?status:{ok:true};assert.equal(await api.start('marble'),true);assert.equal(confirmCount,1);assert.equal(calls.filter(x=>x.action==='contentStart').length,1);const start=calls.find(x=>x.action==='contentStart');assert.equal(start.token,'member');assert.ok(start.requestId);assert.equal(start.price,undefined);
  calls=[];assert.equal(await api.start('factory'),false);assert.equal(calls.some(x=>x.action==='contentStart'),false);
