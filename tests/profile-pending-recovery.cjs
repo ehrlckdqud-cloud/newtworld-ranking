@@ -4,7 +4,7 @@ const start=html.indexOf('  async function loadProfile(){'),end=html.indexOf('  
 assert(start>0&&end>start);
 async function test(initial,recover,response){
  const state=new Map(Object.entries(initial)),calls=[],elements=new Map();
- const ctx={localStorage:{getItem:k=>state.get(k)||null,setItem:(k,v)=>state.set(k,v),removeItem:k=>state.delete(k)},coreCacheKey:'cache',avatarEditVersion:0,ownProfile:null,device:()=> 'same-device',
+ const ctx={window:{dispatchEvent(){}},Event:class{constructor(type){this.type=type;}},localStorage:{getItem:k=>state.get(k)||null,setItem:(k,v)=>state.set(k,v),removeItem:k=>state.delete(k)},coreCacheKey:'cache',avatarEditVersion:0,ownProfile:null,device:()=> 'same-device',
   $:id=>{if(!elements.has(id))elements.set(id,{textContent:'',classList:{remove(){}}});return elements.get(id);},
   recoverExisting:async()=>{calls.push('recover');if(recover){state.set('nwProfileToken','restored');state.delete('nwProfileRequestId');state.delete('nwProfileCode');}return recover;},
   jsonp:async()=>{calls.push('data');return response;},show:v=>calls.push(v),loadCandidates:()=>calls.push('candidates'),renderPending:()=>calls.push('pending'),check:()=>calls.push('check'),saveCoreCache(){},clearCoreCache(){},renderProfile:()=>calls.push('profile'),loadProfileExtras(){},loadEditableProfile(){}};

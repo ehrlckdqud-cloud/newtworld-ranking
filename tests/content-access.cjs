@@ -1,0 +1,14 @@
+const fs=require('node:fs'),assert=require('node:assert/strict'),{chromium}=require('playwright');
+(async()=>{const browser=await chromium.launch({headless:true});const page=await browser.newPage({viewport:{width:1100,height:900}});let saves=[];
+const cfg={enabled:true,welcome:1000,contact:'문의 예시',games:{marble:{price:100,public:true},factory:{price:100,public:false},pond:{price:100,public:false},space:{price:100,public:false}}};
+await page.route('**/assets/content-access.js',r=>r.fulfill({contentType:'text/javascript',body:`window.NWContent={call:async(action,p={})=>{window.testSaves=(window.testSaves||[]);if(action==='contentAdminSave')window.testSaves.push(p);return {ok:true,config:${JSON.stringify(cfg)},customers:[{id:'guest:1',name:'고객 A',email:'a@example.test',mode:'uses',remaining:10,games:['marble']}]}},status:async()=>({ok:true,kind:'guest',config:${JSON.stringify(cfg)},customer:{name:'고객 A',mode:'uses',remaining:10,games:['marble']}})};`}));
+await page.goto('http://localhost:8765/content-admin.html');await page.locator('#adminBody').waitFor({state:'visible'});
+await page.selectOption('#customer [name=id]','guest:1');await page.selectOption('#customer [name=mode]','uses');await page.fill('#customer [name=quantity]','7');page.on('dialog',d=>d.accept());await page.click('#customer button');await page.waitForFunction(()=>window.testSaves?.length===1);saves=await page.evaluate(()=>testSaves);assert.equal(saves[0].quantity,7);assert.equal(saves[0].mode,'uses');assert.equal(saves[0].id,'guest:1');
+assert.equal(await page.locator('#settings').textContent().then(s=>s.includes('관리자 전용')),true);
+await page.goto('http://localhost:8765/customer.html');await page.locator('#games a').waitFor();assert.match(await page.locator('#details').textContent(),/10회/);assert.equal(await page.locator('#games a').count(),1);
+await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+await browser.close();
+const base=__dirname+'/../';
+for(const [file,needle]of [['draw/gameApp.321153b3.js','NWContent.start('],['draw/pondApp.e4104cc4.js','NWContent.start("pond"'],['draw/space-original.js','await startAccess()']])assert.ok(fs.readFileSync(base+file,'utf8').includes(needle));
+console.log('Admin numeric allowance, customer isolation UI, mobile layout, all start hooks: passed (mock API).');
+})().catch(e=>{console.error(e);process.exit(1);});
