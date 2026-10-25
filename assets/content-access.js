@@ -27,10 +27,6 @@
  }
  window.NWContent={call,status,start,credentials,base,get account(){return lastStatus?.memberId||'unknown';},async access(){try{return await status();}catch(e){return {ok:false,error:e.message};}}};
  document.addEventListener('DOMContentLoaded',()=>{
-  if(document.getElementById('nwWallet')){
-   async function render(){const root=document.getElementById('nwWallet');root.hidden=false;root.textContent='뉴트젬을 불러오는 중…';try{const r=await call('contentStatus',{guestToken:'',adminToken:''});if(!r.ok||r.kind!=='member')throw Error(r.error||'회원식별 후 뉴트젬을 확인할 수 있어요.');root.replaceChildren();const h=document.createElement('h3');h.textContent='내 뉴트젬';const gem=document.createElement('span');gem.setAttribute('aria-hidden','true');gem.style.cssText='display:inline-block;width:20px;height:20px;margin-right:9px;vertical-align:-3px;background:linear-gradient(135deg,#a7f3d0 0%,#34d399 40%,#059669 65%,#064e3b 100%);clip-path:polygon(25% 0,75% 0,100% 35%,50% 100%,0 35%)';h.prepend(gem);const b=document.createElement('strong');b.textContent=Number(r.wallet.balance).toLocaleString()+' 젬';const note=document.createElement('p');note.textContent=r.config.enabled?'랭킹 점수는 유지되고 콘텐츠 이용 시 뉴트젬만 차감됩니다.':'뉴트젬 서비스 준비 중';const list=document.createElement('ul');for(const x of (r.wallet.history||[]).slice(0,10)){const li=document.createElement('li');li.textContent=new Date(x.at).toLocaleDateString('ko-KR')+' · '+x.note+' · '+(x.amount>0?'+':'')+x.amount+' 젬';list.append(li);}root.append(h,b,note,list);}catch(e){root.hidden=false;root.textContent=e.message;const retry=document.createElement('button');retry.type='button';retry.className='btn';retry.textContent='뉴트젬 다시 불러오기';retry.onclick=render;root.append(retry);}}
-   render();window.addEventListener('nw-wallet-updated',render);window.addEventListener('focus',render);
-  }
   if(location.pathname.includes('/draw/')){const footer=document.createElement('div');footer.style.cssText='position:fixed;bottom:8px;right:12px;font-size:12px;z-index:30;color:#a9c8ba';status().then(r=>{if(r.ok&&r.config.contact){footer.textContent='이용 문의: '+r.config.contact;document.body.append(footer);}}).catch(()=>{});}
  });
 })();
