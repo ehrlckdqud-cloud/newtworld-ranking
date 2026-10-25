@@ -1985,6 +1985,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <div class="section-title"><div><h2 id="nwRankingTitle">📊 활동왕 실시간 순위</h2><small id="nwRankingAsOf">집계 기준일 확인 중…</small></div></div>
 <div class="controls">
 <input id="q" placeholder="닉네임 / 회원ID 검색"/>
+<select id="scoreBasis" aria-label="랭킹 점수 기준"><option value="season">월간점수</option><option value="lifetime">누적점수</option></select>
 <select id="limit"><option value="all">전체 회원</option><option selected="" value="40">TOP 40</option><option value="20">TOP 20</option><option value="10">TOP 10</option><option value="staff">운영진</option></select>
 <button class="active" id="allBtn">전체</button>
 <button id="gradedBtn">등급 보유자</button>
@@ -2206,37 +2207,40 @@ function memberBadge(score){const idx=badgeIndexFor(score),unlocked=unlockState(
 function rankingAvatarSlot(member,mobile=false){return `<span class="nw-ranking-avatar-slot ${mobile?'nw-ranking-avatar-mobile':''}" data-ranking-avatar="${encodeURIComponent(member.memberId||'')}" ${mobile?'hidden':''}>${mobile?'':'—'}</span>`;}
 function renderRanking(){
   const q=document.getElementById('q').value.trim().toLowerCase(),limitVal=document.getElementById('limit').value;
-  const members=DATA.filter(x=>!isStaff(x));
+  const lifetime=document.getElementById('scoreBasis').value==='lifetime',scoreField=lifetime?'lifetimeTotal':'seasonTotal';
+  const sorted=DATA.filter(x=>!isStaff(x)&&x[scoreField]>0).slice().sort((a,b)=>b[scoreField]-a[scoreField]||a.rank-b.rank);
+  const members=sorted.map(x=>({...x,viewRank:lifetime?1+sorted.filter(y=>y.lifetimeTotal>x.lifetimeTotal).length:x.rank}));
   const staff=DATA.filter(isStaff);
   let list;
   if(limitVal==='staff'){
     list=staff.filter(x=>[x.name,x.prevName,x.memberId].some(v=>String(v||'').toLowerCase().includes(q)));
   }else{
     const lim=limitVal==='all'?Infinity:Number(limitVal);
-    list=members.filter(x=>x.rank<=lim&&[x.name,x.prevName,x.memberId].some(v=>String(v||'').toLowerCase().includes(q)));
+    list=members.filter(x=>x.viewRank<=lim&&[x.name,x.prevName,x.memberId].some(v=>String(v||'').toLowerCase().includes(q)));
   }
   if(gradedOnly)list=list.filter(x=>badgeIndexFor(x.lifetimeTotal)>=0);
   const max=list.length?Math.max(...list.map(x=>x.seasonTotal),1):1;
   const maxLifetime=list.length?Math.max(...list.map(x=>x.lifetimeTotal),1):1;
   document.getElementById('tb').innerHTML=list.map(x=>{
-    const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    const rowClass=staffMode?'':(x.rank<=10?'top10':x.rank<=20?'top20':'');
-    return `<tr class="${rowClass}" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><td class="rank">${firstCell}</td><td class="ranking-photo-col">${rankingAvatarSlot(x)}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}${rankMovementBadge(x)}</td><td class="verification-col">${window.NWMemberVerificationHTML(x.memberId)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td class="lifetime-total">${fmt(x.lifetimeTotal)}<div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></td></tr>`;
+    const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.viewRank+'위';
+    const rowClass=staffMode?'':(x.viewRank<=10?'top10':x.viewRank<=20?'top20':'');
+    return `<tr class="${rowClass}" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><td class="rank">${firstCell}</td><td class="ranking-photo-col">${rankingAvatarSlot(x)}</td><td>${memberBadge(x.lifetimeTotal)}</td><td class="name"><span>[${x.name}]</span>${staffStar(x)}${lifetime?'':rankMovementBadge(x)}</td><td class="verification-col">${window.NWMemberVerificationHTML(x.memberId)}</td><td class="detail-col">${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}</td><td>${x.date}</td><td>${fmt(x.chat)}</td><td>${fmt(x.photo)}</td><td>${fmt(x.video)}</td><td>${x.intro||'-'}</td><td>${x.attendance||'-'}</td><td class="total">${fmt(x.seasonTotal)}<div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div></td><td class="lifetime-total">${fmt(x.lifetimeTotal)}<div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></td></tr>`;
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
-    const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.rank+'위';
-    return `<div class="card" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적점수 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></div></div>`;
+    const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.viewRank+'위';
+    return `<div class="card" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${lifetime?'':rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">${lifetime?'누적 ':'월간 '}${fmt(x[scoreField])}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적점수 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div></div></div>`;
   }).join('');
   window.NWPaintRankingAvatars?.();
-  const top=members[0]||{name:'-',seasonTotal:0};
-  document.getElementById('leader').textContent=top.name+' · '+fmt(top.seasonTotal)+'점';
-  document.getElementById('cut10').textContent=members[9]?fmt(members[9].seasonTotal)+'점':'-';
-  document.getElementById('cut20').textContent=members[19]?fmt(members[19].seasonTotal)+'점':'-';
+  const top=members[0]||{name:'-',seasonTotal:0,lifetimeTotal:0};
+  document.getElementById('leader').textContent=top.name+' · '+fmt(top[scoreField])+'점';
+  document.getElementById('cut10').textContent=members[9]?fmt(members[9][scoreField])+'점':'-';
+  document.getElementById('cut20').textContent=members[19]?fmt(members[19][scoreField])+'점':'-';
   document.getElementById('memberCount').textContent=fmt(DATA.length)+'명';
 }
 function renderAll(){renderBadgeLadder();renderRanking();}
 document.getElementById('q').oninput=renderRanking;
 document.getElementById('limit').onchange=renderRanking;
+document.getElementById('scoreBasis').onchange=renderRanking;
 document.getElementById('allBtn').onclick=()=>{gradedOnly=false;allBtn.classList.add('active');gradedBtn.classList.remove('active');renderRanking();};
 document.getElementById('gradedBtn').onclick=()=>{gradedOnly=true;gradedBtn.classList.add('active');allBtn.classList.remove('active');renderRanking();};
 document.getElementById('refreshBtn')?.addEventListener('click',()=>loadSheet(DEFAULT_SHEET_URL,false));

@@ -1,13 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict'),crypto=require('crypto');
-const source=fs.readFileSync(__dirname+'/../assets/content-access.js','utf8');
-async function run(owner){
- let ready,posted=[],urls=[],button={hidden:true,setAttribute(){},textContent:''},window;
- const storage={getItem:k=>k==='nwProfileToken'?'owner':k==='nwProfileDevice'?'device':k==='nwAdminToken'?'global-admin':'',setItem(){},removeItem(){}};
- const doc={currentScript:{src:'https://example.test/assets/content-access.js'},addEventListener:(type,f)=>ready=f,getElementById:id=>id==='nwGameAdminMode'?button:null,createElement:tag=>({style:{},remove(){}}),head:{append(s){urls.push(s.src);const u=new URL(s.src),nonce=u.searchParams.get('nonce'),p=posted.find(p=>p.nonce===nonce);assert(p);assert.equal(u.searchParams.get('token'),null);queueMicrotask(()=>window[u.searchParams.get('callback')]({done:true,result:{ok:true,kind:'member',memberId:'member:NW0001',canUseGameAdmin:owner,config:{games:{marble:{public:true,price:20}},enabled:true}}}));}},body:{append(){throw Error('iframe should not be used when fetch exists')}}};
- window={NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener(){},removeEventListener(){},dispatchEvent(){}};
- const ctx={window,document:doc,location:{origin:'https://example.test',pathname:'/draw/index.html'},localStorage:storage,sessionStorage:storage,Event:class{},URL,URLSearchParams,crypto,fetch:async(url,opt)=>{assert.equal(opt.mode,'no-cors');posted.push(JSON.parse(opt.body.get('payload')));},setTimeout:(f,ms)=>setTimeout(f,ms===1000?0:ms),clearTimeout};
- vm.runInNewContext(source,ctx);ready();await new Promise(r=>setTimeout(r,30));
- assert.equal(button.hidden,!owner);assert.equal(button.textContent,'관리자모드');
- assert(posted.length>0);assert(posted.every(p=>p.adminToken===''));assert(urls.every(u=>u.includes('contentReceipt')));
-}
-(async()=>{await run(true);await run(false);console.log('PASS POST receipt polling without iframe, no credential query strings, owner-only button, global admin ignored');})().catch(e=>{console.error(e);process.exitCode=1});
+const code=fs.readFileSync(__dirname+'/../assets/content-access.js','utf8');let posted=[],queried=[],timerJobs=[];
+const storage={getItem:k=>k==='nwProfileToken'?'member':k==='nwProfileDevice'?'device':'',setItem(){},removeItem(){}};
+let window;const doc={currentScript:{src:'https://example.test/assets/content-access.js'},addEventListener(){},getElementById:()=>null,body:{append(){}},head:{append(script){const p=Object.fromEntries(new URL(script.src).searchParams);queried.push(p);queueMicrotask(()=>window[p.callback](p.action==='contentStatus'?{ok:true,kind:'member'}:{done:true,result:{ok:true,remaining:2}}));}},createElement(tag){return{children:[],remove(){},append(x){this.children.push(x)},submit(){posted.push(JSON.parse(this.children[0].value));}}}};
+window={NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener(){},removeEventListener(){},dispatchEvent(){}};
+vm.runInNewContext(code,{window,document:doc,localStorage:storage,sessionStorage:storage,URL,URLSearchParams,crypto,Event:class{},setTimeout:(f,ms)=>setTimeout(f,ms===1000?0:ms),clearTimeout,fetch:()=>{throw Error('fetch must not gate entry or writes')}});
+(async()=>{const api=window.NWContent;assert.equal((await api.status()).ok,true);assert.equal(posted.length,0);assert.equal(queried[0].action,'contentStatus');assert.equal((await api.call('contentAdminSave',{operation:'customer'})).remaining,2);assert.equal(posted.length,1);assert(queried.some(p=>p.action==='contentReceipt'&&!p.token));console.log('PASS JSONP entry, form POST mutation and nonce receipt independent of fetch');})().catch(e=>{console.error(e);process.exitCode=1});
