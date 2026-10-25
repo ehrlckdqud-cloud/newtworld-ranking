@@ -3,7 +3,7 @@ const store=()=>{const m=new Map;return {getItem:k=>m.get(k)||null,setItem:(k,v)
 let listeners=[],calls=[],next,alerts=[],confirmCount=0;const localStorage=store(),sessionStorage=store();localStorage.setItem('nwProfileToken','member');
 const doc={currentScript:{src:'https://example.test/assets/content-access.js'},addEventListener(){},head:{append(){}},body:{append(){}},createElement(tag){return {tag,children:[],append(x){this.children.push(x);},remove(){},submit(){const p=JSON.parse(this.children[0].value);calls.push(p);queueMicrotask(()=>{const result=next(p);const event={origin:'https://script.googleusercontent.com',data:{channel:'nw-content',nonce:p.nonce,result}};for(const cb of [...listeners])cb(event);});}};}};
 const window={NW_CONFIG:{appScriptUrl:'https://script.google.com/macros/s/test/exec'},addEventListener:(t,f)=>{if(t==='message')listeners.push(f);},removeEventListener:(t,f)=>listeners=listeners.filter(x=>x!==f),dispatchEvent(){}};
-const ctx={window,document:doc,URL,localStorage,sessionStorage,crypto,setTimeout,clearTimeout,queueMicrotask,CustomEvent:class{},confirm:()=>{confirmCount++;return true;},alert:s=>alerts.push(s)};
+const ctx={window,document:doc,location:{origin:'https://example.test'},URL,localStorage,sessionStorage,crypto,setTimeout,clearTimeout,queueMicrotask,CustomEvent:class{},confirm:()=>{confirmCount++;return true;},alert:s=>alerts.push(s)};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/../assets/content-access.js','utf8'),ctx);const api=window.NWContent;
 const status={ok:true,auth:true,memberId:'member:one',kind:'member',config:{enabled:true,games:{marble:{price:20,public:true},factory:{price:100,public:false}}}};
 (async()=>{
