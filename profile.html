@@ -68,22 +68,10 @@ window.NWConfigReady=new Promise(resolve=>{const s=document.createElement('scrip
     </section>
 
     <section class="card gem-line" id="nwWallet" role="status">
-      <svg class="gem-icon" viewBox="0 0 40 40" aria-hidden="true"><defs>
-        <linearGradient id="gemBody" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#91f5d1"/><stop offset=".48" stop-color="#21b990"/><stop offset="1" stop-color="#08745f"/></linearGradient>
-        <linearGradient id="gemFace" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#ddfff0"/><stop offset="1" stop-color="#49d5a6"/></linearGradient>
-      </defs>
-      <path d="M11 5h18l8 11-17 21L3 16Z" fill="url(#gemBody)" stroke="#65d7b6" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="m11 5 4 11H3Zm18 0-4 11h12Z" fill="#0c8e74" opacity=".65"/>
-      <path d="m11 5 4 11h10l4-11Z" fill="url(#gemFace)"/>
-      <path d="m15 16 5 21L3 16Z" fill="#2abc93"/>
-      <path d="m25 16-5 21 17-21Z" fill="#04634f" opacity=".7"/>
-      <path d="m15 16 5 21 5-21Z" fill="#6be4b4" opacity=".7"/>
-      <path d="M4 16h32M11 5l4 11 5 20 5-20 4-11" fill="none" stroke="#d7fff0" stroke-opacity=".5" stroke-width=".8" stroke-linejoin="round"/>
-      <path d="m9 10 2-3h7" fill="none" stroke="#effff7" stroke-width="1.4" stroke-linecap="round"/>
-      </svg><span>내 뉴트젬 : <strong id="nwGemBalance">—</strong>젬</span>
+      <img class="gem-icon" src="assets/newt-gem.svg" alt=""><span>내 뉴트젬 : <strong id="nwGemBalance">—</strong>젬</span>
     </section>
     <section class="grid5">
-      <div class="card stat"><div class="k">현재 순위</div><div class="v" id="rank">-</div><div class="s" id="rankCaption">월간 활동왕 순위</div></div>
+      <div class="card stat"><div class="k">월간 · 누적 순위</div><div class="v" id="rank">-</div><div class="s" id="rankCaption">월간 활동왕 순위</div><div class="s" style="margin-top:8px">누적 <b id="lifetimeRank">—</b></div></div>
       <div class="card stat"><div class="k">이번 달 점수</div><div class="v" id="seasonScore">-</div><div class="s">시즌 점수</div></div>
       <div class="card stat"><div class="k">누적 점수</div><div class="v" id="lifetimeScore">-</div><div class="s">영구 누적</div></div>
       <div class="card stat"><div class="k">출석 횟수</div><div class="v" id="attendance">-</div><div class="s">선택 월 기준</div></div>
@@ -244,7 +232,8 @@ window.NWConfigReady.then(()=>{
     $('nicknameView').textContent=(p.nickname||'')+(staff?' ⭐':'');
     $('rank').textContent=staff||(p.rank?('#'+p.rank):'-');
     $('rank').dataset.staff=staff?'true':'false';
-    $('rankCaption').textContent=staff?'운영진 직책':'월간 활동왕 순위';
+    $('rankCaption').textContent=staff?'운영진 · 순위 제외':'월간 활동왕 순위';
+    $('lifetimeRank').textContent=staff?'순위 제외':p.lifetimeRank>0?p.lifetimeRank+'위':'—';
   }
   function renderProfile(p,cached=false){const level=window.NWGrades.levels[window.NWGrades.index(p.lifetimeScore)];p={...p,grade:level?level.name:'미획득',nextGrade:window.NWGrades.next(p.lifetimeScore)};ownProfile=p;$('nwGemBalance').textContent=Number.isFinite(p.gemBalance)?fmt(p.gemBalance):'—';avatarImmediate(p,cached);show('profileView');$('memberId').textContent=p.memberId;renderProfileIdentity(p);$('firstJoin').textContent=p.firstJoin||'-';$('seasonScore').textContent=fmt(p.seasonScore)+'점';$('lifetimeScore').textContent=fmt(p.lifetimeScore)+'점';$('attendance').textContent=fmt(p.attendanceCount)+'회';$('workout').textContent=p.workoutCount==null?'불러오는 중…':fmt(p.workoutCount)+'회';$('grade').textContent=p.grade||'미획득';const badge=$('gradeBadge'),src=GRADE_IMG[p.grade]||'';if(src){badge.src=src;badge.style.display='block';badge.alt=(p.grade||'')+' 등급 배지';}else{badge.removeAttribute('src');badge.style.display='none';}const ng=p.nextGrade||{};$('gradeBar').style.width=(ng.progress||0)+'%';$('nextGradeText').textContent=ng.remaining>0?'다음 '+ng.name+'까지 '+fmt(ng.remaining)+'점 남았습니다.':'최고 등급 달성';$('nextRemain').textContent=ng.remaining>0?fmt(ng.remaining)+'점':'달성';$('goalGrade').style.width=(ng.progress||0)+'%';$('goalAttendance').textContent=p.attendanceCount+'/20회';$('goalAttendanceBar').style.width=Math.min(100,p.attendanceCount/20*100)+'%';if(p.workoutCount!=null){$('goalWorkout').textContent=p.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,p.workoutCount/10*100)+'%';}renderActivity(p);renderHistory(p.rankHistory||[]);renderRecent(p);if(!cached){loadEditableProfile(p.memberProfile||null);}}
   function renderActivity(p){const pts=[['채팅',p.chat||0,'#6ab6ff'],['사진',(p.photo||0)*5,'#ffc64d'],['영상',(p.video||0)*10,'#a26cff'],['소개',(p.intro||0)*500,'#62d3b1'],['출석',(p.attendance||0)*50,'#ef6e9b']];const total=Math.max(1,pts.reduce((a,x)=>a+x[1],0));let a=0,stops=[];pts.forEach(x=>{const b=a+x[1]/total*100;stops.push(`${x[2]} ${a}% ${b}%`);a=b});$('donut').style.background='conic-gradient('+stops.join(',')+')';$('donutTotal').textContent=fmt(p.seasonScore)+'점';$('legend').innerHTML=pts.map(x=>`<span><i style="color:${x[2]}">● ${x[0]}</i><b>${Math.round(x[1]/total*100)}% (${fmt(x[1])}점)</b></span>`).join('');}

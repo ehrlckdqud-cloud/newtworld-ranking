@@ -32,6 +32,6 @@ const tick=()=>new Promise(r=>setImmediate(r));
  vm.runInNewContext(assignment,display);assert.equal(balance.textContent,'5,755');
  display.p.gemBalance=null;vm.runInNewContext(assignment,display);assert.equal(balance.textContent,'—','unknown balance never displays zero');
  const card=html.match(/<section class="card gem-line"[\s\S]*?<\/section>/)[0];
- assert.ok(card.includes('내 뉴트젬 : '));assert.ok(!/<(?:p|ul|h3)\b/.test(card));assert.ok(card.includes('linearGradient'));assert.ok(card.includes('stroke='));
+ assert.ok(card.includes('내 뉴트젬 : '));assert.ok(!/<(?:p|ul|h3)\b/.test(card));assert.ok(card.includes('assets/newt-gem.svg'));
  console.log('PASS popup validation, no wallet iframe, profile response balance and compact gem row');
 })().catch(e=>{console.error(e);process.exitCode=1});
