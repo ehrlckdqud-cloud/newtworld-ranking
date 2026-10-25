@@ -20,7 +20,7 @@ const ctx={window,document:doc,location:{origin,pathname:'/newtworld-ranking/pro
 vm.runInNewContext(source,ctx);
 const tick=()=>new Promise(r=>setImmediate(r));
 (async()=>{
- let settled=false;const p=window.NWContent.call('contentStatus').then(r=>{settled=true;return r});await tick();
+ let settled=false;const p=window.NWContent.call('contentAdminList').then(r=>{settled=true;return r});await tick();
  const msg={channel:'nw-content',nonce:submitted.nonce,result:{ok:true}};
  receive({origin,source:{},data:msg});await tick();assert.equal(settled,false,'unrelated same-origin window rejected');
  receive({origin:'https://evil.test',source:parent,data:msg});await tick();assert.equal(settled,false);
