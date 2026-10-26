@@ -1721,6 +1721,30 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <script src="assets/newt-ui.js"></script>
 <style>.card-head-right{flex-wrap:wrap}.nw-ranking-avatar-mobile.nw-ranking-avatar-missing{width:auto;height:auto;flex:0 0 100%;order:5;font-size:10px;white-space:nowrap;justify-items:end;color:#8da8ba}</style>
 <style>.card .card-score,.card .card-lifetime-text{display:block;font-size:20px;font-weight:800;line-height:1.4;margin:8px 0}.lifetime-breakdown{font-size:12px;color:#9bb4c5;line-height:1.7;white-space:normal}.lifetime-details summary{cursor:pointer}.lifetime-details[open]{min-width:180px}</style>
+<style>
+@media(min-width:721px){
+ .table-wrap{overflow-x:auto}
+ .table-wrap table{min-width:1350px;width:100%;table-layout:fixed}
+ .table-wrap th:nth-child(1),.table-wrap td:nth-child(1){width:60px}
+.table-wrap th:nth-child(2),.table-wrap td:nth-child(2){width:64px}
+.table-wrap th:nth-child(3),.table-wrap td:nth-child(3){width:150px}
+.table-wrap th:nth-child(4),.table-wrap td:nth-child(4){width:140px}
+.table-wrap th:nth-child(5),.table-wrap td:nth-child(5){width:86px}
+.table-wrap th:nth-child(6),.table-wrap td:nth-child(6){width:75px}
+.table-wrap th:nth-child(7),.table-wrap td:nth-child(7){width:90px}
+.table-wrap th:nth-child(8),.table-wrap td:nth-child(8){width:60px}
+.table-wrap th:nth-child(9),.table-wrap td:nth-child(9){width:55px}
+.table-wrap th:nth-child(10),.table-wrap td:nth-child(10){width:55px}
+.table-wrap th:nth-child(11),.table-wrap td:nth-child(11){width:50px}
+.table-wrap th:nth-child(12),.table-wrap td:nth-child(12){width:50px}
+.table-wrap th:nth-child(13),.table-wrap td:nth-child(13){width:105px}
+.table-wrap th:nth-child(14),.table-wrap td:nth-child(14){width:210px}
+ .table-wrap td.lifetime-total{white-space:normal;overflow:visible;text-overflow:clip}
+ .table-wrap .lifetime-details[open]{min-width:0}
+ .table-wrap .lifetime-breakdown{overflow-wrap:anywhere;white-space:normal;line-height:1.8}
+}
+@media(min-width:1250px){.table-wrap{width:min(1380px,calc(100vw - 48px));max-width:none;position:relative;left:50%;transform:translateX(-50%)}}
+</style>
 </head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
@@ -1990,7 +2014,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <div class="section-title"><div><h2 id="nwRankingTitle">📊 활동왕 실시간 순위</h2><small id="nwRankingAsOf">집계 기준일 확인 중…</small></div></div>
 <div class="controls">
 <input id="q" placeholder="닉네임 / 회원ID 검색"/>
-<select id="scoreBasis" aria-label="랭킹 점수 기준"><option value="season">월간점수</option><option value="lifetime">누적점수</option></select>
+<select id="scoreBasis" aria-label="랭킹 점수 기준"><option value="season">월간점수</option><option value="lifetime">누적</option></select>
 <select id="limit"><option value="all">전체 회원</option><option selected="" value="40">TOP 40</option><option value="20">TOP 20</option><option value="10">TOP 10</option><option value="staff">운영진</option></select>
 <button class="active" id="allBtn">전체</button>
 <button id="gradedBtn">등급 보유자</button>
@@ -2004,7 +2028,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 </div>
 <div class="table-wrap">
 <table>
-<thead><tr><th>순위</th><th class="ranking-photo-head">대표사진</th><th>등급</th><th>이름</th><th class="verification-col-head">회원 인증</th><th class="detail-col-head">상세</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적점수</th></tr></thead>
+<thead><tr><th>순위</th><th class="ranking-photo-head">대표사진</th><th>등급</th><th>이름</th><th class="verification-col-head">회원 인증</th><th class="detail-col-head">상세</th><th>최초 입장일</th><th>채팅</th><th>사진</th><th>영상</th><th>소개</th><th>출석</th><th>10월 총점</th><th>누적</th></tr></thead>
 <tbody id="tb"></tbody>
 </table>
 </div>
@@ -2235,7 +2259,7 @@ function renderRanking(){
   }).join('');
   document.getElementById('cards').innerHTML=list.map(x=>{
     const staffMode=isStaff(x), firstCell=staffMode?roleOf(x):x.viewRank+'위';
-    return `<div class="card" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${lifetime?'':rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">월간 ${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적점수 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div><div class="lifetime-breakdown">${lifetimeCountsText(x)}</div></div></div>`;
+    return `<div class="card" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${lifetime?'':rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">월간 ${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div><div class="lifetime-breakdown">${lifetimeCountsText(x)}</div></div></div>`;
   }).join('');
   window.NWPaintRankingAvatars?.();
   const top=members[0]||{name:'-',seasonTotal:0,lifetimeTotal:0};
