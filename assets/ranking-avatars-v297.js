@@ -28,8 +28,8 @@
   identity();if(metaUntil&&Date.now()>=metaUntil)meta.clear();if(observer)observer.disconnect();
   document.querySelectorAll('[data-ranking-avatar]').forEach(slot=>{
    const id=decodeURIComponent(slot.dataset.rankingAvatar),m=meta.get(id);
-   if(!m){slot.hidden=slot.classList.contains('nw-ranking-avatar-mobile');slot.classList.remove('nw-ranking-avatar-loading');slot.replaceChildren();if(!slot.hidden)slot.textContent='미등록';return;}
-   slot.hidden=false;const src=source(id,m.ref);
+   if(!m){slot.hidden=false;slot.classList.add('nw-ranking-avatar-missing');slot.classList.remove('nw-ranking-avatar-loading');slot.replaceChildren();slot.textContent=slot.classList.contains('nw-ranking-avatar-mobile')?'대표사진 미등록':'미등록';return;}
+   slot.hidden=false;slot.classList.remove('nw-ranking-avatar-missing');const src=source(id,m.ref);
    if(src){
     const old=slot.querySelector('img');if(old?.getAttribute('src')===src)return;
     const button=document.createElement('button');button.type='button';button.className='nw-ranking-avatar-button';button.dataset.rankingPhoto=id;button.setAttribute('aria-label',m.name+' 대표사진 확대');
