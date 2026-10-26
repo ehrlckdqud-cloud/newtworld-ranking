@@ -542,6 +542,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 .community-quick .quick-link{min-height:86px}
 @media(min-width:760px){.community-quick{grid-template-columns:repeat(2,minmax(0,1fr))}.community-quick .quick-link{grid-column:auto}}
 .nw-app-overlay{position:fixed;inset:0;z-index:99995;background:rgba(2,8,12,.93);backdrop-filter:blur(10px);display:none}.nw-app-overlay.open{display:block}.nw-app-shell{position:absolute;inset:14px;max-width:1180px;margin:auto;border:1px solid #294b5d;border-radius:22px;overflow:hidden;background:#071018;box-shadow:0 28px 80px rgba(0,0,0,.55)}.nw-app-topbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#0b1922;border-bottom:1px solid #203947}.nw-app-close{border:1px solid #35586a;background:#10232d;color:#eff8ff;border-radius:11px;padding:8px 12px;font-weight:800;cursor:pointer}.nw-app-frame{width:100%;height:calc(100% - 54px);border:0;display:block;background:#071018}@media(max-width:700px){.nw-app-shell{inset:0;border-radius:0}.nw-app-topbar{height:50px}.nw-app-frame{height:calc(100% - 50px)}}
+#nwAdminLoginBtn[hidden]{display:none!important}
 #nwAdminLoginBtn{position:fixed;left:12px;bottom:12px;z-index:99980;border:1px solid #315264;background:rgba(8,24,33,.93);color:#9ebcca;border-radius:10px;padding:7px 9px;font-size:10px;cursor:pointer}
 #nwMyPageBtn{position:fixed;left:84px;bottom:12px;z-index:99980;border:1px solid #315264;background:rgba(8,24,33,.93);color:#d8eef7;border-radius:10px;padding:7px 9px;font-size:10px;cursor:pointer;box-shadow:0 8px 26px rgba(0,0,0,.18);transition:.18s transform,.18s border-color,.18s background}#nwMyPageBtn:hover{transform:translateY(-2px);border-color:#58c9a0;background:rgba(11,38,45,.96)}
 .nw-member-link{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:0;margin:0;cursor:pointer;text-decoration:none;border-bottom:1px dashed rgba(112,204,178,.45)}.nw-member-link:hover{color:#83e2c3;border-bottom-color:#83e2c3}.card .nw-member-link{font-weight:900}
@@ -2378,7 +2379,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 
 <button id="nwMyPageBtn" type="button">👤 내 페이지</button>
-<button id="nwAdminLoginBtn" type="button">🔐 관리자</button>
+<button id="nwAdminLoginBtn" type="button" hidden>🔐 관리자</button>
 <div class="nw-admin-hub" id="nwAdminHub" aria-hidden="true">
   <div class="nw-admin-card">
     <h3>🔐 뉴트월드 관리자</h3>
@@ -2549,6 +2550,34 @@ document.addEventListener('DOMContentLoaded',()=>{
   const themeState=document.getElementById('nwThemeState');
   const themeBtns=[...document.querySelectorAll('.nw-theme-btn')];
 
+  // Owner-only entry: use the authenticated server profile, never the nickname or admin-token cache.
+  let ownerCheckId=0;
+  async function verifyOwnerEntry(){
+    const checkId=++ownerCheckId;
+    const token=localStorage.getItem('nwProfileToken')||'',device=localStorage.getItem('nwProfileDevice')||'';
+    adminBtn.hidden=true;
+    let result=null;
+    if(token&&device){
+      result=await new Promise(resolve=>{
+        const timeout=setTimeout(()=>resolve(null),12000);
+        NWJsonp('profileData',{token,device},data=>{clearTimeout(timeout);resolve(data);});
+      });
+    }
+    if(checkId!==ownerCheckId)return false;
+    const current=token===(localStorage.getItem('nwProfileToken')||'')&&device===(localStorage.getItem('nwProfileDevice')||'');
+    const allowed=!!(current&&token&&device&&result?.ok&&result.auth&&String(result.profile?.role||'').trim()==='방장');
+    adminBtn.hidden=!allowed;
+    if(!allowed){adminHub?.classList.remove('open');adminHub?.setAttribute('aria-hidden','true');}
+    window.dispatchEvent(new Event('resize'));
+    return allowed;
+  }
+  window.addEventListener('storage',event=>{if(!event.key||['nwProfileToken','nwProfileDevice'].includes(event.key))void verifyOwnerEntry();});
+  window.addEventListener('focus',()=>void verifyOwnerEntry());
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void verifyOwnerEntry();});
+  void verifyOwnerEntry();
+  // End owner-only entry.
+
+
   function autoSeason(){
     const m=(new Date()).getMonth()+1;
     return (m>=3&&m<=5)?'spring':(m>=6&&m<=8)?'summer':(m>=9&&m<=11)?'autumn':'winter';
@@ -2578,6 +2607,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     NWJsonp('themeGet',{},d=>{if(d&&d.ok)markTheme(d.override||'auto',d.resolved||autoSeason());});
   }
   async function adminLoginAndOpen(){
+    if(!await verifyOwnerEntry())return;
     let token=sessionStorage.getItem('nwAdminToken')||'';
     if(token){openAdminHub();return;}
     const pw=await window.NWUI.password();if(!pw)return;
