@@ -28,7 +28,7 @@
   identity();if(metaUntil&&Date.now()>=metaUntil)meta.clear();if(observer)observer.disconnect();
   document.querySelectorAll('[data-ranking-avatar]').forEach(slot=>{
    const id=decodeURIComponent(slot.dataset.rankingAvatar),m=meta.get(id);
-   if(!m){slot.hidden=slot.classList.contains('nw-ranking-avatar-mobile');slot.classList.remove('nw-ranking-avatar-loading');slot.replaceChildren();if(!slot.hidden)slot.textContent='—';return;}
+   if(!m){slot.hidden=slot.classList.contains('nw-ranking-avatar-mobile');slot.classList.remove('nw-ranking-avatar-loading');slot.replaceChildren();if(!slot.hidden)slot.textContent='미등록';return;}
    slot.hidden=false;const src=source(id,m.ref);
    if(src){
     const old=slot.querySelector('img');if(old?.getAttribute('src')===src)return;

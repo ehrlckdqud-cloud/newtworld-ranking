@@ -2,6 +2,8 @@
 
 <html lang="ko">
 <head>
+<script>if(/KAKAOTALK/i.test(navigator.userAgent))document.documentElement.classList.add("nw-kakao-browser");</script>
+<style>.nw-kakao-browser #nwMyPageBtn{display:none!important}.nw-ranking-avatar-slot{font-size:10px;white-space:nowrap}</style>
 <meta charset="utf-8"/>
 <style>html{background:#071018}
 /* v2.71 · Monthly survival draw: load the game only when opened. */
@@ -1690,7 +1692,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 @media(max-width:390px){.nw-ranking-avatar-mobile{width:28px;height:28px;flex-basis:28px}.nw-ranking-avatar-mobile .nw-ranking-avatar-button{width:28px;height:28px}.card-head-right{gap:5px}}
 </style>
-<script src="assets/ranking-avatars-v297.js" defer></script>
+<script src="assets/ranking-avatars-v297.js?v=20261026" defer></script>
 <link rel="stylesheet" href="assets/badge-hover-v294.css">
 <script src="assets/badge-hover-v294.js" defer></script>
 <link rel="stylesheet" href="assets/badges/badge-details-v336.css">
@@ -2204,7 +2206,7 @@ function badgeIndexFor(score){let idx=-1;BADGES.forEach((b,i)=>{if(score>=b.thre
 function unlockState(){const maxLife=DATA.reduce((max,x)=>Math.max(max,Number(x.lifetimeTotal)||0),0),published=window.NWLatestRankingMeta330?.badgeUnlocked||[];return BADGES.map((b,i)=>i<2||published[i]===true||maxLife>=b.threshold);}
 function renderBadgeLadder(){const unlocked=unlockState(),grid=document.getElementById('badgeGrid');grid.innerHTML=BADGES.map((b,i)=>{const on=unlocked[i],ach=DATA.filter(x=>x.lifetimeTotal>=b.threshold);return `<div class="badge-card ${on?'unlocked':'locked'}" data-badge-index="${i}" ${on?`role="button" tabindex="0" aria-label="${b.name} 등급 배지 확대" aria-haspopup="dialog"`:''}><div class="badge-art"><img src="${on?b.image:b.lockedImage}" decoding="async" alt="${b.name}"><div class="lockmark">?</div></div><div class="badge-name">${b.emoji} ${b.name}</div><div class="badge-th">${fmt(b.threshold)}점+</div><div class="badge-state">${on?`해금 완료 · 현재 달성 ${ach.length}명`:'🔒 미해금 · 최초 달성자를 기다리는 중'}</div></div>`;}).join('');document.getElementById('unlockCount').textContent=unlocked.filter(Boolean).length+' / '+BADGES.length;window.NWInitBadgeHover?.();}
 function memberBadge(score){const idx=badgeIndexFor(score),unlocked=unlockState();if(idx<0)return `<span class="no-grade">미획득</span>`;if(!unlocked[idx])return `<span class="no-grade">미해금</span>`;const b=BADGES[idx];return `<div class="member-grade"><img src="${b.image}" alt="${b.name} 등급 배지" decoding="async"><span>${b.name}</span></div>`;}
-function rankingAvatarSlot(member,mobile=false){return `<span class="nw-ranking-avatar-slot ${mobile?'nw-ranking-avatar-mobile':''}" data-ranking-avatar="${encodeURIComponent(member.memberId||'')}" ${mobile?'hidden':''}>${mobile?'':'—'}</span>`;}
+function rankingAvatarSlot(member,mobile=false){return `<span class="nw-ranking-avatar-slot ${mobile?'nw-ranking-avatar-mobile':''}" data-ranking-avatar="${encodeURIComponent(member.memberId||'')}" ${mobile?'hidden':''}>${mobile?'':'미등록'}</span>`;}
 function renderRanking(){
   const q=document.getElementById('q').value.trim().toLowerCase(),limitVal=document.getElementById('limit').value;
   const lifetime=document.getElementById('scoreBasis').value==='lifetime',scoreField=lifetime?'lifetimeTotal':'seasonTotal';
