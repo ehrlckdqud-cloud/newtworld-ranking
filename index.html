@@ -2019,6 +2019,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <button class="active" id="allBtn">전체</button>
 <button id="gradedBtn">등급 보유자</button>
 </div>
+<p id="syncStatus" class="sync-status" role="status" style="margin:10px 0;color:#bdd8e3">랭킹을 불러오는 중…</p>
 <div class="stats">
 <div class="stat"><small>현재 1위</small><strong id="leader"></strong></div>
 <div class="stat"><small>TOP10 커트</small><strong id="cut10"></strong></div>
@@ -2037,7 +2038,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 </div>
 <script>
 const DEFAULT_SHEET_URL='https://docs.google.com/spreadsheets/d/1BJtdycwIMsbAaJnJg8l5yYmLpSgWVKVVy7l8UAeMq24/edit?usp=sharing';
-let DATA=[{"rank": 1, "date": "26-9-8", "name": "건욱", "chat": 2682, "photo": 210, "video": 17, "intro": 0, "seasonTotal": 3902, "lifetimeTotal": 3902}, {"rank": 2, "date": "26-7-23", "name": "김규민", "chat": 2169, "photo": 113, "video": 16, "intro": 0, "seasonTotal": 2894, "lifetimeTotal": 2894}, {"rank": 3, "date": "26-8-7", "name": "고탱", "chat": 1831, "photo": 172, "video": 11, "intro": 0, "seasonTotal": 2801, "lifetimeTotal": 2801}, {"rank": 4, "date": "26-9-28", "name": "김민정", "chat": 1298, "photo": 52, "video": 5, "intro": 1, "seasonTotal": 2108, "lifetimeTotal": 2108}, {"rank": 5, "date": "26-7-11", "name": "김보겸", "chat": 1032, "photo": 152, "video": 31, "intro": 0, "seasonTotal": 2102, "lifetimeTotal": 2102}, {"rank": 6, "date": "26-9-4", "name": "보배", "chat": 1022, "photo": 83, "video": 6, "intro": 1, "seasonTotal": 1997, "lifetimeTotal": 1997}, {"rank": 7, "date": "26-7-24", "name": "현서", "chat": 1317, "photo": 70, "video": 5, "intro": 0, "seasonTotal": 1717, "lifetimeTotal": 1717}, {"rank": 8, "date": "26-4-28", "name": "SpoonJo", "chat": 1397, "photo": 48, "video": 7, "intro": 0, "seasonTotal": 1707, "lifetimeTotal": 1707}, {"rank": 9, "date": "26-8-16", "name": "J", "chat": 756, "photo": 88, "video": 8, "intro": 0, "seasonTotal": 1276, "lifetimeTotal": 1276}, {"rank": 10, "date": "26-4-28", "name": "ZandH", "chat": 523, "photo": 139, "video": 3, "intro": 0, "seasonTotal": 1248, "lifetimeTotal": 1248}, {"rank": 11, "date": "26-8-16", "name": "안지원", "chat": 667, "photo": 69, "video": 10, "intro": 0, "seasonTotal": 1112, "lifetimeTotal": 1112}, {"rank": 12, "date": "26-7-25", "name": "태연", "chat": 665, "photo": 42, "video": 10, "intro": 0, "seasonTotal": 975, "lifetimeTotal": 975}, {"rank": 13, "date": "26-4-20", "name": "박태현", "chat": 577, "photo": 74, "video": 1, "intro": 0, "seasonTotal": 957, "lifetimeTotal": 957}, {"rank": 14, "date": "26-7-11", "name": "jelly", "chat": 545, "photo": 68, "video": 7, "intro": 0, "seasonTotal": 955, "lifetimeTotal": 955}, {"rank": 15, "date": "26-8-3", "name": "이상혁", "chat": 535, "photo": 37, "video": 2, "intro": 0, "seasonTotal": 740, "lifetimeTotal": 740}, {"rank": 16, "date": "26-7-5", "name": "김세아", "chat": 352, "photo": 56, "video": 3, "intro": 0, "seasonTotal": 662, "lifetimeTotal": 662}, {"rank": 17, "date": "26-8-27", "name": "케이팜", "chat": 304, "photo": 40, "video": 6, "intro": 0, "seasonTotal": 564, "lifetimeTotal": 564}, {"rank": 18, "date": "26-8-19", "name": "이민성", "chat": 10, "photo": 2, "video": 0, "intro": 1, "seasonTotal": 520, "lifetimeTotal": 520}, {"rank": 19, "date": "26-9-7", "name": "김선홍", "chat": 314, "photo": 35, "video": 0, "intro": 0, "seasonTotal": 489, "lifetimeTotal": 489}, {"rank": 20, "date": "26-7-18", "name": "신대영", "chat": 156, "photo": 41, "video": 9, "intro": 0, "seasonTotal": 451, "lifetimeTotal": 451}, {"rank": 21, "date": "25-10-24", "name": "홍석현", "chat": 262, "photo": 10, "video": 11, "intro": 0, "seasonTotal": 422, "lifetimeTotal": 422}, {"rank": 22, "date": "26-8-17", "name": "김규원", "chat": 145, "photo": 25, "video": 10, "intro": 0, "seasonTotal": 370, "lifetimeTotal": 370}, {"rank": 23, "date": "26-5-1", "name": "지선", "chat": 13, "photo": 23, "video": 24, "intro": 0, "seasonTotal": 368, "lifetimeTotal": 368}, {"rank": 24, "date": "26-5-31", "name": "하민", "chat": 225, "photo": 13, "video": 1, "intro": 0, "seasonTotal": 300, "lifetimeTotal": 300}, {"rank": 25, "date": "26-9-28", "name": "로미", "chat": 171, "photo": 16, "video": 1, "intro": 0, "seasonTotal": 261, "lifetimeTotal": 261}, {"rank": 26, "date": "26-6-19", "name": "이건호", "chat": 186, "photo": 12, "video": 1, "intro": 0, "seasonTotal": 256, "lifetimeTotal": 256}, {"rank": 27, "date": "26-6-4", "name": "ㅈㄷㅈ", "chat": 183, "photo": 12, "video": 1, "intro": 0, "seasonTotal": 253, "lifetimeTotal": 253}, {"rank": 28, "date": "25-10-25", "name": "최지호", "chat": 111, "photo": 14, "video": 4, "intro": 0, "seasonTotal": 221, "lifetimeTotal": 221}, {"rank": 29, "date": "26-4-15", "name": "구창모", "chat": 176, "photo": 4, "video": 0, "intro": 0, "seasonTotal": 196, "lifetimeTotal": 196}, {"rank": 30, "date": "26-6-6", "name": "Funny", "chat": 100, "photo": 9, "video": 2, "intro": 0, "seasonTotal": 165, "lifetimeTotal": 165}, {"rank": 31, "date": "26-7-8", "name": "하 나", "chat": 106, "photo": 9, "video": 1, "intro": 0, "seasonTotal": 161, "lifetimeTotal": 161}, {"rank": 32, "date": "26-7-26", "name": "신수", "chat": 82, "photo": 5, "video": 5, "intro": 0, "seasonTotal": 157, "lifetimeTotal": 157}, {"rank": 33, "date": "26-6-3", "name": "손건", "chat": 115, "photo": 5, "video": 1, "intro": 0, "seasonTotal": 150, "lifetimeTotal": 150}, {"rank": 34, "date": "26-9-15", "name": "IH", "chat": 99, "photo": 7, "video": 0, "intro": 0, "seasonTotal": 134, "lifetimeTotal": 134}, {"rank": 35, "date": "26-7-31", "name": "병찬", "chat": 41, "photo": 15, "video": 0, "intro": 0, "seasonTotal": 116, "lifetimeTotal": 116}, {"rank": 36, "date": "26-4-29", "name": "최진영", "chat": 34, "photo": 9, "video": 3, "intro": 0, "seasonTotal": 109, "lifetimeTotal": 109}, {"rank": 37, "date": "25-10-24", "name": "구구대호", "chat": 57, "photo": 8, "video": 0, "intro": 0, "seasonTotal": 97, "lifetimeTotal": 97}, {"rank": 38, "date": "26-9-25", "name": "ㄱ", "chat": 55, "photo": 6, "video": 1, "intro": 0, "seasonTotal": 95, "lifetimeTotal": 95}, {"rank": 39, "date": "26-9-21", "name": "변재식", "chat": 42, "photo": 3, "video": 3, "intro": 0, "seasonTotal": 87, "lifetimeTotal": 87}, {"rank": 40, "date": "26-8-27", "name": "윤형빈", "chat": 32, "photo": 7, "video": 2, "intro": 0, "seasonTotal": 87, "lifetimeTotal": 87}];
+let DATA=[];
 const DEMO_DATA=JSON.parse(JSON.stringify(DATA));
 const BADGES=window.NWGrades.levels;
 const fmt=n=>Number(n||0).toLocaleString('ko-KR');
@@ -2087,13 +2088,14 @@ function rankMovementBadge(x){
 
 window.NWPaintRankMovements297=function(){document.querySelectorAll('[data-rank-movement]').forEach(node=>{const id=decodeURIComponent(node.dataset.rankMovement),x=DATA.find(v=>v.memberId===id);if(x)node.outerHTML=rankMovementBadge(x);});};
 function staffStar(x){return isStaff(x)?'<span class="nw-ranking-staff-star" role="img" aria-label="운영진">⭐</span>':'';}
-let gradedOnly=false, refreshTimer=null;
+let gradedOnly=false, refreshTimer=null, sheetLoading=false;
 function num(v){if(v===null||v===undefined||v==='')return 0;const n=Number(String(v).replace(/,/g,'').replace(/[^0-9.-]/g,''));return Number.isFinite(n)?n:0;}
 function cleanName(v){return String(v||'').trim().replace(/^\[/,'').replace(/\]$/,'');}
 function normHeader(v){return String(v||'').replace(/\s+/g,'').replace(/\([^)]*\)/g,'').toLowerCase();}
 function findCol(headers,cands){const hs=headers.map(normHeader);for(const c of cands){const n=normHeader(c),i=hs.indexOf(n);if(i>=0)return i;}for(const c of cands){const n=normHeader(c),i=hs.findIndex(h=>h.includes(n));if(i>=0)return i;}return -1;}
 function parseCSV(s){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<s.length;i++){const ch=s[i];if(quoted){if(ch==='"'&&s[i+1]==='"'){field+='"';i++;}else if(ch==='"')quoted=false;else field+=ch;}else{if(ch==='"')quoted=true;else if(ch===','){row.push(field);field='';}else if(ch==='\n'){row.push(field.replace(/\r$/,''));rows.push(row);row=[];field='';}else field+=ch;}}if(field.length||row.length){row.push(field.replace(/\r$/,''));rows.push(row);}return rows.filter(r=>r.some(x=>String(x).trim()!==''));}
-function toCsvUrl(raw){let u=String(raw||'').trim();if(!u)return'';if(/output=csv|tqx=out:csv/.test(u))return u;const m=u.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);if(m){const gid=(u.match(/[?&#]gid=(\d+)/)||[])[1]||'0';return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&gid=${gid}`;}return u;}
+function toCsvUrl(raw){let u=String(raw||'').trim();if(!u)return'';if(/output=csv|tqx=out:csv/.test(u))return u;const m=u.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);if(m){const gid=(u.match(/[?&#]gid=(\d+)/)||[])[1];
+  const target=gid?'gid='+encodeURIComponent(gid):'sheet='+encodeURIComponent('랭킹');return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:csv&${target}`;}return u;}
 function sheetRowsToData(rows){
   if(rows.length<2)throw new Error('시트에 데이터 행이 없습니다.');
   const h=rows[0];
@@ -2146,8 +2148,9 @@ function toGvizUrl(raw){
   const u=(raw||'').trim();
   const m=u.match(/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
   if(!m)return '';
-  const gid=(u.match(/[?&#]gid=(\d+)/)||[])[1]||'0';
-  return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:json&headers=1&gid=${gid}&_=${Date.now()}`;
+  const gid=(u.match(/[?&#]gid=(\d+)/)||[])[1];
+  const target=gid?'gid='+encodeURIComponent(gid):'sheet='+encodeURIComponent('랭킹');
+  return `https://docs.google.com/spreadsheets/d/${m[1]}/gviz/tq?tqx=out:json&headers=1&${target}&_=${Date.now()}`;
 }
 function gvizResponseToRows(resp){
   if(!resp)throw new Error('Google Sheets 응답이 비어 있습니다.');
@@ -2212,6 +2215,7 @@ function loadGvizJsonp(raw){
   });
 }
 async function loadSheet(raw,save=true){
+  if(sheetLoading)return;sheetLoading=true;clearTimeout(refreshTimer);
   setStatus('불러오는 중…','sync-loading');
   try{
     const resp=await loadGvizJsonp(raw);
@@ -2223,12 +2227,11 @@ async function loadSheet(raw,save=true){
     window.NWRefreshRankingMeta?.();
     const miss=DATA.missingIdCount||0;
     setStatus(`연결됨 · 전체 ${DATA.length}명 (회원 ${DATA.filter(x=>!isStaff(x)).length} + 운영진 ${DATA.filter(isStaff).length})${miss?` · 회원ID 미입력 ${miss}명`:''} · ${new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})} 갱신`,miss?'sync-loading':'sync-ok');
-    clearInterval(refreshTimer);
-    refreshTimer=setInterval(()=>loadSheet(DEFAULT_SHEET_URL,false),60000);
+
   }catch(e){
     console.error(e);
-    setStatus('연결 실패: '+e.message,'sync-bad');
-  }
+    setStatus((DATA.length?'최신 갱신 실패 · 마지막으로 불러온 자료입니다. ':'랭킹을 불러오지 못했습니다. ')+e.message+' · 15초 후 자동 재시도합니다.','sync-bad');
+  }finally{sheetLoading=false;refreshTimer=setTimeout(()=>loadSheet(DEFAULT_SHEET_URL,false),document.getElementById('syncStatus')?.classList.contains('sync-bad')?15000:60000);}
 }
 function badgeIndexFor(score){let idx=-1;BADGES.forEach((b,i)=>{if(score>=b.threshold)idx=i;});return idx;}
 function unlockState(){const maxLife=DATA.reduce((max,x)=>Math.max(max,Number(x.lifetimeTotal)||0),0),published=window.NWLatestRankingMeta330?.badgeUnlocked||[];return BADGES.map((b,i)=>i<2||published[i]===true||maxLife>=b.threshold);}
@@ -3282,4 +3285,5 @@ window.NWConfigReady.then(function(){
 </script>
 <script src="assets/game-defaults-export.js"></script>
 </body></html>
+
 
