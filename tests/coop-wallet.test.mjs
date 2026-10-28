@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {MemberCoins} from '../coop/member-coins.mjs';
+test('confirmed purchase is not rolled back by an older room response',()=>{const c=new MemberCoins();c.update({balance:2,revision:4});c.pending=true;assert.equal(c.balance,2);c.update({balance:3,revision:5});c.pending=false;assert.equal(c.update({balance:2,revision:4}),false);assert.equal(c.balance,3);c.update({balance:2,revision:6});assert.equal(c.balance,2);});
