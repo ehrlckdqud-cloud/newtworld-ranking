@@ -16,7 +16,7 @@ export class FiveSession {
  detach(a){if(this.linked(a)){this.wl(this.long(a+4)+8,this.long(a+8));this.wl(this.long(a+8)+4,this.long(a+4));}}
  insert(a){this.detach(a);const before=0x1005ac,after=this.long(before+8);this.wl(before+8,a);this.wl(after+4,a);this.wl(a+4,before);this.wl(a+8,after);}
  coin(){if(this.phase!=='attract')throw Error('USE_PER_PLAYER_CONTINUE');this.coinPulse=5;}
- start(){if(this.phase!=='attract')throw Error('ALREADY_STARTED');this.pendingStart=true;this.startPulse=5;}
+ start(){if(this.phase!=='attract')throw Error('ALREADY_STARTED');this.pendingStart=true;this.startPulse=5;this.startConfirmAt=this.frame+48;}
  begin(){if(this.reserved.size!==this.reserve.length)throw Error('RESERVATION_INCOMPLETE');
   for(let i=0;i<5;i++){
    const a=this.x.actors[i],s=this.status[i],p=this.players[i];
@@ -84,7 +84,7 @@ export class FiveSession {
   }
   if(this.phase==='attract'){this.reserveDuringBoot();if(this.paidInitialCoin&&this.frame>1100&&this.frame%30===0){if(this.byte(0x10fdb0)>0)this.paidInitialCoin=false;else this.coinPulse=5;}}
   let native=0;if(this.nativeContinue){const routine=this.long(this.status[0]);if(routine===0x43640&&((!this.paid&&(inputs[0]&16)&&!(previousInputs[0]&16))||this.paidContinuePending)){this.paidContinuePending=false;this.coinPulse=5;this.startPulse=5;}if(routine===0x432d4)native|=inputs[0];if(this.startPulse>0){native|=256;this.startPulse--;}}if(this.coinPulse>0){native|=128;this.coinPulse--;}if(this.phase==='attract'){
-   native|=this.selectionInput(inputs);if(this.pendingStart&&this.frame%30===0&&this.byte(0x10fdb0)>0)this.startPulse=5;if(this.startPulse>0){native|=256;this.startPulse--;}
+   native|=this.selectionInput(inputs);if(this.pendingStart&&this.frame>=this.startConfirmAt&&this.frame<this.startConfirmAt+6)native|=16;if(this.pendingStart&&this.frame%30===0&&this.byte(0x10fdb0)>0)this.startPulse=5;if(this.startPulse>0){native|=256;this.startPulse--;}
   }
   if(this.phase==='playing')for(let i=0;i<5;i++){let bits=this.players[i].state==='active'?inputs[i]:0;if((bits&12)===12)bits&=~12;if((bits&3)===3)bits&=~3;this.wb(this.x.inputBase+i*2,bits);const edge=bits&~previousInputs[i],edgeAddr=this.x.inputBase+0x10+i;this.wb(edgeAddr,this.long(0x10039c)===0xed682?this.byte(edgeAddr)|edge:edge);}
   this.m._nw_input(native);this.m._nw_run(this.frame);
@@ -103,6 +103,6 @@ export class FiveSession {
   this.frame++;
  }
  state(){return {playerCount:this.playerCount,frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,selection:this.selection?structuredClone(this.selection):null,activeMask:this.byte(0x10ed86),players:this.players.map((p,i)=>({...p,coinIds:undefined,x:this.word(this.x.actors[i]+0x28),y:this.word(this.x.actors[i]+0x2c),owner:this.word(this.x.actors[i]+0x6c),routine:this.long(this.x.actors[i]),nativeCharacter:this.word(this.x.actors[i]+0x6a),ammo:this.word(this.weapon[i]+10),weapon:this.byte(this.weapon[i]+3)}))};}
- checkpoint(){return {nativeContinue:!!this.nativeContinue,playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,players:structuredClone(this.players),reserved:[...this.reserved]};}
- restore(s){this.nativeContinue=!!s.nativeContinue;this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
+ checkpoint(){return {nativeContinue:!!this.nativeContinue,playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,startConfirmAt:Number.isFinite(this.startConfirmAt)?this.startConfirmAt:null,players:structuredClone(this.players),reserved:[...this.reserved]};}
+ restore(s){this.nativeContinue=!!s.nativeContinue;this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.startConfirmAt=s.startConfirmAt??Infinity;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
 }
