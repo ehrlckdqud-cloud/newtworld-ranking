@@ -1,0 +1,107 @@
+--- a/src/burn/drv/neogeo/neo_text.cpp
++++ b/src/burn/drv/neogeo/neo_text.cpp
+@@ -1,4 +1,6 @@
+ #include "neogeo.h"
++static int newtworldHud=0;
++extern "C" void retro_set_newtworld_hud(int enabled) { newtworldHud=enabled; }
+ 
+ UINT8* NeoTextROMBIOS;
+ UINT8* NeoTextROM[MAX_SLOT];
+@@ -7,6 +9,13 @@
+ bool bBIOSTextROMEnabled;
+ 
+ static UINT8* NeoTextROMCurrent;
++static UINT32 newtworldCells[160];
++extern "C" unsigned retro_newtworld_cell(int x,int y) { return (x>=0&&x<40&&y>=0&&y<4)?newtworldCells[y*40+x]:0; }
++extern "C" void retro_newtworld_glyph(unsigned tile,unsigned pal,UINT32* out) {
++ if (!NeoTextROMCurrent || tile*32+32>(unsigned)nNeoTextROMSize[nNeoActiveSlot] || pal>255) return;
++ UINT8* data=NeoTextROMCurrent+tile*32;
++ for(int i=0;i<64;i++){unsigned c=(i&1)?(data[i/2]&15):(data[i/2]>>4);out[i]=c?(0xff000000|NeoPalette[pal*16+c]):0;}
++}
+ 
+ static INT8* NeoTextTileAttrib[MAX_SLOT] = { NULL, };
+ static INT8* NeoTextTileAttribBIOS = NULL;
+@@ -51,6 +60,7 @@
+ INT32 NeoRenderText()
+ {
+ 	INT32 x, y;
++ memset(newtworldCells,0,sizeof(newtworldCells));
+ 	UINT8* pTextROM;
+ 	INT8* pTileAttrib;
+ 	UINT8* pCurrentRow = pBurnDraw;
+@@ -109,14 +119,22 @@
+ 				pTextROM    = NeoTextROMCurrent        + (nOffset[y - 2] << 5);
+ 				pTileAttrib = NeoTextTileAttribActive +  nOffset[y - 2];
+ 				for (x = nMinX, pTile = pCurrentRow; x < nMaxX; x++, pTile += nTileLeft) {
+-					UINT32 nTile = pTileRow[x << 5];
++					
++                    UINT32 nTile = pTileRow[x << 5];
+ 					INT32 nPalette = nTile & 0xF000;
+ 					nTile &= 0x0FFF;
+ 					nTransparent = (UINT8)pTileAttrib[nTile];
+ 					if (nTransparent != 1) {
+ 						pTileData = pTextROM + (nTile << 5);
+ 						pTilePalette = &pTextPalette[nPalette >> 8];
+-						RenderTile();
++						if (newtworldHud && y < 6) {
++                            newtworldCells[(y-2)*40+x]=(UINT32)((pTextROM-NeoTextROMCurrent)/32+nTile)|((nPalette>>12)<<16);
++                            // Suppress HUD glyphs only, never transition masks or scenery.
++                            unsigned tile=(unsigned)((pTextROM-NeoTextROMCurrent)/32+nTile);
++                            if ((tile>=0x800 && tile<=0x83f) || (newtworldHud==1 && ((tile>=0x300 && tile<=0x39f) || (tile>=0xba0 && tile<=0xbc7)))) continue;
++                        }
++                        RenderTile();
++
+ 					}
+ 				}
+ 			}
+@@ -130,7 +148,8 @@
+ 
+ 			for (y = 2, pTileRow += 2; y < 30; y++, pCurrentRow += nTileDown, pTileRow++, pBankInfo++) {
+  				for (x = nMinX, pTile = pCurrentRow; x < nMaxX; x++, pTile += nTileLeft) {
+-					UINT32 nTile = pTileRow[x << 5];
++					
++                    UINT32 nTile = pTileRow[x << 5];
+ 					INT32 nPalette = nTile & 0xF000;
+ 					nTile &= 0x0FFF;
+ 					nTile += (((pBankInfo[nBankLookupAddress[x]] >> nBankLookupShift[x]) & 3) ^ 3) << 12;
+@@ -138,7 +157,14 @@
+ 					if (nTransparent != 1) {
+ 						pTileData = pTextROM + (nTile << 5);
+ 						pTilePalette = &pTextPalette[nPalette >> 8];
+-						RenderTile();
++						if (newtworldHud && y < 6) {
++                            newtworldCells[(y-2)*40+x]=(UINT32)((pTextROM-NeoTextROMCurrent)/32+nTile)|((nPalette>>12)<<16);
++                            // Suppress HUD glyphs only, never transition masks or scenery.
++                            unsigned tile=(unsigned)((pTextROM-NeoTextROMCurrent)/32+nTile);
++                            if ((tile>=0x800 && tile<=0x83f) || (newtworldHud==1 && ((tile>=0x300 && tile<=0x39f) || (tile>=0xba0 && tile<=0xbc7)))) continue;
++                        }
++                        RenderTile();
++
+ 					}
+ 				}
+ 			}
+@@ -157,14 +183,22 @@
+ 
+ 		for (y = 2, pTileRow += 2; y < 30; y++, pCurrentRow += nTileDown, pTileRow++) {
+ 			for (x = nMinX, pTile = pCurrentRow; x < nMaxX; x++, pTile += nTileLeft) {
+-				UINT32 nTile = pTileRow[x << 5];
++				
++                    UINT32 nTile = pTileRow[x << 5];
+ 				INT32 nPalette = nTile & 0xF000;
+ 				nTile &= 0xFFF;
+ 				nTransparent = (UINT8)pTileAttrib[nTile];
+ 				if (nTransparent != 1) {
+ 					pTileData = pTextROM + (nTile << 5);
+ 					pTilePalette = &pTextPalette[nPalette >> 8];
+-					RenderTile();
++					if (newtworldHud && y < 6) {
++                            newtworldCells[(y-2)*40+x]=(UINT32)((pTextROM-NeoTextROMCurrent)/32+nTile)|((nPalette>>12)<<16);
++                            // Suppress HUD glyphs only, never transition masks or scenery.
++                            unsigned tile=(unsigned)((pTextROM-NeoTextROMCurrent)/32+nTile);
++                            if ((tile>=0x800 && tile<=0x83f) || (newtworldHud==1 && ((tile>=0x300 && tile<=0x39f) || (tile>=0xba0 && tile<=0xbc7)))) continue;
++                        }
++                        RenderTile();
++
+ 				}
+ 			}
+ 		}

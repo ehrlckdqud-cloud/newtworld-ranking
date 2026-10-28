@@ -1,0 +1,13 @@
+{
+  "coreSha256": "0130b65b6aa44063607668af4fab5e9cb264b3880b64d4bd53e53be5a6658927",
+  "coreBytes": 7996652,
+  "reconstructedMatchesOriginal": true,
+  "sourceRevision": "2b0c1c0679df115cada7df9199ea2762222e58fd",
+  "buildRecipe": "coop/source/build.sh",
+  "adapter": "coop/source/web_host.cpp",
+  "patch": "coop/source/core-hud.patch",
+  "initialVirtualFiles": [],
+  "gameROMPresent": false,
+  "biosPresent": false,
+  "publicationIncludesOriginalZIP": false
+}
