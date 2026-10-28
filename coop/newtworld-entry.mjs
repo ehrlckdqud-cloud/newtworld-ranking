@@ -1,4 +1,5 @@
-import {initLobby} from './lobby.mjs';
+import {requestTestAccess} from './test-access.mjs?v=48';
+import {initLobby} from './lobby.mjs?v=48';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
 const form=document.getElementById('joinForm');
@@ -17,9 +18,13 @@ try{
  });
  if(!response?.ok||!response.auth||!response.profile?.nickname)throw Error('auth');
  document.getElementById('name').value=response.profile.nickname;
+ document.getElementById('memberName').textContent=response.profile.nickname;
+ status.textContent='운영진 테스트 비밀번호를 입력해주세요.';
+ await requestTestAccess({token,device});
+ document.getElementById('channelView').hidden=false;
  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=47');initLobby(response.profile.nickname);
+ await import('./play.mjs?v=48');initLobby(response.profile.nickname);
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
 }catch(error){status.textContent='회원 확인을 완료하지 못했습니다. 뉴트월드 회원식별 상태를 확인하고 새로고침해주세요.';document.getElementById('memberHelp').hidden=false;}
