@@ -16,6 +16,7 @@ const $=id=>document.getElementById(id),BUILD='nw-ms3-online-lab-v46';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
 let pendingDownload=null,away=false,purchaseBusy=false;
 let session,roster=[],module,engine,profile,stream,ac,audioOut,audioNext=0,playing=false,completed=false,seq=0,bits=0,lastSent=-1,lastSentAt=0,lastTick=0,clock=0,chatOpen=false,composing=false,pendingChat=false,enterHeld=false,transportAlive=false,config;
+const creditReceipts=new Map();
 const peers=new Map(),held=[0,0,0,0,0],heldAt=[0,0,0,0,0],bubbles=new Map();
 const canvas=$('screen'),displayCtx=canvas.getContext('2d',{alpha:false}),nativeCanvas=document.createElement('canvas'),ctx=nativeCanvas.getContext('2d',{alpha:false});let pixels,paintHUD,paintResults;
 const note=s=>$('status').textContent=({ALL_PRESENT_READY_REQUIRED:'현재 입장한 인원이 모두 준비를 눌러주세요.',CLIENT_UPDATE_REQUIRED:'새 버전이 적용되었습니다. 새로고침한 뒤 방을 다시 만들어주세요.',BUILD_MISMATCH:'새로고침한 뒤 방을 다시 만들어주세요.',ALL_PLAYERS_NEED_COIN:'모든 참가자가 코인을 1개 이상 구매해야 출동할 수 있습니다.',PAID_COIN_REQUIRED:'보유 코인이 없습니다. 채팅창 옆 코인 구매 버튼을 눌러주세요.',CONTINUE_NOT_AVAILABLE:'지금은 컨티뉴를 사용할 수 없습니다.'}[s]||s);
@@ -53,7 +54,7 @@ async function event(e){
  }
  if(e.type==='signal'&&e.to===session.slot){try{await signal(e.from,e.signal);}catch(err){note('영상 연결 오류: '+err.message);}}
  if(e.type==='native-input'&&session.slot===1){held[e.slot-1]=e.bits;heldAt[e.slot-1]=performance.now();}
- if(e.type==='native-command'&&session.slot===1&&engine){try{if(e.command==='start')engine.start();if(e.command==='continue')engine.authorizeContinue(e.slot,'paid-'+e.id);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){note(err.message);}}
+ if(e.type==='native-command'&&session.slot===1&&engine){let accepted=true;try{if(e.command==='start')engine.start();if(e.command==='continue')engine.authorizeContinue(e.slot,'paid-'+e.id);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(e.command==='continue')creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});}
  if(e.type==='chat')chatPresentation.receive(e);
 }
 async function makePeer(slot,offer=false){if(peers.has(slot))return peers.get(slot);const pc=new RTCPeerConnection({iceServers:config.iceServers});const record={pc,queue:[],chain:Promise.resolve(),channel:null};peers.set(slot,record);pc.onicecandidate=e=>{if(e.candidate)safe(act({type:'signal',to:slot,signal:{type:'candidate',candidate:e.candidate.toJSON()}}));};pc.onconnectionstatechange=()=>{if(['failed','disconnected','closed'].includes(pc.connectionState))note(`P${slot} 영상 연결 ${pc.connectionState}. 외부망에서는 TURN 중계가 필요할 수 있습니다.`);};pc.ondatachannel=e=>{if(session.slot!==1&&slot===1&&e.channel.label==='input')bindInput(record,e.channel,slot);else e.channel.close();};pc.ontrack=e=>{$('video').srcObject=e.streams[0];safe($('video').play());note('게임 연결됨');};if(offer){bindInput(record,pc.createDataChannel('input',{ordered:false,maxRetransmits:0}),slot);for(const t of stream.getTracks())pc.addTrack(t,stream);await pc.setLocalDescription(await pc.createOffer());await act({type:'signal',to:slot,signal:{type:'offer',sdp:pc.localDescription.sdp}});}return record;}
@@ -130,3 +131,5 @@ setInterval(async()=>{if(!playing||!engine||session?.slot!==1||stateInFlight)ret
 window.newtOnlineDiagnostics=()=>({slot:session?.slot,playing,state:engine?.state(),credits:engine?.byte(0x10fdb0),peers:[...peers].map(([slot,{pc}])=>({slot,state:pc.connectionState})),inputChannel:peers.get(1)?.channel?.readyState,videoFrames:$('video').getVideoPlaybackQuality?.().totalVideoFrames||0,audioState:ac?.state,roster:roster.map(p=>({...p}))});
 
 async function listenPoll(){let cursor=0;for(;;){const r=await apiFetch(`/api/rooms/${session.room}/poll?after=${cursor}`,{headers:{Authorization:'Bearer '+session.token}}),d=await r.json();if(!r.ok){stop(d.error);return;}if(d.slot)session.slot=d.slot;if(d.snapshot)await event({type:'snapshot',...d.snapshot});for(const e of d.events)await event(e);cursor=d.cursor;await new Promise(resolve=>setTimeout(resolve,750));}}
+
+let creditReceiptBusy=false;setInterval(async()=>{if(!session||creditReceiptBusy||!creditReceipts.size)return;creditReceiptBusy=true;try{for(const [id,receipt]of creditReceipts){await act(receipt);creditReceipts.delete(id);}}catch{}finally{creditReceiptBusy=false;}},1000);
