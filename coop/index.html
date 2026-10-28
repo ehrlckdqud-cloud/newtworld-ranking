@@ -1,0 +1,9 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>뉴트월드 1~5인 협동 테스트</title><link rel="stylesheet" href="./style.css">
+<header><a href="../index.html">← 뉴트월드</a><strong>NEWTWORLD</strong><span>1~5인 협동 · 개발 검증본</span></header>
+<main><section class="game"><p>5인 메인 경로 완주 검증 완료 · 실제 외부 PC 연결은 검증 중입니다. 뉴트젬은 사용하지 않습니다.</p>
+<form id="joinForm"><label>회원 <input id="name" maxlength="20" readonly required></label><label>초대 코드 <input id="invite"></label><button id="create" type="button">방 만들기</button><button>입장</button></form>
+<p id="code"></p><div id="players"></div><div id="controls" hidden><label>캐릭터 <select id="character"><option value="0">Marco</option><option value="1">Tarma</option><option value="2">Eri</option><option value="3">Fio</option></select></label><button id="ready">준비</button><button id="select">컨티뉴 캐릭터 선택</button><button id="sound">소리 켜기</button><button id="full">전체화면</button></div>
+<div id="host" hidden><label>원본 ZIP (방장 PC에서만 읽음) <input id="rom" type="file" accept=".zip"></label><button id="load">게임 코어 준비</button><button id="start" disabled>현재 인원으로 시작</button><button id="coin">코인</button></div>
+<output id="status" role="status">뉴트월드 회원 확인 중…</output><p id="memberHelp" hidden><a href="../profile.html">회원식별 후 다시 입장하기</a></p><div id="stage"><canvas id="screen" width="304" height="224" hidden></canvas><video id="video" autoplay playsinline muted hidden></video></div><p>WASD 이동 · J 공격/시작/컨티뉴 · K 점프 · U 폭탄 · Enter 채팅</p></section>
+<aside><h2>채팅</h2><ol id="messages" aria-live="polite"></ol><form id="chatForm" hidden><input id="chat" maxlength="120" aria-label="채팅 메시지"><button>전송</button></form></aside></main>
+<script src="./jszip.js"></script><script src="https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js"></script><script src="./engine.js"></script><script type="module" src="./newtworld-entry.mjs"></script></html>
