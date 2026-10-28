@@ -1,3 +1,4 @@
+import {lobbyAudio} from './lobby-audio.mjs?v=51';
 import {testHeaders} from './test-access.mjs?v=48';
 const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 let channel=1,rooms=[],inside=false,busy=false;
@@ -9,5 +10,6 @@ export async function refreshRooms(){if(inside||busy)return;busy=true;try{const 
 export function initLobby(name){$('memberName').textContent=name;$('openCreate').disabled=false;$('openCreate').onclick=()=>{$('roomTitle').value=name+'의 작전실';$('createDialog').showModal();};$('cancelCreate').onclick=()=>$('createDialog').close();$('refreshRooms').onclick=refreshRooms;$('waitingOnly').onchange=render;
  for(const b of document.querySelectorAll('[data-channel]'))b.onclick=()=>{channel=Number(b.dataset.channel);for(const x of document.querySelectorAll('[data-channel]'))x.classList.toggle('active',x===b);refreshRooms();};
  window.nwLobbyConfig=()=>({channel,title:$('roomTitle').value.trim()||name+'의 작전실',listed:true});window.nwEnterRoom=(title)=>{inside=true;$('createDialog').close();$('channelView').hidden=true;$('roomView').hidden=false;$('roomName').textContent=title||'작전 대기실';$('roomChannel').textContent='CHANNEL '+String(channel).padStart(2,'0');};
- window.nwGameStarted=()=>{document.body.classList.add('in-game');$('gameView').hidden=false;$('stage').append(document.querySelector('aside'));};refreshRooms();setInterval(refreshRooms,5000);
+ window.nwOperations=()=>{document.body.classList.remove('in-game');$('gameView').hidden=true;document.querySelector('.lobby-layout').append(document.querySelector('aside'));$('chatForm').hidden=false;lobbyAudio.setWaiting(true);};
+ window.nwGameStarted=()=>{lobbyAudio.setWaiting(false);document.body.classList.add('in-game');$('gameView').hidden=false;$('stage').append(document.querySelector('aside'));};refreshRooms();setInterval(refreshRooms,5000);
 }
