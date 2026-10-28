@@ -40,7 +40,7 @@ export class FiveSession {
   if(this.approvedCredits.has(id))return false;
   if(this.phase!=='playing'||!this.players.some(p=>p.state==='active'))throw Error('NO_ACTIVE_TEAMMATE');
   const p=this.players[slot-1];if(!p||!['continue','spectator'].includes(p.state))throw Error('REJOIN_NOT_AVAILABLE');
-  p.state='selecting';p.deadline=null;this.selectCharacter(slot,p.character);this.approvedCredits.add(id);return true;
+  p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;
  }
  selectCharacter(slot,character){const p=this.players[slot-1];if(!p||p.state!=='selecting'||!Number.isInteger(character)||character<0||character>3)throw Error('INVALID_SELECTION');p.character=character;p.lives=3;this.wb(this.status[slot-1]+0x7e,character);this.respawn(slot-1);}
  continueInput(inputs,previous){
@@ -87,6 +87,9 @@ export class FiveSession {
    native|=this.selectionInput(inputs);if(this.pendingStart&&this.frame>=this.startConfirmAt&&this.frame<this.startConfirmAt+6)native|=16;if(this.pendingStart&&this.frame%30===0&&this.byte(0x10fdb0)>0)this.startPulse=5;if(this.startPulse>0){native|=256;this.startPulse--;}
   }
   if(this.phase==='playing')for(let i=0;i<5;i++){let bits=this.players[i].state==='active'?inputs[i]:0;if((bits&12)===12)bits&=~12;if((bits&3)===3)bits&=~3;this.wb(this.x.inputBase+i*2,bits);const edge=bits&~previousInputs[i],edgeAddr=this.x.inputBase+0x10+i;this.wb(edgeAddr,this.long(0x10039c)===0xed682?this.byte(edgeAddr)|edge:edge);}
+  // Native 4303A/43072 and portrait renderer 43C12 share the character-use mask.
+  // Only clear it during selection; gameplay ownership and actor state are untouched.
+  if(this.nativeContinue||(this.phase==='attract'&&[0x4323c,0x43284,0x432c4,0x432d4].includes(this.long(this.status[0]))))this.wb(0x10ec06,0);
   this.m._nw_input(native);this.m._nw_run(this.frame);
   if(this.phase==='playing'&&this.byte(0x10040c)===5){this.phase='complete';this.completionFrame=this.frame;for(let i=0;i<5;i++){this.wb(this.x.inputBase+i*2,0);this.wb(this.x.inputBase+i*2+1,0);}this.emit('complete',{nativeStage:5});}
   if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
