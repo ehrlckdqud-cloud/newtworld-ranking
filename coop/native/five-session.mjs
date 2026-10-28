@@ -1,8 +1,8 @@
 /** Cooperative host lifecycle. Native continue/selection rendering is still a release gate. */
 export class FiveSession {
- constructor(module,profile,{characters=[0,1,2,3,0],sharedSelection=false,playerCount=characters.length}={}){
+ constructor(module,profile,{characters=[0,1,2,3,0],sharedSelection=false,playerCount=characters.length,paid=false}={}){
   if(!Number.isInteger(playerCount)||playerCount<1||playerCount>5||characters.length<playerCount||characters.length>5||characters.some(x=>!Number.isInteger(x)||x<0||x>3))throw Error('INVALID_CHARACTERS');
-  this.playerCount=playerCount;characters=Array.from({length:5},(_,i)=>characters[i]??0);
+  this.paid=paid;this.paidInitialCoin=paid;this.paidContinuePending=false;this.approvedCredits=new Set();this.playerCount=playerCount;characters=Array.from({length:5},(_,i)=>characters[i]??0);
   this.sharedSelection=sharedSelection;this.selection=null;this.selectionPrevious=[0,0,0,0,0];this.m=module;this.x=profile.experiment;this.frame=0;this.phase='attract';this.completionFrame=null;this.inputs=[0,0,0,0,0];this.coinPulse=0;this.startPulse=0;this.events=[];this.reserved=new Set();this.pendingStart=false;
   this.status=[0x10023c,0x1002ec,0x1052ac,0x10509c,0x104e8c];this.weapon=[0x10eaf0,0x10eafe,0x10538c,0x10517c,0x104f6c];
   this.players=characters.map((character,i)=>({slot:i+1,character,participating:i<playerCount,lives:i<playerCount?3:0,state:i<playerCount?'waiting':'spectator',deadline:null,seenAlive:false,coinIds:[]}));
@@ -29,6 +29,13 @@ export class FiveSession {
  }
  respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);p.state='active';p.seenAlive=false;p.deadline=null;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
  requestContinue(slot,id){const p=this.players[slot-1];if(!p||typeof id!=='string'||!id||id.length>100)throw Error('INVALID_CONTINUE');if(p.coinIds.includes(id))return false;if(p.state!=='continue'||this.frame>=p.deadline)throw Error('CONTINUE_EXPIRED');p.coinIds.push(id);p.state='selecting';p.deadline=null;this.emit('continue-selection',{slot});return true;}
+ authorizeContinue(slot,id){
+  if(this.approvedCredits.has(id))return false;
+  const p=this.players[slot-1];if(!p)throw Error('EMPTY_SEAT');
+  if(this.nativeContinue&&slot===1){this.paidContinuePending=true;this.approvedCredits.add(id);return true;}
+  if(p.state==='spectator'&&this.phase==='playing'){p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;}
+  const ok=this.requestContinue(slot,id);this.approvedCredits.add(id);return ok;
+ }
  selectCharacter(slot,character){const p=this.players[slot-1];if(!p||p.state!=='selecting'||!Number.isInteger(character)||character<0||character>3)throw Error('INVALID_SELECTION');p.character=character;p.lives=3;this.wb(this.status[slot-1]+0x7e,character);this.respawn(slot-1);}
  continueInput(inputs,previous){
   // Test credits only. A paid deployment must authorize coin spending on the server.
@@ -36,7 +43,7 @@ export class FiveSession {
   for(let i=0;i<5;i++){
    const p=this.players[i],edge=inputs[i]&~previous[i];
    if(p.state==='continue'){
-    if((edge&16)&&this.frame<p.deadline)this.requestContinue(i+1,`keyboard-${this.frame}-${i}`);
+    if(!this.paid&&(edge&16)&&this.frame<p.deadline)this.requestContinue(i+1,`keyboard-${this.frame}-${i}`);
    }else if(p.state==='selecting'){
     let at=order.indexOf(p.character);
     if(edge&4)at=(at+3)%4;if(edge&8)at=(at+1)%4;
@@ -69,8 +76,8 @@ export class FiveSession {
    // Simultaneous players share a single tick instead of stacking five sounds.
    if(tick){this.ww(this.x.inputBase+0x50,0x10d4);this.emit('continue-sound',{command:0x10d4});}
   }
-  if(this.phase==='attract')this.reserveDuringBoot();
-  let native=0;if(this.nativeContinue){const routine=this.long(this.status[0]);if(routine===0x43640&&(inputs[0]&16)&&!(previousInputs[0]&16)){this.coinPulse=5;this.startPulse=5;}if(routine===0x432d4)native|=inputs[0];if(this.startPulse>0){native|=256;this.startPulse--;}}if(this.coinPulse>0){native|=128;this.coinPulse--;}if(this.phase==='attract'){
+  if(this.phase==='attract'){this.reserveDuringBoot();if(this.paidInitialCoin&&this.frame>1100&&this.frame%30===0){if(this.byte(0x10fdb0)>0)this.paidInitialCoin=false;else this.coinPulse=5;}}
+  let native=0;if(this.nativeContinue){const routine=this.long(this.status[0]);if(routine===0x43640&&((!this.paid&&(inputs[0]&16)&&!(previousInputs[0]&16))||this.paidContinuePending)){this.paidContinuePending=false;this.coinPulse=5;this.startPulse=5;}if(routine===0x432d4)native|=inputs[0];if(this.startPulse>0){native|=256;this.startPulse--;}}if(this.coinPulse>0){native|=128;this.coinPulse--;}if(this.phase==='attract'){
    native|=this.selectionInput(inputs);if(this.pendingStart&&this.frame%30===0&&this.byte(0x10fdb0)>0)this.startPulse=5;if(this.startPulse>0){native|=256;this.startPulse--;}
   }
   if(this.phase==='playing')for(let i=0;i<5;i++){let bits=this.players[i].state==='active'?inputs[i]:0;if((bits&12)===12)bits&=~12;if((bits&3)===3)bits&=~3;this.wb(this.x.inputBase+i*2,bits);const edge=bits&~previousInputs[i],edgeAddr=this.x.inputBase+0x10+i;this.wb(edgeAddr,this.long(0x10039c)===0xed682?this.byte(edgeAddr)|edge:edge);}
