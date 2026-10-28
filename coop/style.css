@@ -6,4 +6,8 @@ body.in-game #stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;align
 
 .coin-tools{display:flex;align-items:center;gap:8px;margin:8px 0 12px;flex-wrap:wrap}.coin-tools button{border-color:#79a66b;color:#d4f5b5}.coin-tools span{font-size:12px;color:#c8dbb3}#waitingMusic{white-space:nowrap}
 
-#gameSurface{position:relative;min-width:0;grid-column:1;grid-row:1;container-type:inline-size}#gameSurface canvas,#gameSurface video{display:block;width:100%;height:auto}#gameCredits{position:absolute;right:1%;bottom:1%;min-width:30%;text-align:right;padding:2px 5px;background:#000;color:#fff;font:bold clamp(12px,3cqw,30px)/1 monospace;letter-spacing:1px;text-shadow:1px 1px #777;pointer-events:none}#rejoinGame{border-color:#d3b86a;color:#ffe6a0}
+#gameSurface{position:relative;min-width:0;grid-column:1;grid-row:1;container-type:inline-size}#gameSurface canvas,#gameSurface video{display:block;width:100%;height:auto}#rejoinGame{border-color:#d3b86a;color:#ffe6a0}
+
+.room-actions{display:flex;gap:8px;align-items:center}#gameSurface:focus{outline:none}:root:fullscreen{overflow:auto;background:#141914}:root:fullscreen body.in-game #appShell{max-width:none}:root:fullscreen body.in-game #screen,:root:fullscreen body.in-game #video{max-height:82vh}
+
+body.in-game .room-heading{position:sticky;top:0;z-index:20;background:#141914;padding:10px 0}body.expanded-view #appShell{max-width:none}body.expanded-view header{display:none}

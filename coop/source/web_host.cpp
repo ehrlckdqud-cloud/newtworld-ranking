@@ -10,6 +10,7 @@ static int frame=0,pixel=1;
 static unsigned manual=0;static int hud_enabled=false;
 static double rate=48000,fps=59.18;
 extern "C" void retro_set_newtworld_hud(int);
+extern "C" void retro_newtworld_credits(int);
 extern "C" void retro_newtworld_glyph(unsigned,unsigned,uint32_t*);
 EM_JS(void,video_js,(const void* ptr,unsigned w,unsigned h,unsigned pitch,int fmt),{if(Module.onVideo)Module.onVideo(ptr,w,h,pitch,fmt);});
 EM_JS(void,audio_js,(const void* ptr,unsigned count),{if(Module.onAudio)Module.onAudio(ptr,count);});
@@ -39,7 +40,7 @@ static int16_t input(unsigned port,unsigned device,unsigned,unsigned id){
 }
 extern "C" {
 EMSCRIPTEN_KEEPALIVE int nw_load(){
- manual=0;hud_enabled=false;frame=0;retro_set_newtworld_hud(false);
+ manual=0;hud_enabled=false;frame=0;retro_newtworld_credits(-1);retro_set_newtworld_hud(false);
  options["fbneo-allow-patched-romsets"]="enabled";options["fbneo-neogeo-mode"]="MVS";options["fbneo-cpu-speed-adjust"]="100%";options["fbneo-dipswitch-mslug3fd-BIOS"]="MVS Asia/Europe ver. 5 (1 slot)";
  retro_set_environment(environment);retro_set_video_refresh(video);retro_set_audio_sample(sample);retro_set_audio_sample_batch(batch);retro_set_input_poll(poll);retro_set_input_state(input);retro_init();
  retro_game_info info={"/roms/mslug3fd.zip",nullptr,0,nullptr};if(!retro_load_game(&info))return 0;
@@ -47,6 +48,10 @@ EMSCRIPTEN_KEEPALIVE int nw_load(){
 }
 extern unsigned retro_newtworld_cell(int,int);
 EMSCRIPTEN_KEEPALIVE unsigned nw_cell(int x,int y){return retro_newtworld_cell(x,y);}
+extern void retro_newtworld_redraw();
+extern void retro_newtworld_credits(int);
+EMSCRIPTEN_KEEPALIVE void nw_credits(int value){retro_newtworld_credits(value);}
+EMSCRIPTEN_KEEPALIVE void nw_redraw(){retro_newtworld_redraw();}
 EMSCRIPTEN_KEEPALIVE void nw_input(unsigned b){manual=b;}
 EMSCRIPTEN_KEEPALIVE void nw_hud(int v){hud_enabled=v;}
 EMSCRIPTEN_KEEPALIVE void nw_run(int f){frame=f;retro_set_newtworld_hud(hud_enabled);retro_run();}
