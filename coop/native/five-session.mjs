@@ -27,7 +27,7 @@ export class FiveSession {
   }
   this.phase='playing';this.pendingStart=false;this.m._nw_hud(1);this.emit('five-session-start');
  }
- respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);p.state='active';p.seenAlive=false;p.deadline=null;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
+ respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);this.wb(this.status[i]+0x82,2);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,1);p.state='active';p.seenAlive=false;p.deadline=null;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
  requestContinue(slot,id){const p=this.players[slot-1];if(!p||typeof id!=='string'||!id||id.length>100)throw Error('INVALID_CONTINUE');if(p.coinIds.includes(id))return false;if(p.state!=='continue'||this.frame>=p.deadline)throw Error('CONTINUE_EXPIRED');p.coinIds.push(id);p.state='selecting';p.deadline=null;this.emit('continue-selection',{slot});return true;}
  authorizeContinue(slot,id){
   if(this.approvedCredits.has(id))return false;
@@ -35,6 +35,12 @@ export class FiveSession {
   if(this.nativeContinue&&slot===1){this.paidContinuePending=true;this.approvedCredits.add(id);return true;}
   if(p.state==='spectator'&&this.phase==='playing'){p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;}
   const ok=this.requestContinue(slot,id);this.approvedCredits.add(id);return ok;
+ }
+ authorizeRejoin(slot,id){
+  if(this.approvedCredits.has(id))return false;
+  if(this.phase!=='playing'||!this.players.some(p=>p.state==='active'))throw Error('NO_ACTIVE_TEAMMATE');
+  const p=this.players[slot-1];if(!p||!['continue','spectator'].includes(p.state))throw Error('REJOIN_NOT_AVAILABLE');
+  p.state='selecting';p.deadline=null;this.selectCharacter(slot,p.character);this.approvedCredits.add(id);return true;
  }
  selectCharacter(slot,character){const p=this.players[slot-1];if(!p||p.state!=='selecting'||!Number.isInteger(character)||character<0||character>3)throw Error('INVALID_SELECTION');p.character=character;p.lives=3;this.wb(this.status[slot-1]+0x7e,character);this.respawn(slot-1);}
  continueInput(inputs,previous){
