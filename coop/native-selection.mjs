@@ -13,7 +13,7 @@ export function drawFiveSelection(ctx,module,engine,colors){
 
 /** Per-seat continue overlay in original ROM lettering. The ongoing game stays visible. */
 export function drawFiveContinue(ctx,module,engine,colors){
- if(engine?.phase!=='playing')return;
+ if(engine?.phase!=='playing'||engine.nativeContinue)return;
  const text=(s,x,y,size=5)=>{
   for(const [i,ch]of [...s].entries()){
    const ptr=module._nw_glyph(0x300+ch.charCodeAt(0),1);

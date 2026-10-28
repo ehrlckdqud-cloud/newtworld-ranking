@@ -7,3 +7,9 @@ Public entry: ./index.html. The existing compiled emulator is loaded from the al
 FBNeo revision 2b0c1c0679df115cada7df9199ea2762222e58fd. Core build recipe, changed host adapter and patch: source/. All license notices: licenses/. The final package.py step in the historical build recipe is not required for compiling core.js.
 
 Known limitations: actual separate-PC internet/WebRTC test is pending; TURN is not provisioned. Disconnect currently pauses the game and requires a new room. Game-specific fixes are deferred until after migration.
+
+## Channel lobby (2026-10-29)
+
+Three member-gated channels list independent rooms, participant counts and waiting/playing states. Hosts create rooms and load their local game data; other participants need no ROM. Mobile clients are blocked before entry and by the create/join/list gateway. IndexedDB keeps one validated local ZIP per browser for later automatic preparation. This does not distribute a ROM to a first-time solo host.
+
+Solo continue now invokes the original native routine (0x43606), countdown, sounds, selector and door. Cooperative 2–5-player continue still uses the existing per-seat overlay; original multi-seat continue presentation is not yet restored. Do not describe that as complete.

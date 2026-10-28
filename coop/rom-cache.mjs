@@ -1,0 +1,3 @@
+const open=()=>new Promise((resolve,reject)=>{const r=indexedDB.open('newtworld-local-game-data',1);r.onupgradeneeded=()=>r.result.createObjectStore('games');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+export async function readSavedROM(){const db=await open();return new Promise((resolve,reject)=>{const t=db.transaction('games'),r=t.objectStore('games').get('mslug3');r.onsuccess=()=>resolve(r.result||null);r.onerror=()=>reject(r.error);t.oncomplete=()=>db.close();});}
+export async function saveROM(bytes){const db=await open();return new Promise((resolve,reject)=>{const t=db.transaction('games','readwrite');t.objectStore('games').put(bytes,'mslug3');t.oncomplete=()=>{db.close();resolve();};t.onerror=()=>reject(t.error);});}

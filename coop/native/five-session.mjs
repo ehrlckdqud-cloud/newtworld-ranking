@@ -56,11 +56,11 @@ export class FiveSession {
   this.ww(0x1001fa,0x20ff);return 0;
  }
  step(inputs=this.inputs){if(!Array.isArray(inputs)||inputs.length!==5||inputs.some(x=>!Number.isInteger(x)||x<0||x>127))throw Error('INVALID_INPUTS');const previousInputs=this.inputs;this.inputs=inputs.slice();
-  if(this.phase==='playing')this.continueInput(inputs,previousInputs);
+  if(this.phase==='playing'&&!this.nativeContinue)this.continueInput(inputs,previousInputs);
   if(this.phase==='playing'){
    let tick=false;
    for(const p of this.players){
-    if(p.state==='continue'){
+    if(p.state==='continue'&&!this.nativeContinue){
      const digit=Math.max(0,Math.min(9,Math.ceil((p.deadline-this.frame)/this.m._nw_fps())-1));
      if(p.continueDigit!==digit){p.continueDigit=digit;tick=true;}
     }else p.continueDigit=null;
@@ -70,7 +70,7 @@ export class FiveSession {
    if(tick){this.ww(this.x.inputBase+0x50,0x10d4);this.emit('continue-sound',{command:0x10d4});}
   }
   if(this.phase==='attract')this.reserveDuringBoot();
-  let native=0;if(this.coinPulse>0){native|=128;this.coinPulse--;}if(this.phase==='attract'){
+  let native=0;if(this.nativeContinue){const routine=this.long(this.status[0]);if(routine===0x43640&&(inputs[0]&16)&&!(previousInputs[0]&16)){this.coinPulse=5;this.startPulse=5;}if(routine===0x432d4)native|=inputs[0];if(this.startPulse>0){native|=256;this.startPulse--;}}if(this.coinPulse>0){native|=128;this.coinPulse--;}if(this.phase==='attract'){
    native|=this.selectionInput(inputs);if(this.pendingStart&&this.frame%30===0&&this.byte(0x10fdb0)>0)this.startPulse=5;if(this.startPulse>0){native|=256;this.startPulse--;}
   }
   if(this.phase==='playing')for(let i=0;i<5;i++){let bits=this.players[i].state==='active'?inputs[i]:0;if((bits&12)===12)bits&=~12;if((bits&3)===3)bits&=~3;this.wb(this.x.inputBase+i*2,bits);const edge=bits&~previousInputs[i],edgeAddr=this.x.inputBase+0x10+i;this.wb(edgeAddr,this.long(0x10039c)===0xed682?this.byte(edgeAddr)|edge:edge);}
@@ -81,14 +81,15 @@ export class FiveSession {
    const p=this.players[i],a=this.x.actors[i],routine=this.long(a);
    if(p.state==='active'){
     if(routine!==0&&routine!==0x567a)p.seenAlive=true;
-    else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);}}
+    else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);if(this.playerCount===1){this.nativeContinue=true;p.deadline=null;const s=this.status[0];this.ww(s+0x6a,0);this.wb(s+0x7f,0);this.wb(s+0x80,0);this.ww(s+0x10,0);this.wl(s+0xc,0);this.wl(s,0x43606);}}}
    }
-   if(p.state==='continue'&&this.frame>=p.deadline){p.state='spectator';p.deadline=null;this.wb(this.status[i]+0x82,0);this.emit('spectator',{slot:i+1});}
+   if(p.state==='continue'&&!this.nativeContinue&&this.frame>=p.deadline){p.state='spectator';p.deadline=null;this.wb(this.status[i]+0x82,0);this.emit('spectator',{slot:i+1});}
   }
+  if(this.nativeContinue){const p=this.players[0],s=this.status[0],routine=this.long(s);if(routine===0x432d4)p.state='selecting';if(routine===0x433e6&&![0,0x567a].includes(this.long(this.x.actors[0]))){p.character=this.word(this.x.actors[0]+0x6a);p.lives=3;p.state='active';p.seenAlive=true;p.deadline=null;this.nativeContinue=false;this.wb(s+0x7f,3);this.wl(s,0x567a);this.emit('native-continue-accepted');}else if(routine===0x43862){p.state='spectator';p.deadline=null;this.nativeContinue=false;this.emit('native-continue-expired');}}
   if(this.phase==='playing'&&this.players.every(p=>p.state==='spectator')){this.phase='game-over';for(let i=2;i<5;i++)this.wb(0x1053e0-(i-2)*0x210,0);this.emit('game-over');}
   this.frame++;
  }
  state(){return {playerCount:this.playerCount,frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,selection:this.selection?structuredClone(this.selection):null,activeMask:this.byte(0x10ed86),players:this.players.map((p,i)=>({...p,coinIds:undefined,x:this.word(this.x.actors[i]+0x28),y:this.word(this.x.actors[i]+0x2c),owner:this.word(this.x.actors[i]+0x6c),routine:this.long(this.x.actors[i]),nativeCharacter:this.word(this.x.actors[i]+0x6a),ammo:this.word(this.weapon[i]+10),weapon:this.byte(this.weapon[i]+3)}))};}
- checkpoint(){return {playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,players:structuredClone(this.players),reserved:[...this.reserved]};}
- restore(s){this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
+ checkpoint(){return {nativeContinue:!!this.nativeContinue,playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,players:structuredClone(this.players),reserved:[...this.reserved]};}
+ restore(s){this.nativeContinue=!!s.nativeContinue;this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
 }
