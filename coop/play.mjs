@@ -1,9 +1,9 @@
-import {chooseCoinQuantity} from './coin-purchase.mjs?v=57';
-import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=57';
+import {chooseCoinQuantity} from './coin-purchase.mjs?v=58';
+import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=58';
 import {MemberCoins} from './member-coins.mjs?v=53';
 import {lobbyAudio} from './lobby-audio.mjs?v=51';
 import {downloadGame} from './download-game.mjs?v=50';
-import {testHeaders} from './test-access.mjs?v=57';
+import {testHeaders} from './test-access.mjs?v=58';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,headers:{...options.headers,...testHeaders()}});
@@ -13,7 +13,7 @@ import {inputReceiver} from './input-channel.mjs';
 import {makeResults} from './native-results.mjs';
 import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=48';
 import {makeHUD} from './native-hud.mjs';
-import {FiveSession} from './native/five-session.mjs?v=55';
+import {FiveSession} from './native/five-session.mjs?v=58';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-online-lab-v55';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -62,7 +62,8 @@ async function event(e){
  if(e.type==='snapshot'||e.type==='roster'){if(e.viewers)viewers=e.viewers;roster=e.players;if(e.completed)completed=true;render();}
  if(e.type==='game-complete'){completed=true;render();bits=0;held.fill(0);note('MISSION ALL OVER · 채팅은 계속 이용할 수 있습니다.');}
  if(e.type==='game-over'){completed=true;stop('GAME OVER · 작전실로 돌아갈 수 있습니다.');render();}
- if(e.type==='paused')stop('연결 중단: '+e.reason+' · 현재 검증본은 새 방으로 다시 시작해야 합니다.');
+ if(e.type==='paused'){roomPhase='paused';stop('잠시 일시정지 · 창으로 돌아와 연결이 확인되면 이어집니다.');}
+ if(e.type==='native-resumed'){roomPhase='native';playing=!completed&&(session.slot===1||!away);lastTick=0;clock=0;bits=0;held.fill(0);audioNext=0;note('게임을 이어서 진행합니다.');if(!document.hidden){ac?.resume().catch(()=>{});if(session.slot!==1)$('video').play().catch(()=>{});module?._nw_redraw?.();}}
  if(e.type==='native-presence'){const p=roster.find(p=>p.slot===e.slot);if(p){p.away=e.away;if(e.departed)p.departed=true;}if(e.slot<=5)held[e.slot-1]=0;if(e.slot===session.slot)setAway(e.away);render();}
  if(e.type==='native-reset'){handledCommands.clear();startApprovals.clear();playing=false;hasGame=false;completed=false;away=true;disposeGame();roster=e.players;$('load').disabled=false;setAway(true);render();if(session.slot===1)await $('load').onclick();}
  if(e.type==='native-start'){
@@ -81,9 +82,10 @@ function bindInput(record,channel,slot){
  if(session.slot===1){if(slot>5){channel.onmessage=()=>{};return;}const receive=inputReceiver({slot,enabled:()=>playing&&!completed&&!roster[slot-1]?.away&&engine?.players[slot-1]?.state!=='spectator',accept:(seat,value,t)=>{held[seat-1]=value;heldAt[seat-1]=t;}});channel.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch{return;}if(m.type==='wallet-display'){if(record.wallet.update(m))syncNativeCredits();return;}receive(e.data);};}
  if(session.slot!==1)channel.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='live-state'&&Array.isArray(m.players)){for(const p of m.players){const q=roster.find(q=>q.slot===p.slot);if(q){q.state=p.state;q.lives=p.lives;}}render();}}catch{}};
  channel.onopen=()=>{lastSent=-1;if(session?.slot!==1)channel.send(JSON.stringify({type:'wallet-display',balance:coins.balance,revision:coins.revision}));note('게임 입력 연결됨');};
- channel.onclose=()=>{if(!session||slot>5||roster[slot-1]?.departed)return;if(session.slot===1){held[slot-1]=0;safe(act({type:'native-pause'}));}stop('게임 입력 연결이 끊겼습니다. 새 방으로 다시 시작하세요.');};
+ channel.onclose=()=>{if(!session||slot>5||roster[slot-1]?.departed)return;if(session.slot===1){held[slot-1]=0;safe(act({type:'native-pause'}));}roomPhase='paused';stop('게임 연결을 복구하는 중입니다.');};
 }
-async function signal(from,s){const r=await makePeer(from),pc=r.pc;if(s.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(s.candidate);else r.queue.push(s.candidate);return;}await pc.setRemoteDescription({type:s.type,sdp:s.sdp});for(const c of r.queue.splice(0))await pc.addIceCandidate(c);if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());await act({type:'signal',to:from,signal:{type:'answer',sdp:pc.localDescription.sdp}});}}
+function discardPeer(slot){const r=peers.get(slot);if(!r)return;r.pc.onconnectionstatechange=null;r.pc.onicecandidate=null;if(r.channel)r.channel.onclose=null;r.media?.getVideoTracks().forEach(t=>t.stop());r.pc.close();peers.delete(slot);}
+async function signal(from,s){if(s.type==='offer'&&peers.has(from)&&(['failed','closed'].includes(peers.get(from).pc.connectionState)||peers.get(from).channel?.readyState==='closed'))discardPeer(from);const r=await makePeer(from),pc=r.pc;if(s.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(s.candidate);else r.queue.push(s.candidate);return;}await pc.setRemoteDescription({type:s.type,sdp:s.sdp});for(const c of r.queue.splice(0))await pc.addIceCandidate(c);if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());await act({type:'signal',to:from,signal:{type:'answer',sdp:pc.localDescription.sdp}});}}
 async function initAudio(){ac??=new AudioContext();if(!audioOut){audioOut=ac.createMediaStreamDestination();}await ac.resume();}
 function audio(ptr,n){if(!playing||!ac||ac.state!=='running'||!n)return;const src=module.HEAP16.subarray(ptr/2,ptr/2+n*2),b=ac.createBuffer(2,n,module._nw_rate());for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<n;i++)d[i]=src[i*2+c]/32768;}if(audioNext<ac.currentTime||audioNext>ac.currentTime+.25)audioNext=ac.currentTime+.04;const node=ac.createBufferSource();node.buffer=b;if(!away)node.connect(ac.destination);node.connect(audioOut);node.start(audioNext);audioNext+=n/module._nw_rate();}
 function paint(ptr,w,h,pitch,fmt){if(nativeCanvas.width!==w||nativeCanvas.height!==h){nativeCanvas.width=w;nativeCanvas.height=h;pixels=null;}pixels??=ctx.createImageData(w,h);const src=module.HEAPU8,d=pixels.data;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const s=ptr+y*pitch+x*(fmt===1?4:2),o=(y*w+x)*4;if(fmt===1){d[o]=src[s+2];d[o+1]=src[s+1];d[o+2]=src[s];}else{const v=src[s]|src[s+1]<<8;d[o]=(v>>11&31)*255/31;d[o+1]=(v>>5&63)*255/63;d[o+2]=(v&31)*255/31;}d[o+3]=255;}ctx.putImageData(pixels,0,0);if(engine?.nativeContinue)return;drawFiveSelection(ctx,module,engine,colors);if(engine?.phase!=='playing')return;paintHUD?.();if(paintResults?.(paintHUD)){drawFiveContinue(ctx,module,engine,colors);return;}drawFiveContinue(ctx,module,engine,colors);
@@ -154,7 +156,7 @@ function sendChat(){
 $('chat').onfocus=()=>{chatOpen=true;bits=0;};
 $('chatForm').onsubmit=e=>{e.preventDefault();if(composing)pendingChat=true;else sendChat();};$('chat').oncompositionstart=()=>composing=true;$('chat').oncompositionend=()=>{composing=false;if(pendingChat)queueMicrotask(()=>{if(chatOpen)sendChat();});};
 window.addEventListener('keydown',e=>{if(!session||document.querySelector('dialog[open]'))return;if(viewer){if(e.key==='Enter'&&document.activeElement!==$('viewerInput')){e.preventDefault();$('viewerInput').focus();}return;}if(e.key==='Enter'){if(enterHeld||e.repeat)return;enterHeld=true;if(!chatOpen){e.preventDefault();chatOpen=true;bits=0;$('chatForm').hidden=false;$('chat').focus();}else if(composing||e.isComposing)pendingChat=true;else{e.preventDefault();sendChat();}return;}if(chatOpen){if(e.key==='Escape')closeChat();return;}if(completed||away||purchaseBusy||!playing||document.querySelector('dialog[open]')||/INPUT|SELECT/.test(e.target.tagName))return;if(keymap[e.code]){e.preventDefault();if(e.code==='KeyJ'&&!e.repeat){const p=session.slot===1&&engine?engine.players[0]:roster.find(p=>p.slot===session.slot);if(!roster.find(p=>p.slot===session.slot)?.started){safe(command('start'));return;}if(['continue','spectator'].includes(p?.state)){safe(command('continue'));return;}}bits|=keymap[e.code];}});
-window.addEventListener('keyup',e=>{if(e.key==='Enter')enterHeld=false;bits&=~(keymap[e.code]||0);});window.addEventListener('blur',()=>{bits=0;enterHeld=false;});document.addEventListener('visibilitychange',()=>{bits=0;if(document.hidden&&session?.slot===1&&playing){safe(act({type:'native-pause'}));stop('방장 창이 숨겨졌습니다. 현재 검증본은 새 방으로 재시작하세요.');}});
+window.addEventListener('keyup',e=>{if(e.key==='Enter')enterHeld=false;bits&=~(keymap[e.code]||0);});window.addEventListener('blur',()=>{bits=0;enterHeld=false;});document.addEventListener('visibilitychange',()=>{bits=0;held.fill(0);enterHeld=false;lastTick=0;clock=0;audioNext=0;if(!document.hidden){ac?.resume().catch(()=>{});if(session?.slot!==1)$('video').play().catch(()=>{});module?._nw_redraw?.();safe(recoverWindow());}});
 setInterval(()=>{if(viewer||!session||!playing||completed||away||roster[session.slot-1]?.state==='spectator')return;const t=performance.now();if(bits!==lastSent||t-lastSentAt>150){lastSent=bits;lastSentAt=t;if(config.inputTransport==='webrtc'){if(session.slot!==1){const ch=peers.get(1)?.channel;if(ch?.readyState==='open'&&ch.bufferedAmount<4096)ch.send(JSON.stringify({type:'input',bits,sequence:seq++}));}}else safe(act({type:'native-input',bits,sequence:seq++}));}},35);
 setInterval(()=>{if(session&&transportAlive)safe(act({type:'ping'}));},5000);
 let publishedState='',stateInFlight=false;
@@ -163,7 +165,7 @@ setInterval(publishState,80);
 // Read-only diagnostics for reproducible browser checks; no state mutation endpoint.
 window.newtOnlineDiagnostics=()=>({wallet:{balance:coins.balance,revision:coins.revision},hasGame,away,completed,bits,chatOpen,inputFocus:document.activeElement?.id,slot:session?.slot,playing,state:engine?.state(),credits:engine?.byte(0x10fdb0),peers:[...peers].map(([slot,{pc}])=>({slot,state:pc.connectionState})),inputChannel:peers.get(1)?.channel?.readyState,videoFrames:$('video').getVideoPlaybackQuality?.().totalVideoFrames||0,audioState:ac?.state,roster:roster.map(p=>({...p}))});
 
-async function listenPoll(own=session,epoch=roomEpoch){let cursor=0;while(session===own&&epoch===roomEpoch){const r=await apiFetch(`/api/rooms/${own.room}/poll?after=${cursor}`,{headers:{Authorization:'Bearer '+own.token}}),d=await r.json();if(session!==own||epoch!==roomEpoch)return;if(!r.ok){stop(d.error);return;}if(d.slot)session.slot=d.slot;roomPhase=d.phase||roomPhase;if(d.completed||roomPhase==='game-over')completed=true;if(d.snapshot)await event({type:'snapshot',...d.snapshot});for(const e of d.events){if(session!==own)return;await event(e);}if(session!==own)return;if(d.players)roster=d.players;if(d.viewers)viewers=d.viewers;if(viewer&&d.phase==='native'&&!hasGame)await event({type:'native-start',players:roster});if(d.wallet)updateCoins(d.wallet);render();cursor=d.cursor;await new Promise(resolve=>setTimeout(resolve,120));}}
+async function listenPoll(own=session,epoch=roomEpoch){let cursor=0;while(session===own&&epoch===roomEpoch){const r=await apiFetch(`/api/rooms/${own.room}/poll?after=${cursor}`,{headers:{Authorization:'Bearer '+own.token}}),d=await r.json();if(session!==own||epoch!==roomEpoch)return;if(!r.ok){stop(d.error);return;}if(d.slot)session.slot=d.slot;roomPhase=d.phase||roomPhase;if(d.completed||roomPhase==='game-over')completed=true;if(d.snapshot)await event({type:'snapshot',...d.snapshot});for(const e of d.events){if(session!==own)return;await event(e);}if(session!==own)return;if(d.players)roster=d.players;if(d.viewers)viewers=d.viewers;if(viewer&&d.phase==='native'&&!hasGame)await event({type:'native-start',players:roster});if(d.wallet)updateCoins(d.wallet);if(d.phase==='native'&&!completed&&!away&&!playing&&hasGame&&(session.slot===1||peers.get(1)?.channel?.readyState==='open')){playing=true;lastTick=0;clock=0;}render();cursor=d.cursor;await new Promise(resolve=>setTimeout(resolve,120));}}
 let creditReceiptFlush=null;
 await refreshWallet().catch(()=>{});
 function flushCreditReceipts(){if(creditReceiptFlush)return creditReceiptFlush;creditReceiptFlush=(async()=>{for(const [id,receipt]of creditReceipts){await act(receipt);creditReceipts.delete(id);}})().finally(()=>creditReceiptFlush=null);return creditReceiptFlush;}
@@ -174,3 +176,13 @@ $('viewerChatForm').onsubmit=e=>{e.preventDefault();const text=$('viewerInput').
 const gameControls=document.createElement('div');gameControls.id='gameControls';for(const [label,id]of [['전체화면 / 해제','full'],['소리 켜기','sound'],['작전실','leaveRoom']]){const b=document.createElement('button');b.textContent=label;b.onclick=()=>$(id).click();if(id==='leaveRoom')b.id='gameLeave';gameControls.append(b);}$('playerChat').prepend(gameControls);
 
 window.addEventListener('nw-site-blocked',()=>{playing=false;transportAlive=false;roomEpoch++;disposeGame();session=null;lobbyAudio.setWaiting(false);});
+
+let recoveringWindow=false;
+async function recoverWindow(){
+ if(recoveringWindow||document.hidden||!session||!hasGame||completed)return;
+ recoveringWindow=true;
+ try{await act({type:'ping'});if(!transportAlive){transportAlive=true;const own=session,epoch=++roomEpoch;listenPoll(own,epoch).catch(e=>{if(session===own)stop('연결 복구 중: '+e.message);}).finally(()=>{if(session===own&&epoch===roomEpoch)transportAlive=false;});}if(session?.slot===1&&roomPhase==='paused'){for(const p of [...roster,...viewers]){if(p.slot===1||p.departed||!p.connected)continue;const r=peers.get(p.slot);if(!r||['failed','closed'].includes(r.pc.connectionState)||r.channel?.readyState==='closed'){discardPeer(p.slot);await makePeer(p.slot,true);}}}if(session?.slot===1&&roomPhase==='paused'&&roster.filter(p=>!p.departed).every(p=>p.connected)&&roster.filter(p=>p.slot!==1&&!p.departed).every(p=>peers.get(p.slot)?.channel?.readyState==='open'))await act({type:'native-resume'});}
+ catch(e){if(!['PLAYERS_NOT_CONNECTED','NOT_PAUSED','SITE_SESSION_EXPIRED'].includes(e.message))note('게임 복귀 확인 중: '+e.message);}
+ finally{recoveringWindow=false;}
+}
+setInterval(()=>{if(roomPhase==='paused'||!transportAlive)recoverWindow();},2000);
