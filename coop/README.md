@@ -16,3 +16,6 @@ Solo continue now invokes the original native routine (0x43606), countdown, soun
 
 ## Staff test gate
 Member identification and a separate server-side test password are both required. The password is configured only as a secret runtime variable, never in this public source. Every room/lobby/action/poll request is gated; existing seat tokens alone are insufficient. The password is held only in the current page memory and must be re-entered after reload. It is not an administrator credential or role grant. The installation confirmation stores a validated user-selected ZIP locally; it does not provide ROM downloads.
+
+## Authorized server installation
+The owner confirmed distribution permission for the supplied ROM/BIOS. The installation package contains only ROMS/mslug3.zip and the required neogeo.zip inside a BIOS-only compatibility ZIP. Windows executables, settings, saves, screenshots and unrelated files are excluded. The server stores AES-GCM encrypted parts; the decryption key is a runtime secret released only after membership and test-password verification. The browser verifies GCM tags, total size and SHA-256 before preparing and saving the game. New solo hosts can install without selecting a file. No NewtGem charges are enabled.
