@@ -1,0 +1,2 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {readScores,SCORE_ADDRESSES} from '../coop/native/score-reader.mjs';
+test('native BCD scores read all five slots without accepting invalid boot bytes',()=>{const values=[0x123456,0x99999999,0x00004000,0xabcdef,0];const e={playerCount:5,long:a=>values[SCORE_ADDRESSES.indexOf(a)]};assert.deepEqual(readScores(e),[123456,99999999,4000,0,0]);e.playerCount=2;assert.deepEqual(readScores(e),[123456,99999999]);});
