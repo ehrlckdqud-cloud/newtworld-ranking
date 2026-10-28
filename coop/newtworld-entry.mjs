@@ -25,7 +25,7 @@ try{
  document.getElementById('channelView').hidden=false;
  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=51');initLobby(response.profile.nickname);lobbyAudio.arm();
+ await import('./play.mjs?v=52');initLobby(response.profile.nickname);lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
 }catch(error){status.textContent='회원 확인을 완료하지 못했습니다. 뉴트월드 회원식별 상태를 확인하고 새로고침해주세요.';document.getElementById('memberHelp').hidden=false;}
