@@ -1,4 +1,4 @@
-import {downloadGame} from './download-game.mjs?v=49';
+import {downloadGame} from './download-game.mjs?v=50';
 import {testHeaders} from './test-access.mjs?v=48';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
