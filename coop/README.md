@@ -13,3 +13,6 @@ Known limitations: actual separate-PC internet/WebRTC test is pending; TURN is n
 Three member-gated channels list independent rooms, participant counts and waiting/playing states. Hosts create rooms and load their local game data; other participants need no ROM. Mobile clients are blocked before entry and by the create/join/list gateway. IndexedDB keeps one validated local ZIP per browser for later automatic preparation. This does not distribute a ROM to a first-time solo host.
 
 Solo continue now invokes the original native routine (0x43606), countdown, sounds, selector and door. Cooperative 2–5-player continue still uses the existing per-seat overlay; original multi-seat continue presentation is not yet restored. Do not describe that as complete.
+
+## Staff test gate
+Member identification and a separate server-side test password are both required. The password is configured only as a secret runtime variable, never in this public source. Every room/lobby/action/poll request is gated; existing seat tokens alone are insufficient. The password is held only in the current page memory and must be re-entered after reload. It is not an administrator credential or role grant. The installation confirmation stores a validated user-selected ZIP locally; it does not provide ROM downloads.

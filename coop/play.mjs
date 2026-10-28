@@ -1,14 +1,15 @@
+import {testHeaders} from './test-access.mjs?v=48';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
-const apiFetch=(path,options)=>fetch(API+path,options);
+const apiFetch=(path,options={})=>fetch(API+path,{...options,headers:{...options.headers,...testHeaders()}});
 import {createChatPresentation} from './chat-presentation.mjs';
 import {applyLocalHostCommand} from './local-command.mjs';
 import {drawClearLabels,DISPLAY_SCALE} from './clear-labels.mjs';
 import {inputReceiver} from './input-channel.mjs';
 import {makeResults} from './native-results.mjs';
-import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs';
+import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=48';
 import {makeHUD} from './native-hud.mjs';
-import {FiveSession} from './native/five-session.mjs';
+import {FiveSession} from './native/five-session.mjs?v=48';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-online-lab-v46';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -67,7 +68,11 @@ function present(){
 function tick(t){requestAnimationFrame(tick);if(!playing||!engine||session?.slot!==1)return;if(!lastTick)lastTick=t;clock+=Math.min(100,t-lastTick);lastTick=t;const dt=1000/module._nw_fps();let n=0;try{while(clock>=dt&&n++<5){for(let i=1;i<5;i++)if(t-heldAt[i]>500)held[i]=0;held[0]=bits;engine.step(held);clock-=dt;}if(clock>dt*5)clock=dt*5;}catch(e){stop('실행 오류: '+e.message);}}
 requestAnimationFrame(tick);
 $('create').onclick=()=>safe(join(true));$('joinForm').onsubmit=e=>{e.preventDefault();safe(join(false));};$('ready').onclick=()=>safe(act({type:'ready',ready:!roster.find(p=>p.slot===session.slot)?.ready,character:+$('character').value}));$('character').onchange=()=>safe(act({type:'ready',ready:false,character:+$('character').value}));$('select').onclick=()=>safe(act({type:'native-command',command:'select',character:+$('character').value}));
-$('load').onclick=async()=>{try{if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],source=f?await f.arrayBuffer():await readSavedROM();if(!source)throw Error('이 PC에 게임 데이터가 없습니다. 최초 한 번 원본 ZIP을 선택해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();module=await createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(module,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(!module._nw_load())throw Error('CORE_LOAD_FAILED');canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;stream=canvas.captureStream(30);for(const t of audioOut.stream.getAudioTracks())stream.addTrack(t);await act({type:'native-loaded',loaded:true});$('start').disabled=false;if(f){try{await saveROM(source);$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}note('게임 준비 완료 · 대원들이 준비하면 출동하세요.');}catch(e){note(e.message);$('load').disabled=false;}};
+$('load').onclick=async()=>{try{if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],source=f?await f.arrayBuffer():await readSavedROM();if(!source)throw Error('이 PC에 게임 데이터가 없습니다. 최초 한 번 원본 ZIP을 선택해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();module=await createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(module,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(!module._nw_load())throw Error('CORE_LOAD_FAILED');canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;stream=canvas.captureStream(30);for(const t of audioOut.stream.getAudioTracks())stream.addTrack(t);await act({type:'native-loaded',loaded:true});$('start').disabled=false;if(f){try{await saveROM(source);$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}$('installGame').textContent='설치 완료';note('게임 준비 완료 · 대원들이 준비하면 출동하세요.');}catch(e){note(e.message);$('load').disabled=false;}};
+async function offerInstallation(){if(session?.slot!==1){note('참가자는 별도 데이터 설치 없이 방장의 게임에 연결됩니다.');return;}const saved=await readSavedROM().catch(()=>null);if(saved){note('이 PC에 이미 설치된 게임입니다.');if(!$('load').disabled)$('load').click();return;}$('installDialog').showModal();}
+$('gameSelect').onclick=()=>safe(offerInstallation());$('installGame').onclick=()=>safe(offerInstallation());
+$('cancelInstall').onclick=()=>$('installDialog').close();$('confirmInstall').onclick=()=>{$('installDialog').close();$('rom').click();};
+$('rom').onchange=()=>{if($('rom').files[0])$('load').click();};
 $('start').onclick=()=>safe((async()=>{await initAudio();await act({type:'start-native'});})());$('coin').onclick=()=>safe(command('coin'));$('sound').onclick=()=>safe(session?.slot===1?initAudio():($('video').muted=false,$('video').play()));const chatPanel=document.querySelector('aside'),chatParent=chatPanel.parentElement;
 $('full').onclick=()=>safe((async()=>{const stage=$('stage');stage.append(chatPanel);try{await stage.requestFullscreen();}catch(e){chatParent.append(chatPanel);throw e;}})());
 document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)chatParent.append(chatPanel);});
