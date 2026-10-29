@@ -8,3 +8,5 @@ test('actual handler refuses participant launch before checking local core',asyn
 test('server refusal is visible and unlocks start retry',async()=>{const f=fixture({act:async()=>{throw Error('ALL_PLAYERS_NEED_COIN');}});await f.button.onclick();assert.match(f.notices[0],/코인/);assert.equal(f.context.launchBusy,false);});
 
 test("failed relay preflight sends no start request and consumes no coin",async()=>{const f=fixture({verifyGameConnections:async()=>{throw Error("TURN_NOT_CONFIGURED");}});await f.button.onclick();assert.equal(f.calls.length,0);assert.match(f.notices[0],/중계/);});
+
+test('start acknowledgement opens the game without waiting for the polling loop',async()=>{const events=[];const f=fixture({act:async()=>({phase:'native',players:roster}),event:async e=>events.push(e)});await f.button.onclick();assert.equal(events[0].type,'native-start');assert.equal(events[0].players,roster);});
