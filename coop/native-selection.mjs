@@ -11,32 +11,33 @@ export function drawFiveSelection(ctx,module,engine,colors){
  }
 }
 
-/** Per-seat continue overlay in original ROM lettering. The ongoing game stays visible. */
+/** Native 0x43606/0x43640 top-screen CONTINUE? tiles, captured with _nw_cell.
+ * ROM text 0x42eca uses font A / palette 4; digit table 0x42ede uses 0xa60+n.
+ * Keep the original two-row lettering and palette, fit into each 60px player HUD.
+ */
 export function drawFiveContinue(ctx,module,engine,colors){
  if(engine?.phase!=='playing'||engine.nativeContinue)return;
- const text=(s,x,y,size=5)=>{
-  for(const [i,ch]of [...s].entries()){
-   const ptr=module._nw_glyph(0x300+ch.charCodeAt(0),1);
-   for(let dy=0;dy<size;dy++)for(let dx=0;dx<size;dx++){
-    const a=ptr+(Math.floor(dy*8/size)*8+Math.floor(dx*8/size))*4;
-    if(module.HEAPU8[a+3])ctx.fillRect(x+i*size+dx,y+dy,1,1);
-   }
+ const tile=(id,palette,x,y,scale=1)=>{
+  const ptr=module._nw_glyph(id,palette),src=module.HEAPU8;
+  for(let yy=0;yy<8;yy++)for(let xx=0;xx<8;xx++){
+   const at=ptr+(yy*8+xx)*4;if(!src[at+3])continue;
+   ctx.fillStyle=`rgb(${src[at+2]},${src[at+1]},${src[at]})`;
+   const left=Math.round(x+xx*scale),top=Math.round(y+yy*scale);
+   ctx.fillRect(left,top,Math.round(x+(xx+1)*scale)-left,Math.round(y+(yy+1)*scale)-top);
   }
  };
+ const text=(s,x,y)=>{for(const [i,ch]of [...s].entries())tile(0x300+ch.charCodeAt(0),1,x+i*5,y,5/8);};
  ctx.save();
- for(let i=0;i<5;i++){
+ for(let i=0;i<(engine.playerCount??5);i++){
   const p=engine.players[i];if(!['continue','selecting'].includes(p.state))continue;
-  const x=2+i*60,y=175;ctx.fillStyle='rgba(10,12,23,.92)';ctx.fillRect(x,y,58,47);
-  ctx.strokeStyle=colors[i];ctx.lineWidth=1;ctx.strokeRect(x+.5,y+.5,57,46);
-  ctx.fillStyle=colors[i];text(`${i+1}P`,x+24,y+3);
-  ctx.fillStyle='#fff4c3';
+  const x=i*60+1; text(`${i+1}UP`,x+21,0);
   if(p.state==='continue'){
-   text('CONTINUE?',x+6,y+13);
    const seconds=Math.max(0,Math.min(9,Math.ceil((p.deadline-engine.frame)/module._nw_fps())-1));
-   text(String(seconds),x+25,y+23,8);text('J START',x+11,y+37);
+   const row=[0xa83,0xa8f,0xa8e,0xaa4,0xa89,0xa8e,0xaa5,0xa85,0xa6f,null,0xa60+seconds],scale=58/88;
+   for(const [j,id]of row.entries())if(id!==null){tile(id,4,x+j*8*scale,9,scale);tile(id+0x10,4,x+j*8*scale,9+8*scale,scale);}
   }else{
-   text(['MARCO','TARMA','ERI','FIO'][p.character],x+8,y+15);
-   text('A/D SELECT',x+4,y+27);text('J OK',x+19,y+37);
+   text(['MARCO','TARMA','ERI','FIO'][p.character],x+14,10);
+   text('A/D SELECT',x+4,19);text('J OK',x+19,27);
   }
  }
  ctx.restore();
