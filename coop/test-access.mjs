@@ -1,4 +1,4 @@
-import {siteHeaders,claimSiteSession} from './site-session.mjs?v=67';
+import {siteHeaders,claimSiteSession} from './site-session.mjs?v=68';
 let password='';
 export const testHeaders=()=>({...siteHeaders(),...(password?{'X-NW-Test-Password':password}:{})});
 export function requestTestAccess(member){return new Promise(resolve=>{
