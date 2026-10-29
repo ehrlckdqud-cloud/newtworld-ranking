@@ -1,15 +1,16 @@
-import {createCandidateBatcher} from './candidate-batcher.mjs?v=65';
-import {waitForConnection} from './connection-check.mjs?v=65';
-import {createRoomActions} from './room-actions.mjs?v=65';
-import {startError,checkLaunch} from './start-flow.mjs?v=65';
-import {starLabel,showCompletionStar} from './rankings.mjs?v=65';
-import {readScores} from './native/score-reader.mjs?v=65';
-import {chooseCoinQuantity} from './coin-purchase.mjs?v=65';
-import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=65';
+import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=66';
+import {createCandidateBatcher} from './candidate-batcher.mjs?v=66';
+import {waitForConnection} from './connection-check.mjs?v=66';
+import {createRoomActions} from './room-actions.mjs?v=66';
+import {startError,checkLaunch} from './start-flow.mjs?v=66';
+import {starLabel,showCompletionStar} from './rankings.mjs?v=66';
+import {readScores} from './native/score-reader.mjs?v=66';
+import {chooseCoinQuantity} from './coin-purchase.mjs?v=66';
+import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=66';
 import {MemberCoins} from './member-coins.mjs?v=53';
 import {lobbyAudio} from './lobby-audio.mjs?v=51';
 import {downloadGame} from './download-game.mjs?v=50';
-import {testHeaders} from './test-access.mjs?v=65';
+import {testHeaders} from './test-access.mjs?v=66';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,signal:options.signal||AbortSignal.timeout(15000),headers:{...options.headers,...testHeaders()}});
@@ -19,7 +20,7 @@ import {inputReceiver} from './input-channel.mjs';
 import {makeResults} from './native-results.mjs';
 import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=48';
 import {makeHUD} from './native-hud.mjs';
-import {FiveSession} from './native/five-session.mjs?v=65';
+import {FiveSession} from './native/five-session.mjs?v=66';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-online-lab-v55';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -86,7 +87,7 @@ async function event(e){
  if(e.type==='native-command'&&session.slot===1&&engine){if(handledCommands.has(e.commandId))return;handledCommands.add(e.commandId);let accepted=true;try{if(e.command==='start'){startApprovals.add(e.slot);if(startApprovals.size===engine.playerCount&&engine.phase==='attract'&&!engine.pendingStart)engine.start();}if(e.command==='continue')engine.authorizeContinue(e.slot,'paid-'+e.id);if(e.command==='revive')engine.authorizeRejoin(e.slot,'paid-'+e.id);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(['continue','revive'].includes(e.command)){creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});await flushCreditReceipts().catch(()=>{});}}
  if(e.type==='chat')chatPresentation.receive(e);
 }
-async function makePeer(slot,offer=false){if(peers.has(slot))return peers.get(slot);const pc=new RTCPeerConnection({iceServers:config.iceServers,iceTransportPolicy:config.relayConfigured?'relay':'all'});const record={pc,queue:[],chain:Promise.resolve(),channel:null,wallet:new MemberCoins(),surface:null,media:null};peers.set(slot,record);record.candidates=createCandidateBatcher(signal=>{if(peers.get(slot)!==record)return;return act({type:'signal',to:slot,signal});},e=>note('중계 신호 전송 실패: '+e.message));pc.onicecandidate=e=>record.candidates.add(e.candidate?.toJSON());pc.onconnectionstatechange=()=>{if(['failed','disconnected','closed'].includes(pc.connectionState))note(config.relayConfigured?`P${slot} 영상 연결 실패 · 중계 연결 상태를 확인해야 합니다.`:`P${slot} 영상 연결 실패 · 현재 TURN 중계가 설정되지 않아 다른 네트워크의 PC와 연결되지 않을 수 있습니다.`);};pc.ondatachannel=e=>{if(session.slot!==1&&slot===1&&e.channel.label==='input')bindInput(record,e.channel,slot);else e.channel.close();};pc.ontrack=e=>{$('video').srcObject=e.streams[0];safe($('video').play());$('video').onplaying=()=>{$('gameLoading').hidden=true;gameReady=true;};note('게임 연결됨');};if(offer){bindInput(record,pc.createDataChannel('input',{ordered:false,maxRetransmits:0}),slot);record.surface=slot<=5?document.createElement('canvas'):null;if(record.surface){record.surface.width=canvas.width;record.surface.height=canvas.height;}record.media=new MediaStream([...(record.surface||canvas).captureStream(30).getVideoTracks(),...audioOut.stream.getAudioTracks()]);for(const t of record.media.getTracks())pc.addTrack(t,record.media);await pc.setLocalDescription(await pc.createOffer());await act({type:'signal',to:slot,signal:{type:'offer',sdp:pc.localDescription.sdp}});lastPeerPaint=0;module?._nw_redraw?.();}return record;}
+async function makePeer(slot,offer=false,attempt=null,mode='auto'){if(peers.has(slot))return peers.get(slot);const pc=new RTCPeerConnection(peerOptions(config,mode));const record={pc,attempt:attempt||crypto.randomUUID(),mode,iceErrors:[],queue:[],chain:Promise.resolve(),channel:null,wallet:new MemberCoins(),surface:null,media:null};peers.set(slot,record);record.candidates=createCandidateBatcher(signal=>{if(peers.get(slot)!==record)return;return act({type:'signal',to:slot,signal:{...signal,attempt:record.attempt}});},e=>note('중계 신호 전송 실패: '+e.message));pc.onicecandidate=e=>record.candidates.add(e.candidate?.toJSON());pc.onicecandidateerror=e=>{record.iceErrors.push(e.errorCode);record.iceErrors=record.iceErrors.slice(-8);};pc.onconnectionstatechange=()=>{if(['failed','disconnected','closed'].includes(pc.connectionState))note(config.relayConfigured?`P${slot} 영상 연결 실패 · 중계 연결 상태를 확인해야 합니다.`:`P${slot} 영상 연결 실패 · 현재 TURN 중계가 설정되지 않아 다른 네트워크의 PC와 연결되지 않을 수 있습니다.`);};pc.ondatachannel=e=>{if(session.slot!==1&&slot===1&&e.channel.label==='input')bindInput(record,e.channel,slot);else e.channel.close();};pc.ontrack=e=>{$('video').srcObject=e.streams[0];safe($('video').play());$('video').onplaying=()=>{$('gameLoading').hidden=true;gameReady=true;};note('게임 연결됨');};if(offer){bindInput(record,pc.createDataChannel('input',{ordered:false,maxRetransmits:0}),slot);record.surface=slot<=5?document.createElement('canvas'):null;if(record.surface){record.surface.width=canvas.width;record.surface.height=canvas.height;}record.media=new MediaStream([...(record.surface||canvas).captureStream(30).getVideoTracks(),...audioOut.stream.getAudioTracks()]);for(const t of record.media.getTracks())pc.addTrack(t,record.media);await pc.setLocalDescription(await pc.createOffer());const description=await gatherDescription(pc);if(peers.get(slot)!==record)throw Error('PEER_REPLACED');await act({type:'signal',to:slot,signal:{...description,attempt:record.attempt,mode}});lastPeerPaint=0;module?._nw_redraw?.();}return record;}
 function bindInput(record,channel,slot){
  record.channel=channel;
  if(session.slot===1){if(slot>5){channel.onmessage=()=>{};return;}const receive=inputReceiver({slot,enabled:()=>playing&&!completed&&!roster[slot-1]?.away&&engine?.players[slot-1]?.state!=='spectator',accept:(seat,value,t)=>{held[seat-1]=value;heldAt[seat-1]=t;}});channel.onmessage=e=>{let m;try{m=JSON.parse(e.data);}catch{return;}if(m.type==='wallet-display'){if(record.wallet.update(m))syncNativeCredits();return;}receive(e.data);};}
@@ -95,7 +96,19 @@ function bindInput(record,channel,slot){
  channel.onclose=()=>{if(!session||!hasGame||slot>5||roster[slot-1]?.departed)return;if(session.slot===1){held[slot-1]=0;safe(act({type:'native-pause'}));}roomPhase='paused';stop('게임 연결을 복구하는 중입니다.');};
 }
 function discardPeer(slot){const r=peers.get(slot);if(!r)return;r.candidates?.cancel();r.pc.onconnectionstatechange=null;r.pc.onicecandidate=null;if(r.channel)r.channel.onclose=null;r.media?.getVideoTracks().forEach(t=>t.stop());r.pc.close();peers.delete(slot);}
-async function signal(from,s){if(s.type==='candidates'){for(const candidate of s.candidates)await signal(from,{type:'candidate',candidate});return;}if(s.type==='offer'&&peers.has(from)&&(!hasGame&&!!peers.get(from).pc.remoteDescription||['failed','closed'].includes(peers.get(from).pc.connectionState)||peers.get(from).channel?.readyState==='closed'))discardPeer(from);const r=await makePeer(from),pc=r.pc;if(s.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(s.candidate);else r.queue.push(s.candidate);return;}await pc.setRemoteDescription({type:s.type,sdp:s.sdp});for(const c of r.queue.splice(0))await pc.addIceCandidate(c);if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());safe(act({type:'signal',to:from,signal:{type:'answer',sdp:pc.localDescription.sdp}}));}}
+async function signal(from,s){
+ const current=peers.get(from);
+ if(s.type==='offer'){
+  if(current&&s.attempt&&current.attempt===s.attempt&&current.pc.remoteDescription)return;
+  if(current&&(!s.attempt||current.attempt!==s.attempt))discardPeer(from);
+ }else if(s.attempt&&(!current||current.attempt!==s.attempt))return;
+ if(s.type==='candidates'){for(const candidate of s.candidates)await signal(from,{type:'candidate',candidate,attempt:s.attempt});return;}
+ const r=await makePeer(from,false,s.attempt,s.mode||'auto'),pc=r.pc;
+ if(s.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(s.candidate);else r.queue.push(s.candidate);return;}
+ await pc.setRemoteDescription({type:s.type,sdp:s.sdp});for(const c of r.queue.splice(0))await pc.addIceCandidate(c);
+ if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());const description=await gatherDescription(pc);if(peers.get(from)!==r)return;safe(act({type:'signal',to:from,signal:{...description,attempt:r.attempt}}));}
+}
+
 async function initAudio(){ac??=new AudioContext();if(!audioOut){audioOut=ac.createMediaStreamDestination();}await ac.resume();}
 function audio(ptr,n){if(!playing||!ac||ac.state!=='running'||!n)return;const src=module.HEAP16.subarray(ptr/2,ptr/2+n*2),b=ac.createBuffer(2,n,module._nw_rate());for(let c=0;c<2;c++){const d=b.getChannelData(c);for(let i=0;i<n;i++)d[i]=src[i*2+c]/32768;}if(audioNext<ac.currentTime||audioNext>ac.currentTime+.25)audioNext=ac.currentTime+.04;const node=ac.createBufferSource();node.buffer=b;if(!away)node.connect(ac.destination);node.connect(audioOut);node.start(audioNext);audioNext+=n/module._nw_rate();}
 function paint(ptr,w,h,pitch,fmt){if(nativeCanvas.width!==w||nativeCanvas.height!==h){nativeCanvas.width=w;nativeCanvas.height=h;pixels=null;}pixels??=ctx.createImageData(w,h);const src=module.HEAPU8,d=pixels.data;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const s=ptr+y*pitch+x*(fmt===1?4:2),o=(y*w+x)*4;if(fmt===1){d[o]=src[s+2];d[o+1]=src[s+1];d[o+2]=src[s];}else{const v=src[s]|src[s+1]<<8;d[o]=(v>>11&31)*255/31;d[o+1]=(v>>5&63)*255/63;d[o+2]=(v&31)*255/31;}d[o+3]=255;}ctx.putImageData(pixels,0,0);if(engine?.nativeContinue)return;drawFiveSelection(ctx,module,engine,colors);if(engine?.phase!=='playing')return;paintHUD?.();if(paintResults?.(paintHUD)){drawFiveContinue(ctx,module,engine,colors);return;}drawFiveContinue(ctx,module,engine,colors);
@@ -187,7 +200,7 @@ let publishedState='',stateInFlight=false;
 async function publishState(){if(!playing||!engine||session?.slot!==1||stateInFlight)return;const scoring=['playing','complete'].includes(engine.phase);if(scoring&&(performance.now()-lastScoreRead>=1000||engine.phase==='complete'||scoreSample.length!==engine.playerCount)){scoreSample=readScores(engine);lastScoreRead=performance.now();}const state={type:'native-state',completed:engine.phase==='complete',...(scoring?{mission:engine.byte(0x10040c)}:{}),players:engine.players.slice(0,engine.playerCount).map(({state,lives},i)=>({state,lives,...(scoring?{score:scoreSample[i]||0}:{})}))},key=JSON.stringify(state);if(key===publishedState)return;for(const {channel}of peers.values())if(channel?.readyState==='open')channel.send(JSON.stringify({type:'live-state',players:state.players.map((p,i)=>({...p,slot:i+1}))}));stateInFlight=true;try{await act(state);publishedState=key;}catch(e){note(e.message);}finally{stateInFlight=false;}}
 setInterval(publishState,80);
 // Read-only diagnostics for reproducible browser checks; no state mutation endpoint.
-window.newtOnlineDiagnostics=()=>({wallet:{balance:coins.balance,revision:coins.revision},hasGame,away,completed,bits,chatOpen,inputFocus:document.activeElement?.id,slot:session?.slot,coreReady,launchBusy,roomPhase,transportAlive,playing,state:engine?.state(),credits:engine?.byte(0x10fdb0),peers:[...peers].map(([slot,{pc}])=>({slot,state:pc.connectionState})),inputChannel:peers.get(1)?.channel?.readyState,videoFrames:$('video').getVideoPlaybackQuality?.().totalVideoFrames||0,audioState:ac?.state,roster:roster.map(p=>({...p}))});
+window.newtOnlineDiagnostics=()=>({wallet:{balance:coins.balance,revision:coins.revision},hasGame,away,completed,bits,chatOpen,inputFocus:document.activeElement?.id,slot:session?.slot,coreReady,launchBusy,roomPhase,transportAlive,playing,state:engine?.state(),credits:engine?.byte(0x10fdb0),peers:[...peers].map(([slot,{pc}])=>({slot,state:pc.connectionState,ice:pc.iceConnectionState,signaling:pc.signalingState})),inputChannel:peers.get(1)?.channel?.readyState,videoFrames:$('video').getVideoPlaybackQuality?.().totalVideoFrames||0,audioState:ac?.state,roster:roster.map(p=>({...p}))});
 
 async function listenPoll(own=session,epoch=roomEpoch){let cursor=pollCursor;while(session===own&&epoch===roomEpoch){const r=await apiFetch(`/api/rooms/${own.room}/poll?after=${cursor}`,{headers:{Authorization:'Bearer '+own.token}}),d=await r.json();if(session!==own||epoch!==roomEpoch)return;if(!r.ok){if(d.error==='KICKED_FROM_ROOM'){exitToChannel();showRoomNotice('방장에 의해 강퇴되었습니다. 이 방에는 다시 입장할 수 없습니다.');}else stop(d.error);return;}if(d.slot)session.slot=d.slot;roomPhase=d.phase||roomPhase;if(d.completed||roomPhase==='game-over')completed=true;if(d.snapshot)await event({type:'snapshot',...d.snapshot});for(const e of d.events){if(session!==own||epoch!==roomEpoch)return;await event(e);pollCursor=e.id;}roomPhase=d.phase||roomPhase;if(session!==own)return;if(d.players)roster=d.players;if(d.viewers)viewers=d.viewers;if(d.phase==='native'&&!hasGame)await event({type:'native-start',players:roster});if(d.wallet)updateCoins(d.wallet);if(d.phase==='native'&&!completed&&!away&&!playing&&hasGame&&(session.slot===1||peers.get(1)?.channel?.readyState==='open')){playing=true;lastTick=0;clock=0;}render();cursor=d.cursor;pollCursor=cursor;await new Promise(resolve=>setTimeout(resolve,120));}}
 let creditReceiptFlush=null;
@@ -221,6 +234,14 @@ async function verifyGameConnections(){
  const own=session,targets=roster.filter(p=>p.slot!==1&&!p.departed);if(!targets.length)return;
  note('중계 접속 설정을 확인하는 중…');const response=await apiFetch('/native-config?room='+own.room,{headers:{Authorization:'Bearer '+own.token}}),fresh=await response.json();if(!response.ok)throw Error(fresh.error||'TURN_SERVICE_UNAVAILABLE');if(session!==own)throw Error('ROOM_CHANGED');config=fresh;
  if(!config.relayConfigured)throw Error('TURN_NOT_CONFIGURED');
- await Promise.all(targets.map(async p=>{note(`${p.name} 님과 중계 연결 확인 중…`);discardPeer(p.slot);const peer=await makePeer(p.slot,true);try{await waitForConnection(peer,{valid:()=>session===own&&roster.some(q=>q.seatId===p.seatId&&q.connected)});}catch(e){discardPeer(p.slot);throw Error(`${p.name}: ${e.message}`);}}));
+ await Promise.all(targets.map(async p=>{
+  for(const mode of ['auto','tls']){
+   if(session!==own)throw Error('ROOM_CHANGED');
+   note(`${p.name} 님과 ${mode==='tls'?'보안 중계로 다시':'직접·중계 경로를'} 연결하는 중…`);
+   discardPeer(p.slot);const peer=await makePeer(p.slot,true,null,mode);
+   try{await waitForConnection(peer,{valid:()=>session===own&&roster.some(q=>q.seatId===p.seatId&&q.connected)});return;}
+   catch(e){const stage=connectionStage(peer);safe(act({type:'connection-report',to:p.slot,mode,stage:peer.pc.signalingState,ice:peer.pc.iceConnectionState,connection:peer.pc.connectionState,input:peer.channel?.readyState||'none',remoteDescription:!!peer.pc.remoteDescription,iceErrors:peer.iceErrors}));discardPeer(p.slot);if(e.message==='ROOM_CHANGED'||mode==='tls')throw Error(`${p.name}: ${stage} (${e.message})`);}
+  }
+ }));
  note('모든 참가자의 중계·입력 연결 확인 완료');
 }
