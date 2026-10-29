@@ -14,5 +14,5 @@ export function connectionStage(record){
  if(!pc.remoteDescription)return '상대 PC의 연결 응답을 받지 못했습니다';
  if(['new','checking','failed'].includes(pc.iceConnectionState))return '양쪽 PC의 통신 경로를 연결하지 못했습니다';
  if(record.channel?.readyState!=='open')return '통신 경로는 확인됐지만 게임 입력 연결이 열리지 않았습니다';
- return record.mediaReady?'영상·입력 연결 완료를 확인하지 못했습니다':'입력은 연결됐지만 상대 PC에서 게임 영상을 재생하지 못했습니다';
+ return record.coreReady?'입력 동기화 준비 완료를 확인하지 못했습니다':'상대 PC의 게임 설치·실행 준비를 기다리는 중입니다';
 }
