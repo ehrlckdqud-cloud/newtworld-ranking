@@ -1,6 +1,6 @@
-import {roomError} from './room-feedback.mjs?v=66';
+import {roomError} from './room-feedback.mjs?v=67';
 import {lobbyAudio} from './lobby-audio.mjs?v=51';
-import {testHeaders} from './test-access.mjs?v=66';
+import {testHeaders} from './test-access.mjs?v=67';
 const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 let channel=1,rooms=[],inside=false,busy=false;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
