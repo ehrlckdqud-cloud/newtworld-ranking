@@ -1,0 +1,6 @@
+const bytes=s=>new TextEncoder().encode(s);
+const hex=b=>Array.from(new Uint8Array(b),v=>v.toString(16).padStart(2,'0')).join('');
+const raw=s=>Uint8Array.from(s.match(/../g)||[],v=>parseInt(v,16));
+export async function roomProofKey(secret,room){return hex(await crypto.subtle.sign('HMAC',await crypto.subtle.importKey('raw',bytes(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']),bytes('nw-command:'+room)));}
+export async function signCommand(key,room,event){const issued=Date.now(),body=JSON.stringify({room,issued,event});const k=await crypto.subtle.importKey('raw',raw(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);return {body,signature:hex(await crypto.subtle.sign('HMAC',k,bytes(body)))};}
+export async function verifyCommand(key,room,proof,slot){try{if(!key||typeof proof?.body!=='string'||proof.body.length>3000||!/^\w{64}$/.test(proof.signature||''))return null;const k=await crypto.subtle.importKey('raw',raw(key),{name:'HMAC',hash:'SHA-256'},false,['verify']);if(!await crypto.subtle.verify('HMAC',k,raw(proof.signature),bytes(proof.body)))return null;const p=JSON.parse(proof.body);return p.room===room&&p.event?.type==='native-command'&&p.event.slot===slot&&Math.abs(Date.now()-p.issued)<30000?p.event:null;}catch{return null;}}

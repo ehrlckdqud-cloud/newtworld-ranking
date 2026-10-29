@@ -20,14 +20,16 @@ export class FiveSession {
  begin(){if(this.reserved.size!==this.reserve.length)throw Error('RESERVATION_INCOMPLETE');
   for(let i=0;i<5;i++){
    const a=this.x.actors[i],s=this.status[i],p=this.players[i];
-   if(i>=this.playerCount){this.wl(a,0x567a);this.wl(s,0x567a);this.wb(s+0x7f,0);this.wb(s+0x82,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);continue;}
+   if(i>=this.playerCount||p.departed){this.wl(a,0x567a);this.wl(s,0x567a);this.wb(s+0x7f,0);this.wb(s+0x82,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);continue;}
    this.wb(s+0x7f,3);this.wb(s+0x7e,p.character);this.wb(s+0x82,2);this.wl(s,0x567a);
    if(i>=2){this.wl(s+0x6c,a);this.wb(0x1053e0-(i-2)*0x210,1);this.ww(0x105380-(i-2)*0x210,65535);this.wb(0x105404-(i-2)*0x210,255);}
    if(i===0){p.character=this.word(a+0x6a);p.state='active';p.seenAlive=true;}else this.respawn(i);
   }
   this.phase='playing';this.pendingStart=false;this.m._nw_hud(1);this.emit('five-session-start');
  }
- respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);this.wb(this.status[i]+0x82,2);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,1);p.state='active';p.seenAlive=false;p.deadline=null;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
+ respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);this.wb(this.status[i]+0x82,2);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,1);p.state='active';p.seenAlive=false;p.deadline=null;p.spawnSpacing=true;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
+ removePlayer(slot){const i=slot-1,p=this.players[i];if(!p||p.departed)return;p.departed=true;p.participating=false;p.state='spectator';p.lives=0;p.deadline=null;const a=this.x.actors[i];this.detach(a);this.wl(a,0x567a);this.wl(this.status[i],0x567a);this.wb(this.status[i]+0x7f,0);this.wb(this.status[i]+0x82,0);this.wb(this.x.inputBase+i*2,0);this.wb(this.x.inputBase+0x10+i,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);if(this.selection)this.selection[i].confirmed=true;this.emit('player-departed',{slot});}
+ separateSpawn(i){const p=this.players[i],a=this.x.actors[i];if(!p.spawnSpacing||this.long(a)===this.x.spawns[i]||!this.word(a+0x3c))return;p.spawnSpacing=false;let x=this.word(a+0x3c),y=this.word(a+0x40),shift=0;for(let j=0;j<i;j++){const other=this.x.actors[j];if(this.players[j].state==='active'&&Math.abs(y-this.word(other+0x40))<16&&Math.abs(x+shift-this.word(other+0x3c))<16)shift+=20;}if(shift&&x+shift<288){this.ww(a+0x28,this.word(a+0x28)+shift);this.ww(a+0x3c,x+shift);}}
  requestContinue(slot,id){const p=this.players[slot-1];if(!p||typeof id!=='string'||!id||id.length>100)throw Error('INVALID_CONTINUE');if(p.coinIds.includes(id))return false;if(p.state!=='continue'||this.frame>=p.deadline)throw Error('CONTINUE_EXPIRED');p.coinIds.push(id);p.state='selecting';p.deadline=null;this.emit('continue-selection',{slot});return true;}
  authorizeContinue(slot,id){
   if(this.approvedCredits.has(id))return false;
@@ -60,7 +62,7 @@ export class FiveSession {
  }
  selectionInput(inputs){
   if(!this.sharedSelection||this.long(0x10023c)!==0x432d4)return inputs[0];
-  if(!this.selection){this.selection=this.players.map((p,i)=>({character:p.character,confirmed:i>=this.playerCount}));this.selectionPrevious=inputs.slice();this.emit('five-selection-open');}
+  if(!this.selection){this.selection=this.players.map((p,i)=>({character:p.character,confirmed:i>=this.playerCount||!!p.departed}));this.selectionPrevious=inputs.slice();this.emit('five-selection-open');}
   const order=[0,2,1,3];
   for(let i=0;i<5;i++){const q=this.selection[i],edge=inputs[i]&~this.selectionPrevious[i];if(!q.confirmed){let at=order.indexOf(q.character);if(edge&4)at=(at+3)%4;if(edge&8)at=(at+1)%4;q.character=order[at];if(edge&16){q.confirmed=true;this.players[i].character=q.character;this.emit('selection-confirmed',{slot:i+1,character:q.character});}}}
   this.selectionPrevious=inputs.slice();this.wb(0x1002ba,this.selection[0].character);
@@ -95,7 +97,7 @@ export class FiveSession {
   if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
   else if(this.phase==='playing')for(let i=0;i<5;i++){
    const p=this.players[i],a=this.x.actors[i],routine=this.long(a);
-   if(p.state==='active'){
+   if(p.state==='active'){this.separateSpawn(i);
     if(routine!==0&&routine!==0x567a)p.seenAlive=true;
     else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);if(this.playerCount===1){this.nativeContinue=true;p.deadline=null;const s=this.status[0];this.ww(s+0x6a,0);this.wb(s+0x7f,0);this.wb(s+0x80,0);this.ww(s+0x10,0);this.wl(s+0xc,0);this.wl(s,0x43606);}}}
    }
