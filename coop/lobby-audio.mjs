@@ -1,4 +1,4 @@
-import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=79';
+import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=80';
 const base='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/lobby-audio/';
 export function createLobbyAudio({makeAudio=src=>new Audio(src)}={}){
  const music=makeAudio(base+'waiting.mp3'),click=makeAudio(base+'click.mp3'),launch=makeAudio(base+'deploy.mp3');
@@ -20,4 +20,4 @@ window.addEventListener('pagehide',()=>lobbyAudio.setWaiting(false));
 
 for(const parent of [document.querySelector('#channelView'),document.querySelector('.equipment')]){if(parent&&!parent.querySelector('input[aria-label="대기 음악"]'))parent.append(volumeControl('대기 음악',lobbyAudio.volume,value=>{lobbyAudio.setVolume(value);for(const slider of document.querySelectorAll('input[aria-label="대기 음악"]')){slider.value=String(Math.round(value*100));slider.nextElementSibling.textContent=slider.value+'%';}}));}
 
-for(const parent of [document.querySelector('#channelView'),document.querySelector('.equipment')]){if(parent&&!parent.querySelector('input[aria-label="버튼 효과음"]')){const control=volumeControl('버튼 효과음',lobbyAudio.effectsVolume,value=>{lobbyAudio.setEffectsVolume(value);for(const slider of document.querySelectorAll('input[aria-label="버튼 효과음"]')){slider.value=String(Math.round(value*100));slider.nextElementSibling.textContent=slider.value+'%';}});parent.append(control);}}
+for(const parent of [document.querySelector('#channelView'),document.querySelector('.equipment')]){if(parent&&!parent.querySelector('input[aria-label="버튼·코인 효과음"]')){const control=volumeControl('버튼·코인 효과음',lobbyAudio.effectsVolume,value=>{lobbyAudio.setEffectsVolume(value);for(const slider of document.querySelectorAll('input[aria-label="버튼·코인 효과음"]')){slider.value=String(Math.round(value*100));slider.nextElementSibling.textContent=slider.value+'%';}});parent.append(control);}}
