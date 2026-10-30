@@ -1,8 +1,8 @@
-import {initRankings} from './rankings.mjs?v=72';
-import {claimSiteSession,blockSite,DUPLICATE_MESSAGE} from './site-session.mjs?v=72';
-import {requestTestAccess} from './test-access.mjs?v=72';
+import {initRankings} from './rankings.mjs?v=73';
+import {claimSiteSession,blockSite,DUPLICATE_MESSAGE} from './site-session.mjs?v=73';
+import {requestTestAccess} from './test-access.mjs?v=73';
 import {lobbyAudio} from './lobby-audio.mjs?v=51';
-import {initLobby} from './lobby.mjs?v=72';
+import {initLobby} from './lobby.mjs?v=73';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
 const form=document.getElementById('joinForm');
@@ -26,9 +26,9 @@ try{
  status.textContent='운영진 테스트 비밀번호를 입력해주세요.';
  await requestTestAccess({token,device});
  document.getElementById('channelView').hidden=false;
- await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js?v=72';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
+ await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js?v=73';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=72');initLobby(response.profile.nickname);initRankings();lobbyAudio.arm();
+ await import('./play.mjs?v=73');initLobby(response.profile.nickname);initRankings();lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
 }catch(error){if(error.message==='MEMBER_ALREADY_ONLINE'){blockSite(DUPLICATE_MESSAGE);}else{status.textContent='회원 확인을 완료하지 못했습니다. 뉴트월드 회원식별 상태를 확인하고 새로고침해주세요.';document.getElementById('memberHelp').hidden=false;}}
