@@ -1,5 +1,5 @@
 // Reliable, ordered, frame-numbered inputs. No video/audio payloads.
-export const PROTOCOL='nw-input-lockstep-v71', INPUT_DELAY=6;
+export const PROTOCOL='nw-input-lockstep-v72', INPUT_DELAY=6;
 export class InputSequencer {
  constructor({slots,onFrame,delay=INPUT_DELAY,start=0}){this.slots=new Set(slots);this.onFrame=onFrame;this.delay=delay;this.frame=start;this.pending=new Map();this.commands=[];this.commandIds=new Set();this.history=new Map();for(let f=start;f<start+delay;f++)this.pending.set(f,new Map(slots.map(s=>[s,0])));}
  submit(slot,frame,bits){if(!this.slots.has(slot)||!Number.isSafeInteger(frame)||frame<this.frame||frame>this.frame+120||!Number.isInteger(bits)||bits<0||bits>127)return false;let row=this.pending.get(frame);if(!row)this.pending.set(frame,row=new Map());if(row.has(slot))return row.get(slot)===bits;row.set(slot,bits);return true;}
