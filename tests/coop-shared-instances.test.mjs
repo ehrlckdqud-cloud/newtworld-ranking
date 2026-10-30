@@ -12,3 +12,11 @@ test('two audio module instances create only one music player and one set of lis
  const load=()=>vm.runInContext('(function(){'+source('lobby-audio.mjs')+';return lobbyAudio;})()',context);
  assert.equal(load(),load());assert.equal(audios,3);assert.equal(listeners,4);
 });
+test('button and launch effect levels persist independently of waiting music',()=>{
+ const storage=new Map(),players=[];
+ const context=vm.createContext({Audio:class{constructor(){players.push(this);}},readVolume:(key,fallback)=>storage.get(key)??fallback,saveVolume:(key,value)=>{storage.set(key,value);return value;},document:{addEventListener(){},querySelector(){return null;}},window:{addEventListener(){}}});
+ const factory=vm.runInContext('(function(){'+source('lobby-audio.mjs')+';return createLobbyAudio;})()',context);
+ const sound=factory();sound.setEffectsVolume(.2);
+ assert.equal(players[3].volume,.45);assert.equal(players[4].volume,.2);assert.equal(players[5].volume,.2);
+ const restored=factory();assert.equal(restored.effectsVolume,.2);assert.equal(restored.volume,.45);
+});
