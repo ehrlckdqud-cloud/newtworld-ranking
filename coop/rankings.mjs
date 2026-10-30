@@ -1,4 +1,4 @@
-import {testHeaders} from './test-access.mjs?v=81';
+import {testHeaders} from './test-access.mjs?v=82';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 export const starLabel=n=>n>5?`★ × ${n}`:n>0?'★'.repeat(n):'☆';
 export function initRankings(){

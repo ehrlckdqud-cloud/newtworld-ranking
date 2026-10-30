@@ -1,0 +1,238 @@
+diff --git a/lib/game/native-room.mjs b/lib/game/native-room.mjs
+index cd19406..6dd5d27 100644
+--- a/lib/game/native-room.mjs
++++ b/lib/game/native-room.mjs
+@@ -1,5 +1,5 @@
+ import {beginRecord,observeRecord} from './records.mjs';
+-import {ProtocolError} from './room.mjs';
++import {ProtocolError,CLOCK_GRACE} from './room.mjs';
+ const fail=c=>{throw new ProtocolError(c)};
+ /** Input-lockstep room admission and paid lifecycle authority. */
+ export class NativeRoom {
+@@ -28,7 +28,7 @@ export class NativeRoom {
+    if(!Number.isSafeInteger(m.frame)||m.frame<0)fail('INVALID_FRAME');
+    if(p.slot===(r.hostSlot||1)&&m.links!==undefined){
+     if(!Array.isArray(m.links)||m.links.length>4||m.links.some(x=>!Number.isInteger(x.slot)||x.slot===p.slot||!r.players.some(q=>q.slot===x.slot)||typeof x.connected!=='boolean'))fail('INVALID_LINKS');
+-    for(const link of m.links){const q=r.players.find(q=>q.slot===link.slot);if(q.departed||q.reconnecting)continue;if(link.connected)delete q.missingLinkAt;else {q.missingLinkAt??=r.now();if(r.now()-q.missingLinkAt>12000)r.depart(q,'INPUT_LINK_TIMEOUT');}}
++    for(const link of m.links){const q=r.players.find(q=>q.slot===link.slot);if(q.departed||q.reconnecting)continue;if(link.connected)delete q.missingLinkAt;else {q.missingLinkAt??=r.now();if(r.now()-q.missingLinkAt>CLOCK_GRACE)r.depart(q,'INPUT_LINK_TIMEOUT');}}
+    }
+    p.lastClockAt=r.now();p.syncFrame=m.frame;if(m.frame>0)p.reconnecting=false;return {hostSlot:r.hostSlot||1,hostEpoch:r.hostEpoch||0};
+   }
+@@ -42,7 +42,7 @@ export class NativeRoom {
+    if(p.slot!==(r.hostSlot||1))fail('HOST_ONLY');if(r.phase==='lobby')return {phase:'lobby'};if(!this.completed&&r.phase!=='game-over')fail('GAME_STILL_RUNNING');
+    return this.reset();
+   }
+-  if(m.type==='native-loaded'){if(!['lobby','native'].includes(r.phase))fail('NOT_LOBBY');if(m.protocol!=='nw-input-lockstep-v78')fail('CLIENT_UPDATE_REQUIRED');p.coreReady=m.loaded===true;if(p.slot===(r.hostSlot||1))this.loaded=p.coreReady;r.emit('roster',{players:r.roster()});return {};}
++  if(m.type==='native-loaded'){if(!['lobby','native'].includes(r.phase))fail('NOT_LOBBY');if(m.protocol!==(r.protocol||'nw-input-lockstep-v78'))fail('CLIENT_UPDATE_REQUIRED');p.coreReady=m.loaded===true;if(p.slot===(r.hostSlot||1))this.loaded=p.coreReady;r.emit('roster',{players:r.roster()});return {};}
+   if(m.type==='start-native'){
+    if(p.slot!==(r.hostSlot||1))fail('HOST_ONLY');if(!this.loaded)fail('HOST_CORE_REQUIRED');if(r.phase==='native')return {phase:r.phase,players:r.roster(),replayed:true};if(r.phase!=='lobby')fail('NOT_LOBBY');
+    if(r.players.some(q=>!q.coreReady))fail('ALL_CORES_REQUIRED');
+diff --git a/lib/game/newtworld-gateway.mjs b/lib/game/newtworld-gateway.mjs
+index 259ae5f..794ca26 100644
+--- a/lib/game/newtworld-gateway.mjs
++++ b/lib/game/newtworld-gateway.mjs
+@@ -26,13 +26,13 @@ export async function gateway(request,env,{verifyFetch=fetch,runRelay=relay,sess
+   if(['renew','release'].includes(data.action)){try{return cors(Response.json({ok:true,...await sessionGate(env.DB,{...sessionArgs,action:data.action})}));}catch(e){return cors(error(e.message,409));}}
+   if(data.action!=='claim')return cors(error('INVALID_ACTION',400));
+  }
+- const entering=request.method==='POST'&&(['/api/site-session','/api/rooms','/api/lobby','/api/rankings','/api/test-access','/api/game-package','/api/wallet'].includes(url.pathname)||/^\/api\/rooms\/[a-f0-9]{16}\/(join|coin)$/.test(url.pathname));
++ const entering=request.method==='POST'&&(['/api/site-session','/api/rooms','/api/lobby','/api/rankings','/api/test-access','/api/game-package','/api/wallet','/api/gems'].includes(url.pathname)||/^\/api\/rooms\/[a-f0-9]{16}\/(join|coin)$/.test(url.pathname));
+  if(entering){
+   const ua=request.headers.get('user-agent')||'';if(/android|iphone|ipad|ipod|mobile/i.test(ua)||request.headers.get('sec-ch-ua-mobile')==='?1')return cors(error('PC_ONLY',403));
+   let data;try{const text=await request.text();if(text.length>65536)return cors(error('BODY_TOO_LARGE',413));data=JSON.parse(text);}catch{return cors(error('INVALID_JSON',400));}
+   const member=data?.member;
+   if(!member||typeof member.token!=='string'||typeof member.device!=='string'||!member.token||!member.device||member.token.length>1024||member.device.length>256)return cors(error('NEWTWORLD_LOGIN_REQUIRED',401));
+-  const cacheKey=member.token+':'+member.device,cached=verifyFetch===fetch?identities.get(cacheKey):null;let identity=cached?.until>Date.now()?cached.value:null;try{
++  const cacheKey=member.token+':'+member.device,cached=verifyFetch===fetch?identities.get(cacheKey):null;let identity=url.pathname!=='/api/gems'&&cached?.until>Date.now()?cached.value:null;try{
+    if(!identity){
+    const endpoint=new URL(PROFILE);endpoint.search=new URLSearchParams({action:'profileData',token:member.token,device:member.device,callback:'nwCoopAuth'});
+    const response=await verifyFetch(endpoint,{signal:AbortSignal.timeout(15000),redirect:'follow'});if(!response.ok)throw Error();
+@@ -42,6 +42,7 @@ export async function gateway(request,env,{verifyFetch=fetch,runRelay=relay,sess
+   if(!identity?.ok||identity.auth!==true||!identity.profile?.memberId||!identity.profile?.nickname)return cors(error('NEWTWORLD_LOGIN_REQUIRED',401));
+   if(sitePath){try{return cors(Response.json({ok:true,...await sessionGate(env.DB,{...sessionArgs,action:'claim',memberId:identity.profile.memberId})}));}catch(e){return cors(error(e.message,409));}}
+   if(siteMemberId!==identity.profile.memberId)return cors(error('SITE_SESSION_EXPIRED',409));
++  if(url.pathname==='/api/gems')return cors(Response.json({balance:Number.isFinite(identity.profile.gemBalance)?identity.profile.gemBalance:null}));
+   if(url.pathname==='/api/game-package'){if(!env.NW_GAME_PACKAGE_KEY)return cors(error('GAME_PACKAGE_UNAVAILABLE',503));return cors(new Response(JSON.stringify({...gamePackage,key:env.NW_GAME_PACKAGE_KEY}),{headers:{'content-type':'application/json','cache-control':'no-store'}}));}
+   if(url.pathname==='/api/test-access')return cors(new Response(JSON.stringify({ok:true,name:identity.profile.nickname}),{headers:{'content-type':'application/json','cache-control':'no-store'}}));
+   const billingMember={...member,memberId:identity.profile.memberId};delete data.member;data.memberId=identity.profile.memberId;data.staffRole=['방장','부방장','운영진'].includes(identity.profile.role)?identity.profile.role:null;data.gradeScore=Math.max(0,Number(identity.profile.lifetimeScore)||0);data.name=String(identity.profile.nickname).slice(0,20);
+diff --git a/lib/game/relay.mjs b/lib/game/relay.mjs
+index b8588ad..3c1934a 100644
+--- a/lib/game/relay.mjs
++++ b/lib/game/relay.mjs
+@@ -10,10 +10,10 @@ import {NativeRoom} from './native-room.mjs';
+ const fail=c=>{throw new ProtocolError(c)},json=(d,status=200)=>new Response(JSON.stringify(d),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
+ const digest=async s=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))].map(v=>v.toString(16).padStart(2,'0')).join('');
+ const allowed=new Set(['launch-begin','launch-failed','native-heartbeat','ping','ready','chat','native-loaded','native-reset','native-abandon','start-native','native-pause','native-resume','transfer-host','kick-member','connection-report','signal','native-state','native-command','native-credit-result','native-return','native-rejoin','leave']);
+-function encode(r,n){return JSON.stringify({room:{launch:r.launch||null,hostSlot:r.hostSlot||1,hostEpoch:r.hostEpoch||0,nativeCommands:r.nativeCommands||[],kickedMembers:r.kickedMembers||[],kickedTokens:r.kickedTokens||[],walletVersion:1,title:r.title,channel:r.channel,listed:r.listed,game:r.game,build:r.build,id:r.id,invite:r.invite,nextViewer:r.nextViewer,viewers:(r.viewers||[]).map(p=>({...p,coinIds:[...p.coinIds],chatIds:[...p.chatIds]})),players:r.players.map(p=>({...p,coinIds:[...p.coinIds],chatIds:[...p.chatIds]})),phase:r.phase,frame:r.frame,seq:r.seq,lastActivity:r.lastActivity,nativeCommandId:r.nativeCommandId},native:{recordRun:n.recordRun,recordMission:n.recordMission,recordValid:n.recordValid,loaded:n.loaded,completed:n.completed,lastSeq:[...n.lastSeq],rates:[...n.rates]}});}
++function encode(r,n){return JSON.stringify({room:{protocol:r.protocol||'nw-input-lockstep-v78',launch:r.launch||null,hostSlot:r.hostSlot||1,hostEpoch:r.hostEpoch||0,nativeCommands:r.nativeCommands||[],kickedMembers:r.kickedMembers||[],kickedTokens:r.kickedTokens||[],walletVersion:1,title:r.title,channel:r.channel,listed:r.listed,game:r.game,build:r.build,id:r.id,invite:r.invite,nextViewer:r.nextViewer,viewers:(r.viewers||[]).map(p=>({...p,coinIds:[...p.coinIds],chatIds:[...p.chatIds]})),players:r.players.map(p=>({...p,coinIds:[...p.coinIds],chatIds:[...p.chatIds]})),phase:r.phase,frame:r.frame,seq:r.seq,lastActivity:r.lastActivity,nativeCommandId:r.nativeCommandId},native:{recordRun:n.recordRun,recordMission:n.recordMission,recordValid:n.recordValid,loaded:n.loaded,completed:n.completed,lastSeq:[...n.lastSeq],rates:[...n.rates]}});}
+ function decode(raw,now){const d=JSON.parse(raw);if(d.room.build!==BUILD)fail('CLIENT_UPDATE_REQUIRED');const r=Object.assign(Object.create(Room.prototype),d.room,{now:()=>now,events:[],listeners:new Set(),pending:new Map(),hashes:new Map()});r.players=r.players.map(p=>({...p,coinIds:new Set(p.coinIds),chatIds:new Map(p.chatIds)}));r.viewers=(r.viewers||[]).map(p=>({...p,coinIds:new Set(p.coinIds),chatIds:new Map(p.chatIds)}));r.nextViewer=r.nextViewer||6;r.owner=r.players[0];const n=Object.assign(new NativeRoom(r),d.native);n.lastSeq=new Map(d.native.lastSeq);n.rates=new Map(d.native.rates);return {r,n};}
+ async function commit(db,row,r,n,now){const nonce=crypto.randomUUID(),rev=row.revision+1,w=walletCommit(db,r,nonce,rev,now);const statements=[db.prepare('UPDATE game_rooms SET revision=?,nonce=?,state=?,updated=? WHERE id=? AND revision=?'+w.conditions).bind(rev,nonce,encode(r,n),now,r.id,row.revision,...w.values),...w.writes,...recordCommit(db,r,n,rev,nonce,now)];for(const e of r.events)statements.push(db.prepare('INSERT INTO game_events (key,room,seq,target,payload,created) SELECT ?,?,?,?,?,? WHERE EXISTS (SELECT 1 FROM game_rooms WHERE id=? AND revision=? AND nonce=?)').bind(r.id+':'+e.id,r.id,e.id,e.type==='signal'?e.to:null,JSON.stringify(e),now,r.id,rev,nonce));const result=await db.batch(statements);return result[0].meta.changes===1;}
+-async function mutate(db,id,token,operation,now){for(let retry=0;retry<12;retry++){const row=await db.prepare('SELECT * FROM game_rooms WHERE id=? AND expires>?').bind(id,now).first();if(!row)fail('ROOM_NOT_FOUND');const {r,n}=decode(row.state,now);await hydrateWallets(db,r);const p=token?r.auth(token):null;r.tick(!n.completed);const result=await operation(r,n,p);n.resetIfEmpty();if(await commit(db,row,r,n,now))return p?.memberId?{...result,wallet:await wallet(db,p.memberId)}:result;await new Promise(resolve=>setTimeout(resolve,20+Math.floor(Math.random()*80)));}fail('ROOM_BUSY_RETRY');}
++async function mutate(db,id,token,operation,now,heartbeat=null){for(let retry=0;retry<12;retry++){const row=await db.prepare('SELECT * FROM game_rooms WHERE id=? AND expires>?').bind(id,now).first();if(!row)fail('ROOM_NOT_FOUND');const {r,n}=decode(row.state,now);await hydrateWallets(db,r);const p=token?r.auth(token):null;if(p&&heartbeat?.epoch===(r.hostEpoch||0)&&Number.isSafeInteger(heartbeat.frame)&&heartbeat.frame>=0)p.lastClockAt=now;r.tick(!n.completed);const result=await operation(r,n,p);n.resetIfEmpty();if(await commit(db,row,r,n,now))return p?.memberId?{...result,wallet:await wallet(db,p.memberId)}:result;await new Promise(resolve=>setTimeout(resolve,20+Math.floor(Math.random()*80)));}fail('ROOM_BUSY_RETRY');}
+ export async function relay(request,env,{now=Date.now(),billingMember=null,pay=payCoin,siteMemberId=null}={}){try{
+  const db=env.DB;if(!db)return json({error:'DATABASE_NOT_READY'},503);await initialize(db,now);
+  const u=new URL(request.url),origin=request.headers.get('origin');if(origin&&origin!==u.origin)fail('ORIGIN_REJECTED');
+@@ -23,7 +23,7 @@ export async function relay(request,env,{now=Date.now(),billingMember=null,pay=p
+   const room=u.searchParams.get('room');if(!/^[a-f0-9]{16}$/.test(room||''))fail('ROOM_NOT_FOUND');
+   const row=await db.prepare('SELECT state FROM game_rooms WHERE id=? AND expires>?').bind(room,now).first();if(!row)fail('ROOM_NOT_FOUND');const {r}=decode(row.state,now),p=r.auth(token);if(siteMemberId&&p.memberId!==siteMemberId)fail('MEMBER_MISMATCH');
+   let ice;try{ice=await turnConfig(env,{room:r.id,slot:p.slot,now});}catch(e){return json({error:e.message},503);}
+-  const secret=env.CF_TURN_API_TOKEN||env.NW_GAME_PACKAGE_KEY;const commandProofKey=p.slot===(r.hostSlot||1)&&secret?await roomProofKey(secret,r.id):undefined;return json({hostSlot:r.hostSlot||1,hostEpoch:r.hostEpoch||0,...ice,commandProofKey,inputTransport:'lockstep',protocol:'nw-input-lockstep-v78',eventTransport:'poll',experimental:true,realGems:true});
++  const secret=env.CF_TURN_API_TOKEN||env.NW_GAME_PACKAGE_KEY;const commandProofKey=p.slot===(r.hostSlot||1)&&secret?await roomProofKey(secret,r.id):undefined;return json({hostSlot:r.hostSlot||1,hostEpoch:r.hostEpoch||0,...ice,commandProofKey,inputTransport:'lockstep',protocol:r.protocol||'nw-input-lockstep-v78',eventTransport:'poll',experimental:true,realGems:true});
+  }
+  if(request.method==='GET'&&u.pathname==='/health')return json({build:BUILD,mode:'local-input-lockstep',realInternetVerified:false,realGems:true});
+  if(request.method==='GET'&&match?.[2]==='poll'){
+@@ -39,7 +39,7 @@ export async function relay(request,env,{now=Date.now(),billingMember=null,pay=p
+  if(u.pathname==='/api/lobby'){
+   const channel=Number(m.channel||1);if(![1,2,3].includes(channel))fail('INVALID_CHANNEL');
+   const rows=await db.prepare('SELECT state FROM game_rooms WHERE expires>? AND updated>? ORDER BY updated DESC LIMIT 100').bind(now,now-30000).all();
+-  const rooms=[];for(const row of rows.results){try{const {r,n}=decode(row.state,now);if(!r.listed||r.channel!==channel||r.phase==='closed'||!r.players.find(p=>p.slot===(r.hostSlot||1))?.connected)continue;rooms.push({id:r.id,title:r.title,channel:r.channel,game:r.game,count:r.players.filter(p=>p.connected&&!p.departed).length,canResume:r.phase==='native'&&r.players.some(p=>p.memberId===m.memberId&&p.departed),max:5,viewers:r.audience().length,host:r.players.find(p=>p.slot===(r.hostSlot||1))?.name,status:n.completed?'complete':r.phase==='lobby'?'waiting':r.phase==='native'?'playing':'paused'});}catch{}}
++  const rooms=[];for(const row of rows.results){try{const {r,n}=decode(row.state,now);if(!r.listed||r.channel!==channel||r.phase==='closed'||!r.players.find(p=>p.slot===(r.hostSlot||1))?.connected)continue;rooms.push({id:r.id,title:r.title,channel:r.channel,game:r.game,count:r.players.filter(p=>p.connected&&!p.departed).length,canJoin:r.phase==='native'&&!n.completed&&(r.players.length<5||r.players.some(p=>p.departed&&!p.pendingContinue&&!p.purchasing)),canResume:r.phase==='native'&&r.players.some(p=>p.memberId===m.memberId&&p.departed),max:5,viewers:r.audience().length,host:r.players.find(p=>p.slot===(r.hostSlot||1))?.name,status:n.completed?'complete':r.phase==='lobby'?'waiting':r.phase==='native'?'playing':'paused'});}catch{}}
+   return json({channel,rooms});
+  }
+  if(u.pathname==='/api/rooms'){
+@@ -47,13 +47,13 @@ export async function relay(request,env,{now=Date.now(),billingMember=null,pay=p
+   // Bounded private test service. Cleanup is independent of a room's gameplay state.
+   await db.batch([db.prepare('DELETE FROM game_events WHERE created<?').bind(now-86400000),db.prepare('DELETE FROM game_rooms WHERE expires<=?').bind(now)]);
+   const count=await db.prepare('SELECT COUNT(*) AS n FROM game_rooms').first();if(count.n>=100)fail('SERVER_FULL');
+-  const r=new Room(m.name,{now:()=>now}),n=new NativeRoom(r),p=r.owner;r.channel=[1,2,3].includes(Number(m.channel))?Number(m.channel):1;r.title=typeof m.title==='string'?m.title.trim().slice(0,40):m.name+'의 작전실';r.listed=m.listed===true;r.game='mslug3';p.memberId=m.memberId;p.seatId=crypto.randomUUID();p.gradeScore=m.gradeScore;p.staffRole=m.staffRole;await hydrateWallets(db,r);const result={room:r.id,invite:r.invite,slot:p.slot,token:p.token};r.invite=await digest(r.invite);p.token=await digest(p.token);p.connected=true;
++  const r=new Room(m.name,{now:()=>now}),n=new NativeRoom(r),p=r.owner;r.protocol=m.protocol==='nw-input-lockstep-v82'?'nw-input-lockstep-v82':'nw-input-lockstep-v78';r.channel=[1,2,3].includes(Number(m.channel))?Number(m.channel):1;r.title=typeof m.title==='string'?m.title.trim().slice(0,40):m.name+'의 작전실';r.listed=m.listed===true;r.game='mslug3';p.memberId=m.memberId;p.seatId=crypto.randomUUID();p.gradeScore=m.gradeScore;p.staffRole=m.staffRole;await hydrateWallets(db,r);const result={room:r.id,invite:r.invite,slot:p.slot,token:p.token};r.invite=await digest(r.invite);p.token=await digest(p.token);p.connected=true;
+   // Initial roster is served as a snapshot. No token/invite ever enters the event stream.
+   r.events=[];r.seq=0;
+   await db.prepare('INSERT INTO game_rooms (id,revision,nonce,state,updated,expires) VALUES (?,?,?,?,?,?)').bind(r.id,0,crypto.randomUUID(),encode(r,n),now,now+86400000).run();return json(result,201);
+  }
+  if(!match) return json({error:'NOT_FOUND'},404);
+- if(match[2]==='join')return json(await mutate(db,match[1],null,async(r,n)=>{if((r.kickedMembers||[]).includes(m.memberId))fail('MEMBER_KICKED');if(!r.listed&&(typeof m.invite!=='string'||await digest(m.invite)!==r.invite))fail('INVITE_REJECTED');if([...r.players,...r.viewers].some(q=>q.memberId===m.memberId&&!q.departed))fail('MEMBER_ALREADY_IN_ROOM');const p=m.role==='viewer'?r.joinViewer(m.name,m.build):r.phase==='native'?r.resumeMember(m.memberId,m.name,m.build):r.join(m.name,m.build),result={room:r.id,slot:p.slot,role:p.role||'player',token:p.token,phase:r.phase};p.memberId=m.memberId;p.seatId=crypto.randomUUID();p.gradeScore=m.gradeScore;p.staffRole=m.staffRole;const w=await wallet(db,p.memberId);p.credits=w.balance;r.walletBefore.set(p.memberId,w);p.token=await digest(p.token);r.connect(p);r.emit('audience',{viewers:r.audience()});return {...result,cursor:r.seq};},now),201);
++ if(match[2]==='join')return json(await mutate(db,match[1],null,async(r,n)=>{if(m.role!=='viewer'&&n.completed)fail('GAME_COMPLETED');if(r.phase==='native'&&(m.protocol||'nw-input-lockstep-v78')!==(r.protocol||'nw-input-lockstep-v78'))fail('CLIENT_UPDATE_REQUIRED');if((r.kickedMembers||[]).includes(m.memberId))fail('MEMBER_KICKED');if(!r.listed&&(typeof m.invite!=='string'||await digest(m.invite)!==r.invite))fail('INVITE_REJECTED');if([...r.players,...r.viewers].some(q=>q.memberId===m.memberId&&!q.departed))fail('MEMBER_ALREADY_IN_ROOM');const p=m.role==='viewer'?r.joinViewer(m.name,m.build):r.phase==='native'?r.joinRunning(m.memberId,m.name,m.build):r.join(m.name,m.build),result={room:r.id,slot:p.slot,role:p.role||'player',token:p.token,phase:r.phase};p.memberId=m.memberId;p.seatId=crypto.randomUUID();p.gradeScore=m.gradeScore;p.staffRole=m.staffRole;const w=await wallet(db,p.memberId);p.credits=w.balance;r.walletBefore.set(p.memberId,w);p.token=await digest(p.token);r.connect(p);r.emit('audience',{viewers:r.audience()});return {...result,cursor:r.seq};},now),201);
+  if(match[2]==='records'){const row=await db.prepare('SELECT state FROM game_rooms WHERE id=? AND expires>?').bind(match[1],now).first();if(!row)fail('ROOM_NOT_FOUND');const {r}=decode(row.state,now),p=r.auth(token);if(siteMemberId&&p.memberId!==siteMemberId)fail('MEMBER_MISMATCH');return json({records:await roomRecords(db,r.players)});}
+  if(match[2]==='coin'){
+   const row=await db.prepare('SELECT state FROM game_rooms WHERE id=?').bind(match[1]).first();if(!row)fail('ROOM_NOT_FOUND');
+@@ -90,5 +90,5 @@ export async function relay(request,env,{now=Date.now(),billingMember=null,pay=p
+   if(!p.connected&&['lobby','native','paused'].includes(r.phase))r.connect(p);
+   if(m.type.startsWith('launch-')||m.type==='connection-report'||m.type==='signal'||m.type.startsWith('native-')||m.type==='start-native')return n.action(p,m);
+   return r.action(p,m);
+- },now);const secret=env.CF_TURN_API_TOKEN||env.NW_GAME_PACKAGE_KEY;if(result?.event?.type==='native-command'&&secret)result.proof=await signCommand(await roomProofKey(secret,match[1]),match[1],result.event);return json(result);}return json({error:'NOT_FOUND'},404);
++ },now,m.type==='native-heartbeat'?m:null);const secret=env.CF_TURN_API_TOKEN||env.NW_GAME_PACKAGE_KEY;if(result?.event?.type==='native-command'&&secret)result.proof=await signCommand(await roomProofKey(secret,match[1]),match[1],result.event);return json(result);}return json({error:'NOT_FOUND'},404);
+  }catch(e){console.warn('coop-request-error',JSON.stringify({path:new URL(request.url).pathname,code:e instanceof ProtocolError?e.code:'INTERNAL_ERROR'}));return json({error:e instanceof ProtocolError?e.code:'INTERNAL_ERROR'},e instanceof ProtocolError?400:500);}}
+diff --git a/lib/game/room.mjs b/lib/game/room.mjs
+index 166c1a2..32f9119 100644
+--- a/lib/game/room.mjs
++++ b/lib/game/room.mjs
+@@ -1,4 +1,5 @@
+ const randomBytes=n=>({toString:format=>{const a=crypto.getRandomValues(new Uint8Array(n));return format==='hex'?[...a].map(v=>v.toString(16).padStart(2,'0')).join(''):btoa(String.fromCharCode(...a)).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');}});
++export const CLOCK_GRACE=30000;
+ export const BUILD='nw-ms3-input-lockstep-v72';
+ export const COLORS=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'];
+ export class ProtocolError extends Error {constructor(code){super(code);this.code=code;}}
+@@ -6,7 +7,7 @@ const fail=c=>{throw new ProtocolError(c)};
+ const text=(s,n)=>typeof s==='string'&&s.trim()&&[...s.trim()].length<=n&&!/[\u0000-\u001f\u007f]/u.test(s);
+ export class Room {
+  constructor(name,{now=()=>Date.now()}={}){
+-  this.hostSlot=1;this.hostEpoch=0;this.nativeCommands=[];this.now=now;this.build=BUILD;this.id=randomBytes(8).toString('hex');this.invite=randomBytes(16).toString('base64url');this.players=[];this.viewers=[];this.nextViewer=6;this.phase='lobby';this.frame=0;this.events=[];this.seq=0;this.pending=new Map();this.hashes=new Map();this.listeners=new Set();this.lastActivity=now();this.emit('created',{});this.owner=this.join(name,BUILD);
++  this.protocol='nw-input-lockstep-v82';this.hostSlot=1;this.hostEpoch=0;this.nativeCommands=[];this.now=now;this.build=BUILD;this.id=randomBytes(8).toString('hex');this.invite=randomBytes(16).toString('base64url');this.players=[];this.viewers=[];this.nextViewer=6;this.phase='lobby';this.frame=0;this.events=[];this.seq=0;this.pending=new Map();this.hashes=new Map();this.listeners=new Set();this.lastActivity=now();this.emit('created',{});this.owner=this.join(name,BUILD);
+  }
+  emit(type,data){const event={...data,id:++this.seq,type};this.lastActivity=this.now();this.events.push(event);if(this.events.length>400)this.events.shift();for(const cb of this.listeners)cb(event);return event;}
+  join(name,build){if(this.phase!=='lobby')fail('GAME_ALREADY_STARTED');if(build!==BUILD)fail('BUILD_MISMATCH');if(this.players.length>=5)fail('ROOM_FULL');if(!text(name,20))fail('INVALID_NAME');const p={slot:this.players.length+1,name:name.trim(),token:randomBytes(32).toString('base64url'),connected:false,ready:false,away:false,credits:0,character:0,state:'waiting',lives:0,input:0,lastInputSeq:-1,lastSeen:this.now(),chatAt:-Infinity,coinIds:new Set(),chatIds:new Map()};this.players.push(p);this.emit('roster',{players:this.roster()});return p;}
+@@ -24,6 +25,16 @@ export class Room {
+   delete p.lastClockAt;delete p.missingLinkAt;p.reconnecting=true;p.started=true;
+   this.emit('native-presence',{slot:p.slot,away:false,returned:true});return p;
+  }
++ joinRunning(memberId,name,build){
++  if(this.phase!=='native')fail('GAME_ALREADY_STARTED');
++  if(this.players.some(p=>p.memberId===memberId&&p.departed))return this.resumeMember(memberId,name,build);
++  if(build!==BUILD)fail('BUILD_MISMATCH');if(!text(name,20))fail('INVALID_NAME');
++  const vacant=this.players.find(p=>p.departed&&!p.pendingContinue&&!p.purchasing);
++  if(!vacant&&this.players.length>=5)fail('ROOM_FULL');
++  const p={slot:vacant?.slot||this.players.length+1,name:name.trim(),memberId,token:randomBytes(32).toString('base64url'),connected:true,departed:false,reconnecting:true,started:true,ready:false,coreReady:false,away:false,credits:0,character:0,state:'spectator',lives:0,input:0,lastInputSeq:-1,lastSeen:this.now(),chatAt:-Infinity,coinIds:new Set(),chatIds:new Map()};
++  if(vacant)this.players[vacant.slot-1]=p;else this.players.push(p);
++  this.emit('native-presence',{slot:p.slot,away:false,returned:true,newSeat:true});return p;
++ }
+  disconnect(p){p.connected=false;p.input=0;p.ready=false;this.emit('roster',{players:this.roster()});if(['diagnostic','native'].includes(this.phase))this.pause('CONNECTION_LOST',p.slot);}
+  pause(reason,slot){this.phase='paused';this.pending.clear();this.hashes.clear();for(const p of this.players)p.input=0;this.emit('paused',{reason,slot,frame:this.frame});}
+  action(p,msg){if(!msg||typeof msg!=='object')fail('INVALID_MESSAGE');const {type}=msg;if(p.role==='viewer'&&!['chat','ping'].includes(type))fail('SPECTATOR_INPUT');
+@@ -41,9 +52,9 @@ export class Room {
+  depart(p,reason='DISCONNECTED'){
+   if(p.departed)return;
+   p.connected=false;p.departed=true;p.away=true;p.ready=false;p.state='spectator';p.lives=0;p.input=0;
+-  this.emit('native-presence',{slot:p.slot,away:true,departed:true});
++  this.emit('native-presence',{slot:p.slot,away:true,departed:true,reason});
+   if(p.slot===(this.hostSlot||1)){
+-   const candidates=this.players.filter(q=>!q.departed&&q.connected&&this.now()-(q.lastClockAt??q.lastSeen)<12000);
++   const candidates=this.players.filter(q=>!q.departed&&q.connected&&this.now()-(q.lastClockAt??q.lastSeen)<CLOCK_GRACE);
+    candidates.sort((a,b)=>(b.syncFrame||0)-(a.syncFrame||0)||a.slot-b.slot);
+    const next=candidates[0];
+    if(!next){this.phase='closed';this.emit('closed',{reason:'NO_PLAYERS'});return;}
+@@ -57,7 +68,7 @@ export class Room {
+  // Trusted future emulator adapter only: these are deliberately NOT HTTP actions.
+  nativeDeath(slot){const p=this.players[slot-1];if(!p||p.state!=='active')fail('INVALID_LIFECYCLE');p.lives=Math.max(0,p.lives-1);if(!p.lives){p.state='continue';p.continueDeadline=this.now()+10000;p.input=0;}this.emit('roster',{players:this.roster()});}
+  grantTestCoin(slot,id){const p=this.players[slot-1];if(!p||!text(id,80))fail('INVALID_COIN');if(p.coinIds.has(id))return false;if(p.state==='spectator'||p.state==='active'&&p.lives>0)fail('COIN_NOT_ALLOWED');if(p.state==='continue'&&this.now()>=p.continueDeadline)fail('CONTINUE_EXPIRED');p.coinIds.add(id);p.lives=3;p.state='active';delete p.continueDeadline;this.emit('test-coin',{slot,id,lives:3,realGems:false});return true;}
+- tick(checkClock=true){if(checkClock&&this.phase==='native'){for(const p of this.players)if(!p.departed&&p.lastClockAt!==undefined&&this.now()-p.lastClockAt>12000)this.depart(p,'CLOCK_TIMEOUT');}
++ tick(checkClock=true){if(checkClock&&this.phase==='native'){for(const p of this.players)if(!p.departed&&p.lastClockAt!==undefined&&this.now()-p.lastClockAt>CLOCK_GRACE)this.depart(p,'CLOCK_TIMEOUT');}
+  const previous=(this.viewers||[]).length;this.viewers=(this.viewers||[]).filter(p=>this.now()-p.lastSeen<=25000);if(this.viewers.length!==previous)this.emit('audience',{viewers:this.audience()});for(const p of this.players){if(p.state==='continue'&&this.now()>=p.continueDeadline){p.state='spectator';p.input=0;this.emit('spectator',{slot:p.slot});}if(p.connected&&this.now()-p.lastSeen>30000){
+  if(this.phase==='diagnostic'){this.disconnect(p);continue;}
+  p.connected=false;p.ready=false;p.input=0;
+diff --git a/tests/newtworld-gateway.test.mjs b/tests/newtworld-gateway.test.mjs
+index 990a1fa..215121a 100644
+--- a/tests/newtworld-gateway.test.mjs
++++ b/tests/newtworld-gateway.test.mjs
+@@ -38,3 +38,5 @@ test('entry claim uses verified identity before test password, rejects duplicate
+ });
+ 
+ test('staff label comes only from authenticated profile, never request data',async()=>{for(const role of ['방장','부방장','회원']){const r=await gateway(request({staffRole:'방장',member:{token:'x',device:'y'}}),{},{verifyFetch:async()=>Response.json({ok:true,auth:true,profile:{memberId:'1',nickname:'회원',role}}),runRelay:async req=>{assert.equal((await req.json()).staffRole,role==='회원'?null:role);return Response.json({ok:true});}});assert.equal(r.status,200);}});
++
++test('gem balance endpoint returns the verified current balance only',async()=>{let balance=2400,calls=0;const query=()=>new Request('https://relay.test/api/gems',{method:'POST',headers:{origin:NEWTWORLD_ORIGIN,'x-nw-test-password':'test-secret','content-type':'application/json'},body:JSON.stringify({member:{token:'private-token',device:'device'}})});const options={verifyFetch:async()=>{calls++;return Response.json({ok:true,auth:true,profile:{memberId:'1',nickname:'private-name',gemBalance:balance}});},runRelay:()=>assert.fail('not a coin wallet request')};assert.deepEqual(await(await gateway(query(),{},options)).json(),{balance:2400});balance=2200;assert.deepEqual(await(await gateway(query(),{},options)).json(),{balance:2200});assert.equal(calls,2);});
+diff --git a/tests/relay.test.mjs b/tests/relay.test.mjs
+index 985ab26..d7cb612 100644
+--- a/tests/relay.test.mjs
++++ b/tests/relay.test.mjs
+@@ -6,7 +6,7 @@ import {payCoin} from '../lib/game/coin-payment.mjs';
+ import {relay} from '../lib/game/relay.mjs';
+ import {inputReceiver} from '../public/input-channel.mjs';
+ function database(){const sql=new DatabaseSync(':memory:');for(const f of readdirSync('drizzle').filter(f=>f.endsWith('.sql')))sql.exec(readFileSync('drizzle/'+f,'utf8'));const prepare=query=>({bind(...args){return {first:async()=>sql.prepare(query).get(...args),all:async()=>({results:sql.prepare(query).all(...args)}),run:async()=>({meta:sql.prepare(query).run(...args)})}},first:async()=>sql.prepare(query).get(),all:async()=>({results:sql.prepare(query).all()}),run:async()=>({meta:sql.prepare(query).run()})});return {prepare,batch:async xs=>{sql.exec('BEGIN');try{const r=[];for(const x of xs)r.push(await x.run());sql.exec('COMMIT');return r;}catch(e){sql.exec('ROLLBACK');throw e;}},sql};}
+-function setup(extraEnv={}){const DB=database();let now=1_000_000;const call=async(path,data,token)=>{if(data?.name&&!data.memberId)data={...data,memberId:'test:'+data.name};const r=await relay(new Request('https://game.test'+path,{method:data?'POST':'GET',headers:{...(data?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})},body:data?JSON.stringify(data):undefined}),{DB,...extraEnv},{now});return {status:r.status,...await r.json()};};const credit=p=>{const d=JSON.parse(DB.sql.prepare('SELECT state FROM game_rooms WHERE id=?').get(p.room).state),member=d.room.players[p.slot-1].memberId;DB.sql.prepare('UPDATE game_wallets SET balance=1,revision=revision+1 WHERE member_id=?').run(member);};const action=async(p,m)=>{if(m.type==='signal')m={...m,signal:{epoch:0,...m.signal}};if(m.type==='ready'&&m.ready)await call(`/api/rooms/${p.room}/action`,{type:'native-loaded',loaded:true,protocol:'nw-input-lockstep-v78'},p.token);if(m.type==='native-loaded')m={protocol:'nw-input-lockstep-v78',...m};return call(`/api/rooms/${p.room}/action`,m,p.token);};return {DB,call,action,credit,time:ms=>now+=ms};}
++function setup(extraEnv={}){const DB=database();let now=1_000_000;const call=async(path,data,token)=>{if(data?.name)data={protocol:'nw-input-lockstep-v82',...data};if(data?.name&&!data.memberId)data={...data,memberId:'test:'+data.name};const r=await relay(new Request('https://game.test'+path,{method:data?'POST':'GET',headers:{...(data?{'content-type':'application/json'}:{}),...(token?{authorization:'Bearer '+token}:{})},body:data?JSON.stringify(data):undefined}),{DB,...extraEnv},{now});return {status:r.status,...await r.json()};};const credit=p=>{const d=JSON.parse(DB.sql.prepare('SELECT state FROM game_rooms WHERE id=?').get(p.room).state),member=d.room.players[p.slot-1].memberId;DB.sql.prepare('UPDATE game_wallets SET balance=1,revision=revision+1 WHERE member_id=?').run(member);};const action=async(p,m)=>{if(m.type==='signal')m={...m,signal:{epoch:0,...m.signal}};if(m.type==='ready'&&m.ready)await call(`/api/rooms/${p.room}/action`,{type:'native-loaded',loaded:true,protocol:'nw-input-lockstep-v82'},p.token);if(m.type==='native-loaded')m={protocol:'nw-input-lockstep-v82',...m};return call(`/api/rooms/${p.room}/action`,m,p.token);};return {DB,call,action,credit,time:ms=>now+=ms};}
+ async function five(s){const h=await s.call('/api/rooms',{name:'방장',build:'nw-ms3-input-lockstep-v72'});const ps=[h];for(let i=2;i<=5;i++)ps.push(await s.call(`/api/rooms/${h.room}/join`,{name:'운영진'+i,build:'nw-ms3-input-lockstep-v72',invite:h.invite}));for(const p of ps)assert.equal((await s.action(p,{type:'ready',ready:true,character:(p.slot-1)%4})).status,200);return ps;}
+ test('five durable seats, hash-only credentials, invite and host gates',async()=>{const s=setup(),ps=await five(s),h=ps[0];assert.deepEqual(ps.map(p=>p.slot),[1,2,3,4,5]);const raw=s.DB.sql.prepare('SELECT state FROM game_rooms').get().state;for(const p of ps)assert.ok(!raw.includes(p.token));assert.ok(!raw.includes(h.invite));assert.equal((await s.call(`/api/rooms/${h.room}/join`,{name:'6',build:'nw-ms3-input-lockstep-v72',invite:h.invite})).error,'ROOM_FULL');assert.equal((await s.action(ps[2],{type:'native-loaded',loaded:true})).status,200);await s.action(h,{type:'native-loaded',loaded:false});assert.equal((await s.action(h,{type:'start-native'})).error,'HOST_CORE_REQUIRED');for(const p of JSON.parse(s.DB.sql.prepare('SELECT state FROM game_rooms WHERE id=?').get(h.room).state).room.players)s.credit({room:h.room,slot:p.slot});await s.action(h,{type:'native-loaded',loaded:true});assert.equal((await s.action(h,{type:'start-native'})).status,200);});
+ test('private signaling, spectator chat, ending is one-way and blocks commands',async()=>{const s=setup(),ps=await five(s),h=ps[0];for(const p of JSON.parse(s.DB.sql.prepare('SELECT state FROM game_rooms WHERE id=?').get(h.room).state).room.players)s.credit({room:h.room,slot:p.slot});await s.action(h,{type:'native-loaded',loaded:true});await s.action(h,{type:'start-native'});await s.action(h,{type:'signal',to:4,signal:{type:'offer',sdp:'private-sdp'}});for(const p of ps){const d=await s.call(`/api/rooms/${h.room}/poll`,null,p.token);assert.equal(d.events.some(e=>e.signal?.sdp==='private-sdp'),p.slot===4);assert.ok(!JSON.stringify(d).includes(h.token));}assert.equal((await s.action(ps[1],{type:'signal',to:3,signal:{type:'offer',sdp:'x'}})).error,'HOST_LINK_ONLY');const players=ps.map(p=>({state:p.slot===5?'spectator':'active',lives:p.slot===5?0:3}));await s.action(h,{type:'native-state',players,completed:true});await s.action(h,{type:'native-state',players,completed:false});assert.equal((await s.action(h,{type:'native-command',command:'coin'})).error,'GAME_COMPLETED');const chat={type:'chat',text:'안녕하세요',messageId:'unique-chat'};await s.action(ps[4],chat);await s.action(ps[4],chat);const d=await s.call(`/api/rooms/${h.room}/poll`,null,h.token);assert.equal(d.events.filter(e=>e.type==='chat').length,1);assert.equal(d.events.find(e=>e.type==='chat').spectator,true);assert.equal(d.events.filter(e=>e.type==='game-complete').length,1);assert.equal(d.snapshot.completed,true);});
+@@ -31,7 +31,7 @@ test('free coin and continue commands are rejected; presence preserves running r
+  await s.action(ps[2],{type:'native-return'});let d=await s.call(`/api/rooms/${h.room}/poll`,null,h.token);assert.equal(d.snapshot.phase,'native');assert.equal(d.snapshot.players[2].away,true);assert.equal(d.snapshot.players[0].away,false);
+  await s.action(ps[2],{type:'native-rejoin'});d=await s.call(`/api/rooms/${h.room}/poll`,null,h.token);assert.equal(d.snapshot.players[2].away,false);assert.equal(d.events.filter(e=>e.type==='native-start').length,1);
+ });
+-test('channels list safe room summaries and allow member-gated public joins',async()=>{const s=setup();const a=await s.call('/api/rooms',{name:'a',title:'작전실',channel:2,listed:true,build:'nw-ms3-input-lockstep-v72'});let list=await s.call('/api/lobby',{channel:2});assert.equal(list.rooms.length,1);assert.equal(list.rooms[0].status,'waiting');assert.ok(!JSON.stringify(list).includes(a.token));assert.ok(!JSON.stringify(list).includes(a.invite));assert.equal((await s.call('/api/lobby',{channel:1})).rooms.length,0);const b=await s.call(`/api/rooms/${a.room}/join`,{name:'b',build:'nw-ms3-input-lockstep-v72'});assert.equal(b.slot,2);for(const p of [a,b])await s.action(p,{type:'ready',ready:true,character:0});for(const p of [a,b])s.credit(p);await s.action(a,{type:'native-loaded',loaded:true});await s.action(a,{type:'start-native'});list=await s.call('/api/lobby',{channel:2});assert.equal(list.rooms[0].status,'playing');assert.equal((await s.call(`/api/rooms/${a.room}/join`,{name:'late',build:'nw-ms3-input-lockstep-v72'})).error,'GAME_ALREADY_STARTED');await s.action(a,{type:'leave'});const remaining=await s.call('/api/lobby',{channel:2});assert.equal(remaining.rooms.length,1);assert.equal(remaining.rooms[0].host,'b');});
++test('channels list safe room summaries and allow member-gated public joins',async()=>{const s=setup();const a=await s.call('/api/rooms',{name:'a',title:'작전실',channel:2,listed:true,build:'nw-ms3-input-lockstep-v72'});let list=await s.call('/api/lobby',{channel:2});assert.equal(list.rooms.length,1);assert.equal(list.rooms[0].status,'waiting');assert.ok(!JSON.stringify(list).includes(a.token));assert.ok(!JSON.stringify(list).includes(a.invite));assert.equal((await s.call('/api/lobby',{channel:1})).rooms.length,0);const b=await s.call(`/api/rooms/${a.room}/join`,{name:'b',build:'nw-ms3-input-lockstep-v72'});assert.equal(b.slot,2);for(const p of [a,b])await s.action(p,{type:'ready',ready:true,character:0});for(const p of [a,b])s.credit(p);await s.action(a,{type:'native-loaded',loaded:true});await s.action(a,{type:'start-native'});list=await s.call('/api/lobby',{channel:2});assert.equal(list.rooms[0].status,'playing');assert.equal((await s.call(`/api/rooms/${a.room}/join`,{name:'late',build:'nw-ms3-input-lockstep-v72'})).slot,3);await s.action(a,{type:'leave'});const remaining=await s.call('/api/lobby',{channel:2});assert.equal(remaining.rooms.length,1);assert.equal(remaining.rooms[0].host,'b');});
+ test('leaving a lobby reseats remaining members without transferring credentials',async()=>{const s=setup(),h=await s.call('/api/rooms',{name:'h',listed:true,build:'nw-ms3-input-lockstep-v72'}),b=await s.call(`/api/rooms/${h.room}/join`,{name:'b',build:'nw-ms3-input-lockstep-v72'}),c=await s.call(`/api/rooms/${h.room}/join`,{name:'c',build:'nw-ms3-input-lockstep-v72'});await s.action(b,{type:'leave'});const p=await s.call(`/api/rooms/${h.room}/poll`,null,c.token);assert.equal(p.slot,2);assert.equal((await s.action(b,{type:'ping'})).error,'UNAUTHORIZED');});
+ 
+ test('purchase binds verified member and receipt; retries grant one credit',async()=>{
+@@ -164,7 +164,7 @@ test('lockstep requires every local core, rejects old clients and preserves coin
+ test('server elects a live coordinator on clock expiry, fences old host, preserves slots and coins',async()=>{
+  const s=setup(),ps=await five(s),h=ps[0];for(const p of ps)s.credit(p);await s.action(h,{type:'start-native'});
+  for(const p of ps)await s.action(p,{type:'native-command',command:'start'});
+- for(let i=1;i<=7;i++){s.time(2000);for(const p of ps.slice(1))await s.action(p,{type:'native-heartbeat',epoch:i<7?0:1,frame:400+p.slot});}
++ for(let i=1;i<=16;i++){s.time(2000);for(const p of ps.slice(1))await s.action(p,{type:'native-heartbeat',epoch:i<16?0:1,frame:400+p.slot});}
+  const d=await s.call(`/api/rooms/${h.room}/poll`,null,ps[1].token);
+  assert.equal(d.phase,'native');assert.equal(d.hostSlot,5);assert.equal(d.hostEpoch,1);assert.equal(d.players[0].departed,true);
+  assert.deepEqual(d.players.map(p=>p.slot),[1,2,3,4,5]);assert(d.players.slice(1).every(p=>!p.departed&&p.lives===3));assert(d.players.every(p=>p.credits===0));
+@@ -191,7 +191,7 @@ test('completion screen survives stopped simulation clocks and a migrated host c
+ });
+ test('a peer with live HTTP but a dead input channel cannot block everyone forever',async()=>{
+  const s=setup(),ps=await five(s);for(const p of ps)s.credit(p);await s.action(ps[0],{type:'start-native'});
+- for(let t=0;t<9;t++){s.time(2000);for(const p of ps.slice(1))await s.action(p,{type:'native-heartbeat',epoch:0,frame:t});await s.action(ps[0],{type:'native-heartbeat',epoch:0,frame:t,links:ps.slice(1).map(p=>({slot:p.slot,connected:p.slot!==3}))});}
++ for(let t=0;t<18;t++){s.time(2000);for(const p of ps.slice(1))await s.action(p,{type:'native-heartbeat',epoch:0,frame:t});await s.action(ps[0],{type:'native-heartbeat',epoch:0,frame:t,links:ps.slice(1).map(p=>({slot:p.slot,connected:p.slot!==3}))});}
+  const d=await s.call(`/api/rooms/${ps[0].room}/poll`,null,ps[0].token);assert.equal(d.phase,'native');assert(d.players[2].departed);assert(d.players.filter(p=>p.slot!==3).every(p=>!p.departed));assert.equal(d.hostEpoch,0);
+ });
+ 
+@@ -221,7 +221,7 @@ test('departed member reclaims fixed seat with a new token and current cursor',a
+  const poll=await s.call(`/api/rooms/${h.room}/poll?after=${joined.cursor}`,null,joined.token);
+  assert.equal(poll.status,200);assert.deepEqual(poll.players.map(p=>p.slot),[1,2,3,4,5]);assert.equal(poll.players[2].state,'spectator');assert.equal(poll.players[2].departed,false);assert.equal(poll.events.length,0);
+  assert.equal((await s.call(`/api/rooms/${h.room}/join`,{name:'운영진3',build:'nw-ms3-input-lockstep-v72',invite:h.invite})).error,'MEMBER_ALREADY_IN_ROOM');
+- assert.equal((await s.call(`/api/rooms/${h.room}/join`,{name:'신규',build:'nw-ms3-input-lockstep-v72',invite:h.invite})).error,'GAME_ALREADY_STARTED');
++ assert.equal((await s.call(`/api/rooms/${h.room}/join`,{name:'신규',build:'nw-ms3-input-lockstep-v72',invite:h.invite})).error,'ROOM_FULL');
+ });
+ test('lobby counts exclude departed seats and only their authenticated owner may resume',async()=>{
+  const s=setup(),h=await s.call('/api/rooms',{name:'방장',build:'nw-ms3-input-lockstep-v72',listed:true});
+@@ -231,3 +231,6 @@ test('lobby counts exclude departed seats and only their authenticated owner may
+  const mine=await s.call('/api/lobby',{memberId:'test:P2'}),other=await s.call('/api/lobby',{memberId:'test:other'});
+  assert.equal(mine.rooms[0].count,1);assert.equal(mine.rooms[0].canResume,true);assert.equal(other.rooms[0].canResume,false);
+ });
++
++test('a delayed but healthy heartbeat refreshes itself before timeout evaluation',async()=>{const s=setup(),ps=await five(s);for(const p of ps)s.credit(p);await s.action(ps[0],{type:'start-native'});s.time(16000);for(const p of ps)assert.equal((await s.action(p,{type:'native-heartbeat',epoch:0,frame:100})).status,200);const d=await s.call(`/api/rooms/${ps[0].room}/poll`,null,ps[0].token);assert(d.players.every(p=>!p.departed));assert.equal(d.hostEpoch,0);});
++test('fresh member takes a departed seat without reviving the previous member token',async()=>{const s=setup(),ps=await five(s),h=ps[0];for(const p of ps)s.credit(p);await s.action(h,{type:'start-native'});await s.action(ps[2],{type:'leave'});const late=await s.call(`/api/rooms/${h.room}/join`,{name:'fresh-member',invite:h.invite,build:'nw-ms3-input-lockstep-v72'});assert.equal(late.status,201);assert.equal(late.slot,3);assert.equal((await s.action(ps[2],{type:'ping'})).error,'UNAUTHORIZED');const d=await s.call(`/api/rooms/${h.room}/poll`,null,late.token);assert.equal(d.players[2].state,'spectator');assert.equal(d.players[2].started,true);assert.equal(d.players[2].credits,0);assert.equal((await s.action(late,{type:'native-command',command:'revive'})).error,'PAID_COIN_REQUIRED');s.credit(late);assert.equal((await s.action(late,{type:'native-command',command:'revive'})).status,200);});
