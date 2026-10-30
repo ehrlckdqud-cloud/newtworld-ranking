@@ -19,3 +19,7 @@ Member identification and a separate server-side test password are both required
 
 ## Authorized server installation
 The owner confirmed distribution permission for the supplied ROM/BIOS. The installation package contains only ROMS/mslug3.zip and the required neogeo.zip inside a BIOS-only compatibility ZIP. Windows executables, settings, saves, screenshots and unrelated files are excluded. The server stores AES-GCM encrypted parts; the decryption key is a runtime secret released only after membership and test-password verification. The browser verifies GCM tags, total size and SHA-256 before preparing and saving the game. New solo hosts can install without selecting a file. No NewtGem charges are enabled.
+
+## Enemy HP verification (v83, 2026-10-30)
+
+See [the measured HP report](../docs/coop-v83-enemy-hp-validation.md) and its JSON/test for the current 1–5-player behavior. The original P1/P2-based table selector is unchanged; there is no general five-player HP multiplier. The report distinguishes directly measured enemies/bosses, seat-specific behavior, and unverified coverage.
