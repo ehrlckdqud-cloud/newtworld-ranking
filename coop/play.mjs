@@ -1,33 +1,33 @@
-import {requestContinue} from './continue-request.mjs?v=80';
-import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=80';
-import {createFramePresentation} from './frame-presentation.mjs?v=80';
-import {verifyCommand} from './command-proof.mjs?v=80';
-import {createSingleFlight} from './single-flight.mjs?v=80';
-import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=80';
-import {captureState,restoreState,sendSnapshot,SnapshotReceiver} from './lockstep-snapshot.mjs?v=80';
-import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=80';
-import {createCandidateBatcher} from './candidate-batcher.mjs?v=80';
-import {waitForConnection} from './connection-check.mjs?v=80';
-import {createRoomActions} from './room-actions.mjs?v=80';
-import {startError,checkLaunch} from './start-flow.mjs?v=80';
-import {starLabel,showCompletionStar} from './rankings.mjs?v=80';
-import {readScores} from './native/score-reader.mjs?v=80';
-import {chooseCoinQuantity} from './coin-purchase.mjs?v=80';
-import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=80';
-import {MemberCoins} from './member-coins.mjs?v=80';
-import {lobbyAudio} from './lobby-audio.mjs?v=80';
-import {downloadGame} from './download-game.mjs?v=80';
-import {testHeaders} from './test-access.mjs?v=80';
+import {requestContinue} from './continue-request.mjs?v=81';
+import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=81';
+import {createFramePresentation} from './frame-presentation.mjs?v=81';
+import {verifyCommand} from './command-proof.mjs?v=81';
+import {createSingleFlight} from './single-flight.mjs?v=81';
+import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=81';
+import {captureState,restoreState,sendSnapshot,SnapshotReceiver} from './lockstep-snapshot.mjs?v=81';
+import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=81';
+import {createCandidateBatcher} from './candidate-batcher.mjs?v=81';
+import {waitForConnection} from './connection-check.mjs?v=81';
+import {createRoomActions} from './room-actions.mjs?v=81';
+import {startError,checkLaunch} from './start-flow.mjs?v=81';
+import {starLabel,showCompletionStar} from './rankings.mjs?v=81';
+import {readScores} from './native/score-reader.mjs?v=81';
+import {chooseCoinQuantity} from './coin-purchase.mjs?v=81';
+import {READY_REQUIRED,needsReady,showRoomNotice,roomError} from './room-feedback.mjs?v=81';
+import {MemberCoins} from './member-coins.mjs?v=81';
+import {lobbyAudio} from './lobby-audio.mjs?v=81';
+import {downloadGame} from './download-game.mjs?v=81';
+import {testHeaders} from './test-access.mjs?v=81';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,signal:options.signal||AbortSignal.timeout(15000),headers:{...options.headers,...testHeaders()}});
 import {createChatPresentation} from './chat-presentation.mjs';
 import {drawClearLabels,DISPLAY_SCALE} from './clear-labels.mjs';
 
-import {makeResults} from './native-results.mjs?v=80';
-import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=80';
-import {makeHUD} from './native-hud.mjs?v=80';
-import {FiveSession} from './native/five-session.mjs?v=80';
+import {makeResults} from './native-results.mjs?v=81';
+import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=81';
+import {makeHUD} from './native-hud.mjs?v=81';
+import {FiveSession} from './native/five-session.mjs?v=81';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-input-lockstep-v72';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -53,6 +53,15 @@ const creditReceipts=new Map();
 const peers=new Map(),held=[0,0,0,0,0],heldAt=[0,0,0,0,0],bubbles=new Map();
 const canvas=$('screen'),displayCtx=canvas.getContext('2d',{alpha:false}),nativeCanvas=document.createElement('canvas'),ctx=nativeCanvas.getContext('2d',{alpha:false});let pixels,paintHUD,paintResults;
 const note=s=>$('status').textContent=({PURCHASE_IN_PROGRESS:'코인 결제 확인 중입니다. 구매 버튼으로 결과를 확인한 뒤 준비해주세요.',UNREADY_BEFORE_PURCHASE:'준비 취소 후 코인을 구매해주세요.',SPECTATOR_INPUT:'관전자는 게임 조작이나 코인 사용을 할 수 없습니다.',ALL_PRESENT_READY_REQUIRED:'현재 입장한 인원이 모두 준비를 눌러주세요.',CLIENT_UPDATE_REQUIRED:'새 버전이 적용되었습니다. 새로고침한 뒤 방을 다시 만들어주세요.',BUILD_MISMATCH:'새로고침한 뒤 방을 다시 만들어주세요.',ALL_PLAYERS_NEED_COIN:'모든 참가자가 코인을 1개 이상 구매해야 출동할 수 있습니다.',PAID_COIN_REQUIRED:'보유 코인이 없습니다. 채팅창 옆 코인 구매 버튼을 눌러주세요.',CONTINUE_NOT_AVAILABLE:'지금은 컨티뉴를 사용할 수 없습니다.'}[s]||s);
+async function safe(task){try{return await task;}catch(error){note(roomError(error));return undefined;}}
+async function createRoom(){
+ if(createRoom.busy)return;createRoom.busy=true;
+ const button=$('create'),cancel=$('cancelCreate'),feedback=$('createFeedback');
+ button.disabled=cancel.disabled=true;button.textContent='방 만드는 중…';feedback.textContent='방을 만드는 중입니다…';
+ try{entryRole='player';window.nwPendingRoomTitle=null;await join(true);feedback.textContent='';}
+ catch(error){feedback.textContent=roomError(error);note(feedback.textContent);}
+ finally{createRoom.busy=false;button.disabled=cancel.disabled=false;button.textContent='방 만들기';}
+}
 async function post(path,data){const r=await apiFetch(path,{method:'POST',headers:{'Content-Type':'application/json',...(session?{Authorization:'Bearer '+session.token}:{})},body:JSON.stringify(data)});const d=await r.json();if(!r.ok)throw Object.assign(Error(d.error),{retryable:d.retryable});if(d.wallet)updateCoins(d.wallet);return d;}
 let queuedActions=null,readyBusy=false,rosterRevision=0,soundEnabled=false;let gameGain=null,gameVolume=readVolume('nwGameVolume',1);
 const act=data=>{const own=session;if(!own)return Promise.reject(Error('NOT_IN_ROOM'));if(!queuedActions||queuedActions.owner!==own)queuedActions={owner:own,send:createRoomActions(message=>{if(session!==own)throw Error('ROOM_CHANGED');return post(`/api/rooms/${own.room}/action`,message);})};return data.type==='ping'?post(`/api/rooms/${own.room}/action`,data):queuedActions.send(data);};
@@ -170,8 +179,8 @@ function advanceGame(t){void clockHeartbeat(t);if(migrationBusy||!playing||!engi
  if(n>1)redrawLocal();if(clock>dt*5)clock=dt*5;
  }catch(e){syncFault=true;stop('동기화 실행 오류: '+e.message);}finally{framePresentation.end();}}
 requestAnimationFrame(tick);
-const backgroundClock=new Worker(new URL('./clock-worker.mjs?v=80',import.meta.url),{type:'module'});backgroundClock.onmessage=()=>{const now=performance.now();if(document.hidden||now-lastAnimationTick>=32)advanceGame(now);};
-$('create').onclick=()=>{entryRole='player';safe(join(true));};$('joinForm').onsubmit=e=>{e.preventDefault();safe(join(false));};$('ready').onclick=createSingleFlight(async()=>{if(launchBusy||remoteLaunch)return;const owner=session,self=roster.find(p=>p.slot===owner?.slot);if(!self)return;readyBusy=true;render();void enableSound().catch(()=>{});try{const result=await act({type:'ready',ready:!self.ready,character:self.character??0});if(session===owner&&result.players){rosterRevision=Math.max(rosterRevision,result.revision||0);roster=result.players;}}catch(e){note(e.message);}finally{readyBusy=false;render();}});
+const backgroundClock=new Worker(new URL('./clock-worker.mjs?v=81',import.meta.url),{type:'module'});backgroundClock.onmessage=()=>{const now=performance.now();if(document.hidden||now-lastAnimationTick>=32)advanceGame(now);};
+$('create').onclick=e=>{e.preventDefault();void createRoom();};$('joinForm').onsubmit=e=>{e.preventDefault();void createRoom();};$('ready').onclick=createSingleFlight(async()=>{if(launchBusy||remoteLaunch)return;const owner=session,self=roster.find(p=>p.slot===owner?.slot);if(!self)return;readyBusy=true;render();void enableSound().catch(()=>{});try{const result=await act({type:'ready',ready:!self.ready,character:self.character??0});if(session===owner&&result.players){rosterRevision=Math.max(rosterRevision,result.revision||0);roster=result.players;}}catch(e){note(e.message);}finally{readyBusy=false;render();}});
 async function loadCore(){const owner=session,epoch=roomEpoch,generation=coreGeneration;try{if(coreReady)return true;if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],downloaded=pendingDownload;pendingDownload=null;const source=downloaded||(f?await f.arrayBuffer():await readSavedROM());if(!source)throw Error('게임을 선택하고 설치해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();const loadedModule=await createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(loadedModule,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(session!==owner||epoch!==roomEpoch||generation!==coreGeneration){loadedModule._nw_close?.();return false;}module=loadedModule;if(!module._nw_load())throw Error('CORE_LOAD_FAILED');engine=new FiveSession(module,profile,{characters:[0,1,2,3,0],playerCount:5,sharedSelection:true,paid:true});note('게임 시작 화면 준비 중…');for(let block=0;block<35;block++){for(let i=0;i<40;i++)engine.step([0,0,0,0,0]);await new Promise(r=>setTimeout(r,0));if(generation!==coreGeneration||session!==owner)return false;}canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;module.onVideo=renderLocalFrame;module._nw_credits(coins.balance);module._nw_redraw();await act({type:'native-loaded',loaded:true,protocol:PROTOCOL});coreReady=true;for(const r of peers.values())sendHello(r);render();$('start').disabled=false;let stored=!f&&!downloaded;if(f||downloaded){try{await saveROM(source);stored=true;$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}$('installGame').textContent=stored?'설치 완료':'실행 준비 완료 · 저장 안 됨';note('내 PC 게임 준비 완료 · READY를 눌러주세요.');if(hasGame)requestSync();return true;}catch(e){note(e.message);$('load').disabled=false;return false;}};
 $('load').onclick=()=>{if(loadingCore)return loadingCore;const generation=coreGeneration;loadingCore=loadCore().finally(()=>{loadingCore=null;if(!coreReady)$('load').disabled=false;if(session&&generation!==coreGeneration)void $('load').onclick();});return loadingCore;};
 async function offerInstallation(){const saved=await readSavedROM().catch(()=>null);if(saved){note('이 PC에 이미 설치된 게임입니다.');if(!$('load').disabled)$('load').click();return;}$('installDialog').showModal();}
