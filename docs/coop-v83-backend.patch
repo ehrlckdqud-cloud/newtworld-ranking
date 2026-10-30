@@ -1,0 +1,13 @@
+diff --git a/worker/index.ts b/worker/index.ts
+index 670e075..c57a616 100644
+--- a/worker/index.ts
++++ b/worker/index.ts
+@@ -8,7 +8,7 @@ const worker = {
+   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
+     const path = new URL(request.url).pathname;
+     if(path.startsWith("/api/package-bytes/")) return packageBytes(request,env);
+-    if((path.startsWith("/api/rooms") || path === "/api/site-session" || path === "/api/rankings" || path === "/api/lobby" || path === "/api/test-access" || path === "/api/game-package" || path === "/api/wallet") || path === "/native-config" || path === "/health") return gateway(request,env);
++    if((path.startsWith("/api/rooms") || path === "/api/site-session" || path === "/api/rankings" || path === "/api/lobby" || path === "/api/test-access" || path === "/api/game-package" || path === "/api/wallet" || path === "/api/gems") || path === "/native-config" || path === "/health") return gateway(request,env);
+     let binding = ctx.props?.CONNECTORS;
+     // Local preview emulates the same request-scoped capability. This branch and
+     // the auxiliary service binding are absent from production builds.
