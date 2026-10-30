@@ -6,7 +6,7 @@ import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=82';
 import {createFramePresentation} from './frame-presentation.mjs?v=82';
 import {verifyCommand} from './command-proof.mjs?v=82';
 import {createSingleFlight} from './single-flight.mjs?v=82';
-import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=82';
+import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=85';
 import {captureState,restoreState,sendSnapshot,SnapshotReceiver} from './lockstep-snapshot.mjs?v=82';
 import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=82';
 import {createCandidateBatcher} from './candidate-batcher.mjs?v=82';
@@ -18,7 +18,7 @@ import {readScores} from './native/score-reader.mjs?v=82';
 import {chooseCoinQuantity} from './coin-purchase.mjs?v=83';
 import {READY_REQUIRED,needsReady,showRoomNotice,roomError} from './room-feedback.mjs?v=84';
 import {MemberCoins} from './member-coins.mjs?v=82';
-import {lobbyAudio} from './lobby-audio.mjs?v=82';
+import {lobbyAudio} from './lobby-audio.mjs?v=85';
 import {downloadGame} from './download-game.mjs?v=82';
 import {testHeaders} from './test-access.mjs?v=82';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
@@ -30,7 +30,7 @@ import {drawClearLabels,DISPLAY_SCALE} from './clear-labels.mjs';
 import {makeResults} from './native-results.mjs?v=82';
 import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=82';
 import {makeHUD} from './native-hud.mjs?v=82';
-import {FiveSession} from './native/five-session.mjs?v=82';
+import {FiveSession} from './native/five-session.mjs?v=85';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-input-lockstep-v72';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -51,6 +51,7 @@ function updateCoins(data){if(coins.update(data)){paintCredits();}}
 async function refreshWallet(){const w=await post('/api/wallet',{member:{token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')}});updateCoins(w);}
 
 let viewers=[],viewer=false,entryRole='player',commandBusy=false,gameReady=false;const handledCommands=new Set(),startApprovals=new Set();
+let continueInputPending=false;
 let session,roster=[],module,engine,profile,ac,audioNext=0,playing=false,completed=false,seq=0,bits=0,lastSent=-1,lastSentAt=0,lastTick=0,clock=0,chatOpen=false,composing=false,pendingChat=false,enterHeld=false,transportAlive=false,config;
 const creditReceipts=new Map();
 const peers=new Map(),held=[0,0,0,0,0],heldAt=[0,0,0,0,0],bubbles=new Map();
@@ -71,17 +72,18 @@ const sendAction=data=>{const own=session;if(!own)return Promise.reject(Error('N
 function endRoom(error,own){const message=endedRoomMessage(error);if(!message||!own||session!==own)return false;diagnostics.record('room-ended',{code:error.message});exitToChannel();note(message);return true;}
 const act=data=>{const own=session;return sendAction(data).catch(error=>{endRoom(error,own);throw error;});};
 async function command(command){
- if(commandBusy)return;commandBusy=true;const own=session;
+ if(commandBusy)return;commandBusy=true;const own=session,requestedAt=performance.now(),life=engine?.players[own.slot-1]?.continueLife;
+ const continuing=['continue','revive'].includes(command);
  try{
-  const continuing=['continue','revive'].includes(command);
-  if(continuing){note('컨티뉴 확인 중…');if(own.slot!==hostSlot)sendControl({type:'continue-state'});}
-  const send=()=>act({type:'native-command',command,...(own.slot===hostSlot&&engine&&command!=='start'?{players:engine.players.slice(0,engine.playerCount).map(({state,lives})=>({state,lives}))}:{})});
+  if(continuing){note('컨티뉴 확인 중…');if(command==='continue')continueInputPending=true;}
+  const send=()=>act({type:'native-command',command,...(command==='continue'?{immediate:true}:{}),...(own.slot===hostSlot&&engine&&command!=='start'?{players:engine.players.slice(0,engine.playerCount).map(({state,lives})=>({state,lives}))}:{})});
   const r=continuing?await requestContinue(send,{valid:()=>session===own&&hasGame}):await send();
   if(session!==own)return;
+  if(continuing)diagnostics.record('continue-approved',{duration:Math.round(performance.now()-requestedAt),slot:own.slot,commandId:r.event?.commandId});
   if(r.event&&own.slot===hostSlot)await event(r.event);else if(r.proof)sendControl({type:'command-proof',proof:r.proof});
   if(r.event&&continuing){rosterRevision=Math.max(rosterRevision,r.event.id||0);const self=roster.find(p=>p.slot===own.slot);if(self)self.state='selecting';resetGameInput();}
   return r;
- }finally{commandBusy=false;}
+ }catch(error){if(continuing&&session===own){diagnostics.record('continue-refused',{code:error.message,duration:Math.round(performance.now()-requestedAt)});const cancel={type:'continue-wait-end',slot:own.slot,life,id:crypto.randomUUID()};if(own.slot===hostSlot)sequencer?.enqueue(cancel);else sendControl(cancel);}throw error;}finally{commandBusy=false;}
 }
 function render(){document.body.classList.toggle('has-viewers',viewers.length>0);const cardsKey=JSON.stringify([roster,[...careerRecords],session?.slot,hasGame]);if(cardsKey!==renderedCards){renderedCards=cardsKey;const list=$('players');list.replaceChildren();for(let i=0;i<5;i++){const p=roster[i],a=document.createElement('article');a.className='player-card'+(!p?' empty-seat':'');if(!p){a.textContent='대원 대기 중';list.append(a);continue;}const slot=document.createElement('div');slot.className='slot';slot.textContent=`P${p.slot}`;slot.style.color=colors[i];const name=document.createElement('b');name.textContent=p.name;appendStaff(name,p.staffRole);const state=document.createElement('small');state.textContent=p.slot===hostSlot?'방장':'참가 대원';a.append(slot,name,state);const record=careerRecords.get(p.slot),stars=document.createElement('span');stars.className='completion-stars';stars.textContent=record?starLabel(record.stars):'☆';stars.title=record?`누적 완주 ${record.stars}회 · 최고 ${record.best_score.toLocaleString()}점`:'완주 기록 확인 중';a.append(stars);const grades=[1000,3000,10000,30000,50000,100000,200000],names=['입문자','초보자','중급자','숙련자','전문가','마스터','레전드'];let gi=grades.findLastIndex(v=>Number(p.gradeScore)>=v);if(gi>=0){const badge=document.createElement('img');badge.className='grade-badge';badge.src=`../assets/badges/v335/rank-${gi+1}.webp`;badge.alt=names[gi]+' 등급';badge.title=badge.alt;a.append(badge);}if(p.ready||playing){const ready=document.createElement('span');ready.className='ready';ready.textContent=!p.connected?'연결 끊김':playing?(p.away?'작전실 대기':p.state==='spectator'?'관전 중':'플레이 중'):'READY';a.append(ready);}if(session?.slot===hostSlot&&!hasGame&&p.slot!==hostSlot)a.append(memberActions(p,true));list.append(a);}}const self=roster.find(p=>p.slot===session?.slot);$('ready').disabled=readyBusy||launchBusy||!!remoteLaunch||!coreReady;$('ready').textContent=readyBusy?'READY 처리 중…':self?.ready?'READY 취소':'READY';$('ready').hidden=hasGame||viewer;paintCredits();$('start').textContent=completed?'새 게임 준비':hasGame?'도중 참가하기':'GAME START';$('start').hidden=completed?session?.slot!==hostSlot:hasGame?!away:session?.slot!==hostSlot;$('start').disabled=launchBusy||!!remoteLaunch;if(remoteLaunch)$('start').textContent='방장 START 시도 중…';if($('gameLeave'))$('gameLeave').textContent=solo()&&!completed&&!viewer?'게임 포기하기':'작전실';$('leaveRoom').textContent=document.body.classList.contains('in-game')?(solo()&&!completed?'게임 포기하기':'작전실로 나가기'):'방 나가기';$('rejoinGame').hidden=viewer||!hasGame||completed;$('rejoinGame').disabled=!['spectator','continue'].includes(self?.state);$('coin').hidden=viewer;$('coin').disabled=purchaseBusy||(!hasGame&&!!self?.ready);$('coin').title=self?.ready&&!hasGame?'준비 취소 후 코인을 구매해주세요.':'';const audienceKey=JSON.stringify([session?.slot,hasGame,viewers.map(p=>[p.slot,p.name,p.staffRole])]);if(audienceKey!==renderedAudience){renderedAudience=audienceKey;const audience=$('audienceList');audience.replaceChildren();if(!viewers.length){const empty=document.createElement('li');empty.textContent='관전자 없음';audience.append(empty);}for(const p of viewers){const li=document.createElement('li');li.textContent=p.name;appendStaff(li,p.staffRole);if(session?.slot===hostSlot&&!hasGame)li.append(memberActions(p,false));audience.append(li);}$('gameAudienceCount').textContent=`관전자 ${viewers.length}명`;const gameAudience=$('gameAudienceList');gameAudience.replaceChildren(...[...audience.children].map(li=>li.cloneNode(true)));}$('viewerChatForm').hidden=!viewer;$('chatForm').hidden=viewer||(playing&&!away&&!chatOpen);$('startHint').textContent=self?.started?'동료들의 J 시작을 기다리는 중…':'J를 눌러 시작 · 코인 1개';if(engine?.selection&&engine.phase==='attract'){const waiting=engine.selection.slice(0,engine.playerCount).flatMap((p,i)=>p.confirmed?[]:[roster[i]?.name||`P${i+1}`]);$('startHint').textContent=waiting.length?`캐릭터 선택: A / D · J 확정 — 대기: ${waiting.join(', ')}`:'모든 대원 선택 완료 · 출동 중…';}$('startHint').hidden=viewer||!hasGame||away||completed||(!engine?.selection&&roster.every(p=>p.started))||engine?.phase==='playing';$('start').hidden=viewer?(!hasGame||!away):$('start').hidden;if(viewer)$('start').textContent='관전하기';if(remoteLaunch&&!viewer&&!hasGame)$('start').hidden=false;}
 
@@ -102,7 +104,7 @@ $('leaveRoom').onclick=()=>safe((async()=>{
   if(!session)note(error?(endedRoomMessage(error)||'서버 응답을 확인하지 못해 방 화면을 닫았습니다. 연결 복구 후 방 목록을 새로고침해주세요.'):'방에서 나왔습니다.');
  }finally{leavingRoom=false;}
 })());
-function disposeGame(){coreGeneration++;coreReady=false;synced=false;syncFault=false;frameQueue=null;sequencer=null;hashes.clear();for(const slot of [...peers.keys()])discardPeer(slot);engine=null;module?._nw_close?.();module=null;held.fill(0);bits=0;creditReceipts.clear();publishedState='';}
+function disposeGame(){continueInputPending=false;coreGeneration++;coreReady=false;synced=false;syncFault=false;frameQueue=null;sequencer=null;hashes.clear();for(const slot of [...peers.keys()])discardPeer(slot);engine=null;module?._nw_close?.();module=null;held.fill(0);bits=0;creditReceipts.clear();publishedState='';}
 function exitToChannel(){queuedActions=null;remoteLaunch=null;launchBusy=false;roomEpoch++;session=null;transportAlive=false;playing=false;hasGame=false;completed=false;away=false;disposeGame();roster=[];viewers=[];viewer=false;document.body.classList.remove('is-viewer','has-viewers');$('viewerMessages').replaceChildren();$('load').disabled=false;$('start').disabled=true;$('joinForm').hidden=false;$('controls').hidden=true;$('screen').hidden=true;$('messages').replaceChildren();bubbles.clear();window.nwBackToChannel?.();safe(refreshWallet());}
 function setAway(value){away=value;bits=0;lastSent=-1;lastTick=0;clock=0;
  if(value){if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});window.nwOperations?.();note(!hasGame?'작전실 · READY 후 새 게임을 시작할 수 있습니다.':completed?'게임 종료 · 남은 코인은 회원 계정에 보관됩니다.':'작전실 복귀 · 동료들의 게임은 계속됩니다.');}
@@ -182,8 +184,8 @@ function syncNativeCredits(){if(module&&coreReady&&(displayedCreditModule!==modu
 const framePresentation=createFramePresentation(paint,present);
 function renderLocalFrame(...args){if(document.hidden)return;framePresentation.video(...args);}
 function redrawLocal(){if(!module)return;module._nw_credits(coins.balance);module._nw_redraw();}
-function applyCommand(e){if(e.type==='native-presence'){if(e.departed)engine.removePlayer(e.slot);if(e.returned)engine.addSeat(e.slot);return;}if(e.type!=='native-command'||handledCommands.has(e.commandId))return;handledCommands.add(e.commandId);let accepted=true;try{if(e.command==='start'){startApprovals.add(e.slot);if(engine.players.slice(0,engine.playerCount).filter(p=>!p.departed).every(p=>startApprovals.has(p.slot))&&engine.phase==='attract'&&!engine.pendingStart)engine.start();}if(e.command==='continue')engine.quickContinue(e.slot,'paid-'+e.commandId);if(e.command==='revive')engine.quickContinue(e.slot,'paid-'+e.commandId,true);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(['continue','revive'].includes(e.command))commandResults.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});if(session.slot===hostSlot&&['continue','revive'].includes(e.command)){creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});void flushCreditReceipts().catch(()=>{});}}
-function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else sendControl({type:'input',frame,bits:value});}
+function applyCommand(e){if(e.type==='continue-wait-end'){engine.cancelContinueWait(e.slot,e.life);return;}if(e.type==='native-presence'){if(e.departed)engine.removePlayer(e.slot);if(e.returned)engine.addSeat(e.slot);return;}if(e.type!=='native-command'||handledCommands.has(e.commandId))return;handledCommands.add(e.commandId);let accepted=true;try{if(e.command==='start'){startApprovals.add(e.slot);if(engine.players.slice(0,engine.playerCount).filter(p=>!p.departed).every(p=>startApprovals.has(p.slot))&&engine.phase==='attract'&&!engine.pendingStart)engine.start();}if(e.command==='continue')engine.quickContinue(e.slot,'paid-'+e.commandId);if(e.command==='revive')engine.quickContinue(e.slot,'paid-'+e.commandId,true);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(['continue','revive'].includes(e.command))commandResults.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});if(session.slot===hostSlot&&['continue','revive'].includes(e.command)){creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});void flushCreditReceipts().catch(()=>{});}}
+function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits|(continueInputPending?16:0);continueInputPending=false;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else sendControl({type:'input',frame,bits:value});}
 let lastAnimationTick=-Infinity;
 function tick(t){requestAnimationFrame(tick);const gap=t-lastAnimationTick;if(playing&&!document.hidden&&Number.isFinite(gap)&&gap>50)diagnostics.record('render-gap',{gap:Math.round(gap),frame:frameQueue?.frame});lastAnimationTick=performance.now();if(!document.hidden)advanceGame(t);}
 function advanceGame(t){if(migrationBusy||!playing||!engine||!synced||syncFault||!frameQueue)return;if(!lastTick)lastTick=t;clock+=Math.min(100,t-lastTick);lastTick=t;const dt=1000/module._nw_fps();let n=0;framePresentation.begin();try{
@@ -258,7 +260,7 @@ $('chat').onfocus=()=>{chatOpen=true;bits=0;};
 $('chatForm').onsubmit=e=>{e.preventDefault();if(composing)pendingChat=true;else sendChat();};$('chat').oncompositionstart=()=>composing=true;$('chat').oncompositionend=()=>{composing=false;if(pendingChat)queueMicrotask(()=>{if(chatOpen)sendChat();});};
 window.addEventListener('keydown',e=>{if(!session||document.querySelector('dialog[open]'))return;if(viewer){if(e.key==='Enter'&&document.activeElement!==$('viewerInput')){e.preventDefault();$('viewerInput').focus();}return;}if(e.key==='Enter'){if(enterHeld||e.repeat)return;enterHeld=true;if(!chatOpen){e.preventDefault();chatOpen=true;bits=0;$('chatForm').hidden=false;$('chat').focus();}else if(composing||e.isComposing)pendingChat=true;else{e.preventDefault();sendChat();}return;}if(chatOpen){if(e.key==='Escape')closeChat();return;}if(completed||away||!playing||document.querySelector('dialog[open]')||/INPUT|SELECT/.test(e.target.tagName))return;if(keymap[e.code]){e.preventDefault();if(e.code==='KeyJ'&&!e.repeat){const p=engine?.players[session.slot-1];if(!roster.find(p=>p.slot===session.slot)?.started){safe(command('start'));return;}if(['continue','spectator'].includes(p?.state)){safe(command('continue'));return;}}bits|=keymap[e.code];}});
 window.addEventListener('keyup',e=>{if(e.key==='Enter')enterHeld=false;bits&=~(keymap[e.code]||0);});window.addEventListener('blur',()=>{bits=0;enterHeld=false;});document.addEventListener('visibilitychange',()=>{bits=0;held.fill(0);enterHeld=false;lastTick=0;clock=0;audioNext=0;if(!document.hidden){ac?.resume().catch(()=>{});module?._nw_redraw?.();safe(recoverWindow());}});
-setInterval(()=>{if(session&&transportAlive)safe(act({type:'ping'}));},5000);
+setInterval(()=>{if(session&&transportAlive&&!hasGame)safe(act({type:'ping'}));},5000);
 let publishedState='',stateInFlight=false;
 async function publishState(){if(session?.slot!==hostSlot||!playing||!engine||stateInFlight)return;const scoring=['playing','complete'].includes(engine.phase);if(scoring&&(performance.now()-lastScoreRead>=1000||engine.phase==='complete'||scoreSample.length!==engine.playerCount)){scoreSample=readScores(engine);lastScoreRead=performance.now();}const state={type:'native-state',completed:engine.phase==='complete',...(scoring?{mission:engine.byte(0x10040c)}:{}),players:engine.players.slice(0,engine.playerCount).map(({state,lives},i)=>({state,lives,...(scoring?{score:scoreSample[i]||0}:{})}))},key=JSON.stringify(state);if(key===publishedState)return;stateInFlight=true;try{await act(state);publishedState=key;}catch(e){note(e.message);}finally{stateInFlight=false;}}
 setInterval(publishState,400);
@@ -322,6 +324,7 @@ function failSync(message){syncFault=true;stop(message);if(session.slot===hostSl
 function bindControl(record,ch,slot){record.epoch=hostEpoch;record.control=record.channel=ch;let lastChat=0;ch.onopen=()=>{sendHello(record);if(session.slot!==hostSlot)requestSync();};ch.onclose=()=>{record.synced=false;sequencer?.suspend(slot);diagnostics.record('peer-close',{slot});if(session?.slot!==hostSlot){synced=false;note('입력 연결이 끊겼습니다. 게임 상태 복구 중…');}};ch.onmessage=async e=>{if(record.epoch!==hostEpoch||peers.get(slot)!==record||typeof e.data!=='string'||e.data.length>100000)return;let m;try{m=JSON.parse(e.data);}catch{return;}try{
  if(m.type==='hello'){if(m.protocol!==PROTOCOL){note('게임 버전이 다릅니다. 모두 새로고침해주세요.');return;}record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
  if(session?.slot===hostSlot){
+  if(m.type==='continue-wait-end'&&slot<=5&&record.synced&&Number.isSafeInteger(m.life)&&typeof m.id==='string'&&m.id.length<=100)sequencer?.enqueue({type:'continue-wait-end',slot,life:m.life,id:m.id});
   if(m.type==='continue-state'&&slot<=5&&performance.now()-(record.lastContinueState||0)>250){record.lastContinueState=performance.now();void publishState();}
   if(m.type==='input'&&slot<=5&&record.synced&&sequencer?.submit(slot,m.frame,m.bits))record.lastInputAt=performance.now();
   if(m.type==='sync-request'){record.requestedSync=true;record.bootHash=m.bootHash;await syncPeer(record);}

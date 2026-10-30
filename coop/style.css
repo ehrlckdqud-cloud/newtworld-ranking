@@ -44,3 +44,6 @@ body.in-game #stage #gameChatStack #playerChat,body.in-game #stage #gameChatStac
 .staff-role{display:inline-block!important;margin-left:6px;color:#efcf77!important;font-size:11px!important;white-space:nowrap}.member-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}.member-actions button{font-size:11px;padding:5px 7px}body.in-game .member-actions,#gameAudienceList .member-actions{display:none!important}
 
 .volume-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;margin:12px 0;padding:8px;color:#eadfac}.volume-control input{flex:1;min-width:80px;width:110px;accent-color:#b6a15c}.volume-control output{min-width:38px;text-align:right}.channel-audio{display:grid;gap:8px;margin-top:12px}.channel-audio .volume-control{display:grid;grid-template-columns:minmax(0,1fr) 38px;gap:4px 8px;margin:0;padding:0;font-size:12px}.channel-audio .volume-control>span{grid-column:1/-1}.channel-audio .volume-control input{width:100%;min-width:0;margin:0;padding:0}.channel-audio .volume-control output{white-space:nowrap}#createFeedback{font-size:13px;line-height:1.6;color:#eadfac}
+
+/* Equal tracks in both room and channel audio panels. */
+.equipment>.volume-control{display:grid;grid-template-columns:64px minmax(0,1fr) 38px;gap:8px}.equipment>.volume-control input{width:100%;min-width:0;margin:0}

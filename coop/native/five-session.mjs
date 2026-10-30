@@ -58,12 +58,15 @@ export class FiveSession {
   p.departed=false;p.participating=true;p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;
  }
  selectCharacter(slot,character){const p=this.players[slot-1];if(!p||p.state!=='selecting'||!Number.isInteger(character)||character<0||character>3)throw Error('INVALID_SELECTION');p.character=character;p.lives=3;this.wb(this.status[slot-1]+0x7e,character);this.respawn(slot-1);}
+ cancelContinueWait(slot,life){const p=this.players[slot-1];if(p?.state==='continue'&&p.continueLife===life){p.continueWaitUntil=null;p.continueWaitUsed=true;}}
  continueInput(inputs,previous){
   // Test credits only. A paid deployment must authorize coin spending on the server.
   const order=[0,2,1,3];
   for(let i=0;i<5;i++){
    const p=this.players[i],edge=inputs[i]&~previous[i];
    if(p.state==='continue'){
+    if(this.paid&&(edge&16)&&!p.continueWaitUsed&&this.frame<p.deadline){p.continueWaitUsed=true;p.continueWaitUntil=this.frame+Math.ceil(this.m._nw_fps()*12);}
+    if(this.paid&&p.continueWaitUntil>this.frame)p.deadline++;
     if(!this.paid&&(edge&16)&&this.frame<p.deadline)this.requestContinue(i+1,`keyboard-${this.frame}-${i}`);
    }else if(p.state==='selecting'){
     let at=order.indexOf(p.character);
@@ -112,7 +115,7 @@ export class FiveSession {
    const p=this.players[i],a=this.x.actors[i],routine=this.long(a);
    if(p.state==='active'){this.separateSpawn(i);
     if(routine!==0&&routine!==0x567a)p.seenAlive=true;
-    else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);if(this.playerCount===1){this.nativeContinue=true;p.deadline=null;const s=this.status[0];this.ww(s+0x6a,0);this.wb(s+0x7f,0);this.wb(s+0x80,0);this.ww(s+0x10,0);this.wl(s+0xc,0);this.wl(s,0x43606);}}}
+    else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.continueLife=(p.continueLife||0)+1;p.continueWaitUsed=false;p.continueWaitUntil=null;p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);if(this.playerCount===1){this.nativeContinue=true;p.deadline=null;const s=this.status[0];this.ww(s+0x6a,0);this.wb(s+0x7f,0);this.wb(s+0x80,0);this.ww(s+0x10,0);this.wl(s+0xc,0);this.wl(s,0x43606);}}}
    }
    if(p.state==='continue'&&!this.nativeContinue&&this.frame>=p.deadline){p.state='spectator';p.deadline=null;this.wb(this.status[i]+0x82,0);this.emit('spectator',{slot:i+1});}
   }
