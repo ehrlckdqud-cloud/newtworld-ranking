@@ -22,7 +22,7 @@ export class FiveSession {
    const a=this.x.actors[i],s=this.status[i],p=this.players[i];
    if(i>=this.playerCount||p.departed){this.wl(a,0x567a);this.wl(s,0x567a);this.wb(s+0x7f,0);this.wb(s+0x82,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);continue;}
    this.wb(s+0x7f,3);this.wb(s+0x7e,p.character);this.wb(s+0x82,2);this.wl(s,0x567a);
-   if(i>=2){this.wl(s+0x6c,a);this.wb(0x1053e0-(i-2)*0x210,1);this.ww(0x105380-(i-2)*0x210,65535);this.wb(0x105404-(i-2)*0x210,255);}
+   if(i>=2){this.ww(a+0x12,0xffff);this.wl(s+0x6c,a);this.wb(0x1053e0-(i-2)*0x210,1);this.ww(0x105380-(i-2)*0x210,65535);this.wb(0x105404-(i-2)*0x210,255);}
    if(i===0){p.character=this.word(a+0x6a);p.state='active';p.seenAlive=true;}else this.respawn(i);
   }
   this.phase='playing';this.pendingStart=false;this.m._nw_hud(1);this.emit('five-session-start');
@@ -35,14 +35,14 @@ export class FiveSession {
   if(this.approvedCredits.has(id))return false;
   const p=this.players[slot-1];if(!p)throw Error('EMPTY_SEAT');
   if(this.nativeContinue&&slot===1){this.paidContinuePending=true;this.approvedCredits.add(id);return true;}
-  if(p.state==='spectator'&&this.phase==='playing'){p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;}
+  if(p.state==='spectator'&&this.phase==='playing'){p.departed=false;p.participating=true;p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;}
   const ok=this.requestContinue(slot,id);this.approvedCredits.add(id);return ok;
  }
  authorizeRejoin(slot,id){
   if(this.approvedCredits.has(id))return false;
   if(this.phase!=='playing'||!this.players.some(p=>p.state==='active'))throw Error('NO_ACTIVE_TEAMMATE');
   const p=this.players[slot-1];if(!p||!['continue','spectator'].includes(p.state))throw Error('REJOIN_NOT_AVAILABLE');
-  p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;
+  p.departed=false;p.participating=true;p.state='selecting';p.deadline=null;this.approvedCredits.add(id);return true;
  }
  selectCharacter(slot,character){const p=this.players[slot-1];if(!p||p.state!=='selecting'||!Number.isInteger(character)||character<0||character>3)throw Error('INVALID_SELECTION');p.character=character;p.lives=3;this.wb(this.status[slot-1]+0x7e,character);this.respawn(slot-1);}
  continueInput(inputs,previous){
