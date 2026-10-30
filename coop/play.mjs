@@ -328,7 +328,7 @@ async function migrateCoordinator(e,retry=false){
 async function clockHeartbeat(now){
  if(!session||!hasGame||completed||viewer||clockHeartbeatBusy||now-lastClockHeartbeat<2000)return;
  lastClockHeartbeat=now;clockHeartbeatBusy=true;const own=session;
- try{await post(`/api/rooms/${own.room}/action`,{type:'native-heartbeat',epoch:hostEpoch,frame:frameQueue?.frame||0});}
+ try{await post(`/api/rooms/${own.room}/action`,{type:'native-heartbeat',epoch:hostEpoch,frame:frameQueue?.frame||0,...(own.slot===hostSlot?{links:roster.filter(p=>p.slot!==hostSlot&&!p.departed).map(p=>({slot:p.slot,connected:!!peers.get(p.slot)?.synced}))}:{})});}
  catch(e){if(session===own&&e.message==='PLAYER_DISCONNECTED'){exitToChannel();note('연결이 끊겨 퇴장했습니다. 동료들은 계속 진행합니다.');}}
  finally{clockHeartbeatBusy=false;}
 }
