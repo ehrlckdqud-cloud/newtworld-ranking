@@ -1,21 +1,22 @@
-import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=76';
-import {verifyCommand} from './command-proof.mjs?v=76';
-import {createSingleFlight} from './single-flight.mjs?v=76';
-import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=76';
-import {captureState,restoreState,sendSnapshot,SnapshotReceiver} from './lockstep-snapshot.mjs?v=76';
-import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=76';
-import {createCandidateBatcher} from './candidate-batcher.mjs?v=76';
-import {waitForConnection} from './connection-check.mjs?v=76';
-import {createRoomActions} from './room-actions.mjs?v=76';
-import {startError,checkLaunch} from './start-flow.mjs?v=76';
-import {starLabel,showCompletionStar} from './rankings.mjs?v=76';
-import {readScores} from './native/score-reader.mjs?v=76';
-import {chooseCoinQuantity} from './coin-purchase.mjs?v=76';
-import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=76';
-import {MemberCoins} from './member-coins.mjs?v=76';
-import {lobbyAudio} from './lobby-audio.mjs?v=76';
-import {downloadGame} from './download-game.mjs?v=76';
-import {testHeaders} from './test-access.mjs?v=76';
+import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=77';
+import {createFramePresentation} from './frame-presentation.mjs?v=77';
+import {verifyCommand} from './command-proof.mjs?v=77';
+import {createSingleFlight} from './single-flight.mjs?v=77';
+import {PROTOCOL,INPUT_DELAY,InputSequencer,FrameQueue,stateHash} from './lockstep.mjs?v=77';
+import {captureState,restoreState,sendSnapshot,SnapshotReceiver} from './lockstep-snapshot.mjs?v=77';
+import {gatherDescription,peerOptions,connectionStage} from './peer-connection.mjs?v=77';
+import {createCandidateBatcher} from './candidate-batcher.mjs?v=77';
+import {waitForConnection} from './connection-check.mjs?v=77';
+import {createRoomActions} from './room-actions.mjs?v=77';
+import {startError,checkLaunch} from './start-flow.mjs?v=77';
+import {starLabel,showCompletionStar} from './rankings.mjs?v=77';
+import {readScores} from './native/score-reader.mjs?v=77';
+import {chooseCoinQuantity} from './coin-purchase.mjs?v=77';
+import {READY_REQUIRED,needsReady,showRoomNotice} from './room-feedback.mjs?v=77';
+import {MemberCoins} from './member-coins.mjs?v=77';
+import {lobbyAudio} from './lobby-audio.mjs?v=77';
+import {downloadGame} from './download-game.mjs?v=77';
+import {testHeaders} from './test-access.mjs?v=77';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
 const apiFetch=(path,options={})=>fetch(API+path,{...options,signal:options.signal||AbortSignal.timeout(15000),headers:{...options.headers,...testHeaders()}});
@@ -23,9 +24,9 @@ import {createChatPresentation} from './chat-presentation.mjs';
 import {drawClearLabels,DISPLAY_SCALE} from './clear-labels.mjs';
 
 import {makeResults} from './native-results.mjs';
-import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=76';
-import {makeHUD} from './native-hud.mjs?v=76';
-import {FiveSession} from './native/five-session.mjs?v=76';
+import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=77';
+import {makeHUD} from './native-hud.mjs?v=77';
+import {FiveSession} from './native/five-session.mjs?v=77';
 import {prepareCoopROM} from './native/prepare-coop.mjs';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-input-lockstep-v72';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -141,21 +142,23 @@ function present(target=canvas){
 }
 
 // CREDIT override changes only native text rendering, never emulated RAM or paid lifecycle.
-function syncNativeCredits(){if(module&&coreReady){module._nw_credits(coins.balance);if(!document.hidden)module._nw_redraw();}}
-function renderLocalFrame(...args){if(document.hidden)return;paint(...args);present();}
+let displayedCreditModule=null,displayedCredits=null;
+function syncNativeCredits(){if(module&&coreReady&&(displayedCreditModule!==module||displayedCredits!==coins.balance)){displayedCreditModule=module;displayedCredits=coins.balance;module._nw_credits(coins.balance);if(!document.hidden)module._nw_redraw();}}
+const framePresentation=createFramePresentation(paint,present);
+function renderLocalFrame(...args){if(document.hidden)return;framePresentation.video(...args);}
 function redrawLocal(){if(!module)return;module._nw_credits(coins.balance);module._nw_redraw();}
 function applyCommand(e){if(e.type==='native-presence'){if(e.departed)engine.removePlayer(e.slot);return;}if(e.type!=='native-command'||handledCommands.has(e.commandId))return;handledCommands.add(e.commandId);let accepted=true;try{if(e.command==='start'){startApprovals.add(e.slot);if(engine.players.slice(0,engine.playerCount).filter(p=>!p.departed).every(p=>startApprovals.has(p.slot))&&engine.phase==='attract'&&!engine.pendingStart)engine.start();}if(e.command==='continue')engine.authorizeContinue(e.slot,'paid-'+e.commandId);if(e.command==='revive')engine.authorizeRejoin(e.slot,'paid-'+e.commandId);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(['continue','revive'].includes(e.command))commandResults.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});if(session.slot===hostSlot&&['continue','revive'].includes(e.command)){creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});void flushCreditReceipts().catch(()=>{});}}
 function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else sendControl({type:'input',frame,bits:value});}
 let lastAnimationTick=-Infinity;
 function tick(t){requestAnimationFrame(tick);lastAnimationTick=performance.now();if(!document.hidden)advanceGame(t);}
-function advanceGame(t){void clockHeartbeat(t);if(migrationBusy||!playing||!engine||!synced||syncFault||!frameQueue)return;if(!lastTick)lastTick=t;clock+=Math.min(100,t-lastTick);lastTick=t;const dt=1000/module._nw_fps();let n=0;try{
+function advanceGame(t){void clockHeartbeat(t);if(migrationBusy||!playing||!engine||!synced||syncFault||!frameQueue)return;if(!lastTick)lastTick=t;clock+=Math.min(100,t-lastTick);lastTick=t;const dt=1000/module._nw_fps();let n=0;framePresentation.begin();try{
  if(session.slot===hostSlot){if(roster.some(p=>p.slot!==hostSlot&&!p.departed&&!peers.get(p.slot)?.synced)){clock=0;if(!waitingNotice){waitingNotice=true;note('동료 PC의 게임 상태를 맞추는 중…');}return;}sequencer.drain();}
  while(clock>=dt&&n++<5){const packet=frameQueue.take();if(!packet){clock=Math.min(clock,dt);if(lastProgress&&performance.now()-lastProgress>1500&&!waitingNotice){waitingNotice=true;note('동료의 입력을 기다리는 중 · 연결 복구 후 같은 프레임부터 이어집니다.');}break;}lastProgress=performance.now();if(waitingNotice){waitingNotice=false;note('입력 동기화가 복구되었습니다.');}for(const e of packet.commands)applyCommand(e);engine.step(packet.inputs);if(frameQueue.frame%120===0){const hash=stateHash(engine);hashes.set(frameQueue.frame,hash);if(hashes.size>20)hashes.delete(hashes.keys().next().value);if(session.slot===hostSlot)broadcastSync({type:'hash',frame:frameQueue.frame,hash});else if(!viewer)sendControl({type:'hash',frame:frameQueue.frame,hash});}
  submitInput(packet.frame+INPUT_DELAY);clock-=dt;if(session.slot===hostSlot)sequencer.drain();}
  if(n>1)redrawLocal();if(clock>dt*5)clock=dt*5;
- }catch(e){syncFault=true;stop('동기화 실행 오류: '+e.message);}}
+ }catch(e){syncFault=true;stop('동기화 실행 오류: '+e.message);}finally{framePresentation.end();}}
 requestAnimationFrame(tick);
-const backgroundClock=new Worker(new URL('./clock-worker.mjs?v=76',import.meta.url),{type:'module'});backgroundClock.onmessage=()=>{const now=performance.now();if(document.hidden||now-lastAnimationTick>=32)advanceGame(now);};
+const backgroundClock=new Worker(new URL('./clock-worker.mjs?v=77',import.meta.url),{type:'module'});backgroundClock.onmessage=()=>{const now=performance.now();if(document.hidden||now-lastAnimationTick>=32)advanceGame(now);};
 $('create').onclick=()=>{entryRole='player';safe(join(true));};$('joinForm').onsubmit=e=>{e.preventDefault();safe(join(false));};$('ready').onclick=createSingleFlight(async()=>{if(launchBusy||remoteLaunch)return;const owner=session,self=roster.find(p=>p.slot===owner?.slot);if(!self)return;readyBusy=true;render();void enableSound().catch(()=>{});try{const result=await act({type:'ready',ready:!self.ready,character:self.character??0});if(session===owner&&result.players){rosterRevision=Math.max(rosterRevision,result.revision||0);roster=result.players;}}catch(e){note(e.message);}finally{readyBusy=false;render();}});
 async function loadCore(){const owner=session,epoch=roomEpoch,generation=coreGeneration;try{if(coreReady)return true;if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],downloaded=pendingDownload;pendingDownload=null;const source=downloaded||(f?await f.arrayBuffer():await readSavedROM());if(!source)throw Error('게임을 선택하고 설치해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();const loadedModule=await createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(loadedModule,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(session!==owner||epoch!==roomEpoch||generation!==coreGeneration){loadedModule._nw_close?.();return false;}module=loadedModule;if(!module._nw_load())throw Error('CORE_LOAD_FAILED');engine=new FiveSession(module,profile,{characters:[0,1,2,3,0],playerCount:5,sharedSelection:true,paid:true});note('게임 시작 화면 준비 중…');for(let block=0;block<35;block++){for(let i=0;i<40;i++)engine.step([0,0,0,0,0]);await new Promise(r=>setTimeout(r,0));if(generation!==coreGeneration||session!==owner)return false;}canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;module.onVideo=renderLocalFrame;module._nw_credits(coins.balance);module._nw_redraw();await act({type:'native-loaded',loaded:true,protocol:PROTOCOL});coreReady=true;for(const r of peers.values())sendHello(r);render();$('start').disabled=false;let stored=!f&&!downloaded;if(f||downloaded){try{await saveROM(source);stored=true;$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}$('installGame').textContent=stored?'설치 완료':'실행 준비 완료 · 저장 안 됨';note('내 PC 게임 준비 완료 · READY를 눌러주세요.');if(hasGame)requestSync();return true;}catch(e){note(e.message);$('load').disabled=false;return false;}};
 $('load').onclick=()=>{if(loadingCore)return loadingCore;const generation=coreGeneration;loadingCore=loadCore().finally(()=>{loadingCore=null;if(!coreReady)$('load').disabled=false;if(session&&generation!==coreGeneration)void $('load').onclick();});return loadingCore;};
