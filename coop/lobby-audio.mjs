@@ -1,4 +1,4 @@
-import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=75';
+import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=76';
 const base='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/lobby-audio/';
 export function createLobbyAudio({makeAudio=src=>new Audio(src)}={}){
  const music=makeAudio(base+'waiting.mp3'),click=makeAudio(base+'click.mp3'),launch=makeAudio(base+'deploy.mp3');
