@@ -1,9 +1,10 @@
 // Reliable, ordered, frame-numbered inputs. No video/audio payloads.
-export const PROTOCOL='nw-input-lockstep-v72', INPUT_DELAY=6;
+export const PROTOCOL='nw-input-lockstep-v78', INPUT_DELAY=6;
 export class InputSequencer {
  constructor({slots,onFrame,delay=INPUT_DELAY,start=0}){this.slots=new Set(slots);this.onFrame=onFrame;this.delay=delay;this.frame=start;this.pending=new Map();this.commands=[];this.commandIds=new Set();this.history=new Map();for(let f=start;f<start+delay;f++)this.pending.set(f,new Map(slots.map(s=>[s,0])));}
  submit(slot,frame,bits){if(!this.slots.has(slot)||!Number.isSafeInteger(frame)||frame<this.frame||frame>this.frame+120||!Number.isInteger(bits)||bits<0||bits>127)return false;let row=this.pending.get(frame);if(!row)this.pending.set(frame,row=new Map());if(row.has(slot))return row.get(slot)===bits;row.set(slot,bits);return true;}
- enqueue(event){const id=event.type+':'+(event.commandId??event.id);if(this.commandIds.has(id))return;this.commandIds.add(id);this.commands.push(event);if(event.type==='native-presence'&&event.departed)this.slots.delete(event.slot);}
+ resume(slot){if(this.slots.has(slot))return;this.slots.add(slot);for(let f=this.frame;f<this.frame+this.delay;f++)this.submit(slot,f,0);}
+ enqueue(event){const id=event.type+':'+(event.commandId??event.id);if(this.commandIds.has(id))return;this.commandIds.add(id);this.commands.push(event);if(event.type==='native-presence'&&event.departed){this.slots.delete(event.slot);for(const row of this.pending.values())row.delete(event.slot);}}
  drain(limit=8){let n=0;while(n++<limit){const row=this.pending.get(this.frame);if(!row||[...this.slots].some(s=>!row.has(s)))break;const packet={type:'frame',frame:this.frame,inputs:Array.from({length:5},(_,i)=>this.slots.has(i+1)?row.get(i+1):0),commands:this.commands.splice(0)};this.pending.delete(this.frame);this.history.set(this.frame,packet);this.frame++;for(const f of this.history.keys())if(f<this.frame-600)this.history.delete(f);this.onFrame(packet);} }
 }
 export class FrameQueue {
