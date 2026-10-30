@@ -1,4 +1,4 @@
-import {siteHeaders,claimSiteSession} from './site-session.mjs?v=81';
+import {siteHeaders,claimSiteSession} from './site-session.mjs?v=82';
 const access=globalThis[Symbol.for('nw.coop.testAccess')]??=( {password:''} );
 export const testHeaders=()=>({...siteHeaders(),...(access.password?{'X-NW-Test-Password':access.password}:{})});
 export function requestTestAccess(member){return new Promise(resolve=>{
