@@ -20,3 +20,11 @@ test('button and launch effect levels persist independently of waiting music',()
  assert.equal(players[3].volume,.45);assert.equal(players[4].volume,.2);assert.equal(players[5].volume,.2);
  const restored=factory();assert.equal(restored.effectsVolume,.2);assert.equal(restored.volume,.45);
 });
+
+test('coin purchase sound follows effect volume including mute without changing music',()=>{
+ const src=readFileSync(new URL('../coop/play.mjs',import.meta.url),'utf8');
+ const code=src.slice(src.indexOf('function chime(){'),src.indexOf('function paintCredits()'));
+ let played=0;const coinSound={play(){played++;return Promise.resolve();}},lobbyAudio={effectsVolume:0,volume:.45};
+ const c=vm.createContext({coinSound,lobbyAudio});vm.runInContext(code,c);
+ c.chime();assert.equal(coinSound.volume,0);lobbyAudio.effectsVolume=.3;c.chime();assert.equal(coinSound.volume,.3);assert.equal(lobbyAudio.volume,.45);assert.equal(played,2);
+});
