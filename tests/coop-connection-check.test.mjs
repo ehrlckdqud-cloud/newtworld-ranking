@@ -1,3 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {waitForConnection} from '../coop/connection-check.mjs';
 test('connection must have both open input and connected transport',async()=>{let t=0;const record={channel:{readyState:'connecting'},pc:{connectionState:'connected'}};await waitForConnection(record,{now:()=>t,sleep:async()=>{t+=100;record.channel.readyState='open';}});assert.equal(t,100);});
 test('failed, timed out, or replaced room cannot start',async()=>{await assert.rejects(waitForConnection({pc:{connectionState:'failed'}}),/FAILED/);let t=0;await assert.rejects(waitForConnection({pc:{connectionState:'connecting'}},{timeout:200,now:()=>t,sleep:async()=>{t+=100;}}),/TIMEOUT/);await assert.rejects(waitForConnection({pc:{}},{valid:()=>false}),/ROOM_CHANGED/);});
+
+test('startup waits for peer core hello after transport opens',async()=>{let t=0;const r={channel:{readyState:'open'},pc:{connectionState:'connected'},coreReady:false};await waitForConnection(r,{requireCore:true,now:()=>t,sleep:async()=>{t+=100;if(t===300)r.coreReady=true;}});assert.equal(t,300);});
