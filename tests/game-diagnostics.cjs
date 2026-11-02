@@ -12,6 +12,6 @@ const assert=require('node:assert/strict');
  d.capture({...e,ram:()=>{throw Error('unavailable')}});assert.equal(d.report().error,'native-state-unavailable');
  d.capture(null);assert.deepEqual(ram,before);
  const {createDiagnostics}=await import('../coop/diagnostics.mjs');
- const perf=createDiagnostics();perf.sample({frame:10,token:'secret',name:'private'});assert.equal(perf.report().version,88);assert.equal(perf.report().samples[0].token,undefined);assert.equal(perf.report().samples[0].name,undefined);
+ const perf=createDiagnostics();perf.sample({frame:10,token:'secret',name:'private'});assert.equal(perf.report().version,89);assert.equal(perf.report().samples[0].token,undefined);assert.equal(perf.report().samples[0].name,undefined);
  console.log('PASS native positions/parent/state, no RAM writes, sampling limit, forced capture, isolated copies, reset, error containment, diagnostic privacy');
 })().catch(e=>{console.error(e);process.exitCode=1});

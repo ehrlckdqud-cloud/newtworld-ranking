@@ -1,6 +1,6 @@
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
-import {createDiagnostics} from './diagnostics.mjs?v=88';
-import {createGameDiagnostics} from './game-diagnostics.mjs?v=88';
+import {createDiagnostics} from './diagnostics.mjs?v=89';
+import {createGameDiagnostics} from './game-diagnostics.mjs?v=89';
 import {createFrameBudget} from './frame-budget.mjs?v=87';
 const frameBudget=createFrameBudget();
 const diagnostics=createDiagnostics({storage:globalThis.localStorage});
@@ -34,8 +34,8 @@ import {drawClearLabels,DISPLAY_SCALE} from './clear-labels.mjs';
 import {makeResults} from './native-results.mjs?v=82';
 import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=82';
 import {makeHUD} from './native-hud.mjs?v=82';
-import {FiveSession} from './native/five-session.mjs?v=hp1';
-import {prepareCoopROM} from './native/prepare-coop.mjs?v=hp1';
+import {FiveSession} from './native/five-session.mjs?v=scene1';
+import {prepareCoopROM} from './native/prepare-coop.mjs?v=scene1';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-input-lockstep-v72';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
 let renderedAudience=null,renderedCards=null,coreGeneration=0;const hostChanges=new Set();const careerRecords=new Map();let lastScoreRead=0,scoreSample=[];
@@ -318,7 +318,7 @@ async function verifyGameConnections(){
 
 function sendControl(message){const r=peers.get(hostSlot),ch=r?.control;if(ch?.readyState==='open'){if(ch.bufferedAmount>=2*1024*1024){r.synced=false;synced=false;r.pc.close();note('입력 전송이 지연되어 연결을 다시 맞추는 중입니다.');return false;}ch.send(JSON.stringify(message));return true;}return false;}
 function broadcastSync(message){const data=JSON.stringify(message);for(const r of peers.values())if(r.control?.readyState==='open'){if(r.control.bufferedAmount>=4*1024*1024){r.synced=false;r.pc.close();continue;}r.control.send(data);}}
-function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-hp1',ready:coreReady}));}
+function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene1',ready:coreReady}));}
 function requestSync(){if(coreReady&&hasGame)sendControl({type:'sync-request'});}
 // RAM equality alone does not cover CPU, timers, RNG and other serialized core state.
 async function syncPeer(r){if(!r.requestedSync||!coreReady||!hasGame||!frameQueue||r.syncing||!r.coreReady||r.control?.readyState!=='open')return;r.syncing=true;r.synced=false;sequencer?.suspend(r.slot);try{r.snapshotFrame=frameQueue.frame;await sendSnapshot(r.control,captureState(module,engine,r.snapshotFrame),{protocol:PROTOCOL,handled:[...handledCommands],approved:[...startApprovals],results:[...commandResults]});if(sequencer.frame-r.snapshotFrame>550)throw Error('SNAPSHOT_TOO_OLD');for(const [f,packet]of sequencer.history)if(f>=r.snapshotFrame)r.control.send(JSON.stringify(packet));}finally{r.syncing=false;}}
@@ -326,7 +326,7 @@ function requestResync(reason){diagnostics.record('resync',{reason,frame:frameQu
 async function recoverPeer(record,reason){if(record.recovering||record.syncing)return;record.recovering=true;diagnostics.record('peer-resync',{slot:record.slot,reason});record.requestedSync=true;try{await syncPeer(record);}catch{record.pc.close();}finally{record.recovering=false;}}
 function failSync(message){syncFault=true;stop(message);if(session.slot===hostSlot)broadcastSync({type:'sync-fault',message});}
 function bindControl(record,ch,slot){record.epoch=hostEpoch;record.control=record.channel=ch;let lastChat=0;ch.onopen=()=>{sendHello(record);if(session.slot!==hostSlot)requestSync();};ch.onclose=()=>{record.synced=false;sequencer?.suspend(slot);diagnostics.record('peer-close',{slot});if(session?.slot!==hostSlot){synced=false;note('입력 연결이 끊겼습니다. 게임 상태 복구 중…');}};ch.onmessage=async e=>{if(record.epoch!==hostEpoch||peers.get(slot)!==record||typeof e.data!=='string'||e.data.length>100000)return;let m;try{m=JSON.parse(e.data);}catch{return;}try{
- if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-hp1'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
+ if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene1'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
  if(!record.compatible)return;
  if(session?.slot===hostSlot){
   if(m.type==='continue-wait-end'&&slot<=5&&record.synced&&Number.isSafeInteger(m.life)&&typeof m.id==='string'&&m.id.length<=100)sequencer?.enqueue({type:'continue-wait-end',slot,life:m.life,id:m.id});
