@@ -9,7 +9,7 @@ export function createLobbyAudio({makeAudio=src=>new Audio(src)}={}){
  const arm=()=>{if(waiting&&enabled&&music.paused)play(music);};
  // Retry when media becomes playable; browsers may defer the first play while loading.
  music.addEventListener?.('canplay',arm);
- return {arm,get effectsVolume(){return effectsVolume;},setEffectsVolume(value){effectsVolume=saveVolume('nwLobbyEffectsVolume',value);click.volume=launch.volume=effectsVolume;},get volume(){return music.volume;},setVolume(value){music.volume=saveVolume('nwWaitingVolume',value);arm();},setWaiting(value){waiting=value;if(value)arm();else{music.pause();music.currentTime=0;}},effect(deploy=false){const a=deploy?launch:click;a.currentTime=0;play(a);},toggle(){enabled=!enabled;if(enabled)arm();else music.pause();return enabled;}};
+ return {arm,suspend(){music.pause();},get effectsVolume(){return effectsVolume;},setEffectsVolume(value){effectsVolume=saveVolume('nwLobbyEffectsVolume',value);click.volume=launch.volume=effectsVolume;},get volume(){return music.volume;},setVolume(value){music.volume=saveVolume('nwWaitingVolume',value);arm();},setWaiting(value){waiting=value;if(value)arm();else{music.pause();music.currentTime=0;}},effect(deploy=false){const a=deploy?launch:click;a.currentTime=0;play(a);},toggle(){enabled=!enabled;if(enabled)arm();else music.pause();return enabled;}};
 }
 const shared=globalThis[Symbol.for('nw.coop.lobbyAudio')]??={audio:createLobbyAudio(),bound:false};
 export const lobbyAudio=shared.audio;
@@ -17,6 +17,7 @@ if(!shared.bound){shared.bound=true;
 document.addEventListener('pointerdown',()=>lobbyAudio.arm(),{capture:true});
 document.addEventListener('keydown',()=>lobbyAudio.arm(),{capture:true});
 document.addEventListener('click',event=>{const b=event.target.closest('button');if(b&&!b.disabled)lobbyAudio.effect(b.id==='start');},{capture:true});
+window.addEventListener('pagehide',()=>lobbyAudio.suspend());
 // Preserve the waiting/game phase across bfcache; do not restart music during gameplay.
 window.addEventListener('pageshow',()=>lobbyAudio.arm());
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)lobbyAudio.arm();});
