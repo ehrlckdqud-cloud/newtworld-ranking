@@ -1,0 +1,156 @@
+{
+  "passed": true,
+  "difficulty": 3,
+  "gameMode": 2,
+  "tableIndexRows": 888,
+  "nativeChecks": 4440,
+  "scalar": {
+    "increase": 395,
+    "same": 486,
+    "decrease": 1
+  },
+  "unchangedRandomPools": 6,
+  "unchangedImmediateWriters": 39,
+  "decreaseException": [
+    {
+      "id": "MS3-T444900-I2",
+      "table": "0x444900",
+      "index": 2,
+      "players": 1,
+      "expected": [
+        30
+      ],
+      "observed": [
+        30
+      ],
+      "samples": 1
+    },
+    {
+      "id": "MS3-T444900-I2",
+      "table": "0x444900",
+      "index": 2,
+      "players": 2,
+      "expected": [
+        10
+      ],
+      "observed": [
+        10
+      ],
+      "samples": 1
+    },
+    {
+      "id": "MS3-T444900-I2",
+      "table": "0x444900",
+      "index": 2,
+      "players": 3,
+      "expected": [
+        10
+      ],
+      "observed": [
+        10
+      ],
+      "samples": 1
+    },
+    {
+      "id": "MS3-T444900-I2",
+      "table": "0x444900",
+      "index": 2,
+      "players": 4,
+      "expected": [
+        10
+      ],
+      "observed": [
+        10
+      ],
+      "samples": 1
+    },
+    {
+      "id": "MS3-T444900-I2",
+      "table": "0x444900",
+      "index": 2,
+      "players": 5,
+      "expected": [
+        10
+      ],
+      "observed": [
+        10
+      ],
+      "samples": 1
+    }
+  ],
+  "playerCountAndMissionEntries": {
+    "passed": true,
+    "scope": "real native boot/coin/selection/door for 1–5 players, then controlled 900-frame mission entry fixtures for each count; not full route completions for each count",
+    "results": [
+      {
+        "count": 1,
+        "normalBootAndSelection": true,
+        "activeMask": 1,
+        "noAbsentPlayers": true,
+        "controlledMissionEntries": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "count": 2,
+        "normalBootAndSelection": true,
+        "activeMask": 3,
+        "noAbsentPlayers": true,
+        "controlledMissionEntries": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "count": 3,
+        "normalBootAndSelection": true,
+        "activeMask": 7,
+        "noAbsentPlayers": true,
+        "controlledMissionEntries": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "count": 4,
+        "normalBootAndSelection": true,
+        "activeMask": 15,
+        "noAbsentPlayers": true,
+        "controlledMissionEntries": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      {
+        "count": 5,
+        "normalBootAndSelection": true,
+        "activeMask": 31,
+        "noAbsentPlayers": true,
+        "controlledMissionEntries": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      }
+    ]
+  },
+  "limits": [
+    "Native caller fixtures, not all enemy encounters in complete visual route playthroughs",
+    "Only workbook difficulty 3 / game mode 2 validated; other difficulty settings are not covered"
+  ]
+}
