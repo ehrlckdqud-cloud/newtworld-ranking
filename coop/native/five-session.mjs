@@ -1,3 +1,4 @@
+import {HP_COUNT_ADDRESS} from './hp-scaling.mjs?v=hp1';
 /** Cooperative host lifecycle. Native continue/selection rendering is still a release gate. */
 export class FiveSession {
  constructor(module,profile,{characters=[0,1,2,3,0],sharedSelection=false,playerCount=characters.length,paid=false}={}){
@@ -108,6 +109,7 @@ export class FiveSession {
   // Native 4303A/43072 and portrait renderer 43C12 share the character-use mask.
   // Only clear it during selection; gameplay ownership and actor state are untouched.
   if(this.nativeContinue||(this.phase==='attract'&&[0x4323c,0x43284,0x432c4,0x432d4].includes(this.long(this.status[0]))))this.wb(0x10ec06,0);
+  if(this.phase==='playing')this.wb(HP_COUNT_ADDRESS,Math.max(1,this.players.filter(p=>p.participating&&!p.departed).length));
   this.m._nw_input(native);this.m._nw_run(this.frame);
   if(this.phase==='playing'&&this.byte(0x10040c)===5){this.phase='complete';this.completionFrame=this.frame;for(let i=0;i<5;i++){this.wb(this.x.inputBase+i*2,0);this.wb(this.x.inputBase+i*2+1,0);}this.emit('complete',{nativeStage:5});}
   if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
@@ -127,3 +129,4 @@ export class FiveSession {
  checkpoint(){return {autoContinue:!!this.autoContinue,paidInitialCoin:this.paidInitialCoin,paidContinuePending:this.paidContinuePending,approvedCredits:[...this.approvedCredits],nativeContinue:!!this.nativeContinue,playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,startConfirmAt:Number.isFinite(this.startConfirmAt)?this.startConfirmAt:null,players:structuredClone(this.players),reserved:[...this.reserved]};}
  restore(s){this.autoContinue=!!s.autoContinue;this.paidInitialCoin=s.paidInitialCoin??false;this.paidContinuePending=s.paidContinuePending??false;this.approvedCredits=new Set(s.approvedCredits||[]);this.nativeContinue=!!s.nativeContinue;this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.startConfirmAt=s.startConfirmAt??Infinity;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
 }
+
