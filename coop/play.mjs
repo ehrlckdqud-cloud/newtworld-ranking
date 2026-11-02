@@ -1,8 +1,10 @@
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
-import {createDiagnostics} from './diagnostics.mjs?v=87';
+import {createDiagnostics} from './diagnostics.mjs?v=88';
+import {createGameDiagnostics} from './game-diagnostics.mjs?v=88';
 import {createFrameBudget} from './frame-budget.mjs?v=87';
 const frameBudget=createFrameBudget();
 const diagnostics=createDiagnostics({storage:globalThis.localStorage});
+const gameDiagnostics=createGameDiagnostics();
 import {requestContinue} from './continue-request.mjs?v=82';
 import {readVolume,saveVolume,volumeControl} from './volume.mjs?v=82';
 import {createFramePresentation} from './frame-presentation.mjs?v=82';
@@ -392,9 +394,8 @@ if(!$('playerChat').querySelector('input[aria-label="게임 음악·효과음"]'
 
 setInterval(()=>void clockHeartbeat(performance.now()),2000);
 
-for(const parent of [$('channelAudio'),gameControls]){const b=document.createElement('button');b.type='button';b.textContent='끊김 기록 JSON 저장';b.onclick=()=>diagnostics.download();parent?.append(b);}
+for(const parent of [$('channelAudio'),gameControls]){const b=document.createElement('button');b.type='button';b.textContent='게임 오류·끊김 기록 JSON 저장';b.onclick=()=>{gameDiagnostics.capture(engine,{force:true});diagnostics.download(gameDiagnostics.report());};parent?.append(b);}
 let diagnosticFrame=0;
-setInterval(()=>{const frame=frameQueue?.frame||0;if(hasGame){diagnostics.sample({frame,frames:frame-diagnosticFrame,slot:session?.slot,hostSlot,epoch:hostEpoch,phase:roomPhase,synced,playing,hidden:document.hidden,queue:frameQueue?.pending.size||0,pending:sequencer?.pending.size||0,buffered:Math.max(0,...[...peers.values()].map(r=>r.control?.bufferedAmount||0))});for(const [slot,r]of peers)if(r.pc.connectionState!=='connected')diagnostics.record('peer-state',{slot,state:r.pc.connectionState,ice:r.pc.iceConnectionState});}diagnosticFrame=frame;if(!playing)diagnostics.save();},1000);
+setInterval(()=>{const frame=frameQueue?.frame||0;if(hasGame){gameDiagnostics.capture(engine);diagnostics.sample({frame,frames:frame-diagnosticFrame,slot:session?.slot,hostSlot,epoch:hostEpoch,phase:roomPhase,synced,playing,hidden:document.hidden,queue:frameQueue?.pending.size||0,pending:sequencer?.pending.size||0,buffered:Math.max(0,...[...peers.values()].map(r=>r.control?.bufferedAmount||0))});for(const [slot,r]of peers)if(r.pc.connectionState!=='connected')diagnostics.record('peer-state',{slot,state:r.pc.connectionState,ice:r.pc.iceConnectionState});}diagnosticFrame=frame;if(!playing)diagnostics.save();},1000);
 // Persist outside active simulation; export still includes all in-memory samples.
 window.addEventListener('pagehide',()=>diagnostics.save(true));
-
