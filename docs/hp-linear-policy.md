@@ -45,3 +45,12 @@ node tests/ms3-hp-player-count.cjs
 체력 원자료 카탈로그는 공개 저장소에 포함하지 않는다. 자동 승인 검토가 대규모 분석 데이터의 공개를 거부해, 로컬 원자료를 환경변수로 제공하는 방식으로 변경했다. 실행 코드는 해당 카탈로그 없이 작동한다.
 
 테스트용 JSZip/engine/profile은 저장소의 coop 경로를 사용한다. 실제 공개 배포 상태와 커밋은 PR 및 Pages 실행 결과로 기록한다.
+
+
+## 공개 배포 확인
+
+2026-11-02: [PR #137](https://github.com/ehrlckdqud-cloud/newtworld-ranking/pull/137) main 병합 완료. 배포 커밋 `bf527597b21bcd30e1cd2e5b4ac716a64183826d`.
+
+[Pages 실행 41445167969](https://github.com/ehrlckdqud-cloud/newtworld-ranking/actions/runs/41445167969): build/deploy success. 공개 주소에서 index.html, newtworld-entry.mjs, play.mjs, native/prepare-coop.mjs, native/five-session.mjs, native/hp-scaling.mjs 여섯 파일을 다시 내려받아 검증한 로컬 파일과 바이트 단위 일치 확인. 구/신 hello 호환성 검사 통과. 재설치 없이 참가자 전원 Ctrl+F5 후 새 게임 시작.
+
+이 배포 확인 메모는 불필요한 재배포를 피하기 위해 기록 브랜치에만 추가했다.
