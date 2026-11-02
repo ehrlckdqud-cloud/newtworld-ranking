@@ -1,6 +1,6 @@
 import {initRankings} from './rankings.mjs?v=82';
 import {claimSiteSession,blockSite,DUPLICATE_MESSAGE} from './site-session.mjs?v=82';
-import {lobbyAudio} from './lobby-audio.mjs?v=85';
+import {lobbyAudio} from './lobby-audio.mjs?v=autoplay-20261102';
 import {initLobby} from './lobby.mjs?v=85';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
@@ -22,6 +22,7 @@ try{
  document.getElementById('name').value=response.profile.nickname;
  document.getElementById('memberName').textContent=response.profile.nickname;
  await claimSiteSession({token,device});
+ lobbyAudio.arm(); // Start waiting music before downloading the game engine.
  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/core.js?v=73';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
  await import('./play.mjs?v=member-games-1');document.getElementById('channelView').hidden=false;initLobby(response.profile.nickname);initRankings();lobbyAudio.arm();
