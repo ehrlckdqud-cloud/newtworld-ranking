@@ -394,8 +394,5 @@ setInterval(()=>void clockHeartbeat(performance.now()),2000);
 for(const parent of [$('channelAudio'),gameControls]){const b=document.createElement('button');b.type='button';b.textContent='끊김 기록 JSON 저장';b.onclick=()=>diagnostics.download();parent?.append(b);}
 let diagnosticFrame=0;
 setInterval(()=>{const frame=frameQueue?.frame||0;if(hasGame){diagnostics.sample({frame,frames:frame-diagnosticFrame,slot:session?.slot,hostSlot,epoch:hostEpoch,phase:roomPhase,synced,playing,hidden:document.hidden,queue:frameQueue?.pending.size||0,pending:sequencer?.pending.size||0,buffered:Math.max(0,...[...peers.values()].map(r=>r.control?.bufferedAmount||0))});for(const [slot,r]of peers)if(r.pc.connectionState!=='connected')diagnostics.record('peer-state',{slot,state:r.pc.connectionState,ice:r.pc.iceConnectionState});}diagnosticFrame=frame;if(!playing)diagnostics.save();},1000);
-window.addEventListener('pagehide',()=>diagnostics.save(true));
-
-
 // Persist outside active simulation; export still includes all in-memory samples.
 window.addEventListener('pagehide',()=>diagnostics.save(true));
