@@ -11,6 +11,22 @@ export class FiveSession {
  }
  ram(){return new Uint8Array(this.m.HEAPU8.buffer,this.m._nw_ram(),65536)}byte(a){return this.ram()[(a&65535)^1]}wb(a,v){this.ram()[(a&65535)^1]=v}word(a){const r=this.ram();return r[a&65535]|r[(a+1)&65535]<<8}ww(a,v){const r=this.ram();r[a&65535]=v&255;r[(a+1)&65535]=v>>>8&255}long(a){return ((this.word(a)<<16)|this.word(a+2))>>>0}wl(a,v){this.ww(a,v>>>16);this.ww(a+2,v)}clear(a,n){this.ram().fill(0,a&65535,(a&65535)+n)}
  emit(type,fields={}){this.events.push({frame:this.frame,type,...fields});if(this.events.length>500)this.events.shift();}
+ // These addresses are fixed player seats, never interchangeable scene proxies.
+ // Repair only live player routines: do not touch deleted objects, cinematic
+ // proxies, enemies, selection or reset RAM. Record the mismatch before repair.
+ repairActiveOwners(){
+  if(this.phase!=='playing'||this.byte(0x10040c)>4)return;
+  for(let i=0;i<this.playerCount;i++){
+   const p=this.players[i],a=this.x.actors[i];
+   if(!p.participating||p.departed||p.state!=='active')continue;
+   const owner=this.word(a+0x6c);if(owner===i)continue;
+   const routine=this.long(a);
+   if(!(routine>=0x22a96&&routine<0x28aca)&&routine!==this.x.spawns[i])continue;
+   if(!this.linked(a))continue;
+   this.emit('player-owner-repaired',{slot:i+1,previousOwner:owner,routine,mission:this.byte(0x10040c),substage:this.byte(0x10040d)});
+   this.ww(a+0x6c,i);
+  }
+ }
  removeFree(a){let prev=0x10540c,cur=this.long(prev);for(let n=0;cur&&n<120;n++){if(cur===a){this.wl(prev,this.long(cur+8));this.ww(0x105410,this.word(0x105410)-1);return true;}prev=cur+8;cur=this.long(prev);}return false;}
  reserveDuringBoot(){for(const a of this.reserve)if(this.removeFree(a)){this.clear(a,0xb0);this.reserved.add(a);}}
  linked(a){const p=this.long(a+4),n=this.long(a+8);return p>=0x100000&&p<0x110000&&n>=0x100000&&n<0x110000&&this.long(p+8)===a&&this.long(n+4)===a;}
@@ -22,13 +38,13 @@ export class FiveSession {
   for(let i=0;i<5;i++){
    const a=this.x.actors[i],s=this.status[i],p=this.players[i];
    if(i>=this.playerCount||p.departed){this.wl(a,0x567a);this.wl(s,0x567a);this.wb(s+0x7f,0);this.wb(s+0x82,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);continue;}
-   this.wb(s+0x7f,3);this.wb(s+0x7e,p.character);this.wb(s+0x82,2);this.wl(s,0x567a);
+   this.ww(s+0x6a,i);this.wl(s+0x6c,a);this.wb(s+0x7f,3);this.wb(s+0x7e,p.character);this.wb(s+0x82,2);this.wl(s,0x567a);
    if(i>=2){this.ww(a+0x12,0xffff);this.wl(s+0x6c,a);this.wb(0x1053e0-(i-2)*0x210,1);this.ww(0x105380-(i-2)*0x210,65535);this.wb(0x105404-(i-2)*0x210,255);}
    if(i===0){p.character=this.word(a+0x6a);p.state='active';p.seenAlive=true;}else this.respawn(i);
   }
   this.phase='playing';this.pendingStart=false;this.m._nw_hud(1);this.emit('five-session-start');
  }
- respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);this.wb(this.status[i]+0x82,2);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,1);p.state='active';p.seenAlive=false;p.deadline=null;p.spawnSpacing=true;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
+ respawn(i){if(i>=this.playerCount)throw Error('EMPTY_SEAT');const a=this.x.actors[i],p=this.players[i];this.removeFree(a);if(i>=2)this.insert(a);this.ww(this.status[i]+0x6a,i);this.wl(this.status[i]+0x6c,a);this.wl(a,this.x.spawns[i]);this.ww(a+0x6c,i);this.ww(a+0x6a,p.character);this.wl(a+0x80,this.weapon[i]);this.wb(a+0x5a,1<<i);this.wl(a+0xc,0);this.ww(a+0x10,0);this.wb(this.status[i]+0x7f,p.lives);this.wb(this.status[i]+0x82,2);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,1);p.state='active';p.seenAlive=false;p.deadline=null;p.spawnSpacing=true;this.emit('respawn',{slot:i+1,character:p.character,lives:p.lives});}
  addSeat(slot){
   if(!Number.isInteger(slot)||slot<1||slot>5)throw Error('EMPTY_SEAT');
   const i=slot-1,p=this.players[i];this.playerCount=Math.max(this.playerCount,slot);
@@ -110,6 +126,7 @@ export class FiveSession {
   // Only clear it during selection; gameplay ownership and actor state are untouched.
   if(this.nativeContinue||(this.phase==='attract'&&[0x4323c,0x43284,0x432c4,0x432d4].includes(this.long(this.status[0]))))this.wb(0x10ec06,0);
   if(this.phase==='playing')this.wb(HP_COUNT_ADDRESS,Math.max(1,this.players.filter(p=>p.participating&&!p.departed).length));
+  this.repairActiveOwners();
   this.m._nw_input(native);this.m._nw_run(this.frame);
   if(this.phase==='playing'&&this.byte(0x10040c)===5){this.phase='complete';this.completionFrame=this.frame;for(let i=0;i<5;i++){this.wb(this.x.inputBase+i*2,0);this.wb(this.x.inputBase+i*2+1,0);}this.emit('complete',{nativeStage:5});}
   if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();

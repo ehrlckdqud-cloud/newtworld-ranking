@@ -39,5 +39,5 @@ export function createGameDiagnostics({now=()=>Date.now()}={}){
    if(samples.length>30)samples.shift();error=null;
   }catch{error='native-state-unavailable';}
  }
- return {capture,report:()=>({schema:1,intervalMs:2000,limit:30,error,samples:structuredClone(samples)})};
+ return {capture,report:()=>({schema:1,intervalMs:2000,limit:30,error,ownerRepairs:(lastEngine?.events||[]).filter(e=>e.type==='player-owner-repaired').slice(-20).map(({frame,slot,previousOwner,routine,mission,substage})=>({frame,slot,previousOwner,routine,mission,substage})),samples:structuredClone(samples)})};
 }
