@@ -1,3 +1,4 @@
+import {patchHealthROM} from './hp-scaling.mjs?v=hp1';
 /** Applies only generated deltas to the user's BIOS in the emulator's virtual FS. */
 export async function prepareCoopROM(module,source,profile,progress=()=>{}){
  await globalThis.prepareROM(module,source,profile,progress);
@@ -13,4 +14,5 @@ export async function prepareCoopROM(module,source,profile,progress=()=>{}){
   }
   module.FS.writeFile(path,await zip.generateAsync({type:'uint8array',compression:'STORE'}));
  }
+ await patchHealthROM(module);
 }
