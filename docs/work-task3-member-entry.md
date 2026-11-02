@@ -20,3 +20,11 @@ JavaScript 구문 검사 및 jsdom 기반 tests/coop-member-entry.cjs 통과. �
 실제 회원 로그인 세션이 없어 정상 회원 입장·코인 구매·장부·정산 실거래 검증은 아직 수행하지 못했다. 이 항목을 완료로 표시하지 않는다. 임의의 회원 인증을 만들거나 실제 젬 잔액을 보정하지 않는다.
 
 배포 결과는 아래에 기록한다.
+
+## 배포 결과
+
+- PR #134: https://github.com/ehrlckdqud-cloud/newtworld-ranking/pull/134
+- main 병합 커밋: 15ec23527b288390e7a60ba38eec6cc91a91572d
+- Pages 실행 41430681254: completed / success 확인.
+- 실행: https://github.com/ehrlckdqud-cloud/newtworld-ranking/actions/runs/41430681254
+- 코드 변경 및 배포 완료. 실제 회원 검증은 검증 브라우저에 기존 회원의 일회용 기기 연결이 필요한 상태다. 회원 입장·실거래·정산 검증 완료로 보고하지 않는다.
