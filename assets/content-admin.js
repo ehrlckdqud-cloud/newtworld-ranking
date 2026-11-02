@@ -19,7 +19,8 @@
  catch(e){status.textContent=e.message+(pendingAdjustment?' 입력한 요청을 유지했습니다. 같은 요청 재확인을 눌러주세요.':'');if(pendingAdjustment)button.textContent='같은 요청 재확인';}
  finally{button.disabled=false;for(const input of f.querySelectorAll('input,select'))input.disabled=!!pendingAdjustment;renderAdjustMembers();}
  };
- load().then(()=>status.textContent='관리자 인증 완료').catch(e=>status.textContent=e.message+' 메인에서 관리자 로그인 후 다시 열어주세요.');
+ NWAdminAccess.initialize({load,status,body:document.getElementById('adminBody'),retry:document.getElementById('adminRetry')});
 })();
+
 
 
