@@ -21,8 +21,9 @@ meta('2026-10-19','2026-10-20',live());assert.equal(box.rankMovementState342(mis
 // NEW, unchanged, zero points, staff and stale ranks.
 meta('2026-10-19','2026-10-18',live({type:'new',previous:0}));assert.equal(box.rankMovementState342(row({rankMovementType:'new',rankMovementPrevious:0})).text,'NEW');
 assert.equal(box.rankMovementState342(row({rankMovementType:'same',rankMovementPrevious:3})).text,'—');
-assert.equal(box.rankMovementBadge(row({seasonTotal:0})),'');assert.equal(box.rankMovementBadge(row({role:'방장'})),'');assert.equal(box.rankMovementBadge(row({role:'부방장'})),'');
+assert.equal(box.rankMovementBadge(row({seasonTotal:0})),'');assert.ok(box.rankMovementBadge(row({role:'방장'})).includes('nw-rank-movement'));assert.ok(box.rankMovementBadge(row({role:'부방장'})).includes('nw-rank-movement'));
 meta('2026-10-19','2026-10-18',live({rank:8}));assert.equal(box.rankMovementState342(row({rankMovementRank:8})).source,'baseline');
 // Before November's first import, October's last imported batch remains visible.
 clock=Date.parse('2026-11-01T01:00:00Z');meta('2026-10-31','2026-10-31',live());assert.equal(box.rankMovementState342(row()).text,'▲4');
-console.log('PASS: daily import baseline, midnight/month rollover, updated imports, API fallback, NEW/same, staff and zero-score exclusions');
+console.log('PASS: daily import baseline, midnight/month rollover, updated imports, API fallback, NEW/same, staff inclusion and zero-score exclusion');
+

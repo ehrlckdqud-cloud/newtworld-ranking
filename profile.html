@@ -250,10 +250,10 @@ window.NWConfigReady.then(()=>{
   function renderProfileIdentity(p){
     const value=String(p.role||'').trim(),staff=['방장','부방장'].includes(value)?value:'';
     $('nicknameView').textContent=(p.nickname||'')+(staff?' ⭐':'');
-    $('rank').textContent=staff||(p.rank?('#'+p.rank):'-');
-    $('rank').dataset.staff=staff?'true':'false';
-    $('rankCaption').textContent=staff?'운영진 · 순위 제외':'월간 활동왕 순위';
-    $('lifetimeRank').textContent=staff?'순위 제외':p.lifetimeRank>0?p.lifetimeRank+'위':'—';
+    $('rank').textContent=(p.rank?('#'+p.rank):'-');
+    $('rank').dataset.staff='false';
+    $('rankCaption').textContent='월간 활동왕 순위';
+    $('lifetimeRank').textContent=p.lifetimeRank>0?p.lifetimeRank+'위':'—';
   }
   function renderProfile(p,cached=false){const level=window.NWGrades.levels[window.NWGrades.index(p.lifetimeScore)];p={...p,grade:level?level.name:'미획득',nextGrade:window.NWGrades.next(p.lifetimeScore)};ownProfile=p;$('nwGemBalance').textContent=Number.isFinite(p.gemBalance)?fmt(p.gemBalance):'—';avatarImmediate(p,cached);show('profileView');$('memberId').textContent=p.memberId;renderProfileIdentity(p);$('firstJoin').textContent=p.firstJoin||'-';$('seasonScore').textContent=fmt(p.seasonScore)+'점';$('lifetimeScore').textContent=fmt(p.lifetimeScore)+'점';$('attendance').textContent=fmt(p.attendanceCount)+'회';$('workout').textContent=p.workoutCount==null?'불러오는 중…':fmt(p.workoutCount)+'회';$('grade').textContent=p.grade||'미획득';const badge=$('gradeBadge'),src=GRADE_IMG[p.grade]||'';if(src){badge.src=src;badge.style.display='block';badge.alt=(p.grade||'')+' 등급 배지';}else{badge.removeAttribute('src');badge.style.display='none';}const ng=p.nextGrade||{};$('gradeBar').style.width=(ng.progress||0)+'%';$('nextGradeText').textContent=ng.remaining>0?'다음 '+ng.name+'까지 '+fmt(ng.remaining)+'점 남았습니다.':'최고 등급 달성';$('nextRemain').textContent=ng.remaining>0?fmt(ng.remaining)+'점':'달성';$('goalGrade').style.width=(ng.progress||0)+'%';$('goalAttendance').textContent=p.attendanceCount+'/20회';$('goalAttendanceBar').style.width=Math.min(100,p.attendanceCount/20*100)+'%';if(p.workoutCount!=null){$('goalWorkout').textContent=p.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,p.workoutCount/10*100)+'%';}renderActivity(p);renderHistory(p.rankHistory||[]);renderRecent(p);if(!cached){loadEditableProfile(p.memberProfile||null);}}
   function renderActivity(p){const pts=[['채팅',p.chat||0,'#6ab6ff'],['사진',(p.photo||0)*5,'#ffc64d'],['영상',(p.video||0)*10,'#a26cff'],['소개',(p.intro||0)*500,'#62d3b1'],['출석',(p.attendance||0)*50,'#ef6e9b']];const total=Math.max(1,pts.reduce((a,x)=>a+x[1],0));let a=0,stops=[];pts.forEach(x=>{const b=a+x[1]/total*100;stops.push(`${x[2]} ${a}% ${b}%`);a=b});$('donut').style.background='conic-gradient('+stops.join(',')+')';$('donutTotal').textContent=fmt(p.seasonScore)+'점';$('legend').innerHTML=pts.map(x=>`<span><i style="color:${x[2]}">● ${x[0]}</i><b>${Math.round(x[1]/total*100)}% (${fmt(x[1])}점)</b></span>`).join('');}
@@ -395,5 +395,6 @@ window.NWConfigReady.then(()=>{
 <script src="assets/content-access.js?v=20261025-total-gem"></script>
 </body>
 </html>
+
 
 
