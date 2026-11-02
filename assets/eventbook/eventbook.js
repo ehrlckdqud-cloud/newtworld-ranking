@@ -84,9 +84,55 @@ function post(payload){if(postPromise)return Promise.resolve({ok:false,error:'�
  postPromise=nonce;window.addEventListener('message',receive);timeout=setTimeout(()=>finish({ok:false,error:'응답이 지연됩니다. 목록을 다시 불러와 저장 여부를 확인해주세요.'}),90000);document.body.append(frame,form);form.submit();
 });}
 function adminStatus(text){$('nwEventAdminStatus').textContent=text;}
-function setBusy(busy){adminBusy=busy;for(const node of $('nwEventAdminDialog').querySelectorAll('button,input'))node.disabled=busy;}
-async function adminLoad(){const selected=$('nwEventMonth').value;setBusy(true);adminStatus('사진 목록을 불러오는 중…');const d=await read('eventBookList',{month:selected});setBusy(false);if(!d?.ok){adminStatus(d?.error||'목록 조회 실패');return;}adminMonth=selected;adminList=d.images||[];revision=d.revision||'';renderAdminList();adminStatus(adminList.length+'장 등록됨 · 선택한 월의 사진만 공개됩니다.');}
-function renderAdminList(){const box=$('nwEventAdminList');box.replaceChildren();adminList.forEach((item,i)=>{const li=document.createElement('li'),img=document.createElement('img'),label=document.createElement('span');label.className='event-filename';label.textContent=(i+1)+'. '+item.name;img.alt='사진 미리보기';imageSource(item,adminMonth).then(src=>{if(img.isConnected)img.src=src;}).catch(()=>{});li.append(img,label);for(const [text,action] of [['↑',()=>{if(i){[adminList[i-1],adminList[i]]=[adminList[i],adminList[i-1]];renderAdminList();}}],['↓',()=>{if(i<adminList.length-1){[adminList[i+1],adminList[i]]=[adminList[i],adminList[i+1]];renderAdminList();}}],['삭제',()=>{adminList.splice(i,1);renderAdminList();}]]){const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=()=>{if(!adminBusy){action();adminStatus('순서/삭제 변경 후 아래 목록 저장을 눌러주세요.');}};li.appendChild(b);}box.appendChild(li);});}
+// Reuse registered photos without uploading or modifying the source month.
+const reusePanel=document.createElement('section');
+reusePanel.innerHTML='<h4>이전 달 사진 가져오기</h4><p class="event-admin-note">원본 월의 사진은 그대로 유지됩니다. 선택 사진은 현재 이벤트 월에 바로 저장됩니다. 아직 저장하지 않은 순서·삭제 변경도 함께 저장됩니다.</p><label for="nwEventSourceMonth">가져올 이전 월</label><div class="event-admin-row"><input type="month" id="nwEventSourceMonth"><button type="button" id="nwEventSourceLoad">사진 불러오기</button></div><ul id="nwEventSourceList" class="event-admin-list"></ul><div class="event-admin-row"><button type="button" id="nwEventSourceAll">추가 가능한 사진 선택</button><button type="button" id="nwEventReuse">선택 사진 가져오기</button></div><p id="nwEventReuseStatus" class="event-admin-note" role="status" aria-live="polite"></p>';
+$('nwEventAdminList').before(reusePanel);
+let sourceMonth='',sourceRevision='',sourceImages=[],sourceSelected=new Set();
+function previousMonth(value){const [y,m]=value.split('-').map(Number);return m===1?(y-1)+'-12':y+'-'+String(m-1).padStart(2,'0');}
+function resetReuse(){sourceMonth='';sourceRevision='';sourceImages=[];sourceSelected.clear();$('nwEventSourceMonth').max=previousMonth(adminMonth);$('nwEventSourceMonth').value=previousMonth(adminMonth);$('nwEventSourceList').replaceChildren();$('nwEventReuseStatus').textContent='이전 월을 선택하고 사진을 불러와주세요.';updateReuseControls();}
+function updateReuseControls(){
+ const ready=!!adminMonth&&$('nwEventMonth').value===adminMonth,existing=new Set(adminList.map(x=>x.id));
+ for(const id of sourceSelected)if(existing.has(id))sourceSelected.delete(id);
+ for(const input of $('nwEventSourceList').querySelectorAll('input')){input.disabled=adminBusy||existing.has(input.value);input.checked=sourceSelected.has(input.value);}
+ $('nwEventSourceLoad').disabled=adminBusy||!ready;
+ $('nwEventSourceAll').disabled=adminBusy||!ready||!sourceImages.some(x=>!existing.has(x.id));
+ $('nwEventReuse').disabled=adminBusy||!ready||!sourceMonth||!sourceSelected.size;
+}
+function renderReuse(){
+ const existing=new Set(adminList.map(x=>x.id)),box=$('nwEventSourceList');box.replaceChildren();
+ for(const item of sourceImages){const li=document.createElement('li'),label=document.createElement('label'),input=document.createElement('input'),img=document.createElement('img'),name=document.createElement('span');
+  label.style.cssText='display:flex;align-items:center;gap:8px;margin:0;width:100%';input.type='checkbox';input.value=item.id;name.className='event-filename';name.textContent=item.name+(existing.has(item.id)?' · 이미 등록됨':'');img.alt='';
+  input.onchange=()=>{if(input.checked)sourceSelected.add(item.id);else sourceSelected.delete(item.id);updateReuseControls();$('nwEventReuseStatus').textContent=sourceSelected.size+'장 선택 · 현재 '+adminList.length+' / 20장';};
+  label.append(input,img,name);li.append(label);box.append(li);imageSource(item,sourceMonth,true).then(src=>{if(img.isConnected)img.src=src;}).catch(()=>{});
+ }updateReuseControls();
+}
+$('nwEventSourceMonth').onchange=()=>{sourceMonth='';sourceRevision='';sourceImages=[];sourceSelected.clear();$('nwEventSourceList').replaceChildren();$('nwEventReuseStatus').textContent='선택한 월의 사진을 불러와주세요.';updateReuseControls();};
+$('nwEventSourceLoad').onclick=async()=>{
+ const selected=$('nwEventSourceMonth').value;if(adminBusy)return;
+ if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(selected)||selected>=adminMonth){$('nwEventReuseStatus').textContent='현재 이벤트 월보다 이전 월을 선택해주세요.';return;}
+ sourceMonth='';sourceImages=[];sourceSelected.clear();$('nwEventSourceList').replaceChildren();setBusy(true);$('nwEventReuseStatus').textContent='이전 월 사진을 불러오는 중…';
+ try{const d=await read('eventBookList',{month:selected});if(!d?.ok||d.month!==selected)throw Error(d?.error||'목록 조회 실패');sourceMonth=selected;sourceRevision=d.revision||'';sourceImages=d.images||[];renderReuse();$('nwEventReuseStatus').textContent=sourceImages.length?sourceImages.length+'장 · 가져올 사진을 선택해주세요.':'이 월에 등록된 사진이 없습니다.';}
+ catch(e){$('nwEventReuseStatus').textContent=e.message;}finally{setBusy(false);}
+};
+$('nwEventSourceAll').onclick=()=>{if(adminBusy)return;const existing=new Set(adminList.map(x=>x.id));sourceSelected=new Set(sourceImages.filter(x=>!existing.has(x.id)).map(x=>x.id));renderReuse();$('nwEventReuseStatus').textContent=sourceSelected.size+'장 선택 · 현재 '+adminList.length+' / 20장';};
+function applyAdminSaved(d){revision=d.revision;adminList=d.images;renderAdminList();renderReuse();try{localStorage.setItem('nwEventBookList:'+adminMonth,JSON.stringify({...d,month:adminMonth}));}catch(_){}if(adminMonth===month){list=adminList.slice();offset=0;draw();}}
+$('nwEventReuse').onclick=async()=>{
+ if(adminBusy||!sourceMonth||$('nwEventMonth').value!==adminMonth)return;
+ const existing=new Set(adminList.map(x=>x.id)),ids=sourceImages.filter(x=>sourceSelected.has(x.id)&&!existing.has(x.id)).map(x=>x.id);
+ if(!ids.length){$('nwEventReuseStatus').textContent='가져올 사진을 선택해주세요.';return;}
+ if(adminList.length+ids.length>20){$('nwEventReuseStatus').textContent='한 달 최대 20장까지 등록할 수 있어요. 선택 수를 줄여주세요.';return;}
+ setBusy(true);adminStatus('사진을 가져오는 중…');
+ try{
+  // Commit pending order/deletions first, using the same revision guard as upload.
+  let d=await post({mode:'save',month:adminMonth,revision,ids:adminList.map(x=>x.id)});if(!d?.ok)throw Error(d?.error||'목록 저장 실패');applyAdminSaved(d);setBusy(true);
+  d=await post({mode:'reuse',month:adminMonth,revision,sourceMonth,sourceRevision,ids});if(!d?.ok)throw Error(d?.error||'사진 가져오기 실패');sourceSelected.clear();applyAdminSaved(d);adminStatus(ids.length+'장 가져오기 완료! '+adminMonth+'에 저장되었습니다.');$('nwEventReuseStatus').textContent='저장 완료 · 원본 월의 사진은 그대로 유지됩니다.';
+ }catch(e){adminStatus(e.message+' · 목록 다시 불러오기로 저장 상태를 확인해주세요.');}finally{setBusy(false);}
+};
+
+function setBusy(busy){adminBusy=busy;for(const node of $('nwEventAdminDialog').querySelectorAll('button,input'))node.disabled=busy;updateReuseControls();}
+async function adminLoad(){const selected=$('nwEventMonth').value;setBusy(true);adminStatus('사진 목록을 불러오는 중…');const d=await read('eventBookList',{month:selected});setBusy(false);if(!d?.ok){adminStatus(d?.error||'목록 조회 실패');return;}adminMonth=selected;adminList=d.images||[];revision=d.revision||'';renderAdminList();resetReuse();adminStatus(adminList.length+'장 등록됨 · 선택한 월의 사진만 공개됩니다.');}
+function renderAdminList(){const box=$('nwEventAdminList');box.replaceChildren();adminList.forEach((item,i)=>{const li=document.createElement('li'),img=document.createElement('img'),label=document.createElement('span');label.className='event-filename';label.textContent=(i+1)+'. '+item.name;img.alt='사진 미리보기';imageSource(item,adminMonth).then(src=>{if(img.isConnected)img.src=src;}).catch(()=>{});li.append(img,label);for(const [text,action] of [['↑',()=>{if(i){[adminList[i-1],adminList[i]]=[adminList[i],adminList[i-1]];renderAdminList();}}],['↓',()=>{if(i<adminList.length-1){[adminList[i+1],adminList[i]]=[adminList[i],adminList[i+1]];renderAdminList();}}],['삭제',()=>{adminList.splice(i,1);renderAdminList();}]]){const b=document.createElement('button');b.type='button';b.textContent=text;b.onclick=()=>{if(!adminBusy){action();adminStatus('순서/삭제 변경 후 아래 목록 저장을 눌러주세요.');}};li.appendChild(b);}box.appendChild(li);});updateReuseControls();}
 async function compressedPhoto(file){const bitmap=await createImageBitmap(file),canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext('2d'),scale=Math.min(1080/bitmap.width,1350/bitmap.height),w=bitmap.width*scale,h=bitmap.height*scale;ctx.fillStyle='#fff';ctx.fillRect(0,0,1080,1350);ctx.drawImage(bitmap,(1080-w)/2,(1350-h)/2,w,h);bitmap.close();let url;for(const quality of [.78,.68,.55,.4]){url=canvas.toDataURL('image/jpeg',quality);if(url.length<450000)break;}if(url.length>=450000)throw Error('사진 용량이 큽니다. 크기를 줄인 사진을 사용해주세요.');const small=document.createElement('canvas');small.width=540;small.height=675;small.getContext('2d').drawImage(canvas,0,0,540,675);return {base64:url.split(',')[1],previewBase64:small.toDataURL('image/jpeg',.65).split(',')[1],width:1080,height:1350};}
 $('nwEventUpload').onclick=async()=>{const files=[...$('nwEventFiles').files];if(!files.length){adminStatus('먼저 사진을 선택해주세요.');return;}if($('nwEventMonth').value!==adminMonth){adminStatus('선택한 월의 목록을 먼저 불러와주세요.');return;}if(adminList.length+files.length>20){adminStatus('한 달 최대 20장까지 등록할 수 있어요.');return;}setBusy(true);try{
  // 순서/삭제를 먼저 확정하여 업로드 후 변경이 덮어씌워지지 않도록 한다.
@@ -100,3 +146,4 @@ document.getElementById('nwOpenEventBookAdmin')?.addEventListener('click',()=>{i
 $('nwEventAdminClose').onclick=()=>{if(!adminBusy)$('nwEventAdmin').classList.remove('open');};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!adminBusy)$('nwEventAdmin').classList.remove('open');});
 loadBook();
 })();
+
