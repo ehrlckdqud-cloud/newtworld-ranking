@@ -49,8 +49,9 @@ authorization, rate limits and idempotent coin payments. Do not expose staff
 passwords or disable membership checks. `/api/test-access` must accept the public
 client's member credentials plus site-session headers without a staff password.
 
-Until that relay release is applied, the client reports that server publication
-is pending when it receives `TEST_PASSWORD_REQUIRED` or
-`TEST_ACCESS_UNAVAILABLE`. This repository cannot by itself complete the relay
-deployment. Production Apps Script prices and Google Pages deployment must also
+The Pages release preserves the existing online staff password flow until that
+relay release is available, so current operators retain access. The complete
+public-client candidate remains on `codex/member-games-release` at `25067bc`.
+Only the independent draw-game changes and online gem-price presentation are
+deployed now. This repository cannot by itself complete the relay deployment. Production Apps Script prices and Google Pages deployment must also
 be verified after release; local tests are not deployment evidence.
