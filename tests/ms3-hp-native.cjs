@@ -16,7 +16,7 @@ function load(file){const mod=new Module(file,module);mod.filename=file;mod.path
  for(let f=0;f<1400;f++)e.step(zero);e.playerCount=1;e.players.forEach((p,i)=>{p.participating=i<1;p.state=i<1?"waiting":"spectator";p.lives=i<1?3:0;});e.start();for(let f=0;f<900&&e.phase!=='playing';f++)e.step([f%20===1?16:0,f%20===1?16:0,0,0,0]);if(e.phase!=='playing')console.log('BOOT_DEBUG',e.state(),e.long(0x10023c).toString(16),e.word(0x100016),e.byte(0x10fdb0));assert.equal(e.phase,'playing');for(let f=0;f<60;f++)e.step(zero);
 
  const parent=profile.experiment.actors[0],fixture=captureState(m,e,e.frame);let target;
- const data=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/ms3-hp-catalog.json'))),rows=[...data.photoRows,...data.unpictured],out=[];
+ const data=JSON.parse(fs.readFileSync(process.env.MS3_HP_CATALOG)),rows=[...data.photoRows,...data.unpictured],out=[];
  const rz=await JSZip.loadAsync(m.FS.readFile('/system/fbneo/patched/mslug3fd.zip')),p1=await rz.file('256-ph1.p1').async('uint8array');
  for(const c of data.constants){const at=parseInt(c.site,16),got=Array.from({length:6},(_,i)=>p1[(at+i)^1]);assert.deepEqual(got,[0x3d,0x7c,c.value>>8,c.value&255,0,0x4e],`constant HP changed at ${c.site}`);}
  for(const r of rows){for(let players=1;players<=5;players++){const mode=players>1?0:1; // Deliberately contradict legacy P1/P2 detection; use participant count.
