@@ -2,6 +2,7 @@
  const names=['nw-draw-music-v1','nw-draw-visuals-v1','nw-draw-stickers-v1'];
  function open(name){return new Promise((resolve,reject)=>{const r=indexedDB.open(name);r.onupgradeneeded=()=>{r.transaction.abort();resolve(null);};r.onsuccess=()=>resolve(r.result);r.onerror=()=>r.error?.name==='AbortError'?resolve(null):reject(r.error);r.onblocked=()=>reject(Error('게임을 닫고 다시 시도해주세요.'));});}
  async function serialize(value){
+  if(value&&typeof value==='object'&&typeof value.url==='string'&&value.id&&value.type?.startsWith('audio/')&&!value.blob){const url=new URL(value.url,location.href);if(url.origin!==location.origin)throw Error('공통 음악 주소를 확인해주세요.');const response=await fetch(url);if(!response.ok)throw Error('공통 음악을 내려받지 못했어요. 다시 시도해주세요.');const {url:unused,...track}=value;return serialize({...track,blob:new Blob([await response.arrayBuffer()],{type:value.type})});}
   if(value instanceof Blob){const bytes=new Uint8Array(await value.arrayBuffer());let text='';for(let i=0;i<bytes.length;i+=32768)text+=String.fromCharCode(...bytes.subarray(i,i+32768));return{__type:'Blob',mime:value.type,base64:btoa(text)};}
   if(value instanceof Date)return{__type:'Date',value:value.toISOString()};
   if(Array.isArray(value))return Promise.all(value.map(serialize));

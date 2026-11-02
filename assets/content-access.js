@@ -38,11 +38,11 @@
  window.NWContent={call,status,start,credentials,base,get account(){return lastStatus?.memberId||'unknown';},async access(){try{return await status();}catch(e){return {ok:false,error:e.message};}}};
  document.addEventListener('DOMContentLoaded',()=>{
 
-  const startButton=document.getElementById('start');
+  const startButton=document.getElementById('start')||document.getElementById('pondStart')||document.getElementById('spstart');
   if(startButton&&window.NWUI){
    function paintCost(){
-    const game=Number(document.getElementById('map')?.value)===4?'factory':'marble',g=lastStatus?.config?.games?.[game];
-    const label=gameAdminToken?'면제':game!=='marble'?'관리자 전용':lastStatus?.kind==='guest'?'이용권':g?String(coursePrice(lastStatus.config,game)): '—';
+    const game=startButton.id==='pondStart'?'pond':startButton.id==='spstart'?'space':Number(document.getElementById('map')?.value)===4?'factory':'marble',g=lastStatus?.config?.games?.[game];
+    const label=gameAdminToken?'면제':lastStatus?.kind==='guest'?'이용권':g?String(coursePrice(lastStatus.config,game)): '—';
     let badge=startButton.querySelector('.nw-start-cost');if(!badge){badge=document.createElement('span');badge.className='nw-start-cost';startButton.append(badge);}
     if(badge.dataset.label===label)return;badge.dataset.label=label;badge.replaceChildren();if(/^\d+$/.test(label))badge.append(window.NWUI.gem());badge.append(document.createTextNode(label));badge.setAttribute('aria-label',/^\d+$/.test(label)?label+'젬 차감':label);
    }

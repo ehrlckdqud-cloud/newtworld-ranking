@@ -1,4 +1,4 @@
-import {prepareAtlasFrames} from './space-atlas-frames.js?v=62.0';
+import {prepareAtlasFrames} from './space-atlas-frames.js?v=member-games-1';
 // Original caption actors, VRAM zoom frames and palettes, with native
 // M1/YM2610 announcements. No browser font or synthetic replacement voice.
 const asset=name=>new URL('./space-assets/'+name,import.meta.url).href;

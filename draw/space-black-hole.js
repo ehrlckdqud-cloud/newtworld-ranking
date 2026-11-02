@@ -1,4 +1,4 @@
-import {prepareAtlasFrames} from './space-atlas-frames.js?v=62.0';
+import {prepareAtlasFrames} from './space-atlas-frames.js?v=member-games-1';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=v=>v*v*(3-2*v);
 export const BLACK_HOLE_RULES=Object.freeze({appearances:2,fadeOut:2.4,sizeMultiplier:3,loopBlend:1.5,lifetime:5.2*3});
 // Uploaded movie frames have no audio track. The simulation clock controls playback,
