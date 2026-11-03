@@ -40,7 +40,7 @@ export class FiveSession {
    if(i>=this.playerCount||p.departed){this.wl(a,0x567a);this.wl(s,0x567a);this.wb(s+0x7f,0);this.wb(s+0x82,0);if(i>=2)this.wb(0x1053e0-(i-2)*0x210,0);continue;}
    this.ww(s+0x6a,i);this.wl(s+0x6c,a);this.wb(s+0x7f,3);this.wb(s+0x7e,p.character);this.wb(s+0x82,2);this.wl(s,0x567a);
    if(i>=2){this.ww(a+0x12,0xffff);this.wl(s+0x6c,a);this.wb(0x1053e0-(i-2)*0x210,1);this.ww(0x105380-(i-2)*0x210,65535);this.wb(0x105404-(i-2)*0x210,255);}
-   if(i===0){p.character=this.word(a+0x6a);p.state='active';p.seenAlive=true;}else this.respawn(i);
+   if(i===0){p.character=this.word(a+0x6a);p.state='active';p.seenAlive=true;}else {this.respawn(i);p.openingChute=this.byte(0x10040c)===0&&this.byte(0x10040d)===0;}
   }
   this.phase='playing';this.pendingStart=false;this.m._nw_hud(1);this.emit('five-session-start');
  }
@@ -132,7 +132,15 @@ export class FiveSession {
   if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
   else if(this.phase==='playing')for(let i=0;i<5;i++){
    const p=this.players[i],a=this.x.actors[i],routine=this.long(a);
-   if(p.state==='active'){this.separateSpawn(i);
+   if(p.state==='active'){
+    if(p.openingChute&&routine===0x2311a){
+     const lead=this.x.actors[0];
+     this.wl(a,0x23384);
+     this.ww(a+0x28,this.word(lead+0x28)+40*i);this.ww(a+0x3c,this.word(lead+0x3c)+40*i);
+     this.wl(a+0x2c,this.long(lead+0x2c));this.ww(a+0x40,this.word(lead+0x40));
+     p.openingChute=false;p.spawnSpacing=false;
+    }
+    this.separateSpawn(i);
     if(routine!==0&&routine!==0x567a)p.seenAlive=true;
     else if(p.seenAlive&&routine===0x567a){p.seenAlive=false;p.lives=Math.max(0,p.lives-1);this.wb(this.status[i]+0x7f,p.lives);this.emit('death',{slot:i+1,lives:p.lives});if(p.lives)this.respawn(i);else{p.state='continue';p.continueLife=(p.continueLife||0)+1;p.continueWaitUsed=false;p.continueWaitUntil=null;p.deadline=this.frame+Math.ceil(this.m._nw_fps()*10);this.wb(this.x.inputBase+i*2,0);if(this.playerCount===1){this.nativeContinue=true;p.deadline=null;const s=this.status[0];this.ww(s+0x6a,0);this.wb(s+0x7f,0);this.wb(s+0x80,0);this.ww(s+0x10,0);this.wl(s+0xc,0);this.wl(s,0x43606);}}}
    }
@@ -146,4 +154,5 @@ export class FiveSession {
  checkpoint(){return {autoContinue:!!this.autoContinue,paidInitialCoin:this.paidInitialCoin,paidContinuePending:this.paidContinuePending,approvedCredits:[...this.approvedCredits],nativeContinue:!!this.nativeContinue,playerCount:this.playerCount,sharedSelection:this.sharedSelection,selection:structuredClone(this.selection),selectionPrevious:this.selectionPrevious.slice(),frame:this.frame,phase:this.phase,completionFrame:this.completionFrame,inputs:this.inputs.slice(),coinPulse:this.coinPulse,startPulse:this.startPulse,pendingStart:this.pendingStart,startConfirmAt:Number.isFinite(this.startConfirmAt)?this.startConfirmAt:null,players:structuredClone(this.players),reserved:[...this.reserved]};}
  restore(s){this.autoContinue=!!s.autoContinue;this.paidInitialCoin=s.paidInitialCoin??false;this.paidContinuePending=s.paidContinuePending??false;this.approvedCredits=new Set(s.approvedCredits||[]);this.nativeContinue=!!s.nativeContinue;this.playerCount=s.playerCount??5;this.sharedSelection=s.sharedSelection??false;this.selection=structuredClone(s.selection??null);this.selectionPrevious=s.selectionPrevious?.slice()||[0,0,0,0,0];this.frame=s.frame;this.phase=s.phase;this.completionFrame=s.completionFrame??null;this.inputs=s.inputs.slice();this.coinPulse=s.coinPulse;this.startPulse=s.startPulse;this.pendingStart=s.pendingStart;this.startConfirmAt=s.startConfirmAt??Infinity;this.players=structuredClone(s.players);this.reserved=new Set(s.reserved);}
 }
+
 
