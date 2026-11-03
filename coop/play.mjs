@@ -1,6 +1,6 @@
 import {PeerInput} from './peer-input.mjs?v=94';
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
-import {createDiagnostics} from './diagnostics.mjs?v=94';
+import {createDiagnostics} from './diagnostics.mjs?v=95';
 import {createGameDiagnostics} from './game-diagnostics.mjs?v=89';
 import {createFrameBudget} from './frame-budget.mjs?v=87';
 const frameBudget=createFrameBudget();
@@ -150,10 +150,13 @@ async function event(e){
 }
 async function makePeer(slot,offer=false,attempt=null,mode='auto'){
  if(peers.has(slot))return peers.get(slot);const pc=new RTCPeerConnection(peerOptions(config,mode));const record={pc,slot,attempt:attempt||crypto.randomUUID(),mode,iceErrors:[],queue:[],channel:null,control:null,coreReady:false,synced:false,receiver:new SnapshotReceiver()};peers.set(slot,record);
- record.candidates=createCandidateBatcher(signal=>{if(peers.get(slot)===record)return act({type:'signal',to:slot,signal:{...signal,epoch:hostEpoch,attempt:record.attempt}});},e=>note('연결 신호 전송 실패: '+e.message));pc.onicecandidate=e=>record.candidates.add(e.candidate?.toJSON());pc.onicecandidateerror=e=>record.iceErrors.push(e.errorCode);
+ record.candidates=createCandidateBatcher(signal=>{if(peers.get(slot)===record)return act({type:'signal',to:slot,signal:{...signal,epoch:hostEpoch,attempt:record.attempt}});},e=>note('연결 신호 전송 실패: '+e.message));const earlyCandidates=[];
+ record.descriptionSent=()=>{record.sdpPosted=true;for(const candidate of earlyCandidates.splice(0))record.candidates.add(candidate);};
+ pc.onicecandidate=e=>{const candidate=e.candidate?.toJSON();if(record.sdpPosted)record.candidates.add(candidate);else earlyCandidates.push(candidate);};pc.onicecandidateerror=e=>record.iceErrors.push(e.errorCode);
  pc.onconnectionstatechange=()=>{record.stateChangedAt=performance.now();if(['failed','disconnected','closed'].includes(pc.connectionState)){record.synced=false;sequencer?.suspend(slot);note(`P${slot} 입력 연결 복구 중`);}else if(pc.connectionState==='connected'&&hasGame&&record.control?.readyState==='open'&&!record.synced){if(session?.slot===hostSlot)void recoverPeer(record,'connection-restored');else requestSync();}};
- pc.ondatachannel=e=>{if(session.slot!==hostSlot&&slot===hostSlot&&e.channel.label===PROTOCOL)bindControl(record,e.channel,slot);else e.channel.close();};
- if(offer){bindControl(record,pc.createDataChannel(PROTOCOL,{ordered:true}),slot);await pc.setLocalDescription(await pc.createOffer());const description=await gatherDescription(pc);if(peers.get(slot)!==record)throw Error('PEER_REPLACED');await act({type:'signal',to:slot,signal:{...description,epoch:hostEpoch,attempt:record.attempt,mode}});}
+ // Both endpoints create the same reliable SCTP stream before exchanging SDP.
+ bindControl(record,pc.createDataChannel(PROTOCOL,{negotiated:true,id:0,ordered:true}),slot);
+ if(offer){await pc.setLocalDescription(await pc.createOffer());const description=await gatherDescription(pc);if(peers.get(slot)!==record)throw Error('PEER_REPLACED');await act({type:'signal',to:slot,signal:{...description,epoch:hostEpoch,attempt:record.attempt,mode}});record.descriptionSent();}
  return record;
 }
 function discardPeer(slot){const r=peers.get(slot);if(!r)return;r.candidates?.cancel();r.pc.onconnectionstatechange=null;r.pc.onicecandidate=null;if(r.control)r.control.onclose=null;r.pc.close();peers.delete(slot);}
@@ -168,7 +171,7 @@ async function signal(from,s){
  const r=await makePeer(from,false,s.attempt,s.mode||'auto'),pc=r.pc;
  if(s.type==='candidate'){if(pc.remoteDescription)await pc.addIceCandidate(s.candidate);else r.queue.push(s.candidate);return;}
  await pc.setRemoteDescription({type:s.type,sdp:s.sdp});for(const c of r.queue.splice(0))await pc.addIceCandidate(c);
- if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());const description=await gatherDescription(pc);if(peers.get(from)!==r)return;safe(act({type:'signal',to:from,signal:{...description,epoch:hostEpoch,attempt:r.attempt}}));}
+ if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());const description=await gatherDescription(pc);if(peers.get(from)!==r)return;await act({type:'signal',to:from,signal:{...description,epoch:hostEpoch,attempt:r.attempt}});r.descriptionSent();}
 }
 
 async function initAudio(){ac??=new AudioContext();if(!gameGain){gameGain=ac.createGain();gameGain.gain.value=gameVolume;gameGain.connect(ac.destination);}await ac.resume();}
@@ -322,7 +325,7 @@ $('start').onclick=async()=>{
   if(completed){if(session?.slot!==hostSlot)throw Error('HOST_ONLY');await flushCreditReceipts();await act({type:'native-reset'});return;}
   if(hasGame){if(viewer){setAway(false);return;}const self=roster.find(p=>p.slot===session.slot);if(['spectator','continue'].includes(self?.state))await revive();else{await act({type:'native-rejoin'});setAway(false);}}
   else {await prepareRoomAudio();const announced=await act({type:'launch-begin',attempt:launchAttempt});applyLaunch(announced.launch);await verifyGameConnections();const result=await act({type:'start-native',attempt:launchAttempt});remoteLaunch=null;if(result?.phase==='native')await event({type:'native-start',players:result.players});note('연결 완료 · 각자 J를 눌러 시작해주세요.');}
- }catch(e){const message=startError(e.message);if(launchAttempt){try{const failed=await act({type:'launch-failed',attempt:launchAttempt,message});applyLaunch(failed.launch);}catch{}if(!launchNotices.has(launchAttempt)){launchNotices.add(launchAttempt);note(message);showRoomNotice(message);}}else{note(message);showRoomNotice(message);}}
+ }catch(e){remoteLaunch=null;const message=startError(e.message);if(launchAttempt){try{const failed=await act({type:'launch-failed',attempt:launchAttempt,message});applyLaunch(failed.launch);}catch{}if(!launchNotices.has(launchAttempt)){launchNotices.add(launchAttempt);note(message);showRoomNotice(message);}}else{note(message);showRoomNotice(message);}}
  finally{launchBusy=false;render();}
 };
 $('coin').onclick=()=>safe(buyCoin());$('rejoinGame').onclick=()=>safe(revive());
@@ -398,7 +401,7 @@ function appendStaff(parent,role){if(!['방장','부방장','운영진'].include
 function memberActions(p,transfer){const wrap=document.createElement('div');wrap.className='member-actions';for(const kind of transfer?['transfer-host','kick-member']:['kick-member']){const b=document.createElement('button');b.textContent=kind==='transfer-host'?'방장 넘기기':'강퇴';b.onclick=()=>safe((async()=>{if(!await NWUI.confirm({title:b.textContent,message:kind==='transfer-host'?`${p.name} 님에게 방장 권한을 넘기시겠습니까? 준비 상태는 해제됩니다.`:`${p.name} 님을 강퇴하시겠습니까? 이 방에는 다시 입장할 수 없습니다.`,accept:b.textContent}))return;try{await act({type:kind,targetSlot:p.slot,targetSeatId:p.seatId});}catch(e){const messages={HOST_ONLY:'방장만 사용할 수 있습니다.',LOBBY_ONLY:'게임 시작 전 작전실에서만 사용할 수 있습니다.',PURCHASE_IN_PROGRESS:'코인 구매 처리 중인 인원이 있습니다. 완료 후 다시 시도해주세요.',TARGET_CHANGED:'참가자 구성이 변경되었습니다. 다시 선택해주세요.'};showRoomNotice(messages[e.message]||e.message);}})());wrap.append(b);}return wrap;}
 
 async function verifyGameConnections(){
- while(warmingPeers)await new Promise(resolve=>setTimeout(resolve,50));
+
  const own=session,targets=roster.filter(p=>p.slot!==hostSlot&&!p.departed);if(!targets.length)return;
  note('입력 동기화 연결을 확인하는 중…');const response=await apiFetch('/native-config?room='+own.room,{headers:{Authorization:'Bearer '+own.token}}),fresh=await response.json();if(!response.ok)throw Error(fresh.error||'TURN_SERVICE_UNAVAILABLE');if(session!==own)throw Error('ROOM_CHANGED');config=fresh;
  if(!config.relayConfigured)throw Error('TURN_NOT_CONFIGURED');
@@ -406,9 +409,9 @@ async function verifyGameConnections(){
   for(const mode of ['auto','tls']){
    if(session!==own)throw Error('ROOM_CHANGED');
    note(`${p.name} 님과 ${mode==='tls'?'보안 중계로 다시':'직접·중계 경로를'} 연결하는 중…`);
-   const existing=peers.get(p.slot);if(mode==='auto'&&existing?.pc.connectionState==='connected'&&existing.channel?.readyState==='open'&&existing.coreReady)return;if(mode!=='auto')discardPeer(p.slot);const peer=await makePeer(p.slot,true,null,mode);
-   try{await waitForConnection(peer,{requireMedia:false,requireCore:true,valid:()=>session===own&&roster.some(q=>q.seatId===p.seatId&&q.connected)});return;}
-   catch(e){const stage=connectionStage(peer);safe(act({type:'connection-report',to:p.slot,mode,stage:peer.pc.signalingState,ice:peer.pc.iceConnectionState,connection:peer.pc.connectionState,input:peer.channel?.readyState||'none',remoteDescription:!!peer.pc.remoteDescription,iceErrors:peer.iceErrors}));discardPeer(p.slot);if(e.message==='ROOM_CHANGED'||mode==='tls')throw Error(`${p.name}: ${stage} (${e.message})`);}
+   const existing=peers.get(p.slot);if(mode==='auto'&&existing?.pc.connectionState==='connected'&&existing.channel?.readyState==='open'&&existing.coreReady)return;if(existing)discardPeer(p.slot);const peer=await makePeer(p.slot,true,null,mode);
+   try{await waitForConnection(peer,{requireMedia:false,requireCore:true,valid:()=>session===own&&peers.get(p.slot)===peer&&roster.some(q=>q.seatId===p.seatId&&q.connected)});return;}
+   catch(e){const stage=peer.compatible===false?'게임 버전이 다릅니다. 방장과 참가자 모두 새로고침해주세요':connectionStage(peer);safe(act({type:'connection-report',to:p.slot,mode,stage:peer.pc.signalingState,ice:peer.pc.iceConnectionState,connection:peer.pc.connectionState,input:peer.channel?.readyState||'none',remoteDescription:!!peer.pc.remoteDescription,iceErrors:peer.iceErrors}));if(peers.get(p.slot)===peer)discardPeer(p.slot);if(peer.compatible===false||e.message==='ROOM_CHANGED'||mode==='tls')throw Error(`${p.name}: ${stage} (${e.message})`);}
   }
  }));
  if(targets.some(p=>!peers.get(p.slot)?.coreReady))throw Error('모든 PC의 게임 설치와 준비가 완료되어야 합니다.');note('모든 PC의 게임 실행·입력 연결 준비 완료');
@@ -416,7 +419,7 @@ async function verifyGameConnections(){
 
 function sendControl(message){const r=peers.get(hostSlot),ch=r?.control;if(ch?.readyState==='open'){if(ch.bufferedAmount>=2*1024*1024){r.synced=false;synced=false;r.pc.close();note('입력 전송이 지연되어 연결을 다시 맞추는 중입니다.');return false;}ch.send(JSON.stringify(message));return true;}return false;}
 function broadcastSync(message){const data=JSON.stringify(message);for(const r of peers.values())if(r.control?.readyState==='open'){if(r.control.bufferedAmount>=4*1024*1024){r.synced=false;r.pc.close();continue;}r.control.send(data);}}
-function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room94',ready:coreReady,settings:roomSettings()}));}
+function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room95',ready:coreReady,settings:roomSettings()}));}
 function requestSync(){if(coreReady&&hasGame)sendControl({type:'sync-request'});}
 // RAM equality alone does not cover CPU, timers, RNG and other serialized core state.
 async function syncPeer(r){if(!r.requestedSync||!coreReady||!hasGame||!frameQueue||r.syncing||!r.coreReady||r.control?.readyState!=='open')return;r.syncing=true;r.synced=false;sequencer?.suspend(r.slot);try{r.snapshotFrame=frameQueue.frame;const {state,meta}=roomSnapshot(r.snapshotFrame);await sendSnapshot(r.control,state,{...meta,protocol:PROTOCOL,handled:[...handledCommands],approved:[...startApprovals],results:[...commandResults]});if(sequencer.frame-r.snapshotFrame>550)throw Error('SNAPSHOT_TOO_OLD');for(const [f,packet]of sequencer.history)if(f>=r.snapshotFrame)r.control.send(JSON.stringify(packet));}finally{r.syncing=false;}}
@@ -424,7 +427,7 @@ function requestResync(reason){diagnostics.record('resync',{reason,frame:frameQu
 async function recoverPeer(record,reason){if(record.recovering||record.syncing)return;record.recovering=true;diagnostics.record('peer-resync',{slot:record.slot,reason});record.requestedSync=true;try{await syncPeer(record);}catch{record.pc.close();}finally{record.recovering=false;}}
 function failSync(message){syncFault=true;stop(message);if(session.slot===hostSlot)broadcastSync({type:'sync-fault',message});}
 function bindControl(record,ch,slot){record.epoch=hostEpoch;record.control=record.channel=ch;let lastChat=0;ch.onopen=()=>{sendHello(record);if(session.slot!==hostSlot)requestSync();};ch.onclose=()=>{record.synced=false;sequencer?.suspend(slot);diagnostics.record('peer-close',{slot});if(session?.slot!==hostSlot){synced=false;note('입력 연결이 끊겼습니다. 게임 상태 복구 중…');}};ch.onmessage=async e=>{if(record.epoch!==hostEpoch||peers.get(slot)!==record||typeof e.data!=='string'||e.data.length>100000)return;let m;try{m=JSON.parse(e.data);}catch{return;}try{
- if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room94'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
+ if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room95'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);const firstHello=!record.compatible;record.compatible=true;record.coreReady=m.ready===true;if(firstHello)sendHello(record);if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
  if(!record.compatible)return;
  if(session?.slot===hostSlot){
   if(m.type==='continue-wait-end'&&slot<=5&&record.synced&&Number.isSafeInteger(m.life)&&typeof m.id==='string'&&m.id.length<=100)sequencer?.enqueue({type:'continue-wait-end',slot,life:m.life,id:m.id});
