@@ -2505,7 +2505,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
-  function openPage(page,label,hash){const profileFresh=/^(?:profile|members|attendance|workout|ai)\.html(?:[?#]|$)/.test(page)?'&v=2.79&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
+  function openPage(page,label,hash){if(/^(?:profile|members|ai)\.html(?:[?#]|$)/.test(page)&&kakaoMemberNotice())return;const profileFresh=/^(?:profile|members|attendance|workout|ai)\.html(?:[?#]|$)/.test(page)?'&v=2.79&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
   window.NWOpenPage=openPage;
   let nwDrawRunning=false;
   window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data?.channel==='nw-draw-state')nwDrawRunning=e.data.running===true;});
@@ -2515,7 +2515,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const ua=navigator.userAgent||'',mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);dialog.querySelectorAll('a').forEach(link=>{link.target=mobile?'_self':'_blank';link.rel='noopener';});
     if(!dialog.open)dialog.showModal();
   }
-  function openMemberDraw(){if(!localStorage.getItem('nwProfileToken')||!localStorage.getItem('nwProfileDevice')){if(location.hash==='#draw')history.replaceState(null,'',location.pathname+location.search);alert('회원식별을 완료한 회원만 생존 추첨을 이용할 수 있어요. 내페이지에서 회원 인증을 진행해주세요.');openPage('profile.html','👤 뉴트월드 내 페이지','#profile');return;}showDrawPicker();}
+  function kakaoMemberNotice(){if(!document.documentElement.classList.contains('nw-kakao-browser'))return false;alert('카톡링크가 아닌 일반 브라우저로 접속하시기 바랍니다');return true;}
+  function openMemberDraw(){if(kakaoMemberNotice())return;if(!localStorage.getItem('nwProfileToken')||!localStorage.getItem('nwProfileDevice')){if(location.hash==='#draw')history.replaceState(null,'',location.pathname+location.search);alert('회원식별을 완료한 회원만 생존 추첨을 이용할 수 있어요. 내페이지에서 회원 인증을 진행해주세요.');openPage('profile.html','👤 뉴트월드 내 페이지','#profile');return;}showDrawPicker();}
   const nwDrawLink=document.getElementById('nwDrawOpen');
   if(nwDrawLink){nwDrawLink.href='#draw';nwDrawLink.removeAttribute('target');nwDrawLink.setAttribute('aria-haspopup','dialog');nwDrawLink.addEventListener('click',e=>{e.preventDefault();openMemberDraw();});}
 
@@ -2552,7 +2553,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   let memberHubChecking=false;
   memberHubOpen?.addEventListener('click',async e=>{
-    e.preventDefault();if(memberHubChecking)return;memberHubChecking=true;
+    e.preventDefault();if(kakaoMemberNotice()||memberHubChecking)return;memberHubChecking=true;
     try{
       if(await verifyMemberHubConnection())openPage('members.html','👤 뉴트월드 회원 허브','#members');
       else openMemberAuth();
@@ -2565,8 +2566,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     const d=getMemberAuthDialog();if(d&&e.target===d)closeMemberAuth();
   });
   document.getElementById('nwAppClose')?.addEventListener('click',()=>closePage(false));window.addEventListener('message',e=>{if(e.data==='nw-close-page')closePage(false);if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data==='nw-ai-open-profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
-  window.addEventListener('hashchange',()=>{if(location.hash==='#draw')openMemberDraw();else if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');else if(location.hash==='#members'){if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
-  if(location.hash==='#draw')openMemberDraw();if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');
+  window.addEventListener('hashchange',()=>{if(location.hash==='#draw')openMemberDraw();else if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');else if(location.hash==='#members'){if(kakaoMemberNotice())return;if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
+  if(location.hash==='#draw')openMemberDraw();if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&(document.documentElement.classList.contains('nw-kakao-browser')||localStorage.getItem('nwProfileToken')))openPage('members.html','👤 뉴트월드 회원 허브','#members');
 
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
   document.querySelectorAll('.partner-left .partner-card[data-shop],.partner-site-panel .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
