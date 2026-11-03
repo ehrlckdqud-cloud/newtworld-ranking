@@ -1,5 +1,5 @@
-import {testHeaders} from './test-access.mjs?v=82';
-const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
+import {testHeaders} from './test-access.mjs?v=98';
+const API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 export const starLabel=n=>n>5?`★ × ${n}`:n>0?'★'.repeat(n):'☆';
 export function initRankings(){
  const dialog=document.getElementById('rankingsDialog'),body=document.getElementById('rankRows'),status=document.getElementById('rankStatus');let request=0;

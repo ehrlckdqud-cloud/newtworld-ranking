@@ -1,5 +1,5 @@
-import {siteHeaders} from './site-session.mjs?v=82';
-const endpoint='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site/api/social';
+import {siteHeaders} from './site-session.mjs?v=98';
+const endpoint='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/api/social';
 const el=(tag,label)=>{const node=document.createElement(tag);if(label!==undefined)node.textContent=label;return node;};
 export function initSocial(){
  const launcher=el('button','접속 회원 · 친구'),dialog=el('dialog'),toast=el('div');

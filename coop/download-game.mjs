@@ -1,4 +1,4 @@
-const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
+const API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 const decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 export async function downloadGame({member,headers={},onProgress=()=>{},fetcher=fetch}){
  const response=await fetcher(API+'/api/game-package',{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify({member})});

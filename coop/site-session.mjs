@@ -1,4 +1,4 @@
-const API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
+const API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 let token='',connection='',active=false,timer=null,member=null;
 export const DUPLICATE_MESSAGE='이미 다른 브라우저에서 이 회원으로 접속 중입니다. 기존 브라우저에서 게임사이트를 종료한 뒤 다시 입장해주세요. 비정상 종료 시에는 최대 90초 후 다시 시도할 수 있습니다.';
 export const siteHeaders=()=>token?{'X-NW-Site-Session':token,'X-NW-Site-Connection':connection}:{};

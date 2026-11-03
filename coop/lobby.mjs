@@ -1,7 +1,7 @@
 import {roomError} from './room-feedback.mjs?v=84';
-import {lobbyAudio} from './lobby-audio.mjs?v=85';
-import {testHeaders} from './test-access.mjs?v=82';
-const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.pluckypeach517.chatgpt.site';
+import {lobbyAudio} from './lobby-audio.mjs?v=98';
+import {testHeaders} from './test-access.mjs?v=98';
+const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 let channel=1,rooms=[],inside=false,busy=false;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
