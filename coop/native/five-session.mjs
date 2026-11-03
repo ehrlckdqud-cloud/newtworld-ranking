@@ -129,7 +129,7 @@ export class FiveSession {
   this.repairActiveOwners();
   this.m._nw_input(native);this.m._nw_run(this.frame);
   if(this.phase==='playing'&&this.byte(0x10040c)===5){this.phase='complete';this.completionFrame=this.frame;for(let i=0;i<5;i++){this.wb(this.x.inputBase+i*2,0);this.wb(this.x.inputBase+i*2+1,0);}this.emit('complete',{nativeStage:5});}
-  if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
+  if(this.phase==='attract'&&this.long(0x10023c)===0x433e6&&(this.byte(0x10ed7d)&2)&&[0x22a96,0x22aae,0x23384,0x24ed6,0x24d40].includes(this.long(0x1004fc)))this.begin();
   else if(this.phase==='playing')for(let i=0;i<5;i++){
    const p=this.players[i],a=this.x.actors[i],routine=this.long(a);
    if(p.state==='active'){

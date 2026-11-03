@@ -1,5 +1,6 @@
+import {PeerInput} from './peer-input.mjs?v=94';
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
-import {createDiagnostics} from './diagnostics.mjs?v=89';
+import {createDiagnostics} from './diagnostics.mjs?v=94';
 import {createGameDiagnostics} from './game-diagnostics.mjs?v=89';
 import {createFrameBudget} from './frame-budget.mjs?v=87';
 const frameBudget=createFrameBudget();
@@ -35,7 +36,7 @@ import {makeResults} from './native-results.mjs?v=82';
 import {drawFiveSelection,drawFiveContinue} from './native-selection.mjs?v=82';
 import {makeHUD} from './native-hud.mjs?v=82';
 import {SoundClock,loadSoundCore} from './native/sound-clock.mjs?v=90';
-import {FiveSession} from './native/five-session.mjs?v=opening93';
+import {FiveSession} from './native/five-session.mjs?v=opening94';
 import {prepareCoopROM} from './native/prepare-coop.mjs?v=scene17';
 const $=id=>document.getElementById(id),BUILD='nw-ms3-input-lockstep-v72';
 const colors=['#ff6464','#65afff','#68dc83','#ffc45e','#c892ff'],keymap={KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64};
@@ -235,9 +236,18 @@ const framePresentation=createFramePresentation(paint,present);
 function renderLocalFrame(...args){if(document.hidden)return;framePresentation.video(...args);}
 function redrawLocal(){if(!module)return;module._nw_credits(coins.balance);module._nw_redraw();}
 function applyCommand(e){if(e.type==='continue-wait-end'){engine.cancelContinueWait(e.slot,e.life);return;}if(e.type==='native-presence'){if(e.departed)engine.removePlayer(e.slot);if(e.returned)engine.addSeat(e.slot);return;}if(e.type!=='native-command'||handledCommands.has(e.commandId))return;handledCommands.add(e.commandId);let accepted=true;try{if(e.command==='start'){startApprovals.add(e.slot);if(engine.players.slice(0,engine.playerCount).filter(p=>!p.departed).every(p=>startApprovals.has(p.slot))&&engine.phase==='attract'&&!engine.pendingStart)engine.start();}if(e.command==='continue')engine.quickContinue(e.slot,'paid-'+e.commandId);if(e.command==='revive')engine.quickContinue(e.slot,'paid-'+e.commandId,true);if(e.command==='select')engine.selectCharacter(e.slot,e.character);}catch(err){accepted=false;note(err.message);}if(['continue','revive'].includes(e.command))commandResults.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});if(session.slot===hostSlot&&['continue','revive'].includes(e.command)){creditReceipts.set(e.commandId,{type:'native-credit-result',slot:e.slot,commandId:e.commandId,accepted});void flushCreditReceipts().catch(()=>{});}}
-function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits|(continueInputPending?16:0);continueInputPending=false;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else {const peer=peers.get(hostSlot);let target=Math.max(frame,(peer?.latestFrame??0)+INPUT_DELAY);
- if(peer&&target<=peer.lastSentTarget){if(peer.lastSentBits===value)return;target=peer.lastSentTarget+1;}
- if(peer){peer.lastSentTarget=target;peer.lastSentBits=value;}sendControl({type:'input',frame:target,bits:value});}}
+function submitInput(frame){
+ if(viewer||!synced)return;
+ const value=away||document.hidden?0:bits|(continueInputPending?16:0);
+ continueInputPending=false;
+ if(session.slot===hostSlot){sequencer?.submit(session.slot,frame,value);return;}
+ const peer=peers.get(hostSlot),now=performance.now();
+ if(!peer||(peer.sentBits===value&&now-peer.sentAt<65))return;
+ if(sendControl({type:'input',bits:value})){peer.sentBits=value;peer.sentAt=now;}
+}
+function sendKeyChange(){
+ if(session&&playing&&frameQueue&&session.slot!==hostSlot)submitInput(frameQueue.frame);
+}
 let lastAnimationTick=-Infinity;
 function tick(t){requestAnimationFrame(tick);const gap=t-lastAnimationTick;if(playing&&!document.hidden&&Number.isFinite(gap)&&gap>50)diagnostics.record('render-gap',{gap:Math.round(gap),frame:frameQueue?.frame});lastAnimationTick=performance.now();if(!document.hidden)advanceGame(lastAnimationTick);}
 function finalizeDueInputs(sequencer, frame) {
@@ -246,8 +256,8 @@ function finalizeDueInputs(sequencer, frame) {
   const row = sequencer.pending.get(frame);
   for (const slot of sequencer.slots) {
     if (!row?.has(slot)) {
-      sequencer.submit(slot, frame, 0);
-      diagnostics.record('input-neutral', {slot, frame});
+      const peer=peers.get(slot);
+      sequencer.submit(slot,frame,peer?.synced&&peer.input?peer.input.sample(performance.now()):0);
     }
   }
   sequencer.drain(1);
@@ -257,18 +267,18 @@ function advanceGame(t){if(migrationBusy||!playing||!engine||!synced||syncFault|
  else {
    // Preserve a small playout reserve across network bursts. Send controls
    // against the host frontier even while the local renderer is buffering.
-   const reserve=frameQueue.reserve??4;
+   const reserve=frameQueue.reserve??2;
    if(!frameQueue.refilling&&!frameQueue.pending.has(frameQueue.frame)){
-     frameQueue.refilling=true;frameQueue.reserve=Math.min(12,reserve+2);
+     frameQueue.refilling=true;frameQueue.reserve=Math.min(6,reserve+1);
    }
    if(frameQueue.refilling){
      submitInput(frameQueue.frame+INPUT_DELAY);
      if(frameQueue.pending.size<(frameQueue.reserve??reserve)){clock=0;return;}
      frameQueue.refilling=false;clock=dt;
    }
-   if(frameQueue.pending.size>reserve+4)clock=Math.max(clock,dt*Math.min(3,frameQueue.pending.size-reserve));
+   if(frameQueue.pending.size>reserve+1)clock=Math.max(clock,dt*Math.min(3,frameQueue.pending.size-reserve));
  }
- while(clock>=dt&&frameBudget.take()){if(session.slot===hostSlot)finalizeDueInputs(sequencer,frameQueue.frame);const packet=frameQueue.take();if(!packet){if(session.slot!==hostSlot){frameQueue.refilling=true;frameQueue.reserve=Math.min(12,(frameQueue.reserve??4)+2);}if(!waitingNotice&&lastProgress&&t-lastProgress>100)diagnostics.record('input-wait',{gap:Math.round(t-lastProgress),frame:frameQueue.frame});if(frameQueue.waitSince===undefined){frameQueue.waitSince=performance.now();if(sequencer){const row=sequencer.pending.get(sequencer.frame);for(const slot of sequencer.slots)if(!row?.has(slot))diagnostics.record('input-missing',{slot,frame:sequencer.frame,gap:Math.round(performance.now()-(peers.get(slot)?.lastInputAt||performance.now()))});}}clock=Math.min(clock,dt*5);if(lastProgress&&performance.now()-lastProgress>1500&&!waitingNotice){waitingNotice=true;note('동료의 입력을 기다리는 중 · 연결 복구 후 같은 프레임부터 이어집니다.');}break;}if(frameQueue.waitSince!==undefined){const duration=performance.now()-frameQueue.waitSince;if(duration>=20)diagnostics.record('input-resumed',{duration:Math.round(duration),frame:packet.frame});delete frameQueue.waitSince;}lastProgress=performance.now();if(waitingNotice){waitingNotice=false;note('입력 동기화가 복구되었습니다.');}for(const e of packet.commands)applyCommand(e);submitInput(packet.frame+INPUT_DELAY);const stepStart=performance.now();engine.step(packet.inputs);if(roomSpeed===1.3)soundClock.advance(roomSpeed);const stepMs=performance.now()-stepStart;if(stepMs>30)diagnostics.record('core-slow',{duration:Math.round(stepMs),frame:frameQueue.frame});if(frameQueue.frame%120===0){const hash=stateHash(engine);hashes.set(frameQueue.frame,hash);if(hashes.size>20)hashes.delete(hashes.keys().next().value);if(session.slot===hostSlot)broadcastSync({type:'hash',frame:frameQueue.frame,hash});else if(!viewer)sendControl({type:'hash',frame:frameQueue.frame,hash});}
+ while(clock>=dt&&frameBudget.take()){if(session.slot===hostSlot)finalizeDueInputs(sequencer,frameQueue.frame);const packet=frameQueue.take();if(!packet){if(session.slot!==hostSlot){frameQueue.refilling=true;frameQueue.reserve=Math.min(6,(frameQueue.reserve??2)+1);}if(!waitingNotice&&lastProgress&&t-lastProgress>100)diagnostics.record('input-wait',{gap:Math.round(t-lastProgress),frame:frameQueue.frame});if(frameQueue.waitSince===undefined){frameQueue.waitSince=performance.now();if(sequencer){const row=sequencer.pending.get(sequencer.frame);for(const slot of sequencer.slots)if(!row?.has(slot))diagnostics.record('input-missing',{slot,frame:sequencer.frame,gap:Math.round(performance.now()-(peers.get(slot)?.lastInputAt||performance.now()))});}}clock=Math.min(clock,dt*5);if(lastProgress&&performance.now()-lastProgress>1500&&!waitingNotice){waitingNotice=true;note('동료의 입력을 기다리는 중 · 연결 복구 후 같은 프레임부터 이어집니다.');}break;}if(frameQueue.waitSince!==undefined){const duration=performance.now()-frameQueue.waitSince;if(duration>=20)diagnostics.record('input-resumed',{duration:Math.round(duration),frame:packet.frame});delete frameQueue.waitSince;}lastProgress=performance.now();if(waitingNotice){waitingNotice=false;note('입력 동기화가 복구되었습니다.');}for(const e of packet.commands)applyCommand(e);submitInput(packet.frame+INPUT_DELAY);const stepStart=performance.now();engine.step(packet.inputs);if(roomSpeed===1.3)soundClock.advance(roomSpeed);const stepMs=performance.now()-stepStart;if(stepMs>30)diagnostics.record('core-slow',{duration:Math.round(stepMs),frame:frameQueue.frame});if(frameQueue.frame%120===0){const hash=stateHash(engine);hashes.set(frameQueue.frame,hash);if(hashes.size>20)hashes.delete(hashes.keys().next().value);if(session.slot===hostSlot)broadcastSync({type:'hash',frame:frameQueue.frame,hash});else if(!viewer)sendControl({type:'hash',frame:frameQueue.frame,hash});}
  clock-=dt;if(session.slot===hostSlot)sequencer.drain();}
  if(clock>dt*5)clock=dt*5;
  }catch(e){syncFault=true;stop('동기화 실행 오류: '+e.message);}finally{framePresentation.end();}}
@@ -350,8 +360,8 @@ function sendChat(){
 
 $('chat').onfocus=()=>{chatOpen=true;bits=0;};
 $('chatForm').onsubmit=e=>{e.preventDefault();if(composing)pendingChat=true;else sendChat();};$('chat').oncompositionstart=()=>composing=true;$('chat').oncompositionend=()=>{composing=false;if(pendingChat)queueMicrotask(()=>{if(chatOpen)sendChat();});};
-window.addEventListener('keydown',e=>{if(!session||document.querySelector('dialog[open]'))return;if(viewer){if(e.key==='Enter'&&document.activeElement!==$('viewerInput')){e.preventDefault();$('viewerInput').focus();}return;}if(e.key==='Enter'){if(enterHeld||e.repeat)return;enterHeld=true;if(!chatOpen){e.preventDefault();chatOpen=true;bits=0;$('chatForm').hidden=false;$('chat').focus();}else if(composing||e.isComposing)pendingChat=true;else{e.preventDefault();sendChat();}return;}if(chatOpen){if(e.key==='Escape')closeChat();return;}if(completed||away||!playing||document.querySelector('dialog[open]')||/INPUT|SELECT/.test(e.target.tagName))return;if(keymap[e.code]){e.preventDefault();if(e.code==='KeyJ'&&!e.repeat){const p=engine?.players[session.slot-1];if(!roster.find(p=>p.slot===session.slot)?.started){safe(command('start'));return;}if(['continue','spectator'].includes(p?.state)){safe(command('continue'));return;}}bits|=keymap[e.code];}});
-window.addEventListener('keyup',e=>{if(e.key==='Enter')enterHeld=false;bits&=~(keymap[e.code]||0);});window.addEventListener('blur',()=>{bits=0;enterHeld=false;});document.addEventListener('visibilitychange',()=>{bits=0;held.fill(0);enterHeld=false;lastTick=0;clock=0;audioNext=0;if(!document.hidden){ac?.resume().catch(()=>{});module?._nw_redraw?.();safe(recoverWindow());}});
+window.addEventListener('keydown',e=>{if(!session||document.querySelector('dialog[open]'))return;if(viewer){if(e.key==='Enter'&&document.activeElement!==$('viewerInput')){e.preventDefault();$('viewerInput').focus();}return;}if(e.key==='Enter'){if(enterHeld||e.repeat)return;enterHeld=true;if(!chatOpen){e.preventDefault();chatOpen=true;bits=0;$('chatForm').hidden=false;$('chat').focus();}else if(composing||e.isComposing)pendingChat=true;else{e.preventDefault();sendChat();}return;}if(chatOpen){if(e.key==='Escape')closeChat();return;}if(completed||away||!playing||document.querySelector('dialog[open]')||/INPUT|SELECT/.test(e.target.tagName))return;if(keymap[e.code]){e.preventDefault();if(e.code==='KeyJ'&&!e.repeat){const p=engine?.players[session.slot-1];if(!roster.find(p=>p.slot===session.slot)?.started){safe(command('start'));return;}if(['continue','spectator'].includes(p?.state)){safe(command('continue'));return;}}bits|=keymap[e.code];sendKeyChange();}});
+window.addEventListener('keyup',e=>{if(e.key==='Enter')enterHeld=false;bits&=~(keymap[e.code]||0);if(keymap[e.code])sendKeyChange();});window.addEventListener('blur',()=>{bits=0;enterHeld=false;});document.addEventListener('visibilitychange',()=>{bits=0;held.fill(0);enterHeld=false;lastTick=0;clock=0;audioNext=0;if(!document.hidden){ac?.resume().catch(()=>{});module?._nw_redraw?.();safe(recoverWindow());}});
 setInterval(()=>{if(session&&transportAlive&&!hasGame)safe(act({type:'ping'}));},5000);
 let publishedState='',stateInFlight=false;
 async function publishState(){if(session?.slot!==hostSlot||!playing||!engine||stateInFlight)return;const scoring=['playing','complete'].includes(engine.phase);if(scoring&&(performance.now()-lastScoreRead>=1000||engine.phase==='complete'||scoreSample.length!==engine.playerCount)){scoreSample=readScores(engine);lastScoreRead=performance.now();}const state={type:'native-state',completed:engine.phase==='complete',...(scoring?{mission:engine.byte(0x10040c)}:{}),players:engine.players.slice(0,engine.playerCount).map(({state,lives},i)=>({state,lives,...(scoring?{score:scoreSample[i]||0}:{})}))},key=JSON.stringify(state);if(key===publishedState)return;stateInFlight=true;try{await act(state);publishedState=key;}catch(e){note(e.message);}finally{stateInFlight=false;}}
@@ -406,7 +416,7 @@ async function verifyGameConnections(){
 
 function sendControl(message){const r=peers.get(hostSlot),ch=r?.control;if(ch?.readyState==='open'){if(ch.bufferedAmount>=2*1024*1024){r.synced=false;synced=false;r.pc.close();note('입력 전송이 지연되어 연결을 다시 맞추는 중입니다.');return false;}ch.send(JSON.stringify(message));return true;}return false;}
 function broadcastSync(message){const data=JSON.stringify(message);for(const r of peers.values())if(r.control?.readyState==='open'){if(r.control.bufferedAmount>=4*1024*1024){r.synced=false;r.pc.close();continue;}r.control.send(data);}}
-function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room93',ready:coreReady,settings:roomSettings()}));}
+function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room94',ready:coreReady,settings:roomSettings()}));}
 function requestSync(){if(coreReady&&hasGame)sendControl({type:'sync-request'});}
 // RAM equality alone does not cover CPU, timers, RNG and other serialized core state.
 async function syncPeer(r){if(!r.requestedSync||!coreReady||!hasGame||!frameQueue||r.syncing||!r.coreReady||r.control?.readyState!=='open')return;r.syncing=true;r.synced=false;sequencer?.suspend(r.slot);try{r.snapshotFrame=frameQueue.frame;const {state,meta}=roomSnapshot(r.snapshotFrame);await sendSnapshot(r.control,state,{...meta,protocol:PROTOCOL,handled:[...handledCommands],approved:[...startApprovals],results:[...commandResults]});if(sequencer.frame-r.snapshotFrame>550)throw Error('SNAPSHOT_TOO_OLD');for(const [f,packet]of sequencer.history)if(f>=r.snapshotFrame)r.control.send(JSON.stringify(packet));}finally{r.syncing=false;}}
@@ -414,21 +424,14 @@ function requestResync(reason){diagnostics.record('resync',{reason,frame:frameQu
 async function recoverPeer(record,reason){if(record.recovering||record.syncing)return;record.recovering=true;diagnostics.record('peer-resync',{slot:record.slot,reason});record.requestedSync=true;try{await syncPeer(record);}catch{record.pc.close();}finally{record.recovering=false;}}
 function failSync(message){syncFault=true;stop(message);if(session.slot===hostSlot)broadcastSync({type:'sync-fault',message});}
 function bindControl(record,ch,slot){record.epoch=hostEpoch;record.control=record.channel=ch;let lastChat=0;ch.onopen=()=>{sendHello(record);if(session.slot!==hostSlot)requestSync();};ch.onclose=()=>{record.synced=false;sequencer?.suspend(slot);diagnostics.record('peer-close',{slot});if(session?.slot!==hostSlot){synced=false;note('입력 연결이 끊겼습니다. 게임 상태 복구 중…');}};ch.onmessage=async e=>{if(record.epoch!==hostEpoch||peers.get(slot)!==record||typeof e.data!=='string'||e.data.length>100000)return;let m;try{m=JSON.parse(e.data);}catch{return;}try{
- if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room93'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
+ if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room94'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
  if(!record.compatible)return;
  if(session?.slot===hostSlot){
   if(m.type==='continue-wait-end'&&slot<=5&&record.synced&&Number.isSafeInteger(m.life)&&typeof m.id==='string'&&m.id.length<=100)sequencer?.enqueue({type:'continue-wait-end',slot,life:m.life,id:m.id});
   if(m.type==='continue-state'&&slot<=5&&performance.now()-(record.lastContinueState||0)>250){record.lastContinueState=performance.now();void publishState();}
-  if(m.type==='input'&&slot<=5&&record.synced&&sequencer&&Number.isSafeInteger(m.frame)&&Number.isInteger(m.bits)&&m.bits>=0&&m.bits<=127){
-    record.lastInputAt=performance.now();
-    if(m.frame>(record.lastInputFrame??-1)&&m.frame>=sequencer.frame-120&&m.frame<=sequencer.frame+120){
-      record.lastInputFrame=m.frame;
-      const target=Math.max(sequencer.frame,m.frame);
-      if(sequencer.submit(slot,target,m.bits))sequencer.drain();
-    }
-  }
+  if(m.type==='input'&&slot<=5&&record.synced){record.input??=new PeerInput();record.input.receive(m.bits,performance.now());}
   if(m.type==='sync-request'){record.requestedSync=true;record.bootHash=m.bootHash;await syncPeer(record);}
-  if(m.type==='sync-ready'&&Number.isSafeInteger(m.frame)){record.recovering=false;record.lastInputFrame=-1;record.lastInputAt=performance.now();record.synced=true;if(slot<=5)sequencer?.resume(slot);for(let f=sequencer?.frame||0;f<m.frame+INPUT_DELAY;f++)sequencer?.submit(slot,f,0);}
+  if(m.type==='sync-ready'&&Number.isSafeInteger(m.frame)){record.recovering=false;record.input=new PeerInput();record.lastInputAt=performance.now();record.synced=true;if(slot<=5)sequencer?.resume(slot);for(let f=sequencer?.frame||0;f<m.frame+INPUT_DELAY;f++)sequencer?.submit(slot,f,0);}
   if(m.type==='hash'&&slot<=5&&record.synced){const expected=hashes.get(m.frame);if(expected&&expected!==m.hash)void recoverPeer(record,'hash-mismatch');}
   if(m.type==='command-proof'&&slot<=5){const grant=await verifyCommand(config.commandProofKey,session.room,m.proof,slot);if(grant&&peers.get(slot)===record&&hasGame&&!roster.find(p=>p.slot===slot)?.departed)await event(grant);}
   if(m.type==='chat-preview'&&typeof m.text==='string'&&m.text.trim()&&[...m.text].length<=120&&typeof m.messageId==='string'&&m.messageId.length<=80&&performance.now()-lastChat>=300){const p=[...roster,...viewers].find(p=>p.slot===slot);if(!p||p.departed)return;lastChat=performance.now();const chat={type:'chat',slot,name:p.name,text:m.text.trim(),messageId:m.messageId,audience:slot>5,spectator:p.state==='spectator'};chatPresentation.receive(chat);broadcastChat(chat);}
@@ -438,7 +441,7 @@ function bindControl(record,ch,slot){record.epoch=hostEpoch;record.control=recor
   if(m.type==='frame'){if(Number.isSafeInteger(m.frame)&&frameQueue&&m.frame>=frameQueue.frame&&m.frame<=frameQueue.frame+900)record.latestFrame=Math.max(record.latestFrame??0,m.frame);if(frameQueue&&!frameQueue.receive(m)&&m.frame>frameQueue.frame+900&&!record.receiver.state){synced=false;requestSync();}}
   if(m.type==='hash'&&synced&&!record.receiver.state){const expected=hashes.get(m.frame);if(expected&&expected!==m.hash)requestResync('hash-mismatch');}
   if(m.type==='sync-fault')failSync(m.message);
-  if(m.type.startsWith('snapshot-')){if(m.type==='snapshot-start'){synced=false;$('gameLoading').hidden=false;record.snapshotFrame=m.frame;record.latestFrame=m.frame;record.lastSentTarget=-1;}const state=record.receiver.receive(m);if(state){adoptSettings(state.settings);await prepareRoomAudio();if(record.epoch!==hostEpoch||peers.get(slot)!==record)return;
+  if(m.type.startsWith('snapshot-')){if(m.type==='snapshot-start'){synced=false;$('gameLoading').hidden=false;record.snapshotFrame=m.frame;record.latestFrame=m.frame;record.sentBits=null;}const state=record.receiver.receive(m);if(state){adoptSettings(state.settings);await prepareRoomAudio();if(record.epoch!==hostEpoch||peers.get(slot)!==record)return;
     if(!Number.isSafeInteger(state.gameSize)||state.gameSize<=0||state.gameSize>state.bytes.length)throw Error('SNAPSHOT_SIZE');
     restoreState(module,engine,{...state,bytes:state.bytes.subarray(0,state.gameSize)});applyCpu();
     if(roomSpeed===1.3)soundClock.restoreAudio(state.bytes.subarray(state.gameSize),state.audioCursor);
