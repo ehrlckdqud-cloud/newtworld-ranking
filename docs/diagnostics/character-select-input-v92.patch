@@ -1,0 +1,34 @@
+--- a/coop/play.mjs
++++ b/coop/play.mjs
+@@ -238 +238 @@
+-function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits|(continueInputPending?16:0);continueInputPending=false;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else sendControl({type:'input',frame,bits:value});}
++function submitInput(frame){if(viewer||!synced)return;const value=away||document.hidden?0:bits|(continueInputPending?16:0);continueInputPending=false;if(session.slot===hostSlot)sequencer?.submit(session.slot,frame,value);else {const peer=peers.get(hostSlot);const target=Math.max(frame,(peer?.latestFrame??0)+INPUT_DELAY);if(peer?.lastSentTarget===target&&!value)return;if(peer)peer.lastSentTarget=target;sendControl({type:'input',frame:target,bits:value});}}
+@@ -254 +254,2 @@
+- if(session.slot===hostSlot){for(const [slot,r]of peers)if(slot<=5&&r.synced&&sequencer.slots.has(slot)&&!sequencer.pending.get(sequencer.frame)?.has(slot)&&performance.now()-(r.lastInputAt||0)>1500)void recoverPeer(r,'input-timeout');sequencer.drain();}
++ if(session.slot===hostSlot)sequencer.drain();
++ else if(frameQueue.pending.size>INPUT_DELAY)clock=Math.max(clock,dt*Math.min(3,frameQueue.pending.size-2));
+@@ -393 +394 @@
+-function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room91',ready:coreReady,settings:roomSettings()}));}
++function sendHello(r){if(r.control?.readyState==='open')r.control.send(JSON.stringify({type:'hello',protocol:PROTOCOL+'-scene17-room92',ready:coreReady,settings:roomSettings()}));}
+@@ -401 +402 @@
+- if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room91'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
++ if(m.type==='hello'){if(m.protocol!==PROTOCOL+'-scene17-room92'){record.coreReady=false;record.compatible=false;note('게임 버전이 다릅니다. 모두 새로고침해주세요.');ch.close();return;}if(slot===hostSlot&&!hasGame)adoptSettings(m.settings);record.compatible=true;record.coreReady=m.ready===true;if(session.slot===hostSlot&&hasGame&&record.requestedSync)await syncPeer(record);return;}
+@@ -406 +407,8 @@
+-  if(m.type==='input'&&slot<=5&&record.synced&&sequencer?.submit(slot,m.frame,m.bits)){record.lastInputAt=performance.now();sequencer.drain();}
++  if(m.type==='input'&&slot<=5&&record.synced&&sequencer&&Number.isSafeInteger(m.frame)&&Number.isInteger(m.bits)&&m.bits>=0&&m.bits<=127){
++    record.lastInputAt=performance.now();
++    if(m.frame>(record.lastInputFrame??-1)&&m.frame>=sequencer.frame-120&&m.frame<=sequencer.frame+120){
++      record.lastInputFrame=m.frame;
++      const target=Math.max(sequencer.frame,m.frame);
++      if(sequencer.submit(slot,target,m.bits))sequencer.drain();
++    }
++  }
+@@ -408 +416 @@
+-  if(m.type==='sync-ready'&&Number.isSafeInteger(m.frame)){record.recovering=false;record.lastInputAt=performance.now();record.synced=true;if(slot<=5)sequencer?.resume(slot);for(let f=sequencer?.frame||0;f<m.frame+INPUT_DELAY;f++)sequencer?.submit(slot,f,0);}
++  if(m.type==='sync-ready'&&Number.isSafeInteger(m.frame)){record.recovering=false;record.lastInputFrame=-1;record.lastInputAt=performance.now();record.synced=true;if(slot<=5)sequencer?.resume(slot);for(let f=sequencer?.frame||0;f<m.frame+INPUT_DELAY;f++)sequencer?.submit(slot,f,0);}
+@@ -415 +423 @@
+-  if(m.type==='frame'){if(frameQueue&&!frameQueue.receive(m)&&m.frame>frameQueue.frame+900&&!record.receiver.state){synced=false;requestSync();}}
++  if(m.type==='frame'){if(Number.isSafeInteger(m.frame)&&frameQueue&&m.frame>=frameQueue.frame&&m.frame<=frameQueue.frame+900)record.latestFrame=Math.max(record.latestFrame??0,m.frame);if(frameQueue&&!frameQueue.receive(m)&&m.frame>frameQueue.frame+900&&!record.receiver.state){synced=false;requestSync();}}
+@@ -418 +426 @@
+-  if(m.type.startsWith('snapshot-')){if(m.type==='snapshot-start'){synced=false;$('gameLoading').hidden=false;record.snapshotFrame=m.frame;}const state=record.receiver.receive(m);if(state){adoptSettings(state.settings);await prepareRoomAudio();if(record.epoch!==hostEpoch||peers.get(slot)!==record)return;
++  if(m.type.startsWith('snapshot-')){if(m.type==='snapshot-start'){synced=false;$('gameLoading').hidden=false;record.snapshotFrame=m.frame;record.latestFrame=m.frame;record.lastSentTarget=-1;}const state=record.receiver.receive(m);if(state){adoptSettings(state.settings);await prepareRoomAudio();if(record.epoch!==hostEpoch||peers.get(slot)!==record)return;
