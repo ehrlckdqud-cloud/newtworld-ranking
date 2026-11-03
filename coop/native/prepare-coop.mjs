@@ -1,5 +1,5 @@
 import {patchHealthROM} from './hp-scaling.mjs?v=hp1';
-import {patchSceneROM} from './scene-fixes.mjs?v=scene1';
+import {patchSceneROM} from './scene-fixes.mjs?v=scene16';
 /** Applies only generated deltas to the user's BIOS in the emulator's virtual FS. */
 export async function prepareCoopROM(module,source,profile,progress=()=>{}){
  await globalThis.prepareROM(module,source,profile,progress);
