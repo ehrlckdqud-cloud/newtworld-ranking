@@ -21,13 +21,13 @@
  function readStatus(url,params){return new Promise((resolve,reject)=>{const cb='nwContentRead_'+crypto.randomUUID().replace(/-/g,''),script=document.createElement('script');let done=false;const clean=()=>{clearTimeout(timer);script.remove();delete window[cb];};window[cb]=r=>{if(done)return;done=true;clean();resolve(r);};script.onerror=()=>{if(done)return;done=true;clean();reject(Error('회원 확인 서버에 연결하지 못했습니다.'));};const timer=setTimeout(()=>{if(done)return;done=true;clean();reject(Error('회원 확인 응답이 지연됩니다. 다시 확인해주세요.'));},30000);script.referrerPolicy='no-referrer';script.src=url+'?'+new URLSearchParams({...credentials(),...params,adminToken:'',action:'contentStatus',callback:cb,_:Date.now()});document.head.append(script);});}
  let statusJob=null,statusScope='';
  async function status(){const scope=JSON.stringify([credentials(),gameAdminToken]);if(statusJob&&scope===statusScope)return statusJob;statusScope=scope;const job=(async()=>{lastStatus=await call('contentStatus',{adminToken:'',...(gameAdminToken?{gameAdminToken,guestToken:''}:{})});if(!lastStatus.ok&&gameAdminToken){gameAdminToken='';window.dispatchEvent(new Event('nw-game-mode'));}window.dispatchEvent(new Event('nw-content-status'));return lastStatus;})();statusJob=job;try{return await job;}finally{if(statusJob===job)statusJob=null;}}
- function courseKey(game,course){return game+':'+(course??(game==='marble'?String(Number(document.getElementById('map')?.value)||0):game==='factory'?'4':'default'));}
- function coursePrice(config,game,course){return config.courses?.[courseKey(game,course)]??config.games[game].price;}
+ function courseKey(game,course){return game+':'+(course??(game==='marble'?String(Number(document.getElementById('map')?.value)||0):game==='factory'?'4':game==='pond'&&['90','120'].includes(document.getElementById('pondDuration')?.value)?document.getElementById('pondDuration').value:'default'));}
+ function coursePrice(config,game,course){const key=courseKey(game,course);return config.courses?.[key]??(game==='pond'&&['pond:90','pond:120'].includes(key)?300:config.games[game].price);}
  let starting=false;
  async function start(game,adminToken='',course=null){
   if(starting)return false;starting=true;
   try{
-   const s=await status();if(!s.ok)throw Error(s.error);const g={...s.config.games[game],price:coursePrice(s.config,game,course)};course=courseKey(game,course).split(':')[1];
+   const s=await status();if(!s.ok)throw Error(s.error);const g={...s.config.games[game],price:coursePrice(s.config,game,course)};course=courseKey(game,course).split(':')[1];if(game==='pond'&&['90','120'].includes(course)&&s.config.courses?.['pond:'+course]==null)throw Error('90초·120초 모드는 준비 중입니다. 잠시 후 다시 시도해주세요.');
    if(s.kind!=='admin'&&!adminToken&&(!s.config.enabled||!g.public))throw Error('현재 관리자 전용 콘텐츠입니다.');
    const scope=[s.memberId,s.kind,game,course].join(':'),key='nwPendingRun:'+scope;let id=sessionStorage.getItem(key);
    if(!id){const info=s.kind==='member'?g.price+'젬을 사용합니다.':s.kind==='guest'&&s.customer.mode==='uses'?'실행 횟수 1회를 사용합니다.':s.kind==='admin'?'관리자모드로 실행합니다. 젬은 차감되지 않습니다.':'이용권으로 실행합니다.';if(!adminToken&&!await window.NWUI.confirm({title:'생존추첨 시작',cost:s.kind==='member'?g.price:null,message:info+' 진행하시겠습니까?'}))return false;id=crypto.randomUUID();sessionStorage.setItem(key,id);}
@@ -46,7 +46,7 @@
     let badge=startButton.querySelector('.nw-start-cost');if(!badge){badge=document.createElement('span');badge.className='nw-start-cost';startButton.append(badge);}
     if(badge.dataset.label===label)return;badge.dataset.label=label;badge.replaceChildren();if(/^\d+$/.test(label))badge.append(window.NWUI.gem());badge.append(document.createTextNode(label));badge.setAttribute('aria-label',/^\d+$/.test(label)?label+'젬 차감':label);
    }
-   new MutationObserver(paintCost).observe(startButton,{childList:true});document.getElementById('map')?.addEventListener('change',paintCost);window.addEventListener('nw-content-status',paintCost);paintCost();
+   new MutationObserver(paintCost).observe(startButton,{childList:true});document.getElementById('map')?.addEventListener('change',paintCost);document.getElementById('pondDuration')?.addEventListener('change',paintCost);window.addEventListener('nw-content-status',paintCost);paintCost();
   }
 
   const modeButton=document.getElementById('nwGameAdminMode');
