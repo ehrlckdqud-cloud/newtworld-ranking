@@ -51,7 +51,11 @@ export class PondRevival {
    ctx.drawImage(bitmap,(shown%4)*960,(Math.floor(shown/4)%2)*540,960,540,cx-anchor[0]*960*scale,cy-anchor[1]*540*scale,960*scale,540*scale);
    if(mix>0){ctx.save();ctx.globalAlpha*=mix;const art=renderer.art.leaf(size);if(art)ctx.drawImage(art,dest.x-radius*1.2,dest.y-radius*.8,radius*2.4,radius*1.6);ctx.restore()}
    const px=cx+(dest.x-cx)*mix,py=cy+(dest.y-cy)*mix,pr=size*.29;
-   ctx.save();ctx.beginPath();ctx.ellipse(px,py,pr,pr*.72,0,0,Math.PI*2);ctx.clip();const photo=renderer.images.get(leaf.name);ctx.fillStyle='#d9ed98';ctx.fillRect(px-pr,py-pr,2*pr,2*pr);if(photo)ctx.drawImage(photo,px-pr,py-pr,2*pr,2*pr);else{ctx.font=`${Math.max(12,pr*1.4)}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🐸',px,py)}ctx.restore();
+   ctx.save();ctx.beginPath();ctx.ellipse(px,py,pr,pr*.72,0,0,Math.PI*2);ctx.clip();const photo=renderer.images.get(leaf.name);ctx.fillStyle='#d9ed98';ctx.fillRect(px-pr,py-pr,2*pr,2*pr);if(photo)ctx.drawImage(photo,px-pr,py-pr,2*pr,2*pr);else{
+    const frog=renderer.art.get('treefrog');
+    ctx.fillStyle='#e1edce';ctx.fillRect(px-pr,py-pr,2*pr,2*pr);
+    if(frog){const size=pr*1.5/.69;ctx.drawImage(frog,px-size/2,py-size/2,size,size)}
+   }ctx.restore();
    ctx.font=`bold ${Math.max(10,Math.min(17,radius*.38))}px sans-serif`;ctx.textAlign='center';ctx.textBaseline='top';ctx.lineWidth=3;ctx.strokeStyle='#102d20';ctx.fillStyle='#fff';ctx.strokeText(leaf.name,px,py+pr*.8,radius*3);ctx.fillText(leaf.name,px,py+pr*.8,radius*3);
    if(phase>=.57){ctx.globalAlpha*=1-smooth((phase-.65)/.3);ctx.strokeStyle='#d5ffe1';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(dest.x,dest.y,radius*(1+(phase-.57)*3),radius*(.5+(phase-.57)*1.5),0,0,Math.PI*2);ctx.stroke()}
    ctx.restore();
