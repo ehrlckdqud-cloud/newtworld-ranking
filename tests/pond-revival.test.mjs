@@ -8,8 +8,8 @@ const Engine=load(readFileSync(new URL('../draw/pondApp.e4104cc4.js',import.meta
 const Old=vm.runInNewContext(readFileSync(new URL('./browser-fixtures/pond-engine-before-revival.txt',import.meta.url),'utf8')+';h',{crypto:webcrypto});
 function random(seed=1){return n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n}}
 function run(Type,duration,count,keep,revive,seed=1){const engine=new Type(random(seed),random(seed+99)),names=Array.from({length:count},(_,i)=>'P'+i),events=[],revivals=[];engine.setAdminCheck(()=>true);engine.onEvent=e=>events.push({kind:e.kind,actor:e.actor,targets:Array.from(e.targets),round:e.round,ids:Array.from(e.reviveIds||[])});engine.onRevive=leaves=>revivals.push(...leaves.map(l=>l.id));engine.reset(names,keep,duration,true,revive);engine.start();for(let i=0;i<3000&&engine.state==='running';i++)engine.update(.05);return {engine,events,revivals,winners:Array.from(engine.winners,l=>l.id)}}
-test('45/60 modes retain exact legacy attacks, draws and timing even with requested revival',()=>{
- for(const duration of [45,60])for(const seed of [1,9,123]){const a=run(Old,duration,80,3,299,seed),b=run(Engine,duration,80,3,299,seed);assert.deepEqual(b.events,a.events);assert.deepEqual(b.winners,a.winners);assert.equal(b.engine.elapsed,a.engine.elapsed);assert.equal(b.engine.rounds,12);assert.equal(b.revivals.length,0);assert.equal(b.engine.revivalCount,0)}
+test('45/60 modes retain legacy elimination rounds, draws and timing even with requested revival',()=>{
+ for(const duration of [45,60])for(const seed of [1,9,123]){const a=run(Old,duration,80,3,299,seed),b=run(Engine,duration,80,3,299,seed);const losses=events=>Array.from({length:12},(_,i)=>events.filter(e=>e.round===i+1).flatMap(e=>e.targets).sort((a,b)=>a-b));assert.deepEqual(losses(b.events),losses(a.events));assert.deepEqual(b.winners,a.winners);assert.equal(b.engine.elapsed,a.engine.elapsed);assert.equal(b.engine.rounds,12);assert.equal(b.revivals.length,0);assert.equal(b.engine.revivalCount,0)}
 });
 test('long modes revive only once and finish with the exact requested winners',()=>{
  for(const duration of [90,120])for(const count of [2,3,10,100,300])for(const keep of [1,count-1,count])for(const amount of [0,1,3,299]){
@@ -29,4 +29,27 @@ test('a resurrected member can win, and has no special protection or forced elim
 test('clear/reset and paused clock cannot repeat revival',()=>{
  const r=run(Engine,90,20,1,3);r.engine.clear();assert.equal(r.engine.revivalCount,0);r.engine.reset(['a','b'],1,60,true,100);assert.equal(r.engine.rounds,12);assert.equal(r.engine.revivedCount,0);assert.ok(r.engine.leaves.every(l=>!l.revived));
  const e=new Engine(()=>0,()=>0);e.setAdminCheck(()=>true);e.reset(Array.from({length:20},(_,i)=>''+i),1,90,false,3);e.start();while(e.event.kind!=='revival')e.update(.05);const before=e.elapsed;e.update(0);assert.equal(e.elapsed,before);assert.equal(e.revivedCount,0);while(!e.event.applied)e.update(.05);assert.equal(e.revivedCount,3);const ids=e.event.reviveIds.slice();e.update(.1);assert.equal(e.revivedCount,ids.length);
+});
+
+test('long modes spread eliminations across each half through the final round',()=>{
+ for(const duration of [90,120])for(const count of [2,12,40,150,300])for(const amount of [0,3,299]){
+  const result=run(Engine,duration,count,1,amount);
+  const rounds=result.engine.rounds,mid=rounds/2;
+  const losses=Array(rounds).fill(0);
+  for(const event of result.events)losses[event.round-1]+=event.targets.length;
+  const phases=amount?[losses.slice(0,mid-1),losses.slice(mid)]:[losses];
+  for(const phase of phases)assert.ok(Math.max(...phase)-Math.min(...phase)<=1);
+  assert.ok(losses.at(-1)>0);
+  assert.equal(losses.reduce((a,b)=>a+b,0),count-1+result.revivals.length);
+ }
+});
+
+test('paired creatures are distinct, have separate lanes and each gets targets',()=>{
+ const choices=[6,0,3];const engine=new Engine(()=>0,n=>(choices.shift()??0)%n);
+ engine.setAdminCheck(()=>true);engine.reset(Array.from({length:80},(_,i)=>'P'+i),1,90,true,3);engine.start();
+ const [first,second]=engine.events;
+ assert.ok(first.actor&&second.actor);assert.notEqual(first.actor,second.actor);
+ assert.equal(first.lane,0);assert.equal(second.lane,1);
+ assert.ok(first.targets.length&&second.targets.length);
+ assert.ok(first.targets.every(id=>!second.targets.includes(id)));
 });
