@@ -10,7 +10,7 @@ export class PondRevival {
    const meta=await response.json(),r=await fetch(new URL('./revival/dragonfly-v1.bin',import.meta.url));if(!r.ok)throw Error('부활 영상을 불러오지 못했어요.');
    const blob=await r.blob();if(blob.size!==meta.bytes)throw Error('부활 영상 파일을 다시 받아주세요.');
    this.blobs=meta.ranges.map(([start,length])=>blob.slice(start,start+length,'image/webp'));this.meta=meta;
-   if(!this.player.src)this.player.src=new URL('./revival/revive-v2.mp3',import.meta.url).href;
+   if(!this.player.src)this.player.src=new URL('./revival/revive-v3.mp3',import.meta.url).href;
    await Promise.all([this.load(0),this.load(1)]);
   })();try{await this.job}catch(error){this.meta=null;throw error}finally{this.job=null}
  }
@@ -20,7 +20,7 @@ export class PondRevival {
   const job=createImageBitmap(this.blobs[page]).then(image=>{this.pages.set(page,image);while(this.pages.size>4){const old=[...this.pages.keys()].find(k=>k!==page&&k!==this.last?.page);if(old===undefined)break;this.pages.get(old).close();this.pages.delete(old)}}).finally(()=>this.pending.delete(page));
   this.pending.set(page,job);return job;
  }
- arm(){if(!this.player.src)this.player.src=new URL('./revival/revive-v2.mp3',import.meta.url).href;this.failedAudio=false;this.player.muted=true;this.player.play().then(()=>{this.player.pause();this.player.currentTime=0;this.player.muted=false}).catch(()=>{this.player.muted=false})}
+ arm(){if(!this.player.src)this.player.src=new URL('./revival/revive-v3.mp3',import.meta.url).href;this.failedAudio=false;this.player.muted=true;this.player.play().then(()=>{this.player.pause();this.player.currentTime=0;this.player.muted=false}).catch(()=>{this.player.muted=false})}
  syncAudio(engine,paused,volume,music){
   const event=engine.state==='running'&&engine.event?.kind==='revival'?engine.event:null;
   if(!event||paused){this.player.pause();if(!event)this.event=null;return}
