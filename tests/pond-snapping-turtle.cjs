@@ -35,6 +35,7 @@ const {chromium} = require('playwright');
     if(!clips.draw(ctx,'snappingturtle',phase,0,0,960,540))throw Error('Missing frame '+frame);
     const data=ctx.getImageData(0,0,960,540).data;
     if(data[3]!==0)throw Error('Background not transparent');
+    if(frame===79&&data[(242*960+830)*4+3]!==255)throw Error('Mouth cavity must remain opaque');
     let opaque=0;for(let i=3;i<data.length;i+=4)if(data[i]>200){opaque++;if(data[i-1]>Math.max(data[i-2],data[i-3])+20)throw Error("Blue screen spill remains");}
     minOpaque=Math.min(minOpaque,opaque);
     maxDecoded=Math.max(maxDecoded,clips.decoded.size);drawn++;

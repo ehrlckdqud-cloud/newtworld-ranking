@@ -25,6 +25,19 @@ for page in range(15):
   labels,_=ndimage.label(alpha>.15);sizes=np.bincount(labels.ravel());sizes[0]=0
   body=labels==sizes.argmax()
   alpha*=body
+  # The generated source has screen-blue inside the open mouth. Preserve this
+  # bounded cavity as opaque dark mouth tissue, not a hole into the pond.
+  head=body.copy();head[350:]=False
+  tip=np.where(head)[1].max()
+  for x in range(max(0,tip-105),tip+1):
+   ys=np.flatnonzero((alpha[:350,x]>.8))
+   if len(ys)<2:continue
+   for upper,lower in zip(ys[:-1],ys[1:]):
+    if 2<lower-upper<=60:
+     for y in range(upper+1,lower):
+      depth=(y-upper)/(lower-upper)
+      rgb[y,x]=[35+24*depth,23+7*depth,22+8*depth]
+      alpha[y,x]=1
   # Suppress blue fringe without changing the turtle's brown/olive detail.
   rgb[:,:,2]=np.minimum(rgb[:,:,2],np.maximum(rgb[:,:,0],rgb[:,:,1]))
   rgba=Image.fromarray(np.dstack([rgb,alpha*255]).astype('uint8'),'RGBA')

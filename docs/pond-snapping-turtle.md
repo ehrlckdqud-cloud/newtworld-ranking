@@ -34,3 +34,12 @@ absence of blue spill in opaque pixels, the six-page cache bound, other-attack
 switching, audio duration, the displayed name, random selection and mirrored
 mouth anchors. A rendered screenshot verifies the shrinking player at the mouth
 on the actual pond background. Membership is mocked; no real gem charge occurs.
+
+## Mouth matte correction (v2)
+
+The source itself contains blue pixels inside the open jaws. v2 protects short
+vertical gaps between the upper and lower jaw near the snout, fills that cavity
+with opaque shaded mouth colors, and leaves the outside blue screen transparent.
+The v2 atlas is 4,140,536 bytes. Frame 79 at (830,242) changed from alpha 0 to 255;
+the browser regression checks this point as well as all frames and background.
+Audio, contact phase and suction anchor are unchanged.
