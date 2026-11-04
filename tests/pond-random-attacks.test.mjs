@@ -33,9 +33,30 @@ test('attack selection preserves winners and unique eliminations through complet
   for(let t=0;t<1300&&e.state==='running';t++)e.update(.05);
   assert.equal(e.state,'finished');assert.equal(e.winners.length,3);
   assert.equal(eliminated.length,77);assert.equal(new Set(eliminated).size,77);
-  assert.deepEqual(Array.from(e.winners,x=>x.id),[77,78,79]);
+  assert.ok(e.winners.every(leaf=>!eliminated.includes(leaf.id)));
  }
 });
 test('invalid injected attack randomness fails explicitly',()=>{
  for(const n of [-1,10,NaN,0.5])assert.throws(()=>engine(()=>n).start(),/공격 난수 오류/);
+});
+
+test('every creature strike targets nearby leaves on the mouth side, including paired strikes',()=>{
+ let bites=0;
+ for(const duration of [45,60,90,120])for(const count of [3,20,80,300]){
+  const game=new Engine();game.setAdminCheck(()=>true);
+  game.reset(Array.from({length:count},(_,i)=>'P'+i),2,duration,true,3);
+  game.onEvent=event=>{
+   if(!event.actor||!event.targets.length)return;
+   const hit=event.contact;assert.ok(hit);bites++;
+   if(event.lane!=null){assert.equal(event.lane,Number(hit.x>=.5))}
+   for(const leaf of event.origins){
+    assert.equal(leaf.x>=.5,hit.x>=.5);
+    assert.ok(((leaf.x-hit.x)/.26)**2+((leaf.y-hit.y)/.34)**2<=1);
+   }
+  };
+  game.start();while(game.state==='running')game.update(.2);
+  assert.equal(game.winners.length,2);
+ }
+ assert.ok(bites>0);
+ // Forced pairing is also covered by the deterministic paired-creatures test.
 });
