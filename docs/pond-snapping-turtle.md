@@ -43,3 +43,12 @@ with opaque shaded mouth colors, and leaves the outside blue screen transparent.
 The v2 atlas is 4,140,536 bytes. Frame 79 at (830,242) changed from alpha 0 to 255;
 the browser regression checks this point as well as all frames and background.
 Audio, contact phase and suction anchor are unchanged.
+
+## Mouth cutout correction (v3)
+
+The user clarified that the blue gap between the jaws should be transparent;
+only original lips, jaw and tongue tissue must remain opaque. v3 removes the
+synthetic dark cavity fill from v2. A local warm-color tissue mask preserves
+source-colored lip/tongue pixels even when fine edges separate from the main
+body mask. No new mouth colors are painted. The browser regression checks that
+frame 79's blue gap is transparent while four tongue/jaw samples remain opaque.

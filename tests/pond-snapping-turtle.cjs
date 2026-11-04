@@ -35,7 +35,10 @@ const {chromium} = require('playwright');
     if(!clips.draw(ctx,'snappingturtle',phase,0,0,960,540))throw Error('Missing frame '+frame);
     const data=ctx.getImageData(0,0,960,540).data;
     if(data[3]!==0)throw Error('Background not transparent');
-    if(frame===79&&data[(242*960+830)*4+3]!==255)throw Error('Mouth cavity must remain opaque');
+    if(frame===79){
+     if(data[(242*960+830)*4+3]!==0)throw Error('Blue gap inside jaws must be transparent');
+     for(const [x,y] of [[830,256],[825,255],[840,259],[840,215]])if(data[(y*960+x)*4+3]!==255)throw Error('Tongue or jaw tissue was removed');
+    }
     let opaque=0;for(let i=3;i<data.length;i+=4)if(data[i]>200){opaque++;if(data[i-1]>Math.max(data[i-2],data[i-3])+20)throw Error("Blue screen spill remains");}
     minOpaque=Math.min(minOpaque,opaque);
     maxDecoded=Math.max(maxDecoded,clips.decoded.size);drawn++;
