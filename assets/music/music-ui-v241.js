@@ -10,6 +10,8 @@
   let lyricsOn=localStorage.getItem('nwLyricsOn')==='1';
   let coverOn=localStorage.getItem('nwCoverOn')!=='0';
   let repeatMode=localStorage.getItem('nwRepeatMode')||'all'; // all | one | off
+  let shuffleOn=localStorage.getItem('nwShuffleOn')==='1';
+  let shuffleVisited=new Set();
   let userStarted=false, seeking=false;
 
   const fmt=t=>{ if(!Number.isFinite(t)||t<0)return '0:00'; const m=Math.floor(t/60),s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); };
@@ -183,6 +185,8 @@
     $('nwLyricsToggle').textContent=lyricsOn?'가사 ON':'가사 OFF'; $('nwLyricsToggle').classList.toggle('active',lyricsOn);
     $('nwCoverToggle').textContent=coverOn?'커버 ON':'커버 OFF'; $('nwCoverToggle').classList.toggle('active',coverOn);
     updateTrackPicker();
+    $('nwShuffle').setAttribute('aria-pressed',String(shuffleOn));$('nwShuffle').classList.toggle('active',shuffleOn);
+    $('nwRepeatAll').setAttribute('aria-pressed',String(repeatMode==='all'));$('nwRepeatAll').classList.toggle('active',repeatMode==='all');
     $('nwRepeat').textContent=repeatLabel(); $('nwTrackSelect').value=String(index);
     updateMediaSession();
   }
@@ -216,7 +220,16 @@
     catch(e){$('nwAutoplayNote').classList.add('show');}
   }
   function syncPlayIcon(){ const playing=!audio.paused&&!audio.ended; const g=$('nwPlay').querySelector('.nw-icon-glyph'); if(g) g.textContent=playing?'❚❚':'▶'; $('nwLiveDot').style.opacity=playing?'1':'.35'; updateMediaSession(true); }
-  function nextTrack(auto=true){ if(index<tracks.length-1)setTrack(index+1,auto); else if(repeatMode==='all')setTrack(0,auto); else {audio.pause();audio.currentTime=0;syncPlayIcon();} }
+  function nextTrack(auto=true){
+    if(shuffleOn){
+      if(current())shuffleVisited.add(current().id);
+      let choices=tracks.filter(t=>!shuffleVisited.has(t.id));
+      if(!choices.length&&repeatMode==='all'){shuffleVisited.clear();choices=tracks.filter(t=>tracks.length===1||t.id!==current()?.id);}
+      if(choices.length){const choice=choices[Math.floor(Math.random()*choices.length)];shuffleVisited.add(choice.id);setTrack(tracks.indexOf(choice),auto);return;}
+    }else if(index<tracks.length-1){setTrack(index+1,auto);return;}
+    else if(repeatMode==='all'&&tracks.length){setTrack(0,auto);return;}
+    audio.pause();audio.currentTime=0;syncPlayIcon();
+  }
   function prevTrack(){setTrack(index-1,true);}
 
   $('nwPlay').onclick=()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();audio.paused?tryPlay():audio.pause();};
@@ -236,6 +249,8 @@
   function openCoverModal(){const t=current();if(!t||!t.cover||!coverOn)return;coverModalImg.src=t.cover;coverModal.classList.add('open');coverModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
   function closeCoverModal(){coverModal.classList.remove('open');coverModal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
   $('nwCoverWrap').onclick=openCoverModal;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
+  $('nwShuffle').onclick=()=>{shuffleOn=!shuffleOn;shuffleVisited.clear();localStorage.setItem('nwShuffleOn',shuffleOn?'1':'0');paint();};
+  $('nwRepeatAll').onclick=()=>{repeatMode=repeatMode==='all'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
   $('nwRepeat').onclick=()=>{repeatMode=repeatMode==='all'?'one':repeatMode==='one'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
   function setRangeFill(el,value,min,max){
     if(!el)return;
