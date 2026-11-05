@@ -179,9 +179,8 @@
     $('nwLyricsTitle').textContent=(t.title||'현재 곡')+' · 가사'; renderLyrics(t);
     $('nwCover').src=t.cover||''; $('nwCover').style.display=t.cover?'block':'none';
     if(t.coverFile&&!t.cover&&window.NWResolveMusicCover){const coverFile=t.coverFile;window.NWResolveMusicCover(t).then(src=>{if(t.coverFile!==coverFile)return;t.cover=src;if(current()!==t)return;$('nwCover').src=src;$('nwCover').style.display='block';updateMediaSession();}).catch(()=>{});}
-    $('nwCoverWrap').classList.toggle('hidden',!coverOn); $('nwMusicMain').classList.toggle('no-cover',!coverOn);
+    $('nwMusicDock').classList.toggle('nw-cover-off',!coverOn); $('nwCoverWrap').classList.toggle('hidden',!coverOn); $('nwMusicMain').classList.toggle('no-cover',!coverOn);
     $('nwLyricsPanel').classList.toggle('open',lyricsOn||window.matchMedia('(max-width:650px)').matches);
-    $('nwBgmToggle').textContent=bgmOn?'BGM ON':'BGM OFF'; $('nwBgmToggle').classList.toggle('active',bgmOn);
     $('nwLyricsToggle').textContent=lyricsOn?'가사 ON':'가사 OFF'; $('nwLyricsToggle').classList.toggle('active',lyricsOn);
     $('nwCoverToggle').textContent=coverOn?'커버 ON':'커버 OFF'; $('nwCoverToggle').classList.toggle('active',coverOn);
     updateTrackPicker();
@@ -242,9 +241,8 @@
     if(e.key==='Escape'){closeTrackMenu();$('nwTrackPickerButton').focus();e.preventDefault();}
     if(e.key==='ArrowDown'||e.key==='ArrowUp'){const items=Array.from(menu.children),i=items.indexOf(document.activeElement);items[(i+(e.key==='ArrowDown'?1:items.length-1))%items.length]?.focus();e.preventDefault();}
   });
-  $('nwBgmToggle').onclick=()=>{bgmOn=!bgmOn;localStorage.setItem('nwBgmOn',bgmOn?'1':'0');paint();bgmOn?tryPlay():audio.pause();};
   $('nwLyricsToggle').onclick=()=>{lyricsOn=!lyricsOn;localStorage.setItem('nwLyricsOn',lyricsOn?'1':'0');paint();if(lyricsOn)setTimeout(syncLyrics,40);};
-  $('nwCoverToggle').onclick=()=>{coverOn=!coverOn;localStorage.setItem('nwCoverOn',coverOn?'1':'0');paint();};
+  $('nwCoverToggle').onclick=()=>{coverOn=!coverOn;localStorage.setItem('nwCoverOn',coverOn?'1':'0');paint();setTimeout(syncLyrics,40);};
   const coverModal=$('nwCoverModal'),coverModalImg=$('nwCoverModalImg');
   function closeCoverModal(){coverModal.classList.remove('open');coverModal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
   $('nwCoverWrap').onclick=null;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
