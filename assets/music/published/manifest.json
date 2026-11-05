@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "tracks": {
+    "music-431ed01c-7f33-4f5b-956f-5997dcd08843": {
+      "audioFile": "1USFm_hvrihuMYddxQhnKOlolYpR2GLEF",
+      "audio": "assets/music/published/music-431ed01c-7f33-4f5b-956f-5997dcd08843-9c560cb0d455f97c.mp3"
+    },
+    "music-b9a9fcd0-f64d-4a7a-b908-efc98505118a": {
+      "audioFile": "1UexDzFvvLommZ4q5A83Xo8iMf7CiBlIF",
+      "audio": "assets/music/published/music-b9a9fcd0-f64d-4a7a-b908-efc98505118a-1c99573771555b54.mp3"
+    },
+    "music-8eac1c40-0be9-49e9-a8e7-259a1c1e550b": {
+      "audioFile": "1-BOeFnrNfGfOwS81y0-p5tw-NdcergMt",
+      "audio": "assets/music/published/music-8eac1c40-0be9-49e9-a8e7-259a1c1e550b-79ed26da1d17ce79.mp3"
+    },
+    "music-78dd58fa-b485-408f-958e-266e521970b7": {
+      "audioFile": "1jPwjVhFJxsz1Ju-lqSzyv0FbJr8KRwkC",
+      "audio": "assets/music/published/music-78dd58fa-b485-408f-958e-266e521970b7-1645c0f7d5a3a2e9.mp3"
+    }
+  }
+}
