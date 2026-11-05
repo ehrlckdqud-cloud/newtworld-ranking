@@ -2373,6 +2373,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- v17: music files and track manifest are external for faster loading and easy expansion. -->
 
 <script id="nwBuiltInTracks" type="application/json">[]</script>
+<script src="assets/music/music-library.js?v=20261105-library1" defer></script>
 <script id="nwMusicLoader">
 (function(){
   var tracksReady=new Promise(function(resolve){
@@ -2382,7 +2383,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261105-library1';document.head.appendChild(script);
   });
 })();
 </script>
@@ -2414,7 +2415,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div class="nw-admin-actions"><button class="nw-admin-action" id="nwOpenEventBookAdmin" type="button"><b>🎁 월간 이벤트 사진 관리</b><br><small>월별 사진 업로드 · 순서 변경 · 삭제</small></button>
       <button class="nw-admin-action" id="nwExportGameDefaults" type="button">게임 기본설정 내보내기</button>
       <a class="nw-admin-action" href="content-admin.html">포인트 · 외부 고객 관리</a>
-      <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>음악 타임코드 수정 및 전체 적용</small></button>
+      <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>기본 곡 추가 · 음악 타임코드 수정 및 전체 적용</small></button>
 
       <button class="nw-admin-action" id="nwPreviewAutoTheme" type="button"><b>🌿 현재 테마 확인</b><br><small>사이트 계절 테마를 즉시 미리보기</small></button>
     </div>
@@ -3288,6 +3289,7 @@ window.NWConfigReady.then(function(){
 </script>
 <script src="assets/game-defaults-export.js?v=member-games-1"></script>
 </body></html>
+
 
 
 

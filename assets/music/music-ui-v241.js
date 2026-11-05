@@ -166,11 +166,17 @@
     $('nwRepeat').textContent=repeatLabel(); $('nwTrackSelect').value=String(index);
     updateMediaSession();
   }
+  let trackLoadSerial=0;
   function setTrack(i,autoplay){
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));
-    const t=current(); audio.src=t.audio; audio.load(); populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
+    const t=current(),serial=++trackLoadSerial; audio.pause(); audio.removeAttribute('src'); audio.load();
+    if(t.audioFile){
+      $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show');
+      window.NWResolveMusicAudio(t).then(src=>{if(serial!==trackLoadSerial)return;audio.src=src;audio.load();$('nwAutoplayNote').classList.remove('show');if(autoplay&&bgmOn)tryPlay();}).catch(()=>{if(serial!==trackLoadSerial)return;$('nwAutoplayNote').textContent='음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');});
+    }else{audio.src=t.audio;audio.load();}
+    populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
     updateMediaSession();
-    if(autoplay&&bgmOn) tryPlay();
+    if(autoplay&&bgmOn&&!t.audioFile) tryPlay();
   }
   async function tryPlay(){
     if(!bgmOn||!current())return;
@@ -349,6 +355,7 @@
   function status(msg,bad=false){$('nwSyncStatus').textContent=msg;$('nwSyncStatus').style.color=bad?'#ff8e8e':'#67d6a2';}
   function saveLocal(){ corrections[track().id]=JSON.parse(JSON.stringify(lines())); localStorage.setItem(storeKey,JSON.stringify(corrections)); status('편집내용 임시 저장 · 전체 적용은 [전체 적용 저장] 버튼을 누르세요.'); } function saveRemote(){ saveLocal(); const token=sessionStorage.getItem('nwAdminToken')||''; if(!token){status('관리자 인증이 필요합니다.',true);return;} const times=lines().map(x=>Number(x.time||0).toFixed(2)).join(','); if(!window.NWJsonp){status('서버 연결 기능을 찾을 수 없습니다.',true);return;} status('전체 적용 저장 중…'); NWJsonp('syncSave',{token,trackId:track().id,times},d=>{if(d&&d.ok)status('✅ 전체 적용 저장 완료 · 새로고침한 회원에게 반영됩니다.');else status(d?.error||'저장 실패',true);}); }
   function populateTracks(){const sel=$('nwSyncTrack');sel.innerHTML='';api.tracks.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+t.title;sel.appendChild(o)});sel.value=String(trackIndex);}
+  window.addEventListener('nw-music-library-updated',populateTracks);
   function render(){
     const arr=lines(); lineIndex=Math.max(0,Math.min(lineIndex,Math.max(0,arr.length-1)));
     const cur=arr[lineIndex]; $('nwSyncLine').textContent=cur?cur.text:'가사 없음'; $('nwSyncTime').textContent=cur?fmt2(cur.time):'00:00.00';
@@ -577,3 +584,4 @@
 
 
 window.dispatchEvent(new Event("nw-music-ready"));
+
