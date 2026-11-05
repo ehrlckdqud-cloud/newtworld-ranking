@@ -1,0 +1,7 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const source=fs.readFileSync('assets/music/music-library.js','utf8');
+const segment=source.slice(source.indexOf(' let publishedAudio='),source.indexOf('\n function post('));
+const id='music-12345678-1234-1234-1234-123456789abc',url='assets/music/published/'+id+'-0123456789abcdef.mp3';
+let requests=0,manifest={tracks:{[id]:{audioFile:'file1',audio:url}}};
+const ctx={window:{},cache:new Map(),fetch:async()=>{requests++;return {ok:true,json:async()=>manifest}}};vm.createContext(ctx);vm.runInContext(segment,ctx);
+(async()=>{assert.equal(await ctx.window.NWResolveMusicAudio({audio:'direct.mp3'}),'direct.mp3');assert.equal(requests,0);const t={id,audioFile:'file1'};assert.equal(await ctx.window.NWResolveMusicAudio(t),url);assert.equal(await ctx.window.NWResolveMusicAudio(t),url);assert.equal(requests,1);await assert.rejects(ctx.window.NWResolveMusicAudio({...t,audioFile:'file2'}),/게시 준비/);manifest={tracks:{[id]:{audioFile:'file2',audio:url}}};assert.equal(await ctx.window.NWResolveMusicAudio({...t,audioFile:'file2'}),url);assert.equal(requests,2);ctx.cache.set(id,Promise.resolve('blob:local-upload'));assert.equal(await ctx.window.NWResolveMusicAudio(t),'blob:local-upload');console.log('Direct MP3 resolution, one manifest request, pending publication retry, source version match, and uploader preview passed.');})();

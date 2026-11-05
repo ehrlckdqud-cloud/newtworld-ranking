@@ -195,9 +195,9 @@
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));localStorage.setItem('nwMusicTrackId',tracks[index].id);
     const t=current(),serial=++trackLoadSerial; audio.pause(); audio.removeAttribute('src'); audio.load();
     if(t.audioFile){
-      $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show');
-      window.NWResolveMusicAudio(t).then(src=>{if(serial!==trackLoadSerial)return;audio.src=src;audio.load();$('nwAutoplayNote').classList.remove('show');if(autoplay&&bgmOn)tryPlay();}).catch(()=>{if(serial!==trackLoadSerial)return;$('nwAutoplayNote').textContent='음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');});
-    }else{audio.src=t.audio;audio.load();}
+      $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show','nw-audio-status');
+      window.NWResolveMusicAudio(t).then(src=>{if(serial!==trackLoadSerial)return;audio.src=src;audio.load();$('nwAutoplayNote').classList.remove('show');if(autoplay&&bgmOn)tryPlay();}).catch(e=>{if(serial!==trackLoadSerial)return;$('nwAutoplayNote').textContent=e.message||'음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');});
+    }else{$('nwAutoplayNote').classList.remove('show','nw-audio-status');audio.src=t.audio;audio.load();}
     populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
     updateMediaSession();
     if(autoplay&&bgmOn&&!t.audioFile) tryPlay();

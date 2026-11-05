@@ -20,6 +20,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /site-config.js
+            /tools/publish-music.mjs
+            /assets/music/published/
       - uses: actions/setup-node@v4
         with:
           node-version: '22'

@@ -28,13 +28,21 @@
   if(!covers.has(key))covers.set(key,read('musicCover',{id:track.id}).then(d=>URL.createObjectURL(new Blob([Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0))],{type:d.mime}))).catch(e=>{covers.delete(key);throw e;}));
   return covers.get(key);
  };
- window.NWResolveMusicAudio=track=>{
-  if(!track.audioFile)return Promise.resolve(track.audio);
-  if(!cache.has(track.id))cache.set(track.id,read('musicAudio',{id:track.id}).then(d=>{
-   const bytes=Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0));return URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));
-  }).catch(e=>{cache.delete(track.id);throw e;}));
-  return cache.get(track.id);
+ let publishedAudio=null;
+ function publishedMusic(){
+  if(!publishedAudio)publishedAudio=fetch('assets/music/published/manifest.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('음원 게시 목록을 불러오지 못했습니다. 잠시 후 곡을 다시 선택해주세요.');return r.json();}).catch(e=>{publishedAudio=null;throw e;});
+  return publishedAudio;
+ }
+ window.NWResolveMusicAudio=async track=>{
+  if(!track.audioFile)return track.audio;
+  // The uploader can preview their local file while the automatic publication runs.
+  if(cache.has(track.id))return cache.get(track.id);
+  const manifest=await publishedMusic(),entry=manifest.tracks?.[track.id];
+  if(!entry||entry.audioFile!==track.audioFile){publishedAudio=null;throw Error('MP3 자동 게시 준비 중입니다. 완료 후 곡을 다시 선택해주세요.');}
+  if(!/^assets\/music\/published\/music-[a-zA-Z0-9-]+-[a-f0-9]{16}\.mp3$/.test(entry.audio))throw Error('올바르지 않은 음원 게시 주소입니다.');
+  return entry.audio;
  };
+
  function post(payload){return new Promise((resolve,reject)=>{
   const nonce=crypto.randomUUID(),frame=document.createElement('iframe'),form=document.createElement('form'),input=document.createElement('input');
   frame.name='nwml_'+nonce;frame.hidden=true;form.hidden=true;form.method='POST';form.action=window.NW_CONFIG.appScriptUrl;form.target=frame.name;
@@ -156,7 +164,7 @@
     addTrack(d.track);const i=api.tracks.findIndex(t=>t.id===d.track.id);api.setTrack(i,false);
     $('nwSyncTrack').value=String(i);$('nwSyncTrack').dispatchEvent(new Event('change'));
     box.querySelectorAll('input,textarea').forEach(el=>el.value='');showCover('');requestId='music-'+crypto.randomUUID();
-    status.textContent='등록 완료! 새로 방문하거나 새로고침한 회원의 기본 목록에 표시됩니다. 가사 싱크를 맞춘 후 전체 적용 저장을 눌러주세요.';
+    status.textContent='등록 완료! 5분 주기의 자동 MP3 게시와 사이트 배포가 끝나면 모든 회원이 직접 재생할 수 있습니다. 작업 대기에 따라 더 걸릴 수 있습니다. 현재 창에서는 업로드한 파일로 바로 가사 싱크를 맞출 수 있습니다.';
    }catch(e){status.textContent=e.message;}finally{setBusy(false);}
   };
   async function load(){
