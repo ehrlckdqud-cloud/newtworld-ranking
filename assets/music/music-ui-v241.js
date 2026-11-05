@@ -242,7 +242,7 @@
   $('nwTrackPicker').addEventListener('keydown',e=>{
     const menu=$('nwTrackMenu');if(menu.hidden)return;
     if(e.key==='Escape'){closeTrackMenu();$('nwTrackPickerButton').focus();e.preventDefault();}
-    if(e.key==='ArrowDown'||e.key==='ArrowUp'){const items=Array.from(menu.children),i=items.indexOf(document.activeElement);items[(i+(e.key==='ArrowDown'?1:items.length-1))%items.length]?.focus();e.preventDefault();}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){const items=Array.from(menu.querySelectorAll("button")),i=items.indexOf(document.activeElement);items[(i+(e.key==='ArrowDown'?1:items.length-1))%items.length]?.focus();e.preventDefault();}
   });
   $('nwLyricsToggle').onclick=()=>{lyricsOn=!lyricsOn;localStorage.setItem('nwLyricsOn',lyricsOn?'1':'0');paint();if(lyricsOn)setTimeout(syncLyrics,40);};
   $('nwCoverToggle').onclick=()=>{coverOn=!coverOn;localStorage.setItem('nwCoverOn',coverOn?'1':'0');paint();setTimeout(syncLyrics,40);};
