@@ -3,6 +3,8 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const audio=$('nwAudio');
+  const rememberedPersonalTrack=localStorage.getItem('nwMusicTrackId');
+  let personalReady=Promise.resolve();
   let tracks=(Array.isArray(window.NW_TRACKS)&&window.NW_TRACKS.length?window.NW_TRACKS:JSON.parse($('nwBuiltInTracks').textContent||'[]'));
   let index=Number(localStorage.getItem('nwMusicIndex')||0);
   if(!Number.isFinite(index)||index<0||index>=tracks.length) index=0;
@@ -162,10 +164,11 @@
     const menu=$('nwTrackMenu');menu.innerHTML='';
     tracks.forEach((track,i)=>{
       const option=document.createElement('button');option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(i===index));option.textContent=(i+1)+'. '+track.title;
-      option.onclick=()=>{setTrack(i,true);closeTrackMenu();$('nwTrackPickerButton').focus();};menu.appendChild(option);
+      option.onclick=()=>{setTrack(i,true);closeTrackMenu();$('nwTrackPickerButton').focus();};const row=document.createElement('div');row.className='nw-track-menu-row';row.appendChild(option);
+      if(track.builtin===false&&track.id.startsWith('local-')){const remove=document.createElement('button');remove.type='button';remove.className='nw-track-delete';remove.textContent='삭제';remove.setAttribute('aria-label',track.title+' 삭제');remove.onclick=async()=>{remove.disabled=true;try{await window.NWLocalMusic.remove(track.id);replaceTracks(tracks.filter(t=>t.id!==track.id));shuffleVisited.delete(track.id);window.NWLocalMusic.release(track);openTrackMenu();}catch(error){alert('삭제하지 못했습니다. '+error.message);remove.disabled=false;}};row.appendChild(remove);}menu.appendChild(row);
     });
     menu.hidden=false;$('nwTrackPickerButton').setAttribute('aria-expanded','true');
-    const selected=menu.children[index];if(selected){menu.scrollTop=Math.max(0,selected.offsetTop-menu.clientHeight/2);selected.focus({preventScroll:true});}
+    const selected=menu.children[index];if(selected){menu.scrollTop=Math.max(0,selected.offsetTop-menu.clientHeight/2);selected.querySelector('button').focus({preventScroll:true});}
   }
   function populateSelect(){
     const sel=$('nwTrackSelect'); sel.innerHTML='';
@@ -355,21 +358,33 @@
   function synchsafe(a,b,c,d){return (a<<21)|(b<<14)|(c<<7)|d;}
   function textDecode(bytes,enc){try{ if(enc===1||enc===2){return new TextDecoder(enc===2?'utf-16be':'utf-16').decode(bytes).replace(/^\uFEFF/,'').replace(/\0+$/,'');} return new TextDecoder('utf-8').decode(bytes).replace(/\0+$/,''); }catch(_){return '';}}
   function parseID3(buf,file){
-    const u=new Uint8Array(buf), dv=new DataView(buf); let title=file.name.replace(/\.mp3$/i,''),artist='',lyrics='',cover='';
-    if(u.length<10||String.fromCharCode(...u.slice(0,3))!=='ID3')return {title,artist,lyrics,cover};
+    const u=new Uint8Array(buf), dv=new DataView(buf); let title=file.name.replace(/\.mp3$/i,''),artist='',lyrics='',cover='',coverBlob=null;
+    if(u.length<10||String.fromCharCode(...u.slice(0,3))!=='ID3')return {title,artist,lyrics,cover,coverBlob};
     const ver=u[3], size=synchsafe(u[6],u[7],u[8],u[9]); let p=10,end=Math.min(u.length,10+size);
     while(p+10<=end){const id=String.fromCharCode(...u.slice(p,p+4));if(!/^[A-Z0-9]{4}$/.test(id))break;let sz=ver===4?synchsafe(u[p+4],u[p+5],u[p+6],u[p+7]):dv.getUint32(p+4);if(!sz||p+10+sz>end)break;const data=u.slice(p+10,p+10+sz);
       if(id==='TIT2'||id==='TPE1'){const val=textDecode(data.slice(1),data[0]);if(id==='TIT2'&&val)title=val;if(id==='TPE1'&&val)artist=val;}
       else if(id==='USLT'&&data.length>4){const enc=data[0];let q=4;const term=(enc===1||enc===2)?2:1;while(q+term<=data.length){if(term===1&&data[q]===0){q++;break;}if(term===2&&data[q]===0&&data[q+1]===0){q+=2;break;}q+=term;}lyrics=textDecode(data.slice(q),enc);}
-      else if(id==='APIC'&&data.length>4){let q=1;while(q<data.length&&data[q]!==0)q++;const mime=textDecode(data.slice(1,q),0)||'image/jpeg';q+=2;while(q<data.length&&data[q]!==0)q++;q++;if(q<data.length){const blob=new Blob([data.slice(q)],{type:mime});cover=URL.createObjectURL(blob);}}
+      else if(id==='APIC'&&data.length>4){let q=1;while(q<data.length&&data[q]!==0)q++;const mime=textDecode(data.slice(1,q),0)||'image/jpeg';q+=2;while(q<data.length&&data[q]!==0)q++;q++;if(q<data.length){const blob=new Blob([data.slice(q)],{type:mime});coverBlob=blob;}}
       p+=10+sz;
-    } return {title,artist,lyrics,cover};
+    } return {title,artist,lyrics,cover,coverBlob};
   }
   $('nwAddTrack').onclick=()=>$('nwAddInput').click();
   $('nwAddInput').onchange=async e=>{
-    const fs=[...e.target.files];
-    for(const file of fs){try{const buf=await file.arrayBuffer();const meta=parseID3(buf,file);tracks.push({id:'local-'+Date.now()+'-'+Math.random(),title:meta.title,artist:meta.artist||'로컬 MP3',lyrics:meta.lyrics||'',cover:meta.cover||'',audio:URL.createObjectURL(file),duration:0,builtin:false});}catch(err){console.error(err);}}
-    populateSelect(); if(fs.length){setTrack(tracks.length-fs.length,true);} e.target.value='';
+    const files=[...e.target.files];e.target.value='';if(!files.length)return;
+    const button=$('nwAddTrack');button.disabled=true;button.textContent='기기에 저장 중…';
+    await personalReady;window.NWLocalMusic.keep();let firstId=null;const failures=[];
+    for(const file of files){try{
+      if(!/\.mp3$/i.test(file.name)&&file.type!=='audio/mpeg')throw new Error('MP3 파일을 선택해주세요.');
+      const head=new Uint8Array(await file.slice(0,10).arrayBuffer());
+      const tagSize=head.length===10&&String.fromCharCode(...head.slice(0,3))==='ID3'?10+synchsafe(head[6],head[7],head[8],head[9]):10;
+      const meta=parseID3(await file.slice(0,tagSize).arrayBuffer(),file);
+      const record={id:'local-'+crypto.randomUUID(),title:meta.title,artist:meta.artist||'내 MP3',lyrics:meta.lyrics||'',coverBlob:meta.coverBlob,file,duration:0,builtin:false,addedAt:Date.now()};
+      await window.NWLocalMusic.save(record);tracks.push(window.NWLocalMusic.hydrate(record));firstId=firstId||record.id;
+    }catch(error){failures.push(file.name+': '+(error.name==='QuotaExceededError'?'기기 저장 공간이 부족합니다.':error.message));}}
+    populateSelect();if(firstId)setTrack(tracks.findIndex(t=>t.id===firstId),true);
+    button.disabled=false;button.textContent='+ 내 MP3 불러오기';
+    if(failures.length)alert('다음 파일은 저장되지 않았습니다.\n'+failures.join('\n'));
+    window.dispatchEvent(new Event('nw-music-library-updated'));
   };
 
   const mobilePlayer=window.matchMedia('(max-width:650px)');
@@ -403,6 +418,13 @@
   ensurePlayerHistory();
 
   populateSelect(); setTrack(index,false); paintCollapsed(); syncPlayIcon();
+  personalReady=window.NWLocalMusic.list().then(records=>{
+    const restore=records.sort((a,b)=>a.addedAt-b.addedAt).filter(r=>!tracks.some(t=>t.id===r.id)).map(window.NWLocalMusic.hydrate);
+    tracks.push(...restore);populateSelect();
+    const savedIndex=tracks.findIndex(t=>t.id===rememberedPersonalTrack);
+    if(savedIndex>=0&&rememberedPersonalTrack?.startsWith('local-')&&!userStarted)setTrack(savedIndex,false);
+    window.dispatchEvent(new Event('nw-music-library-updated'));
+  }).catch(error=>{console.warn('Personal music storage unavailable',error);});
   // Attempt autoplay. If blocked, the first real user gesture starts BGM once.
   if(bgmOn) tryPlay();
   initMediaSession();
