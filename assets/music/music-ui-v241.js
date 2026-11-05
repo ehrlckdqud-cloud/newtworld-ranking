@@ -335,8 +335,9 @@
     populateSelect(); if(fs.length){setTrack(tracks.length-fs.length,true);} e.target.value='';
   };
 
-  let collapsed=localStorage.getItem('nwMusicCollapsed')==='1';
-  function paintCollapsed(){$('nwMusicDock').classList.toggle('nw-music-collapsed',collapsed);$('nwCollapseBtn').textContent=collapsed?'🎵 플레이어 열기':'플레이어 접기';}
+  const savedCollapsed=localStorage.getItem('nwMusicCollapsed');
+  let collapsed=savedCollapsed===null ? window.matchMedia('(max-width:650px)').matches : savedCollapsed==='1';
+  function paintCollapsed(){$('nwMusicDock').classList.toggle('nw-music-collapsed',collapsed);$('nwCollapseBtn').textContent=collapsed?'🎵 플레이어 열기':'플레이어 접기';$('nwCollapseBtn').setAttribute('aria-expanded',String(!collapsed));}
   $('nwCollapseBtn').onclick=()=>{collapsed=!collapsed;localStorage.setItem('nwMusicCollapsed',collapsed?'1':'0');paintCollapsed();};
 
   populateSelect(); setTrack(index,false); paintCollapsed(); syncPlayIcon();
