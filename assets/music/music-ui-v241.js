@@ -169,7 +169,7 @@
   }
   let trackLoadSerial=0;
   function setTrack(i,autoplay){
-    if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));
+    if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));localStorage.setItem('nwMusicTrackId',tracks[index].id);
     const t=current(),serial=++trackLoadSerial; audio.pause(); audio.removeAttribute('src'); audio.load();
     if(t.audioFile){
       $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show');
@@ -178,6 +178,18 @@
     populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
     updateMediaSession();
     if(autoplay&&bgmOn&&!t.audioFile) tryPlay();
+  }
+  function replaceTracks(next){
+    const previous=current(),playing=!audio.paused;
+    const remembered=localStorage.getItem('nwMusicTrackId');
+    tracks.splice(0,tracks.length,...next);
+    const found=tracks.findIndex(t=>t.id===(previous?.id||remembered));
+    if(found>=0){index=found;populateSelect();paint();localStorage.setItem('nwMusicIndex',String(index));}
+    else if(tracks.length){setTrack(0,playing);}
+    else{++trackLoadSerial;index=0;audio.pause();audio.removeAttribute('src');audio.load();populateSelect();
+      $('nwTrackTitle').textContent='등록된 곡이 없습니다';$('nwTrackArtist').textContent='';$('nwCover').style.display='none';renderLyrics(null);
+      $('nwNow').textContent='0:00';$('nwDur').textContent='0:00';$('nwSeek').value=0;updateMediaSession();}
+    window.dispatchEvent(new Event('nw-music-library-updated'));
   }
   async function tryPlay(){
     if(!bgmOn||!current())return;
@@ -333,7 +345,7 @@
   initMediaSession();
   const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  window.NWMusicAdminAPI={audio,tracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
+  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
 })();
 
 
@@ -354,9 +366,9 @@
   function track(){return api.tracks[trackIndex];}
   function lines(){return Array.isArray(track()?.syncedLyrics)?track().syncedLyrics:[];}
   function status(msg,bad=false){$('nwSyncStatus').textContent=msg;$('nwSyncStatus').style.color=bad?'#ff8e8e':'#67d6a2';}
-  function saveLocal(){ corrections[track().id]=JSON.parse(JSON.stringify(lines())); localStorage.setItem(storeKey,JSON.stringify(corrections)); status('편집내용 임시 저장 · 전체 적용은 [전체 적용 저장] 버튼을 누르세요.'); } async function saveRemote(){ saveLocal(); let token=sessionStorage.getItem('nwAdminToken')||''; try{if(window.NWEnsureMusicAdmin)token=await window.NWEnsureMusicAdmin();}catch(e){status(e.message,true);return;} if(!token){status('관리자 인증이 필요합니다.',true);return;} const times=lines().map(x=>Number(x.time||0).toFixed(2)).join(','); if(!window.NWJsonp){status('서버 연결 기능을 찾을 수 없습니다.',true);return;} status('전체 적용 저장 중…'); NWJsonp('syncSave',{token,trackId:track().id,times},d=>{if(d&&d.ok)status('✅ 전체 적용 저장 완료 · 새로고침한 회원에게 반영됩니다.');else status(d?.error||'저장 실패',true);}); }
+  function saveLocal(){ if(!track())return; corrections[track().id]=JSON.parse(JSON.stringify(lines())); localStorage.setItem(storeKey,JSON.stringify(corrections)); status('편집내용 임시 저장 · 전체 적용은 [전체 적용 저장] 버튼을 누르세요.'); } async function saveRemote(){ if(!track())return; saveLocal(); let token=sessionStorage.getItem('nwAdminToken')||''; try{if(window.NWEnsureMusicAdmin)token=await window.NWEnsureMusicAdmin();}catch(e){status(e.message,true);return;} if(!token){status('관리자 인증이 필요합니다.',true);return;} const times=lines().map(x=>Number(x.time||0).toFixed(2)).join(','); if(!window.NWJsonp){status('서버 연결 기능을 찾을 수 없습니다.',true);return;} status('전체 적용 저장 중…'); NWJsonp('syncSave',{token,trackId:track().id,times},d=>{if(d&&d.ok)status('✅ 전체 적용 저장 완료 · 새로고침한 회원에게 반영됩니다.');else status(d?.error||'저장 실패',true);}); }
   function populateTracks(){const sel=$('nwSyncTrack');sel.innerHTML='';api.tracks.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+t.title;sel.appendChild(o)});sel.value=String(trackIndex);}
-  window.addEventListener('nw-music-library-updated',populateTracks);
+  window.addEventListener('nw-music-library-updated',()=>{trackIndex=api.getIndex();lineIndex=0;populateTracks();render();});
   function render(){
     const arr=lines(); lineIndex=Math.max(0,Math.min(lineIndex,Math.max(0,arr.length-1)));
     const cur=arr[lineIndex]; $('nwSyncLine').textContent=cur?cur.text:'가사 없음'; $('nwSyncTime').textContent=cur?fmt2(cur.time):'00:00.00';
@@ -375,8 +387,8 @@
     const clean=api.tracks.filter(t=>t.builtin!==false).map(t=>{const c={...t};delete c._file;if(c.coverFile&&/^(blob:|data:)/.test(c.cover||''))c.cover='';return c;});
     download('tracks.js','window.NW_TRACKS = '+JSON.stringify(clean,null,2)+';\n','application/javascript;charset=utf-8');status('tracks.js 내보내기 완료 · GitHub의 assets/music/tracks.js와 교체하세요.');
   }
-  function exportLrc(){const t=track();const txt=lines().map(x=>'['+fmt2(x.time)+']'+x.text).join('\r\n');download((t.title||'track').replace(/[\\/:*?"<>|]/g,'_')+'.lrc',txt);}
-  function resetTrack(){const t=track(),o=original.find(x=>x.id===t.id);if(!o)return;t.syncedLyrics=JSON.parse(JSON.stringify(o.syncedLyrics||[]));delete corrections[t.id];localStorage.setItem(storeKey,JSON.stringify(corrections));lineIndex=0;api.renderLyrics(t);render();status('현재 곡을 최초 로드 상태로 복원했습니다.');}
+  function exportLrc(){const t=track();if(!t)return;const txt=lines().map(x=>'['+fmt2(x.time)+']'+x.text).join('\r\n');download((t.title||'track').replace(/[\\/:*?"<>|]/g,'_')+'.lrc',txt);}
+  function resetTrack(){const t=track();if(!t)return;const o=original.find(x=>x.id===t.id);if(!o)return;t.syncedLyrics=JSON.parse(JSON.stringify(o.syncedLyrics||[]));delete corrections[t.id];localStorage.setItem(storeKey,JSON.stringify(corrections));lineIndex=0;api.renderLyrics(t);render();status('현재 곡을 최초 로드 상태로 복원했습니다.');}
   function open(){trackIndex=api.getIndex();populateTracks();lineIndex=0;modal.classList.add('open');modal.setAttribute('aria-hidden','false');render();document.body.style.overflow='hidden';}
   function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';api.renderLyrics(api.current());api.syncLyrics();}
   btn.onclick=open;$('nwSyncClose').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close();});

@@ -96,7 +96,49 @@
    try{showCover(await prepareCover(file));status.textContent='선택한 이미지로 커버를 교체했습니다.';}catch(e){$('nwMusicCover').value='';status.textContent=e.message;}finally{setBusy(false);}
   };
   $('nwMusicCoverClear').onclick=()=>{showCover('');$('nwMusicCover').value='';requestId='music-'+crypto.randomUUID();};
-  function addTrack(t){const old=api.tracks.find(x=>x.id===t.id);if(!old)api.tracks.push(t);api.populateSelect();window.dispatchEvent(new Event('nw-music-library-updated'));}
+  const catalog=new Map(api.tracks.filter(t=>t.builtin!==false).map(t=>[t.id,t]));
+  let libraryState={revision:0,order:[],deleted:[]},draft=[],dirty=false,managing=false,loaded=false;
+  const manager=document.createElement('section');manager.id='nwMusicManager';manager.style.cssText=box.style.cssText;
+  manager.innerHTML='<h3 style="margin:0;color:#8ce2bd">기본 곡 순서 · 삭제</h3><p style="font-size:12px">▲ ▼로 순서를 바꾸고 재생순서 저장을 누르면 모든 회원에게 적용됩니다. 삭제는 확인 후 바로 적용됩니다.</p><div id="nwMusicOrderList"></div><button type="button" id="nwMusicOrderSave">재생순서 저장</button> <button type="button" id="nwMusicOrderReload">목록 다시 불러오기</button><p id="nwMusicOrderStatus" role="status" aria-live="polite"></p>';
+  box.before(manager);
+  const orderStatus=$('nwMusicOrderStatus');
+  function ordered(state){const gone=new Set(state.deleted),ids=[...new Set([...state.order,...catalog.keys()])];return ids.filter(id=>catalog.has(id)&&!gone.has(id)).map(id=>catalog.get(id));}
+  function applyLibrary(d){
+   d.tracks.forEach(t=>{const old=catalog.get(t.id);catalog.set(t.id,old?Object.assign(old,t):t);});
+   libraryState=d.state||{revision:0,order:[],deleted:[]};loaded=true;
+   const list=ordered(libraryState);api.replaceTracks([...list,...api.tracks.filter(t=>t.builtin===false)]);
+   if(!dirty){draft=list.map(t=>t.id);renderOrder();}
+  }
+  function renderOrder(){
+   const list=$('nwMusicOrderList');list.replaceChildren();
+   draft.forEach((id,i)=>{
+    const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid #294656';
+    const title=document.createElement('span');title.style.cssText='flex:1;min-width:0;overflow-wrap:anywhere';title.textContent=(i+1)+'. '+catalog.get(id).title;row.append(title);
+    for(const [label,delta] of [['▲',-1],['▼',1]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',catalog.get(id).title+(delta<0?' 위로':' 아래로'));b.disabled=managing||i+delta<0||i+delta>=draft.length;b.onclick=()=>{[draft[i],draft[i+delta]]=[draft[i+delta],draft[i]];dirty=true;orderStatus.textContent='변경한 순서를 저장해주세요.';renderOrder();};row.append(b);}
+    const del=document.createElement('button');del.type='button';del.textContent='삭제';del.style.color='#ffaaaa';del.disabled=managing;del.onclick=()=>removeTrack(id);row.append(del);list.append(row);
+   });
+   if(!draft.length)list.textContent=loaded?'등록된 기본 곡이 없습니다.':'목록을 불러오는 중…';
+   $('nwMusicOrderSave').disabled=!loaded||managing||!dirty;$('nwMusicOrderReload').disabled=managing;
+  }
+  async function manage(order,deleted){
+   const payload={action:'musicLibraryAdd',operation:'manage',order,deleted,revision:libraryState.revision,token:await window.NWEnsureMusicAdmin()};
+   try{return await post(payload);}catch(e){if(e.code!=='ADMIN_EXPIRED')throw e;payload.token=await window.NWEnsureMusicAdmin(true);return post(payload);}
+  }
+  async function saveOrder(){
+   if(managing||!loaded)return;managing=true;renderOrder();orderStatus.textContent='재생순서를 저장하는 중…';
+   try{const d=await manage(draft.slice(),libraryState.deleted);dirty=false;applyLibrary(d);orderStatus.textContent='저장 완료. 모든 회원에게 적용됩니다.';}catch(e){orderStatus.textContent=e.message;}finally{managing=false;renderOrder();}
+  }
+  async function removeTrack(id){
+   if(managing||!loaded)return;
+   if(!window.confirm('「'+catalog.get(id).title+'」을 모든 회원의 기본 곡 목록에서 삭제할까요? 저장하지 않은 순서 변경은 취소됩니다.'))return;
+   managing=true;renderOrder();orderStatus.textContent='곡을 삭제하는 중…';
+   try{const d=await manage(ordered(libraryState).map(t=>t.id).filter(x=>x!==id),[...libraryState.deleted,id]);dirty=false;applyLibrary(d);orderStatus.textContent='삭제 완료. 모든 회원의 기본 목록에서 제외했습니다.';}catch(e){orderStatus.textContent=e.message;}finally{managing=false;renderOrder();}
+  }
+  $('nwMusicOrderSave').onclick=saveOrder;
+  $('nwMusicOrderReload').onclick=()=>{if(dirty&&!window.confirm('저장하지 않은 순서 변경을 취소하고 다시 불러올까요?'))return;dirty=false;load();};
+  renderOrder();
+  function addTrack(t){catalog.set(t.id,t);api.replaceTracks([...ordered(libraryState),...api.tracks.filter(t=>t.builtin===false)]);if(!dirty){draft=ordered(libraryState).map(x=>x.id);renderOrder();}}
+
   $('nwMusicAddSave').onclick=async()=>{
    if(busy)return;
    const file=$('nwMusicFile').files[0],title=$('nwMusicTitle').value.trim();
@@ -116,13 +158,14 @@
    }catch(e){status.textContent=e.message;}finally{setBusy(false);}
   };
   async function load(){
-   if(busy)return;
-   try{const d=await read('musicLibraryGet');d.tracks.forEach(addTrack);
+   if(busy||managing)return;
+   try{const d=await read('musicLibraryGet');applyLibrary(d);
     const sync=await read('syncGet');api.tracks.filter(t=>t.shared).forEach(t=>{const times=sync.sync?.[t.id];if(Array.isArray(times))t.syncedLyrics.forEach((line,i)=>{if(Number.isFinite(Number(times[i])))line.time=Number(times[i]);});});
     api.renderLyrics(api.current());api.syncLyrics();
     if(!busy&&!$('nwMusicFile').files.length)status.textContent='추가 기본 곡 '+d.tracks.length+'곡을 불러왔습니다.';
-   }catch(e){if(!busy&&!$('nwMusicFile').files.length)status.textContent='공통 곡 목록을 불러오지 못했습니다. '+e.message;}
+   }catch(e){if(!busy&&!$('nwMusicFile').files.length)status.textContent='공통 곡 목록을 불러오지 못했습니다. '+e.message;orderStatus.textContent=e.message;}
   }
+  setInterval(()=>{if(!document.hidden&&!dirty&&!managing&&!busy&&!$('nwSyncAdmin')?.classList.contains('open'))load();},60000);
   const retry=document.createElement('button');retry.type='button';retry.textContent='기본 곡 목록 다시 불러오기';retry.onclick=load;box.append(retry);await load();
  }
  function ready(){Promise.resolve(window.NWConfigReady).then(init);}
