@@ -165,7 +165,6 @@
     if(!busy&&!$('nwMusicFile').files.length)status.textContent='추가 기본 곡 '+d.tracks.length+'곡을 불러왔습니다.';
    }catch(e){if(!busy&&!$('nwMusicFile').files.length)status.textContent='공통 곡 목록을 불러오지 못했습니다. '+e.message;orderStatus.textContent=e.message;}
   }
-  setInterval(()=>{if(!document.hidden&&!dirty&&!managing&&!busy&&!$('nwSyncAdmin')?.classList.contains('open'))load();},60000);
   const retry=document.createElement('button');retry.type='button';retry.textContent='기본 곡 목록 다시 불러오기';retry.onclick=load;box.append(retry);await load();
  }
  function ready(){Promise.resolve(window.NWConfigReady).then(init);}
