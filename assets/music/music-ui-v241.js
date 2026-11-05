@@ -246,9 +246,8 @@
   $('nwLyricsToggle').onclick=()=>{lyricsOn=!lyricsOn;localStorage.setItem('nwLyricsOn',lyricsOn?'1':'0');paint();if(lyricsOn)setTimeout(syncLyrics,40);};
   $('nwCoverToggle').onclick=()=>{coverOn=!coverOn;localStorage.setItem('nwCoverOn',coverOn?'1':'0');paint();};
   const coverModal=$('nwCoverModal'),coverModalImg=$('nwCoverModalImg');
-  function openCoverModal(){const t=current();if(!t||!t.cover||!coverOn)return;coverModalImg.src=t.cover;coverModal.classList.add('open');coverModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';}
   function closeCoverModal(){coverModal.classList.remove('open');coverModal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
-  $('nwCoverWrap').onclick=openCoverModal;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
+  $('nwCoverWrap').onclick=null;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
   $('nwShuffle').onclick=()=>{shuffleOn=!shuffleOn;shuffleVisited.clear();localStorage.setItem('nwShuffleOn',shuffleOn?'1':'0');paint();};
   $('nwRepeatAll').onclick=()=>{repeatMode=repeatMode==='all'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
   $('nwRepeat').onclick=()=>{repeatMode=repeatMode==='all'?'one':repeatMode==='one'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};

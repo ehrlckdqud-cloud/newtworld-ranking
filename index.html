@@ -438,8 +438,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 3px 12px rgba(0,0,0,.14)
 }
 .partner-left .partner-card{padding-top:27px}
-.nw-cover-wrap{cursor:zoom-in;transition:.18s transform,.18s border-color,.18s box-shadow}
-.nw-cover-wrap:hover{transform:scale(1.025);border-color:rgba(123,213,239,.52);box-shadow:0 0 0 2px rgba(85,200,255,.07)}
+.nw-cover-wrap{cursor:default}
 .nw-lyrics-text{white-space:normal}
 .nw-lyric-line{
   display:block;padding:3px 5px;margin:1px 0;border-radius:8px;
@@ -2416,7 +2415,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-direct1';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-cover-static1';document.head.appendChild(script);
   });
 })();
 </script>
