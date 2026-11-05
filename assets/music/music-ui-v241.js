@@ -148,10 +148,28 @@
     updateMediaSession();
   }
 
+  function closeTrackMenu(){
+    $('nwTrackMenu').hidden=true;$('nwTrackPickerButton').setAttribute('aria-expanded','false');
+  }
+  function updateTrackPicker(){
+    const button=$('nwTrackPickerButton');
+    if(button)button.textContent=(tracks[index]?.title||'곡 목록')+' ▾';
+    closeTrackMenu();
+  }
+  function openTrackMenu(){
+    const menu=$('nwTrackMenu');menu.innerHTML='';
+    tracks.forEach((track,i)=>{
+      const option=document.createElement('button');option.type='button';option.setAttribute('role','option');option.setAttribute('aria-selected',String(i===index));option.textContent=(i+1)+'. '+track.title;
+      option.onclick=()=>{setTrack(i,true);closeTrackMenu();$('nwTrackPickerButton').focus();};menu.appendChild(option);
+    });
+    menu.hidden=false;$('nwTrackPickerButton').setAttribute('aria-expanded','true');
+    const selected=menu.children[index];if(selected){menu.scrollTop=Math.max(0,selected.offsetTop-menu.clientHeight/2);selected.focus({preventScroll:true});}
+  }
   function populateSelect(){
     const sel=$('nwTrackSelect'); sel.innerHTML='';
     tracks.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+t.title;sel.appendChild(o);});
     sel.value=String(index);
+    updateTrackPicker();
   }
   function paint(){
     const t=current(); if(!t)return;
@@ -164,6 +182,7 @@
     $('nwBgmToggle').textContent=bgmOn?'BGM ON':'BGM OFF'; $('nwBgmToggle').classList.toggle('active',bgmOn);
     $('nwLyricsToggle').textContent=lyricsOn?'가사 ON':'가사 OFF'; $('nwLyricsToggle').classList.toggle('active',lyricsOn);
     $('nwCoverToggle').textContent=coverOn?'커버 ON':'커버 OFF'; $('nwCoverToggle').classList.toggle('active',coverOn);
+    updateTrackPicker();
     $('nwRepeat').textContent=repeatLabel(); $('nwTrackSelect').value=String(index);
     updateMediaSession();
   }
@@ -203,6 +222,13 @@
   $('nwPlay').onclick=()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();audio.paused?tryPlay():audio.pause();};
   $('nwPrev').onclick=prevTrack; $('nwNext').onclick=()=>nextTrack(true);
   $('nwTrackSelect').onchange=e=>setTrack(Number(e.target.value),true);
+  $('nwTrackPickerButton').onclick=()=>{$('nwTrackMenu').hidden?openTrackMenu():closeTrackMenu();};
+  document.addEventListener('click',e=>{if(!e.target.closest('#nwTrackPicker'))closeTrackMenu();});
+  $('nwTrackPicker').addEventListener('keydown',e=>{
+    const menu=$('nwTrackMenu');if(menu.hidden)return;
+    if(e.key==='Escape'){closeTrackMenu();$('nwTrackPickerButton').focus();e.preventDefault();}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){const items=Array.from(menu.children),i=items.indexOf(document.activeElement);items[(i+(e.key==='ArrowDown'?1:items.length-1))%items.length]?.focus();e.preventDefault();}
+  });
   $('nwBgmToggle').onclick=()=>{bgmOn=!bgmOn;localStorage.setItem('nwBgmOn',bgmOn?'1':'0');paint();bgmOn?tryPlay():audio.pause();};
   $('nwLyricsToggle').onclick=()=>{lyricsOn=!lyricsOn;localStorage.setItem('nwLyricsOn',lyricsOn?'1':'0');paint();if(lyricsOn)setTimeout(syncLyrics,40);};
   $('nwCoverToggle').onclick=()=>{coverOn=!coverOn;localStorage.setItem('nwCoverOn',coverOn?'1':'0');paint();};
@@ -342,7 +368,7 @@
     $('nwMusicDock').classList.toggle('nw-music-collapsed',collapsed);
     $('nwCollapseBtn').textContent=collapsed?'🎵 플레이어 열기':'플레이어 접기';
     $('nwCollapseBtn').setAttribute('aria-expanded',String(!collapsed));
-    if(collapsed){$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
+    if(collapsed){closeTrackMenu();$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
   }
   function rememberCollapsed(){localStorage.setItem('nwMusicCollapsed',collapsed?'1':'0');paintCollapsed();}
   function ensurePlayerHistory(){
