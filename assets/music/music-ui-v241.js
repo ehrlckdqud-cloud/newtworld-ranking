@@ -187,7 +187,7 @@
     updateTrackPicker();
     $('nwShuffle').setAttribute('aria-pressed',String(shuffleOn));$('nwShuffle').classList.toggle('active',shuffleOn);
     $('nwRepeatAll').setAttribute('aria-pressed',String(repeatMode==='all'));$('nwRepeatAll').classList.toggle('active',repeatMode==='all');
-    $('nwRepeat').textContent=repeatLabel(); $('nwTrackSelect').value=String(index);
+    $('nwTrackSelect').value=String(index);
     updateMediaSession();
   }
   let trackLoadSerial=0;
@@ -250,7 +250,6 @@
   $('nwCoverWrap').onclick=null;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
   $('nwShuffle').onclick=()=>{shuffleOn=!shuffleOn;shuffleVisited.clear();localStorage.setItem('nwShuffleOn',shuffleOn?'1':'0');paint();};
   $('nwRepeatAll').onclick=()=>{repeatMode=repeatMode==='all'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
-  $('nwRepeat').onclick=()=>{repeatMode=repeatMode==='all'?'one':repeatMode==='one'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
   function setRangeFill(el,value,min,max){
     if(!el)return;
     const lo=Number(min ?? el.min ?? 0), hi=Number(max ?? el.max ?? 100);
