@@ -4,9 +4,11 @@ const config=await readFile('site-config.js','utf8');
 const app=config.match(/appScriptUrl\s*:\s*['"](https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec)['"]/)?.[1];
 if(!app)throw Error('Expected public Apps Script endpoint');
 async function api(action,id){
- const url=new URL(app);url.searchParams.set('action',action);if(id)url.searchParams.set('id',id);
+ const url=new URL(app);url.searchParams.set('action',action);url.searchParams.set('callback','nwPublish');if(id)url.searchParams.set('id',id);
  const response=await fetch(url,{signal:AbortSignal.timeout(120000)});if(!response.ok)throw Error('Music API HTTP '+response.status);
- const data=await response.json();if(!data.ok)throw Error('Music API failed: '+action);return data;
+ const text=(await response.text()).trim();
+ let data;try{data=JSON.parse(text.startsWith('nwPublish(')?text.replace(/^nwPublish\(/,'').replace(/\);?$/,''):text);}catch{throw Error('Invalid music API response: '+action);}
+ if(!data.ok)throw Error('Music API failed: '+action);return data;
 }
 const dir='assets/music/published',manifestPath=dir+'/manifest.json';await mkdir(dir,{recursive:true});
 let previous={tracks:{}};try{previous=JSON.parse(await readFile(manifestPath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
