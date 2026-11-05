@@ -15,20 +15,35 @@ let previous={tracks:{}};try{previous=JSON.parse(await readFile(manifestPath,'ut
 const library=await api('musicLibraryGet');if(!Array.isArray(library.tracks)||library.tracks.length>200)throw Error('Invalid music library');
 const tracks={};
 for(const track of library.tracks){
- if(!track.audioFile)continue;
- if(!/^music-[a-zA-Z0-9-]{16,80}$/.test(track.id)||typeof track.audioFile!=='string')throw Error('Invalid audio record');
- const version=createHash('sha256').update(track.audioFile).digest('hex').slice(0,16);
- const path=dir+'/'+track.id+'-'+version+'.mp3';
- const old=previous.tracks[track.id];let exists=false;try{exists=(await stat(path)).size>0;}catch{}
- if(!exists){
-  const data=await api('musicAudio',track.id);
-  if(typeof data.base64!=='string'||data.base64.length>11200000||!/^[A-Za-z0-9+/]*={0,2}$/.test(data.base64))throw Error('Invalid MP3 payload');
-  const bytes=Buffer.from(data.base64,'base64');
-  if(bytes.length<4||bytes.length>8*1024*1024||!(bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===255&&(bytes[1]&224)===224)))throw Error('Invalid MP3 bytes');
-  await writeFile(path,bytes);console.log('Published MP3:',track.id,bytes.length);
+ if(!track.audioFile&&!track.coverFile)continue;
+ if(!/^(?:music-[a-zA-Z0-9-]{16,80}|builtin-[1-6])$/.test(track.id))throw Error('Invalid media record');
+ const entry={};
+ for(const kind of ['audio','cover']){
+  const file=track[kind+'File'];if(!file)continue;if(typeof file!=='string')throw Error('Invalid file version');
+  const version=createHash('sha256').update(file).digest('hex').slice(0,16);
+  const old=previous.tracks[track.id];
+  const prefix=dir+'/'+track.id+'-'+version;
+  let path=kind==='audio'?prefix+'.mp3':old?.coverFile===file&&/^assets\/music\/published\/[a-zA-Z0-9-]+\.(jpg|png|webp)$/.test(old.cover||'')?old.cover:'';
+  let exists=false;if(path)try{exists=(await stat(path)).size>0;}catch{}
+  if(!exists){
+   const data=await api(kind==='audio'?'musicAudio':'musicCover',track.id);
+   const limit=kind==='audio'?11200000:700000;
+   if(typeof data.base64!=='string'||data.base64.length>limit||!/^[A-Za-z0-9+/]*={0,2}$/.test(data.base64))throw Error('Invalid media payload');
+   const bytes=Buffer.from(data.base64,'base64');
+   if(kind==='audio'){
+    if(bytes.length<4||bytes.length>8*1024*1024||!(bytes.subarray(0,3).toString()==='ID3'||(bytes[0]===255&&(bytes[1]&224)===224)))throw Error('Invalid MP3 bytes');
+   }else{
+    if(bytes.length<12||bytes.length>500000)throw Error('Invalid cover size');
+    const ext=bytes[0]===255&&bytes[1]===216&&bytes[2]===255?'jpg':bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]))?'png':bytes.subarray(0,4).toString()==='RIFF'&&bytes.subarray(8,12).toString()==='WEBP'?'webp':null;
+    if(!ext)throw Error('Unsupported cover bytes');path=prefix+'.'+ext;
+   }
+   await writeFile(path,bytes);console.log('Published '+kind+':',track.id,bytes.length);
+  }
+  entry[kind+'File']=file;entry[kind]=path;
  }
- tracks[track.id]={audioFile:track.audioFile,audio:path};
+ tracks[track.id]=entry;
 }
+
 const manifest={version:1,tracks};const json=JSON.stringify(manifest,null,2)+'\n';
 let oldText='';try{oldText=await readFile(manifestPath,'utf8');}catch{}
 if(json!==oldText)await writeFile(manifestPath,json);

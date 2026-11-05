@@ -25,9 +25,17 @@
  window.NWResolveMusicCover=track=>{
   if(!track.coverFile)return Promise.resolve(track.cover||'');
   const key=track.coverFile;
-  if(!covers.has(key))covers.set(key,read('musicCover',{id:track.id}).then(d=>URL.createObjectURL(new Blob([Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0))],{type:d.mime}))).catch(e=>{covers.delete(key);throw e;}));
+  if(!covers.has(key))covers.set(key,(async()=>{
+   const manifest=await publishedMusic().catch(()=>null),entry=manifest?.tracks?.[track.id];
+   if(entry?.coverFile===key&&/^assets\/music\/published\/(?:music-[a-zA-Z0-9-]+|builtin-[1-6])-[a-f0-9]{16}\.(jpg|png|webp)$/.test(entry.cover||''))return entry.cover;
+   // Newly uploaded/replaced artwork remains visible until automatic publication finishes.
+   publishedAudio=null;
+   const d=await read('musicCover',{id:track.id});
+   return URL.createObjectURL(new Blob([Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0))],{type:d.mime}));
+  })().catch(e=>{covers.delete(key);throw e;}));
   return covers.get(key);
  };
+
  let publishedAudio=null;
  function publishedMusic(){
   if(!publishedAudio)publishedAudio=fetch('assets/music/published/manifest.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('음원 게시 목록을 불러오지 못했습니다. 잠시 후 곡을 다시 선택해주세요.');return r.json();}).catch(e=>{publishedAudio=null;throw e;});
@@ -160,7 +168,7 @@
     const payload={action:'musicLibraryAdd',token,id:requestId,title,artist:$('nwMusicArtist').value.trim(),lyrics:$('nwMusicLyrics').value,base64:await base64(file),coverBase64};
     let d;try{d=await post(payload);}catch(e){if(e.code!=='ADMIN_EXPIRED')throw e;status.textContent='인증이 만료되어 다시 확인합니다. 입력한 정보는 유지됩니다.';payload.token=await window.NWEnsureMusicAdmin(true);d=await post(payload);}
     cache.set(d.track.id,Promise.resolve(URL.createObjectURL(file)));
-    if(coverBase64)covers.set(d.track.id,Promise.resolve('data:image/jpeg;base64,'+coverBase64));
+    if(coverBase64)covers.set(d.track.coverFile,Promise.resolve('data:image/jpeg;base64,'+coverBase64));
     addTrack(d.track);const i=api.tracks.findIndex(t=>t.id===d.track.id);api.setTrack(i,false);
     $('nwSyncTrack').value=String(i);$('nwSyncTrack').dispatchEvent(new Event('change'));
     box.querySelectorAll('input,textarea').forEach(el=>el.value='');showCover('');requestId='music-'+crypto.randomUUID();
