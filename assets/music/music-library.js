@@ -24,8 +24,9 @@
  };
  window.NWResolveMusicCover=track=>{
   if(!track.coverFile)return Promise.resolve(track.cover||'');
-  if(!covers.has(track.id))covers.set(track.id,read('musicCover',{id:track.id}).then(d=>URL.createObjectURL(new Blob([Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0))],{type:d.mime}))).catch(e=>{covers.delete(track.id);throw e;}));
-  return covers.get(track.id);
+  const key=track.coverFile;
+  if(!covers.has(key))covers.set(key,read('musicCover',{id:track.id}).then(d=>URL.createObjectURL(new Blob([Uint8Array.from(atob(d.base64),c=>c.charCodeAt(0))],{type:d.mime}))).catch(e=>{covers.delete(key);throw e;}));
+  return covers.get(key);
  };
  window.NWResolveMusicAudio=track=>{
   if(!track.audioFile)return Promise.resolve(track.audio);
@@ -99,12 +100,12 @@
   const catalog=new Map(api.tracks.filter(t=>t.builtin!==false).map(t=>[t.id,t]));
   let libraryState={revision:0,order:[],deleted:[]},draft=[],dirty=false,managing=false,loaded=false;
   const manager=document.createElement('section');manager.id='nwMusicManager';manager.style.cssText=box.style.cssText;
-  manager.innerHTML='<h3 style="margin:0;color:#8ce2bd">기본 곡 순서 · 삭제</h3><p style="font-size:12px">▲ ▼로 순서를 바꾸고 재생순서 저장을 누르면 모든 회원에게 적용됩니다. 삭제는 확인 후 바로 적용됩니다.</p><div id="nwMusicOrderList"></div><button type="button" id="nwMusicOrderSave">재생순서 저장</button> <button type="button" id="nwMusicOrderReload">목록 다시 불러오기</button><p id="nwMusicOrderStatus" role="status" aria-live="polite"></p>';
+  manager.innerHTML='<h3 style="margin:0;color:#8ce2bd">기본 곡 수정 · 순서 · 삭제</h3><p style="font-size:12px">▲ ▼로 순서를 바꾸고 재생순서 저장을 누르면 모든 회원에게 적용됩니다. 삭제는 확인 후 바로 적용됩니다.</p><div id="nwMusicOrderList"></div><button type="button" id="nwMusicOrderSave">재생순서 저장</button> <button type="button" id="nwMusicOrderReload">목록 다시 불러오기</button><p id="nwMusicOrderStatus" role="status" aria-live="polite"></p>';
   box.before(manager);
   const orderStatus=$('nwMusicOrderStatus');
   function ordered(state){const gone=new Set(state.deleted),ids=[...new Set([...state.order,...catalog.keys()])];return ids.filter(id=>catalog.has(id)&&!gone.has(id)).map(id=>catalog.get(id));}
   function applyLibrary(d){
-   d.tracks.forEach(t=>{const old=catalog.get(t.id);catalog.set(t.id,old?Object.assign(old,t):t);});
+   d.tracks.forEach(t=>{const old=catalog.get(t.id);catalog.set(t.id,old?Object.assign(old,t):t);if(t.lyricsRevision)api.acceptLyricsEdit?.(catalog.get(t.id));});
    libraryState=d.state||{revision:0,order:[],deleted:[]};loaded=true;
    const list=ordered(libraryState);api.replaceTracks([...list,...api.tracks.filter(t=>t.builtin===false)]);
    if(!dirty){draft=list.map(t=>t.id);renderOrder();}
@@ -115,6 +116,7 @@
     const row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:5px;padding:8px 0;border-bottom:1px solid #294656';
     const title=document.createElement('span');title.style.cssText='flex:1;min-width:0;overflow-wrap:anywhere';title.textContent=(i+1)+'. '+catalog.get(id).title;row.append(title);
     for(const [label,delta] of [['▲',-1],['▼',1]]){const b=document.createElement('button');b.type='button';b.textContent=label;b.setAttribute('aria-label',catalog.get(id).title+(delta<0?' 위로':' 아래로'));b.disabled=managing||i+delta<0||i+delta>=draft.length;b.onclick=()=>{[draft[i],draft[i+delta]]=[draft[i+delta],draft[i]];dirty=true;orderStatus.textContent='변경한 순서를 저장해주세요.';renderOrder();};row.append(b);}
+    const edit=document.createElement('button');edit.type='button';edit.textContent='수정';edit.disabled=managing;edit.onclick=()=>{const sel=$('nwSyncTrack');sel.value=String(api.tracks.findIndex(t=>t.id===id));sel.dispatchEvent(new Event('change'));$('nwMusicEditForm').open=true;$('nwMusicEditForm').scrollIntoView({block:'start',behavior:'smooth'});};row.append(edit);
     const del=document.createElement('button');del.type='button';del.textContent='삭제';del.style.color='#ffaaaa';del.disabled=managing;del.onclick=()=>removeTrack(id);row.append(del);list.append(row);
    });
    if(!draft.length)list.textContent=loaded?'등록된 기본 곡이 없습니다.':'목록을 불러오는 중…';
@@ -165,8 +167,70 @@
     if(!busy&&!$('nwMusicFile').files.length)status.textContent='추가 기본 곡 '+d.tracks.length+'곡을 불러왔습니다.';
    }catch(e){if(!busy&&!$('nwMusicFile').files.length)status.textContent='공통 곡 목록을 불러오지 못했습니다. '+e.message;orderStatus.textContent=e.message;}
   }
+  const editor=document.createElement('details');editor.id='nwMusicEditForm';editor.open=true;editor.style.cssText=box.style.cssText;
+  editor.innerHTML=`<summary style="cursor:pointer;color:#8ce2bd;font-weight:700">선택한 곡 정보 수정</summary>
+   <p style="font-size:12px;color:#8eb1be">위에서 편집할 곡을 선택하세요. 저장하면 새로고침한 모든 회원에게 반영됩니다.</p>
+   <label>곡명 *<input id="nwMusicEditTitle" maxlength="150"></label>
+   <label>가수<input id="nwMusicEditArtist" maxlength="150"></label>
+   <label>썸네일 이미지 업로드 (JPG/PNG/WebP)<input id="nwMusicEditCover" type="file" accept="image/jpeg,image/png,image/webp"></label>
+   <img id="nwMusicEditPreview" alt="현재 썸네일" hidden style="max-width:160px;max-height:160px;object-fit:contain;border-radius:10px">
+   <button id="nwMusicEditRemoveCover" type="button">썸네일 제거</button>
+   <label>가사 (한 줄씩 입력)<textarea id="nwMusicEditLyrics" rows="8" maxlength="12000"></textarea></label>
+   <p style="font-size:12px;color:#8eb1be">가사 줄 수가 같으면 줄별 싱크를 유지합니다. 줄을 추가하거나 삭제하면 싱크가 초기화되므로 저장 후 다시 맞춰주세요.</p>
+   <button id="nwMusicEditSave" type="button">곡 정보 저장</button> <button id="nwMusicEditReload" type="button">수정 취소 · 다시 불러오기</button>
+   <p id="nwMusicEditStatus" role="status" aria-live="polite"></p>`;
+  editor.querySelectorAll('label').forEach(el=>el.style.cssText='display:block;font-size:12px;margin:9px 0');
+  editor.querySelectorAll('input,textarea').forEach(el=>el.style.cssText='display:block;width:100%;min-width:0;box-sizing:border-box;margin-top:4px;background:#0d1923;color:#eff8ff;border:1px solid #294656;border-radius:8px;padding:9px');
+  $('nwSyncTrack').after(editor);
+  let editId='',editDirty=false,editBusy=false,editCoverMode='keep',editCoverBase64='',editRequestId='',editSource=null,previewSerial=0;
+  const editStatus=$('nwMusicEditStatus');
+  function editControls(){editor.querySelectorAll('input,textarea,button').forEach(el=>el.disabled=editBusy||!editSource);}
+  function preview(src){const img=$('nwMusicEditPreview');img.hidden=!src;if(src)img.src=src;else img.removeAttribute('src');}
+  function fillEditor(){
+   if(editBusy||editDirty)return;
+   const t=api.tracks[Number($('nwSyncTrack').value)];editSource=t&&t.builtin!==false?JSON.parse(JSON.stringify(t)):null;editId=editSource?.id||'';
+   const serial=++previewSerial;editCoverMode='keep';editCoverBase64='';editRequestId='edit-'+crypto.randomUUID();
+   $('nwMusicEditTitle').value=t?.title||'';$('nwMusicEditArtist').value=t?.artist||'';
+   $('nwMusicEditLyrics').value=(t?.syncedLyrics?.length?t.syncedLyrics.map(x=>x.text).join('\n'):t?.lyrics)||'';$('nwMusicEditCover').value='';
+   preview(t?.cover||'');editStatus.textContent=editSource?'':'기본 곡을 선택해주세요.';editControls();
+   if(t?.coverFile)window.NWResolveMusicCover(t).then(src=>{if(serial===previewSerial&&editCoverMode==='keep')preview(src);}).catch(()=>{});
+  }
+  editor.addEventListener('input',()=>{editDirty=true;editRequestId='edit-'+crypto.randomUUID();});
+  $('nwMusicEditCover').onchange=async()=>{
+   const f=$('nwMusicEditCover').files[0];if(!f)return;editBusy=true;editControls();editStatus.textContent='이미지를 준비하는 중…';
+   try{editCoverBase64=await prepareCover(f);editCoverMode='replace';editDirty=true;++previewSerial;preview('data:image/jpeg;base64,'+editCoverBase64);editStatus.textContent='저장하면 선택한 썸네일로 교체됩니다.';}catch(e){$('nwMusicEditCover').value='';editStatus.textContent=e.message;}finally{editBusy=false;editControls();}
+  };
+  $('nwMusicEditRemoveCover').onclick=()=>{++previewSerial;editCoverMode='remove';editCoverBase64='';editDirty=true;editRequestId='edit-'+crypto.randomUUID();$('nwMusicEditCover').value='';preview('');};
+  $('nwSyncTrack').addEventListener('change',e=>{
+   if(editBusy||(editDirty&&!window.confirm('저장하지 않은 곡 정보 수정을 취소하고 다른 곡을 선택할까요?'))){e.stopImmediatePropagation();$('nwSyncTrack').value=String(api.tracks.findIndex(t=>t.id===editId));return;}
+   editDirty=false;fillEditor();
+  },true);
+  $('nwSyncAdminBtn').addEventListener('click',()=>{if(!editDirty)fillEditor();});
+  window.addEventListener('nw-music-library-updated',()=>{if(!editDirty)fillEditor();});
+  $('nwMusicEditReload').onclick=async()=>{if(editDirty&&!window.confirm('저장하지 않은 수정을 취소할까요?'))return;editDirty=false;await load();fillEditor();};
+  $('nwMusicEditSave').onclick=async()=>{
+   if(editBusy||!editSource)return;
+   const title=$('nwMusicEditTitle').value.trim(),lyrics=$('nwMusicEditLyrics').value.trim(),texts=lyrics.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+   if(!title||texts.length>300){editStatus.textContent='곡명을 입력하고 가사는 300줄 이내로 작성해주세요.';return;}
+   const oldLines=(catalog.get(editId)?.syncedLyrics)||editSource.syncedLyrics||[],oldTexts=(oldLines.length?oldLines.map(x=>x.text).join('\n'):(editSource.lyrics||'')).trim().split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+   const lyricsChanged=JSON.stringify(texts)!==JSON.stringify(oldTexts),resetSync=lyricsChanged&&texts.length!==oldLines.length;
+   if(resetSync&&!window.confirm('가사 줄 수가 변경되어 이 곡의 싱크를 초기화합니다. 저장할까요?'))return;
+   editBusy=true;editControls();editStatus.textContent='곡 정보를 저장하는 중…';
+   try{
+    const payload={action:'musicLibraryAdd',operation:'update',id:editId,editRevision:editSource.editRevision||0,requestId:editRequestId,title,artist:$('nwMusicEditArtist').value.trim(),lyrics,lyricsChanged,resetSync,syncedLyrics:texts.map((text,i)=>({text,time:resetSync?0:Number(oldLines[i]?.time)||0})),coverMode:editCoverMode,coverBase64:editCoverBase64,token:await window.NWEnsureMusicAdmin()};
+    let d;try{d=await post(payload);}catch(e){if(e.code!=='ADMIN_EXPIRED')throw e;payload.token=await window.NWEnsureMusicAdmin(true);d=await post(payload);}
+    const t=Object.assign(catalog.get(editId)||{},d.track);catalog.set(editId,t);
+    if(lyricsChanged)api.acceptLyricsEdit?.(t);
+    editDirty=false;api.replaceTracks([...ordered(libraryState),...api.tracks.filter(x=>x.builtin===false)]);
+    if(!dirty){draft=ordered(libraryState).map(x=>x.id);renderOrder();}
+    editBusy=false;fillEditor();editStatus.textContent=resetSync?'저장 완료. 가사 싱크를 다시 맞춘 후 전체 적용 저장을 눌러주세요.':'저장 완료. 새로고침한 모든 회원에게 반영됩니다.';
+   }catch(e){editStatus.textContent=e.message;}finally{editBusy=false;editControls();}
+  };
+  fillEditor();
+
   const retry=document.createElement('button');retry.type='button';retry.textContent='기본 곡 목록 다시 불러오기';retry.onclick=load;box.append(retry);await load();
  }
  function ready(){Promise.resolve(window.NWConfigReady).then(init);}
  if(window.NWMusicAdminAPI)ready();else window.addEventListener('nw-music-ready',ready,{once:true});
 })();
+

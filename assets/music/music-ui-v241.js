@@ -158,7 +158,7 @@
     $('nwTrackTitle').textContent=t.title||'제목 없음'; $('nwTrackArtist').textContent=t.artist||'NEWT WORLD MUSIC';
     $('nwLyricsTitle').textContent=(t.title||'현재 곡')+' · 가사'; renderLyrics(t);
     $('nwCover').src=t.cover||''; $('nwCover').style.display=t.cover?'block':'none';
-    if(t.coverFile&&!t.cover&&window.NWResolveMusicCover){window.NWResolveMusicCover(t).then(src=>{t.cover=src;if(current()!==t)return;$('nwCover').src=src;$('nwCover').style.display='block';updateMediaSession();}).catch(()=>{});}
+    if(t.coverFile&&!t.cover&&window.NWResolveMusicCover){const coverFile=t.coverFile;window.NWResolveMusicCover(t).then(src=>{if(t.coverFile!==coverFile)return;t.cover=src;if(current()!==t)return;$('nwCover').src=src;$('nwCover').style.display='block';updateMediaSession();}).catch(()=>{});}
     $('nwCoverWrap').classList.toggle('hidden',!coverOn); $('nwMusicMain').classList.toggle('no-cover',!coverOn);
     $('nwLyricsPanel').classList.toggle('open',lyricsOn);
     $('nwBgmToggle').textContent=bgmOn?'BGM ON':'BGM OFF'; $('nwBgmToggle').classList.toggle('active',bgmOn);
@@ -367,6 +367,7 @@
   function lines(){return Array.isArray(track()?.syncedLyrics)?track().syncedLyrics:[];}
   function status(msg,bad=false){$('nwSyncStatus').textContent=msg;$('nwSyncStatus').style.color=bad?'#ff8e8e':'#67d6a2';}
   function saveLocal(){ if(!track())return; corrections[track().id]=JSON.parse(JSON.stringify(lines())); localStorage.setItem(storeKey,JSON.stringify(corrections)); status('편집내용 임시 저장 · 전체 적용은 [전체 적용 저장] 버튼을 누르세요.'); } async function saveRemote(){ if(!track())return; saveLocal(); let token=sessionStorage.getItem('nwAdminToken')||''; try{if(window.NWEnsureMusicAdmin)token=await window.NWEnsureMusicAdmin();}catch(e){status(e.message,true);return;} if(!token){status('관리자 인증이 필요합니다.',true);return;} const times=lines().map(x=>Number(x.time||0).toFixed(2)).join(','); if(!window.NWJsonp){status('서버 연결 기능을 찾을 수 없습니다.',true);return;} status('전체 적용 저장 중…'); NWJsonp('syncSave',{token,trackId:track().id,times},d=>{if(d&&d.ok)status('✅ 전체 적용 저장 완료 · 새로고침한 회원에게 반영됩니다.');else status(d?.error||'저장 실패',true);}); }
+  api.acceptLyricsEdit=function(t){delete corrections[t.id];localStorage.setItem(storeKey,JSON.stringify(corrections));const item=original.find(x=>x.id===t.id);if(item)item.syncedLyrics=JSON.parse(JSON.stringify(t.syncedLyrics||[]));else original.push({id:t.id,syncedLyrics:JSON.parse(JSON.stringify(t.syncedLyrics||[]))});};
   function populateTracks(){const sel=$('nwSyncTrack');sel.innerHTML='';api.tracks.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=(i+1)+'. '+t.title;sel.appendChild(o)});sel.value=String(trackIndex);}
   window.addEventListener('nw-music-library-updated',()=>{trackIndex=api.getIndex();lineIndex=0;populateTracks();render();});
   function render(){
@@ -597,4 +598,5 @@
 
 
 window.dispatchEvent(new Event("nw-music-ready"));
+
 
