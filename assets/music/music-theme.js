@@ -11,7 +11,7 @@
 
 
  // PC-wide typography, including the separate desktop lyrics bar.
- const fontChoice=document.createElement('select');fontChoice.id='nwFontChoice';fontChoice.className='nw-mini-btn';fontChoice.setAttribute('aria-label','PC 전체 글꼴 선택');fontChoice.title='PC 전체 글꼴 · 자동 저장';
+ const fontChoice=document.createElement('select');fontChoice.id='nwFontChoice';fontChoice.className='nw-mini-btn';fontChoice.setAttribute('aria-label','전체 글꼴 선택');fontChoice.title='전체 글꼴 · 자동 저장';
  const fonts=[
   ['default','글꼴: 기본',''],
   ['malgun','맑은 고딕','"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-serif'],
@@ -27,7 +27,8 @@
  fonts.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;fontChoice.append(option);});
  $('nwAddTrack').after(fontChoice);
  const fontStyle=document.createElement('style');fontStyle.textContent=`
- @media(min-width:651px){html.nw-custom-font body,html.nw-custom-font body *{font-family:var(--nw-selected-font)!important}
+ html.nw-custom-font body,html.nw-custom-font body *{font-family:var(--nw-selected-font)!important}
+ @media(min-width:651px){
  #nwFontChoice{max-width:125px;height:27px;padding:0 6px;font-size:10px;cursor:pointer}}
  @media(max-width:650px){#nwFontChoice{display:none!important}}
  `;document.head.append(fontStyle);
@@ -150,22 +151,24 @@
  let saved;try{saved=localStorage.getItem(key);}catch{}choose(/^#[0-9a-f]{6}$/i.test(saved||'')?saved:defaultColor,false);
 
  // Relative text sizing keeps each heading/body/control's original hierarchy.
- const sizeChoice=document.createElement('select');sizeChoice.id='nwFontSize';sizeChoice.className='nw-mini-btn';sizeChoice.setAttribute('aria-label','PC 글자 크기');
+ const sizeChoice=document.createElement('select');sizeChoice.id='nwFontSize';sizeChoice.className='nw-mini-btn';sizeChoice.setAttribute('aria-label','글자 크기');
  [80,90,100,110,120,130,140,150].forEach(n=>{const o=document.createElement('option');o.value=String(n);o.textContent='크기 '+n+'%';sizeChoice.append(o);});
- const weightChoice=document.createElement('select');weightChoice.id='nwFontWeight';weightChoice.className='nw-mini-btn';weightChoice.setAttribute('aria-label','PC 글자 굵기');
+ const weightChoice=document.createElement('select');weightChoice.id='nwFontWeight';weightChoice.className='nw-mini-btn';weightChoice.setAttribute('aria-label','글자 굵기');
  [['default','굵기: 기본'],['300','가늘게'],['400','보통'],['500','중간'],['700','굵게'],['900','아주 굵게']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;weightChoice.append(o);});
  fontChoice.after(sizeChoice,weightChoice);
  let fontScale=100,fontWeight='default';
  try{const n=Number(localStorage.getItem('nwDesktopFontSize'));if([80,90,100,110,120,130,140,150].includes(n))fontScale=n;fontWeight=localStorage.getItem('nwDesktopFontWeight')||'default';}catch{}
  sizeChoice.value=String(fontScale);weightChoice.value=fontWeight;if(!weightChoice.value)weightChoice.value='default';
  const typeStyle=document.createElement('style');typeStyle.textContent=`
- @media(min-width:651px){
  html.nw-type-measuring body *{transition:none!important}
  html.nw-sized body [data-nw-type-size]{font-size:calc(var(--nw-original-size) * var(--nw-font-scale,1))!important;transition-property:background-color,color,border-color,opacity,transform!important}
  html.nw-weighted body,html.nw-weighted body *{font-weight:var(--nw-font-weight)!important}
  #nwFontSize,#nwFontWeight{height:27px;padding:0 5px;max-width:108px;font-size:10px}
+ @media(max-width:650px){
+ #nwLyricsAlwaysOnTop,#nwLyricsPipStatus{display:none!important}
+ #nwMusicDock #nwFontSize,#nwMusicDock #nwFontWeight{display:inline-block;height:40px;padding:0 9px;max-width:145px;font-size:12px}
+ #nwMusicDock .nw-tools{max-height:calc(100dvh - 110px - env(safe-area-inset-top,0px));overflow-y:auto;overscroll-behavior:contain}
  }
- @media(max-width:650px){#nwFontSize,#nwFontWeight,#nwLyricsAlwaysOnTop,#nwLyricsPipStatus{display:none!important}}
  `;document.head.append(typeStyle);
  let typeFrame=0;
  function measureType(){
@@ -229,7 +232,11 @@
  #nwFontPreviewList[hidden]{display:none!important}
  #nwFontPreviewList button{display:block;width:100%;height:auto;min-height:42px;text-align:left;padding:7px 12px;border-radius:7px;white-space:normal;line-height:1.3}
  #nwFontPreviewList button:focus-visible{outline:2px solid var(--nw-accent);outline-offset:-2px}
- @media(max-width:650px){#nwFontPicker,#nwFontPreviewList{display:none!important}}
+ @media(max-width:650px){
+ #nwMusicDock #nwFontPicker{display:inline-block;height:40px;max-width:200px;padding:0 12px;font-size:12px}
+ #nwFontPreviewList{position:fixed;top:calc(98px + env(safe-area-inset-top,0px));bottom:auto;left:18px;right:18px;width:auto;box-sizing:border-box;max-height:calc(100dvh - 160px - env(safe-area-inset-top,0px));z-index:30}
+ #nwFontPreviewList button{min-height:48px}
+ }
  `;document.head.append(previewStyle);
  const fontItems=[];
  function updateFontPicker(){
@@ -250,6 +257,9 @@
  fontPicker.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();if(fontList.hidden)fontPicker.click();}};
  document.addEventListener('pointerdown',e=>{if(!fontList.contains(e.target)&&!fontPicker.contains(e.target))closeFontList();});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!fontList.hidden)closeFontList(true);});
+ $('nwPlayerSettings').addEventListener('click',()=>closeFontList());
+ $('nwCollapseBtn').addEventListener('click',()=>closeFontList());
+ window.addEventListener('popstate',()=>closeFontList());
  fontChoice.addEventListener('change',updateFontPicker);updateFontPicker();
 
 })();
