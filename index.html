@@ -1801,6 +1801,19 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 @media(min-width:1250px){.table-wrap{width:min(1380px,calc(100vw - 48px));max-width:none;position:relative;left:50%;transform:translateX(-50%)}}
 </style>
+<style id="nw-desktop-artwork-layout">
+
+/* Desktop player: large artwork above the title and transport. */
+@media(min-width:651px){
+  #nwMusicDock .nw-music-main{grid-template-columns:minmax(0,1fr);gap:14px}
+  #nwMusicDock .nw-cover-wrap{width:min(100%,360px,max(120px,calc(100dvh - 340px)));height:auto;aspect-ratio:1;justify-self:center;border-radius:16px;box-shadow:0 10px 30px #0005}
+  #nwMusicDock .nw-cover-wrap img{object-fit:contain}
+  #nwMusicDock .nw-title-row{justify-content:center}
+  #nwMusicDock .nw-track-title{flex:0 1 auto;font-size:17px;text-align:center}
+  #nwMusicDock .nw-track-artist{flex:0 1 auto;max-width:35%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #nwMusicDock .nw-lyrics{max-height:min(220px,25dvh)}
+}
+</style>
 </head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
