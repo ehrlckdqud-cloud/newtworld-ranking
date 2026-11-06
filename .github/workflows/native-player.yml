@@ -1,8 +1,5 @@
 name: Native player preview
 on:
-  push:
-    branches: [feature/native-player]
-    paths: ['mobile/**', '.github/workflows/native-player.yml']
   workflow_dispatch:
 permissions:
   contents: read

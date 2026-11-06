@@ -4,7 +4,7 @@
  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
  <uses-permission android:name="android.permission.WAKE_LOCK"/>
- <application android:label="뉴트월드 시험판" android:theme="@style/AppTheme" android:icon="@drawable/app_icon" android:usesCleartextTraffic="false" android:allowBackup="false">
+ <application android:label="뉴트월드 음악" android:theme="@style/AppTheme" android:icon="@drawable/app_icon" android:usesCleartextTraffic="false" android:allowBackup="false">
   <activity android:name=".MainActivity" android:exported="true">
    <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
   </activity>

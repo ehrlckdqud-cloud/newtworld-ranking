@@ -1801,6 +1801,20 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 @media(min-width:1250px){.table-wrap{width:min(1380px,calc(100vw - 48px));max-width:none;position:relative;left:50%;transform:translateX(-50%)}}
 </style>
+<style id="nw-desktop-artwork-layout">
+
+/* Desktop player: large artwork above the title and transport. */
+@media(min-width:651px){
+  #nwMusicDock .nw-music-main{grid-template-columns:minmax(0,1fr);gap:14px}
+  #nwMusicDock .nw-cover-wrap{width:min(100%,360px,max(120px,calc(100dvh - 340px)));height:auto;aspect-ratio:1;justify-self:center;border-radius:16px;box-shadow:0 10px 30px #0005}
+  #nwMusicDock .nw-cover-wrap img{object-fit:contain}
+  #nwMusicDock .nw-title-row{justify-content:center}
+  #nwMusicDock .nw-track-title{flex:0 1 auto;font-size:17px;text-align:center}
+  #nwMusicDock .nw-track-artist{flex:0 1 auto;max-width:35%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #nwMusicDock .nw-lyrics{max-height:min(220px,25dvh);margin-top:10px;border-radius:12px}
+  #nwMusicDock .nw-lyrics-head{display:none}
+}
+</style>
 </head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
@@ -2361,6 +2375,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <div class="nw-cover-wrap" id="nwCoverWrap"><img id="nwCover" alt="곡 커버"></div>
       <div class="nw-player-info">
         <div class="nw-title-row"><span class="nw-live-dot" id="nwLiveDot"></span><div class="nw-track-title" id="nwTrackTitle">BGM 준비 중</div><div class="nw-track-artist" id="nwTrackArtist">NEWT WORLD MUSIC</div></div>
+    <div class="nw-lyrics" id="nwLyricsPanel"><div class="nw-lyrics-head"><b id="nwLyricsTitle">가사</b><span>ALSong 정밀 싱크</span></div><div class="nw-lyrics-text" id="nwLyricsText"></div></div>
         <div class="nw-player-row"><button class="nw-transport-mode" id="nwShuffle" type="button" aria-label="랜덤 재생" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h3c4 0 8 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 4-3 6-6s4-6 6-6h3m-4-4 4 4-4 4"/></svg></button><button class="nw-transport-mode" id="nwRepeatAll" type="button" aria-label="전체 반복" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 2 4 4-4 4M4 11V8a2 2 0 0 1 2-2h14M8 22l-4-4 4-4m12-1v3a2 2 0 0 1-2 2H4"/></svg></button>
           <button class="nw-icon-btn" id="nwPrev" type="button" title="이전 곡"><span class="nw-icon-glyph">⏮</span></button>
           <button class="nw-icon-btn nw-play" id="nwPlay" type="button" title="재생/일시정지"><span class="nw-icon-glyph">▶</span></button>
@@ -2381,7 +2396,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       <input class="nw-add-input" id="nwAddInput" type="file" accept="audio/mpeg,.mp3" multiple>
     </div>
     <div class="nw-autoplay-note" id="nwAutoplayNote">브라우저 자동재생 정책으로 대기 중입니다. 화면을 한 번 누르면 음악이 시작됩니다.</div>
-    <div class="nw-lyrics" id="nwLyricsPanel"><div class="nw-lyrics-head"><b id="nwLyricsTitle">가사</b><span>ALSong 정밀 싱크</span></div><div class="nw-lyrics-text" id="nwLyricsText"></div></div>
   </div>
 </div>
 
@@ -2434,7 +2448,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script src="assets/music/music-background-guide.js?v=20261106-bg-guide1" defer></script>
 <script src="assets/music/music-eq.js?v=20261106-eq-touch2" defer></script>
 <script src="assets/music/music-local.js?v=20261106-local1" defer></script>
-<script src="assets/music/music-theme.js?v=20261106-local1" defer></script>
+<script src="assets/music/music-theme.js?v=20261106-modes1" defer></script>
 <script src="assets/music/music-metadata.js?v=20261106-order1" defer></script>
 <script src="assets/music/music-library.js?v=20261106-artwork1" defer></script>
 <script id="nwMusicLoader">
