@@ -111,6 +111,8 @@ final class AudioEngine {
         shuffle = data["shuffle"] as? Bool ?? false
     }
     func play() {
+        if player.currentItem?.status == .failed { select(index, autoplay: false) }
+        if let duration = player.currentItem?.duration.seconds, duration.isFinite, player.currentTime().seconds >= duration { seek(0) }
         do { stopped = false; try AVAudioSession.sharedInstance().setActive(true); player.play(); report() }
         catch { emit?(["type":"error", "message":"오디오 재생을 시작하지 못했습니다."]) }
     }

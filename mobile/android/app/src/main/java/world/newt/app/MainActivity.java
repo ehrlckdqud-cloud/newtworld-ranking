@@ -49,7 +49,7 @@ public final class MainActivity extends ComponentActivity {
   future.addListener(()->{try{controller=future.get();controller.addListener(new Player.Listener(){
    @Override public void onEvents(Player player,Player.Events events){sendState();}
    @Override public void onPlayerError(PlaybackException e){emit("error",e.getErrorCodeName());}
-  });if(pageReady)emit("ready",null);}catch(Exception e){emit("error","재생 서비스 연결 실패");}},getMainExecutor());
+  });if(pageReady)emit("ready",null);}catch(Exception e){emit("error","재생 서비스 연결 실패");}},androidx.core.content.ContextCompat.getMainExecutor(this));
   web.loadUrl("https://appassets.androidplatform.net/assets/web/index.html");
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){moveTaskToBack(true);}});
  }
@@ -68,7 +68,7 @@ public final class MainActivity extends ComponentActivity {
      items.add(new MediaItem.Builder().setMediaId(t.getString("id")).setUri(url).setMediaMetadata(meta.build()).build());
     }controller.setMediaItems(items);modes(m);controller.prepare();sendState();break;
    }
-   case "play":controller.play();break;
+   case "play":if(controller.getPlaybackState()==Player.STATE_ENDED)controller.seekTo(0);if(controller.getPlaybackState()==Player.STATE_IDLE)controller.prepare();controller.play();break;
    case "pause":controller.pause();break;
    case "stop":controller.stop();controller.clearMediaItems();break;
    case "next":controller.seekToNextMediaItem();break;
