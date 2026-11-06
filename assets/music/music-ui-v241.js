@@ -214,7 +214,7 @@
     // Resolve only the small publication manifest, never download every MP3.
     tracks.filter(t=>t.audioFile).forEach(t=>{
       const key=sourceKey(t);if(resolvedSources.has(key))return;
-      window.NWResolveMusicAudio(t).then(src=>resolvedSources.set(key,src)).catch(()=>{});
+      window.NWResolveMusicAudio(t,{prefetch:true}).then(src=>resolvedSources.set(key,src)).catch(()=>{});
     });
   }
   function pausePlayback(){trackTransitionPlaying=false;audio.pause();updateMediaSession(true);}
