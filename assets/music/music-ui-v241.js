@@ -15,6 +15,7 @@
   let shuffleOn=localStorage.getItem('nwShuffleOn')==='1';
   let shuffleVisited=new Set();
   let userStarted=false, seeking=false;
+  let trackTransitionPlaying=false;
 
   const fmt=t=>{ if(!Number.isFinite(t)||t<0)return '0:00'; const m=Math.floor(t/60),s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); };
   const current=()=>tracks[index]||null;
@@ -108,7 +109,7 @@
       }catch(_){ }
     }
     try{
-      navigator.mediaSession.playbackState = (!audio.paused && !audio.ended) ? 'playing' : 'paused';
+      navigator.mediaSession.playbackState = (trackTransitionPlaying || (!audio.paused && !audio.ended)) ? 'playing' : 'paused';
     }catch(_){ }
     if(typeof navigator.mediaSession.setPositionState === 'function'){
       try{
@@ -127,7 +128,7 @@
     if(!('mediaSession' in navigator)) return;
     const safe=(name,handler)=>{try{navigator.mediaSession.setActionHandler(name,handler);}catch(_){}};
     safe('play',()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();tryPlay();});
-    safe('pause',()=>{audio.pause();});
+    safe('pause',pausePlayback);
     safe('previoustrack',()=>{prevTrack();});
     safe('nexttrack',()=>{nextTrack(true);});
     safe('seekbackward',(details)=>{
@@ -148,7 +149,7 @@
       else audio.currentTime=target;
       updateMediaSession(true);
     });
-    safe('stop',()=>{audio.pause();audio.currentTime=0;updateMediaSession(true);});
+    safe('stop',()=>{pausePlayback();audio.currentTime=0;updateMediaSession(true);});
     updateMediaSession();
   }
 
@@ -193,33 +194,66 @@
     updateMediaSession();
   }
   let trackLoadSerial=0;
+  const resolvedSources=new Map();
+  const sourceKey=t=>t.id+':'+(t.audioFile||t.audio);
+  function prepareTrackSources(){
+    // Resolve only the small publication manifest, never download every MP3.
+    tracks.filter(t=>t.audioFile).forEach(t=>{
+      const key=sourceKey(t);if(resolvedSources.has(key))return;
+      window.NWResolveMusicAudio(t).then(src=>resolvedSources.set(key,src)).catch(()=>{});
+    });
+  }
+  function pausePlayback(){trackTransitionPlaying=false;audio.pause();updateMediaSession(true);}
   function setTrack(i,autoplay){
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));localStorage.setItem('nwMusicTrackId',tracks[index].id);
-    const t=current(),serial=++trackLoadSerial; audio.pause(); audio.removeAttribute('src'); audio.load();
-    if(t.audioFile){
+    const t=current(),serial=++trackLoadSerial;
+    trackTransitionPlaying=!!(autoplay&&bgmOn);
+    if(!trackTransitionPlaying)audio.pause();
+    const applySource=src=>{
+      if(serial!==trackLoadSerial)return;
+      // A direct replacement preserves the media element/session. Do not empty src
+      // or call load() between consecutive songs (it resets pending playback).
+      audio.src=src;
+      $('nwAutoplayNote').classList.remove('show','nw-audio-status');
+      if(trackTransitionPlaying)tryPlay();
+    };
+    const ready=t.audioFile?resolvedSources.get(sourceKey(t)):t.audio;
+    if(ready)applySource(ready);
+    else{
       $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show','nw-audio-status');
-      window.NWResolveMusicAudio(t).then(src=>{if(serial!==trackLoadSerial)return;audio.src=src;audio.load();$('nwAutoplayNote').classList.remove('show');if(autoplay&&bgmOn)tryPlay();}).catch(e=>{if(serial!==trackLoadSerial)return;$('nwAutoplayNote').textContent=e.message||'음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');});
-    }else{$('nwAutoplayNote').classList.remove('show','nw-audio-status');audio.src=t.audio;audio.load();}
+      window.NWResolveMusicAudio(t).then(src=>{resolvedSources.set(sourceKey(t),src);applySource(src);}).catch(e=>{
+        if(serial!==trackLoadSerial)return;
+        pausePlayback();$('nwAutoplayNote').textContent=e.message||'음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');
+      });
+    }
     populateSelect(); paint(); $('nwSeek').value=0; setRangeFill($('nwSeek'),0,0,1000); $('nwNow').textContent='0:00'; $('nwDur').textContent=fmt(t.duration||0);
+    try{navigator.mediaSession?.setPositionState?.();}catch(_){}
     updateMediaSession();
-    if(autoplay&&bgmOn&&!t.audioFile) tryPlay();
   }
   function replaceTracks(next){
     const previous=current(),playing=!audio.paused;
     const remembered=localStorage.getItem('nwMusicTrackId');
     tracks.splice(0,tracks.length,...next);
+    prepareTrackSources();
     const found=tracks.findIndex(t=>t.id===(previous?.id||remembered));
     if(found>=0){index=found;populateSelect();paint();localStorage.setItem('nwMusicIndex',String(index));}
     else if(tracks.length){setTrack(0,playing);}
-    else{++trackLoadSerial;index=0;audio.pause();audio.removeAttribute('src');audio.load();populateSelect();
+    else{++trackLoadSerial;trackTransitionPlaying=false;index=0;audio.pause();audio.removeAttribute('src');audio.load();populateSelect();
       $('nwTrackTitle').textContent='등록된 곡이 없습니다';$('nwTrackArtist').textContent='';$('nwCover').style.display='none';renderLyrics(null);
       $('nwNow').textContent='0:00';$('nwDur').textContent='0:00';$('nwSeek').value=0;updateMediaSession();}
     window.dispatchEvent(new Event('nw-music-library-updated'));
   }
   async function tryPlay(){
     if(!bgmOn||!current())return;
-    try{await audio.play(); userStarted=true; $('nwAutoplayNote').classList.remove('show');}
-    catch(e){$('nwAutoplayNote').classList.add('show');}
+    const serial=trackLoadSerial;
+    trackTransitionPlaying=true;updateMediaSession(true);
+    try{
+      await audio.play();if(serial!==trackLoadSerial)return;
+      trackTransitionPlaying=false;userStarted=true; $('nwAutoplayNote').classList.remove('show');updateMediaSession(true);
+    }catch(e){
+      if(serial!==trackLoadSerial)return;
+      trackTransitionPlaying=false;updateMediaSession(true);$('nwAutoplayNote').classList.add('show');
+    }
   }
   function syncPlayIcon(){ const playing=!audio.paused&&!audio.ended; const g=$('nwPlay').querySelector('.nw-icon-glyph'); if(g) g.textContent=playing?'❚❚':'▶'; $('nwLiveDot').style.opacity=playing?'1':'.35'; updateMediaSession(true); }
   function nextTrack(auto=true){
@@ -230,11 +264,11 @@
       if(choices.length){const choice=choices[Math.floor(Math.random()*choices.length)];shuffleVisited.add(choice.id);setTrack(tracks.indexOf(choice),auto);return;}
     }else if(index<tracks.length-1){setTrack(index+1,auto);return;}
     else if(repeatMode==='all'&&tracks.length){setTrack(0,auto);return;}
-    audio.pause();audio.currentTime=0;syncPlayIcon();
+    pausePlayback();audio.currentTime=0;syncPlayIcon();
   }
   function prevTrack(){setTrack(index-1,true);}
 
-  $('nwPlay').onclick=()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();audio.paused?tryPlay():audio.pause();};
+  $('nwPlay').onclick=()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();(trackTransitionPlaying||!audio.paused)?pausePlayback():tryPlay();};
   $('nwPrev').onclick=prevTrack; $('nwNext').onclick=()=>nextTrack(true);
   $('nwTrackSelect').onchange=e=>setTrack(Number(e.target.value),true);
   $('nwTrackPickerButton').onclick=()=>{$('nwTrackMenu').hidden?openTrackMenu():closeTrackMenu();};
@@ -337,7 +371,6 @@
   };
   audio.onloadedmetadata=()=>{$('nwDur').textContent=fmt(audio.duration);renderLyrics(current());syncLyrics();updateMediaSession();}; audio.onplay=()=>{syncPlayIcon();updateMediaSession(true);}; audio.onpause=()=>{syncPlayIcon();updateMediaSession(true);};
   audio.onended=()=>{
-    updateMediaSession(true);
     $('nwSeek').value=1000;
     setRangeFill($('nwSeek'),1000,0,1000);
     $('nwNow').textContent=fmt(audio.duration||0);
@@ -418,6 +451,7 @@
   mobilePlayer.addEventListener('change',()=>{ensurePlayerHistory();paint();lastLyricIndex=-1;syncLyrics();});
   ensurePlayerHistory();
 
+  prepareTrackSources();
   populateSelect(); setTrack(index,false); paintCollapsed(); syncPlayIcon();
   personalReady=window.NWLocalMusic.list().then(records=>{
     const restore=records.sort((a,b)=>a.addedAt-b.addedAt).filter(r=>!tracks.some(t=>t.id===r.id)).map(window.NWLocalMusic.hydrate);
