@@ -7,6 +7,7 @@ android {
 }
 dependencies {
  androidTestImplementation 'androidx.test:runner:1.6.2'
+ androidTestImplementation 'androidx.test:core:1.6.1'
  androidTestImplementation 'androidx.test.ext:junit:1.2.1'
  implementation 'androidx.activity:activity:1.10.1'
  implementation 'androidx.webkit:webkit:1.12.1'

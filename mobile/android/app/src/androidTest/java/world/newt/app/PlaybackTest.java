@@ -40,4 +40,28 @@ public class PlaybackTest {
    assertTrue("Native queue should complete three tracks",ended.await(20,TimeUnit.SECONDS));assertEquals(3,visited.size());
   }finally{InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{if(holder[0]!=null)holder[0].release();});source.delete();}
  }
+ @Test public void backgroundServiceKeepsNotificationAcrossTracks()throws Exception{
+  Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();File source=new File(context.getCacheDir(),"service-test-"+UUID.randomUUID()+".wav");
+  // Repeat the half-second PCM fixture into a three-second WAV.
+  byte[] shortWave=wav();int pcmSize=(shortWave.length-44)*6;ByteBuffer wave=ByteBuffer.allocate(44+pcmSize).order(ByteOrder.LITTLE_ENDIAN);wave.put(shortWave,0,44);wave.putInt(4,36+pcmSize);wave.putInt(40,pcmSize);for(int i=0;i<6;i++)wave.put(shortWave,44,shortWave.length-44);try(FileOutputStream out=new FileOutputStream(source)){out.write(wave.array());}
+  androidx.media3.session.MediaController[] control=new androidx.media3.session.MediaController[1];
+  java.util.concurrent.atomic.AtomicReference<com.google.common.util.concurrent.ListenableFuture<androidx.media3.session.MediaController>> pending=new java.util.concurrent.atomic.AtomicReference<>();
+  CountDownLatch thirdTrack=new CountDownLatch(1),finished=new CountDownLatch(1);
+  try(androidx.test.core.app.ActivityScenario<MainActivity> scenario=androidx.test.core.app.ActivityScenario.launch(MainActivity.class)){
+   scenario.onActivity(activity->{try{java.lang.reflect.Field field=MainActivity.class.getDeclaredField("web");field.setAccessible(true);android.webkit.WebView web=(android.webkit.WebView)field.get(activity);web.stopLoading();androidx.webkit.WebViewCompat.removeWebMessageListener(web,"NWAndroid");web.loadData("Native playback test","text/html","UTF-8");}catch(Exception e){throw new RuntimeException(e);}});
+   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->pending.set(new androidx.media3.session.MediaController.Builder(context,new androidx.media3.session.SessionToken(context,new android.content.ComponentName(context,PlaybackService.class))).buildAsync()));
+   control[0]=pending.get().get(10,TimeUnit.SECONDS);
+   InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{
+    control[0].addListener(new Player.Listener(){@Override public void onMediaItemTransition(MediaItem item,int reason){if(item!=null&&item.mediaId.equals("background-2"))thirdTrack.countDown();}@Override public void onPlaybackStateChanged(int state){if(state==Player.STATE_ENDED)finished.countDown();}});
+    ArrayList<MediaItem> tracks=new ArrayList<>();for(int i=0;i<3;i++)tracks.add(new MediaItem.Builder().setMediaId("background-"+i).setUri(Uri.fromFile(source)).setMediaMetadata(new androidx.media3.common.MediaMetadata.Builder().setTitle("Background test "+i).build()).build());
+    control[0].setMediaItems(tracks);control[0].setRepeatMode(Player.REPEAT_MODE_OFF);control[0].setVolume(0);control[0].prepare();control[0].play();
+   });
+   scenario.onActivity(activity->activity.moveTaskToBack(true));
+   assertTrue("Third track starts with activity backgrounded",thirdTrack.await(30,TimeUnit.SECONDS));
+   android.app.NotificationManager notifications=(android.app.NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
+   assertTrue("Media notification remains at the third track",notifications.getActiveNotifications().length>0);
+   assertTrue("Background queue reaches its end",finished.await(15,TimeUnit.SECONDS));
+  }finally{InstrumentationRegistry.getInstrumentation().runOnMainSync(()->{if(control[0]!=null){control[0].stop();control[0].release();}});source.delete();}
+ }
+
 }

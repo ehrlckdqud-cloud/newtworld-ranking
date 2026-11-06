@@ -30,7 +30,7 @@ rely on background JavaScript timers.
 - Catalog checks: `node --test mobile/tests/*.test.cjs`.
 - DSP checks: compile `mobile/tests/dsp_test.c` with `mobile/ios/NewtWorld/EqualizerDSP.c` and libm.
 - Android instrumentation: persistent import/source deletion/reload/deletion and three native
-  track transitions without JavaScript. Run `connectedDebugAndroidTest` on an Android 10+ emulator.
+  track transitions without JavaScript, plus background MediaSessionService notification continuity through the third track. Run `connectedDebugAndroidTest` on an Android 10+ emulator.
 - iOS XCTest: persistent import/source deletion/reload/deletion on a simulator.
 
 ## Trust and release boundaries
