@@ -12,6 +12,7 @@
   let lyricsOn=localStorage.getItem('nwLyricsOn')==='1';
   let coverOn=localStorage.getItem('nwCoverOn')!=='0';
   let repeatMode=localStorage.getItem('nwRepeatMode')||'all'; // all | one | off
+  if(!['all','one','off'].includes(repeatMode))repeatMode='all';
   let shuffleOn=localStorage.getItem('nwShuffleOn')==='1';
   let shuffleVisited=new Set();
   let userStarted=false, seeking=false;
@@ -177,6 +178,19 @@
     sel.value=String(index);
     updateTrackPicker();
   }
+  function paintPlaybackModes(){
+    const shuffle=$('nwShuffle'),repeat=$('nwRepeatAll');
+    const svg=(body)=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+body+'</svg>';
+    const slash='<path class="nw-mode-slash" d="M3 3 21 21"/>';
+    shuffle.innerHTML=svg('<path d="M3 6h3c4 0 8 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 4-3 6-6s4-6 6-6h3m-4-4 4 4-4 4"/>'+(!shuffleOn?slash:''));
+    repeat.innerHTML=svg('<path d="m16 2 4 4-4 4M4 11V8a2 2 0 0 1 2-2h14M8 22l-4-4 4-4m12-1v3a2 2 0 0 1-2 2H4"/>'+(repeatMode==='one'?'<text x="12" y="12.5" text-anchor="middle" dominant-baseline="middle" fill="currentColor" stroke="none" font-family="Arial,sans-serif" font-size="10" font-weight="900">1</text>':repeatMode==='off'?slash:''));
+    shuffle.setAttribute('aria-pressed',String(shuffleOn));shuffle.classList.toggle('active',shuffleOn);
+    repeat.setAttribute('aria-pressed',String(repeatMode!=='off'));repeat.classList.toggle('active',repeatMode!=='off');
+    repeat.dataset.repeatMode=repeatMode;
+    shuffle.title=shuffleOn?'랜덤 재생 켜짐 · 누르면 끄기':'랜덤 재생 꺼짐 · 누르면 켜기';
+    repeat.title=repeatLabel()+' · 누르면 '+(repeatMode==='off'?'전체 반복':repeatMode==='all'?'한 곡 반복':'반복 끄기');
+    shuffle.setAttribute('aria-label',shuffle.title);repeat.setAttribute('aria-label',repeat.title);
+  }
   function paint(){
     const t=current(); if(!t)return;
     $('nwTrackTitle').textContent=t.title||'제목 없음'; $('nwTrackArtist').textContent=t.artist||'NEWT WORLD MUSIC';
@@ -188,8 +202,7 @@
     $('nwLyricsToggle').textContent=lyricsOn?'가사 ON':'가사 OFF'; $('nwLyricsToggle').classList.toggle('active',lyricsOn);
     $('nwCoverToggle').textContent=coverOn?'커버 ON':'커버 OFF'; $('nwCoverToggle').classList.toggle('active',coverOn);
     updateTrackPicker();
-    $('nwShuffle').setAttribute('aria-pressed',String(shuffleOn));$('nwShuffle').classList.toggle('active',shuffleOn);
-    $('nwRepeatAll').setAttribute('aria-pressed',String(repeatMode==='all'));$('nwRepeatAll').classList.toggle('active',repeatMode==='all');
+    paintPlaybackModes();
     $('nwTrackSelect').value=String(index);
     updateMediaSession();
   }
@@ -284,7 +297,7 @@
   function closeCoverModal(){coverModal.classList.remove('open');coverModal.setAttribute('aria-hidden','true');document.body.style.overflow='';}
   $('nwCoverWrap').onclick=null;$('nwCoverModalClose').onclick=closeCoverModal;coverModal.onclick=e=>{if(e.target===coverModal)closeCoverModal();};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&coverModal.classList.contains('open'))closeCoverModal();});
   $('nwShuffle').onclick=()=>{shuffleOn=!shuffleOn;shuffleVisited.clear();localStorage.setItem('nwShuffleOn',shuffleOn?'1':'0');paint();};
-  $('nwRepeatAll').onclick=()=>{repeatMode=repeatMode==='all'?'off':'all';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
+  $('nwRepeatAll').onclick=()=>{repeatMode=repeatMode==='off'?'all':repeatMode==='all'?'one':'off';localStorage.setItem('nwRepeatMode',repeatMode);paint();};
   function setRangeFill(el,value,min,max){
     if(!el)return;
     const lo=Number(min ?? el.min ?? 0), hi=Number(max ?? el.max ?? 100);
@@ -718,5 +731,6 @@
 
 
 window.dispatchEvent(new Event("nw-music-ready"));
+
 
 
