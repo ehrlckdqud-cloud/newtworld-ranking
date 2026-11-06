@@ -148,7 +148,8 @@
  sizeChoice.value=String(fontScale);weightChoice.value=fontWeight;if(!weightChoice.value)weightChoice.value='default';
  const typeStyle=document.createElement('style');typeStyle.textContent=`
  @media(min-width:651px){
- html.nw-sized body [data-nw-type-size]{font-size:calc(var(--nw-original-size) * var(--nw-font-scale,1))!important}
+ html.nw-type-measuring body *{transition:none!important}
+ html.nw-sized body [data-nw-type-size]{font-size:calc(var(--nw-original-size) * var(--nw-font-scale,1))!important;transition-property:background-color,color,border-color,opacity,transform!important}
  html.nw-weighted body,html.nw-weighted body *{font-weight:var(--nw-font-weight)!important}
  #nwFontSize,#nwFontWeight{height:27px;padding:0 5px;max-width:108px;font-size:10px}
  }
@@ -156,11 +157,11 @@
  `;document.head.append(typeStyle);
  let typeFrame=0;
  function measureType(){
-  typeFrame=0;const root=document.documentElement;root.classList.remove('nw-sized');
+  typeFrame=0;const root=document.documentElement;root.classList.add('nw-type-measuring');root.classList.remove('nw-sized');
   const nodes=[...document.body.querySelectorAll('*')].filter(el=>el instanceof HTMLElement&&!['SCRIPT','STYLE','LINK','META'].includes(el.tagName));
   const sizes=nodes.map(el=>getComputedStyle(el).fontSize);
   nodes.forEach((el,i)=>{el.style.setProperty('--nw-original-size',sizes[i]);el.setAttribute('data-nw-type-size','');});
-  root.style.setProperty('--nw-font-scale',String(fontScale/100));root.classList.toggle('nw-sized',fontScale!==100);keepBarPosition();
+  root.style.setProperty('--nw-font-scale',String(fontScale/100));root.classList.toggle('nw-sized',fontScale!==100);void document.body.offsetHeight;root.classList.remove('nw-type-measuring');keepBarPosition();
  }
  function scheduleType(){if(!typeFrame)typeFrame=requestAnimationFrame(measureType);}
  function setWeight(){const v=weightChoice.value;document.documentElement.style.setProperty('--nw-font-weight',v==='default'?'400':v);document.documentElement.classList.toggle('nw-weighted',v!=='default');}
