@@ -60,7 +60,7 @@
  #nwDesktopLyricsHandle{position:absolute;inset:0;display:flex;justify-content:flex-end;align-items:center;padding-right:6px;cursor:move;touch-action:none;user-select:none;color:var(--nw-muted)}
  #nwDesktopLyricsTitle{display:none}
  #nwDesktopLyricsHandle .nw-desktop-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;width:100px;cursor:default}
- #nwDesktopLyrics button{padding:0;width:22px;height:22px;border-radius:5px;border:1px solid var(--nw-border);background:var(--nw-control);color:var(--nw-text);cursor:pointer;font-size:13px}
+ #nwDesktopLyrics button{display:inline-flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box;flex:0 0 22px;line-height:1!important;text-align:center;letter-spacing:0!important;font-family:Arial,sans-serif!important;font-size:13px!important;font-weight:400!important;padding:0;width:22px;height:22px;border-radius:5px;border:1px solid var(--nw-border);background:var(--nw-control);color:var(--nw-text);cursor:pointer;font-size:13px}
  #nwDesktopLyrics .nw-desktop-opacity{display:flex;align-items:center;gap:3px;font-size:9px;line-height:16px;white-space:nowrap}
  #nwDesktopLyricsOpacity{width:62px;min-width:0;height:14px;padding:0;margin:0;accent-color:var(--nw-accent);cursor:pointer}
  #nwDesktopLyricsCurrent,#nwDesktopLyricsNext{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.15;min-height:1.15em;pointer-events:none;text-shadow:0 1px 3px #0008}
@@ -180,7 +180,7 @@
   try{
    pipWindow=await window.documentPictureInPicture.requestWindow({width:Math.round(Math.min(900,innerWidth*.5)),height:140});
    const pd=pipWindow.document;pd.title='뉴트월드 · 항상 위 가사';
-   const style=pd.createElement('style');style.textContent='html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#071018;color:#fff}#pipBar{box-sizing:border-box;min-height:100%;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;padding:6px 110px 6px 12px;text-align:center}#pipBar::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;text-shadow:0 1px 3px #0008}#pipControls{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:96px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}button{width:28px;height:25px;padding:0;border:1px solid var(--nw-border);border-radius:5px;background:var(--nw-control);color:var(--nw-text);cursor:pointer}label{font-size:10px;display:flex;align-items:center;gap:3px}input{width:58px;margin:0;accent-color:var(--nw-accent)}';
+   const style=pd.createElement('style');style.textContent='html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#071018;color:#fff}#pipBar{box-sizing:border-box;min-height:100%;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;padding:6px 110px 6px 12px;text-align:center}#pipBar::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;text-shadow:0 1px 3px #0008}#pipControls{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:96px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1;text-align:center;letter-spacing:0;font-family:Arial,sans-serif;font-size:14px;font-weight:400;width:28px;height:25px;padding:0;border:1px solid var(--nw-border);border-radius:5px;background:var(--nw-control);color:var(--nw-text);cursor:pointer}label{font-size:10px;display:flex;align-items:center;gap:3px}input{width:58px;margin:0;accent-color:var(--nw-accent)}';
    pd.head.append(style);
    pd.body.innerHTML='<section id="pipBar"><div class="line" id="pipCurrent"></div><div class="line" id="pipNext"></div><div id="pipControls"><button id="pipPrev" aria-label="이전 곡">⏮</button><button id="pipPlay" aria-label="재생 또는 일시정지">▶</button><button id="pipNextTrack" aria-label="다음 곡">⏭</button><label>투명도<input id="pipOpacity" type="range" min="0" max="100" aria-label="배경 투명도"></label></div></section>';
    const target=pd.getElementById('pipBar'),copiedFonts=new Set();
@@ -203,6 +203,41 @@
    pipWindow.addEventListener('pagehide',()=>{pipObserver?.disconnect();pipObserver=null;pipWindow=null;pipButton.textContent='항상 위 가사창';pipButton.setAttribute('aria-pressed','false');},{once:true});
   }catch(e){pipStatus.textContent='항상 위 가사창을 열지 못했습니다. 버튼을 다시 눌러주세요. '+e.message;pipStatus.hidden=false;}
  };
+
+
+ // Custom listbox renders each name in its own face; native select menus cannot
+ // reliably do so across browsers. Keep the select as the saved-value adapter.
+ fontChoice.style.setProperty('display','none','important');
+ const fontPicker=document.createElement('button');fontPicker.id='nwFontPicker';fontPicker.type='button';fontPicker.className='nw-mini-btn';fontPicker.setAttribute('aria-haspopup','listbox');fontPicker.setAttribute('aria-expanded','false');fontPicker.setAttribute('aria-controls','nwFontPreviewList');fontChoice.after(fontPicker);
+ const fontList=document.createElement('div');fontList.id='nwFontPreviewList';fontList.hidden=true;fontList.setAttribute('role','listbox');fontList.setAttribute('aria-label','글꼴 모양 미리보기');dock.append(fontList);
+ const previewStyle=document.createElement('style');previewStyle.textContent=`
+ #nwFontPicker{max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #nwFontPreviewList{position:absolute;z-index:20;right:12px;bottom:65px;width:min(310px,calc(100vw - 40px));max-height:min(420px,60vh);overflow:auto;overscroll-behavior:contain;padding:6px;border:1px solid var(--nw-border);border-radius:12px;background:var(--nw-panel);box-shadow:0 12px 32px #0007}
+ #nwFontPreviewList[hidden]{display:none!important}
+ #nwFontPreviewList button{display:block;width:100%;height:auto;min-height:42px;text-align:left;padding:7px 12px;border-radius:7px;white-space:normal;line-height:1.3}
+ #nwFontPreviewList button:focus-visible{outline:2px solid var(--nw-accent);outline-offset:-2px}
+ @media(max-width:650px){#nwFontPicker,#nwFontPreviewList{display:none!important}}
+ `;document.head.append(previewStyle);
+ const fontItems=[];
+ function updateFontPicker(){
+  const item=fonts.find(f=>f[0]===fontChoice.value)||fonts[0];fontPicker.textContent=item[1]+' ▾';fontPicker.setAttribute('aria-label','글꼴 선택: '+item[1]);
+  fontPicker.style.setProperty('font-family',item[2]||'system-ui,sans-serif','important');
+  fontItems.forEach(b=>b.setAttribute('aria-selected',String(b.dataset.font===item[0])));
+ }
+ function closeFontList(focus=false){fontList.hidden=true;fontPicker.setAttribute('aria-expanded','false');if(focus)fontPicker.focus();}
+ const fontPreviewObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){const item=fonts.find(f=>f[0]===entry.target.dataset.font);loadWebFont(item?.[3]);}});},{root:fontList,rootMargin:'70px'});
+ fonts.forEach(([value,label,family])=>{
+  const b=document.createElement('button');b.type='button';b.dataset.font=value;b.setAttribute('role','option');b.textContent=label;
+  b.style.setProperty('font-family',family||'system-ui,sans-serif','important');b.style.setProperty('font-weight','400','important');b.style.setProperty('font-size','21px','important');
+  b.onclick=()=>{fontChoice.value=value;fontChoice.dispatchEvent(new Event('change'));updateFontPicker();closeFontList(true);};
+  b.onkeydown=e=>{const i=fontItems.indexOf(b);let next;if(e.key==='ArrowDown')next=(i+1)%fontItems.length;if(e.key==='ArrowUp')next=(i+fontItems.length-1)%fontItems.length;if(e.key==='Home')next=0;if(e.key==='End')next=fontItems.length-1;if(next!==undefined){e.preventDefault();fontItems[next].focus();}if(e.key==='Escape'){e.preventDefault();closeFontList(true);}};
+  fontItems.push(b);fontList.append(b);fontPreviewObserver.observe(b);
+ });
+ fontPicker.onclick=()=>{if(!fontList.hidden){closeFontList();return;}fontList.hidden=false;fontPicker.setAttribute('aria-expanded','true');const chosen=fontItems.find(b=>b.dataset.font===fontChoice.value)||fontItems[0];chosen.focus();chosen.scrollIntoView({block:'nearest'});};
+ fontPicker.onkeydown=e=>{if(e.key==='ArrowDown'){e.preventDefault();if(fontList.hidden)fontPicker.click();}};
+ document.addEventListener('pointerdown',e=>{if(!fontList.contains(e.target)&&!fontPicker.contains(e.target))closeFontList();});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!fontList.hidden)closeFontList(true);});
+ fontChoice.addEventListener('change',updateFontPicker);updateFontPicker();
 
 })();
 
