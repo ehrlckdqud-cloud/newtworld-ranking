@@ -1,7 +1,13 @@
-const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const source=fs.readFileSync('assets/music/music-library.js','utf8');
-const segment=source.slice(source.indexOf(' let publishedAudio='),source.indexOf('\n function post('));
-const id='music-12345678-1234-1234-1234-123456789abc',url='assets/music/published/'+id+'-0123456789abcdef.mp3';
-let requests=0,manifest={tracks:{[id]:{audioFile:'file1',audio:url}}};
-const ctx={window:{},cache:new Map(),fetch:async()=>{requests++;return {ok:true,json:async()=>manifest}}};vm.createContext(ctx);vm.runInContext(segment,ctx);
-(async()=>{assert.equal(await ctx.window.NWResolveMusicAudio({audio:'direct.mp3'}),'direct.mp3');assert.equal(requests,0);const t={id,audioFile:'file1'};assert.equal(await ctx.window.NWResolveMusicAudio(t),url);assert.equal(await ctx.window.NWResolveMusicAudio(t),url);assert.equal(requests,1);await assert.rejects(ctx.window.NWResolveMusicAudio({...t,audioFile:'file2'}),/게시 준비/);manifest={tracks:{[id]:{audioFile:'file2',audio:url}}};assert.equal(await ctx.window.NWResolveMusicAudio({...t,audioFile:'file2'}),url);assert.equal(requests,2);ctx.cache.set(id,Promise.resolve('blob:local-upload'));assert.equal(await ctx.window.NWResolveMusicAudio(t),'blob:local-upload');console.log('Direct MP3 resolution, one manifest request, pending publication retry, source version match, and uploader preview passed.');})();
+const fragment=source.slice(source.indexOf(' let publishedAudio=null;'),source.indexOf('\n function post('));
+const id='music-1234567890123456',track={id,audioFile:'version1'},direct='assets/music/published/'+id+'-1234567890123456.mp3';
+async function setup(manifest,fail=false){let reads=0,urls=0;const ctx={window:{},Map,Uint8Array,Blob,Error,atob,fetch:async()=>({ok:true,json:async()=>manifest}),cache:new Map(),URL:{createObjectURL:()=>`blob:audio-${++urls}`},read:async()=>{reads++;if(fail)throw Error('offline');return {base64:Buffer.from([73,68,51,0,0]).toString('base64')}}};vm.createContext(ctx);vm.runInContext(fragment,ctx);return {resolve:ctx.window.NWResolveMusicAudio,reads:()=>reads,ctx};}
+(async()=>{
+let a=await setup({tracks:{[id]:{audioFile:'version1',audio:direct}}});assert.equal(await a.resolve(track),direct);assert.equal(a.reads(),0);
+a=await setup({tracks:{}});await assert.rejects(a.resolve(track,{prefetch:true}));assert.equal(a.reads(),0);
+const values=await Promise.all([a.resolve(track),a.resolve(track)]);assert.equal(values[0],values[1]);assert.equal(a.reads(),1);await a.resolve(track);assert.equal(a.reads(),1);await a.resolve({...track,audioFile:'version2'});assert.equal(a.reads(),2);
+a=await setup({tracks:{}},true);await assert.rejects(a.resolve(track));await assert.rejects(a.resolve(track));assert.equal(a.reads(),2);
+a=await setup({tracks:{}});a.ctx.read=async()=>({base64:Buffer.from('not mp3').toString('base64')});await assert.rejects(a.resolve(track));
+console.log('PASS direct URL, no prefetch downloads, fallback deduplication, version separation, retry after failure, invalid MP3 rejection');
+})().catch(e=>{console.error(e);process.exitCode=1});
