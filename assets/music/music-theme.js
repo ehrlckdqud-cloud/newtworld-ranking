@@ -9,6 +9,33 @@
  const themeStyle=document.createElement('style');themeStyle.id='nw-music-theme-controls';themeStyle.textContent="\n#nwMusicDock.nw-themed :is(button,select,input[type=\"text\"]):not([data-color]){\n background:var(--nw-control)!important;color:var(--nw-text)!important;border-color:var(--nw-border)!important}\n#nwMusicDock.nw-themed :is(button,select):not([data-color]):hover{background:var(--nw-hover)!important}\n#nwMusicDock.nw-themed :is(button.active,button[aria-pressed=\"true\"],button[aria-selected=\"true\"]):not([data-color]){\n background:var(--nw-active)!important;color:var(--nw-text)!important;border-color:var(--nw-accent)!important}\n#nwMusicDock.nw-themed #nwPlay{background:var(--nw-accent)!important;color:var(--nw-ink)!important}\n#nwMusicDock.nw-themed :is(#nwColorPanel,#nwEQPanel,#nwTrackMenu,.nw-tools){background:var(--nw-panel)!important;color:var(--nw-text)!important;border-color:var(--nw-border)!important}\n#nwMusicDock.nw-themed :is(.nw-track-artist,.nw-time,.nw-volume-label,#nwColorPanel small,#nwEQPanel small,.nw-lyric-line){color:var(--nw-muted)!important}\n#nwMusicDock.nw-themed .nw-lyrics{background:var(--nw-panel)!important;border-color:var(--nw-border)!important}\n#nwMusicDock.nw-themed .nw-lyric-line.active{background:var(--nw-active)!important;color:var(--nw-text)!important;text-shadow:none}\n#nwMusicDock.nw-themed :is(.nw-range-fill,.nw-eq-thumb,.nw-live-dot){background:var(--nw-accent)!important}\n#nwMusicDock.nw-themed .nw-live-dot{box-shadow:0 0 12px var(--nw-accent)}\n#nwMusicDock.nw-themed :is(.nw-cover-wrap,.nw-music-shell){border-color:var(--nw-border)!important}\n#nwMusicDock.nw-themed .nw-color-hue input{accent-color:var(--nw-accent)}\n#nwMusicDock.nw-themed .nw-eq-rail{background:linear-gradient(to bottom,var(--nw-border) 0%,var(--nw-border) var(--eq-position,50%),var(--nw-accent) var(--eq-position,50%),var(--nw-accent) 100%)!important}\n";themeStyle.textContent+="\n#nwBackgroundGuide.nw-themed{background:var(--nw-panel);color:var(--nw-text);border-color:var(--nw-border)}\n#nwBackgroundGuide.nw-themed::backdrop{background:var(--nw-ink);opacity:.75}\n#nwBackgroundGuide.nw-themed strong{color:var(--nw-accent)}\n#nwBackgroundGuide.nw-themed ol{background:var(--nw-control)}\n#nwBackgroundGuide.nw-themed .nw-bg-guide-note{color:var(--nw-muted)}\n#nwBackgroundGuide.nw-themed #nwBackgroundGuideConfirm{background:var(--nw-accent);color:var(--nw-ink)}\n#nwBackgroundGuide.nw-themed #nwBackgroundGuideConfirm:hover{background:var(--nw-text)}\n";themeStyle.textContent+="\n/* Playback mode icons: white when off, selected theme color when on. */\n#nwMusicDock.nw-themed :is(#nwShuffle,#nwRepeatAll){\n color:#fff!important;background:var(--nw-control)!important;border-color:var(--nw-border)!important}\n#nwMusicDock.nw-themed :is(#nwShuffle,#nwRepeatAll)[aria-pressed=\"true\"]{\n color:var(--nw-mode-color)!important;background:var(--nw-mode-bg)!important;border-color:var(--nw-mode-color)!important;box-shadow:0 0 0 1px var(--nw-mode-color)}\n#nwMusicDock.nw-themed :is(#nwShuffle,#nwRepeatAll) svg{color:inherit;stroke:currentColor}\n";themeStyle.textContent+="\n/* Off modes remain clickable, but have dimmed icons and a clear diagonal slash. */\n#nwMusicDock.nw-themed :is(#nwShuffle,#nwRepeatAll)[aria-pressed=\"false\"]{\n color:#82878d!important;background:#161a1f!important;border-color:#444a50!important;box-shadow:none!important}\n#nwMusicDock :is(#nwShuffle,#nwRepeatAll) .nw-mode-slash{\n stroke:#b0b5bb;stroke-width:2.6;filter:drop-shadow(0 1px 1px #000)}\n#nwMusicDock.nw-themed :is(#nwShuffle,#nwRepeatAll)[aria-pressed=\"true\"]{opacity:1}\n#nwMusicDock :is(#nwShuffle,#nwRepeatAll):focus-visible{outline:2px solid var(--nw-accent,#fff);outline-offset:3px}\n";document.head.append(themeStyle);
 
 
+
+ // PC-wide typography, including the separate desktop lyrics bar.
+ const fontChoice=document.createElement('select');fontChoice.id='nwFontChoice';fontChoice.className='nw-mini-btn';fontChoice.setAttribute('aria-label','PC 전체 글꼴 선택');fontChoice.title='PC 전체 글꼴 · 자동 저장';
+ const fonts=[
+  ['default','글꼴: 기본',''],
+  ['malgun','맑은 고딕','"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-serif'],
+  ['dotum','돋움','Dotum,"돋움","Apple SD Gothic Neo",sans-serif'],
+  ['gulim','굴림','Gulim,"굴림","Apple SD Gothic Neo",sans-serif'],
+  ['batang','바탕','Batang,"바탕",AppleMyungjo,serif'],
+  ['gungsuh','궁서','Gungsuh,"궁서",Batang,"바탕",AppleMyungjo,serif']
+ ];
+ fonts.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;fontChoice.append(option);});
+ $('nwAddTrack').after(fontChoice);
+ const fontStyle=document.createElement('style');fontStyle.textContent=`
+ @media(min-width:651px){html.nw-custom-font body,html.nw-custom-font body *{font-family:var(--nw-selected-font)!important}
+ #nwFontChoice{max-width:125px;height:27px;padding:0 6px;font-size:10px;cursor:pointer}}
+ @media(max-width:650px){#nwFontChoice{display:none!important}}
+ `;document.head.append(fontStyle);
+ function applyFont(value,save=false){
+  const chosen=fonts.find(item=>item[0]===value)||fonts[0];fontChoice.value=chosen[0];
+  document.documentElement.classList.toggle('nw-custom-font',!!chosen[2]);
+  if(chosen[2])document.documentElement.style.setProperty('--nw-selected-font',chosen[2]);else document.documentElement.style.removeProperty('--nw-selected-font');
+  if(save)try{localStorage.setItem('nwDesktopFont',chosen[0]);}catch{}
+ }
+ let savedFont='default';try{savedFont=localStorage.getItem('nwDesktopFont')||'default';}catch{}applyFont(savedFont);
+ fontChoice.onchange=()=>applyFont(fontChoice.value,true);
+
  // Desktop lyrics stay inside the website and share the player's selected theme.
  const lyricBar=document.createElement('section');lyricBar.id='nwDesktopLyrics';lyricBar.setAttribute('aria-label','데스크탑 가사');
  lyricBar.innerHTML='<div id="nwDesktopLyricsHandle" title="드래그하여 이동"><span id="nwDesktopLyricsTitle">NEWT WORLD · 가사</span><div class="nw-desktop-controls"><button type="button" id="nwDesktopLyricsPrev" aria-label="이전 곡" title="이전 곡">⏮</button><button type="button" id="nwDesktopLyricsPlay" aria-label="재생 또는 일시정지">▶</button><button type="button" id="nwDesktopLyricsNextTrack" aria-label="다음 곡" title="다음 곡">⏭</button><button type="button" id="nwDesktopLyricsClose" aria-label="데스크탑 가사 닫기">×</button><label class="nw-desktop-opacity" title="배경 투명도: 오른쪽으로 갈수록 투명해집니다">투명도<input id="nwDesktopLyricsOpacity" type="range" min="0" max="100" step="1" value="0" aria-label="가사 바 배경 투명도"></label></div></div><div id="nwDesktopLyricsCurrent"></div><div id="nwDesktopLyricsNext"></div>';
