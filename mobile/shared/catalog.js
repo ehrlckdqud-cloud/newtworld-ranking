@@ -17,18 +17,20 @@ function merge(base,remote,manifest,sync={}){
 }
 if(typeof module==='object')module.exports={merge};
 else{
- function script(url){return new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=url;s.onload=resolve;s.onerror=reject;document.head.append(s)});}
+ function script(url){return new Promise((resolve,reject)=>{const s=document.createElement('script');const timer=setTimeout(()=>{s.remove();reject(Error('연결 시간 초과'))},15000);s.src=url;s.onload=()=>{clearTimeout(timer);resolve()};s.onerror=()=>{clearTimeout(timer);reject(Error('연결 실패'))};document.head.append(s)});}
  function read(action){return new Promise((resolve,reject)=>{
   const cb='nwNative_'+Math.random().toString(36).slice(2),s=document.createElement('script');let timer;
   const finish=(value,error)=>{clearTimeout(timer);s.remove();delete window[cb];error?reject(error):resolve(value)};
   window[cb]=d=>d?.ok?finish(d):finish(null,Error('곡 서버 응답 오류'));s.onerror=()=>finish(null,Error('곡 서버 연결 실패'));
   timer=setTimeout(()=>finish(null,Error('곡 서버 응답 지연')),15000);
-  s.src=window.NW_CONFIG.appScriptUrl+'?'+new URLSearchParams({action,callback:cb});document.head.append(s);
+  const url=new URL(window.NW_CONFIG.appScriptUrl);url.searchParams.set('action',action);url.searchParams.set('callback',cb);s.src=url.href;document.head.append(s);
  });}
- root.NWCatalog={async load(){
+ root.NWCatalog={offline:false,async load(){
+  try{
   await Promise.all([script(BASE+'site-config.js'),script(BASE+'assets/music/tracks.js')]);
   const [remote,manifest,sync]=await Promise.all([read('musicLibraryGet'),fetch(BASE+'assets/music/published/manifest.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('음원 목록 오류');return r.json()}),read('syncGet').catch(()=>({sync:{}}))]);
-  return merge(window.NW_TRACKS||[],remote,manifest,sync.sync);
+  const list=merge(window.NW_TRACKS||[],remote,manifest,sync.sync);try{localStorage.setItem("nwNativeCatalog",JSON.stringify(list))}catch{};this.offline=false;return list;
+  }catch(error){let cached;try{cached=JSON.parse(localStorage.getItem("nwNativeCatalog"))}catch{};if(Array.isArray(cached)){this.offline=true;return cached;}throw error;}
  }};
 }
 })(typeof window==='object'?window:globalThis);

@@ -24,6 +24,7 @@ jobs:
           gradle-version: '8.9'
       - run: python3 mobile/tools/bundle-web.py
       - run: node --test mobile/tests/*.test.cjs
+      - run: cc mobile/tests/dsp_test.c mobile/ios/NewtWorld/EqualizerDSP.c -lm -o /tmp/newt-dsp-test && /tmp/newt-dsp-test
       - run: gradle -p mobile/android assembleDebug
       - uses: actions/upload-artifact@v4
         with:
