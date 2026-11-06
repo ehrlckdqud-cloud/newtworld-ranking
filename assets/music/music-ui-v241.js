@@ -465,7 +465,14 @@
   initMediaSession();
   const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
+  function stopForExit(){
+    ++trackLoadSerial;bgmOn=false;userStarted=true;pausePlayback();
+    document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);
+    localStorage.setItem('nwBgmOn','0');localStorage.setItem('nwMusicCollapsed','1');
+    localStorage.setItem('nwAudioResume',JSON.stringify({i:index,t:Number(audio.currentTime)||0,playing:false,at:Date.now()}));
+    try{navigator.mediaSession.playbackState='none';navigator.mediaSession.metadata=null;}catch(_){}
+  }
+  window.NWMusicAdminAPI={stopForExit,audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
 })();
 
 

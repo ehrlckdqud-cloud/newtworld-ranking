@@ -410,6 +410,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 @media(max-width:650px){#nwEQPanel{top:calc(96px + env(safe-area-inset-top,0px));bottom:auto;left:24px;right:24px;max-height:calc(100dvh - 164px)}}
 
 
+#nwExitDialog{box-sizing:border-box;width:calc(100vw - 36px);max-width:390px;margin:auto;padding:24px;border:1px solid #6e9d7d;border-radius:20px;background:#102b20;color:#e5f3e9;font-family:inherit;box-shadow:0 20px 60px #0008}#nwExitDialog::backdrop{background:#03120cbb}#nwExitDialog h2{font-size:20px;margin:0 0 16px}#nwExitDialog p{font-size:15px;line-height:1.8;word-break:keep-all}.nw-exit-actions{display:flex;gap:12px;margin-top:24px}.nw-exit-actions button{flex:1;min-height:44px;border:1px solid #6e9d7d;border-radius:12px;background:#1e4432;color:#e5f3e9;font:inherit;cursor:pointer}#nwExitConfirm{background:#c7ebc9;color:#123326;font-weight:700}
 .nw-background-help{display:none}
 #nwBackgroundGuide{box-sizing:border-box;width:calc(100vw - 36px);max-width:390px;max-height:calc(100dvh - 40px);overflow:auto;margin:auto;padding:24px;border:1px solid #6e9d7d;border-radius:20px;background:#102b20;color:#e5f3e9;box-shadow:0 20px 60px #0008;font-family:inherit}#nwBackgroundGuide::backdrop{background:#03120cbb}#nwBackgroundGuide h2{font-size:20px;line-height:1.5;margin:0 0 16px;word-break:keep-all}#nwBackgroundGuide p{font-size:14px;line-height:1.7;margin:12px 0}#nwBackgroundGuide strong{color:#bcf0c6}#nwBackgroundGuide ol{padding:16px 16px 16px 36px;background:#1e4432;border-radius:12px;font-size:14px;line-height:2}#nwBackgroundGuide .nw-bg-guide-note{font-size:12px;color:#a9c3b2}#nwBackgroundGuideConfirm{width:100%;min-height:44px;margin-top:10px;border:0;border-radius:12px;background:#c7ebc9;color:#123326;font:inherit;font-weight:700;cursor:pointer}
 @media(max-width:650px){#nwMusicDock:not(.nw-music-collapsed) .nw-background-help{display:block;position:absolute;left:82px;top:calc(6px + env(safe-area-inset-top,0px));height:36px;padding:0 10px;border:1px solid #7da98c55;border-radius:18px;font-size:11px;background:#143b2b;color:#d9efdf;cursor:pointer}}
@@ -2431,6 +2432,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- v17: music files and track manifest are external for faster loading and easy expansion. -->
 
 <script id="nwBuiltInTracks" type="application/json">[]</script>
+<script src="assets/music/music-exit.js?v=20261106-exit1" defer></script>
 <script src="assets/music/music-background-guide.js?v=20261106-bg-guide1" defer></script>
 <script src="assets/music/music-eq.js?v=20261106-eq-touch2" defer></script>
 <script src="assets/music/music-local.js?v=20261106-local1" defer></script>
@@ -2446,7 +2448,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-bg-continuity1';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-exit1';document.head.appendChild(script);
   });
 })();
 </script>
