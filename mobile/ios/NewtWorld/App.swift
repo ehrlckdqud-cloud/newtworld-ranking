@@ -85,12 +85,13 @@ final class PlayerViewController: UIViewController, WKScriptMessageHandler, WKNa
 
 final class AudioEngine {
     let player = AVPlayer()
-    let library = LocalLibrary()
+    let library: LocalLibrary
     var defaults: [[String: Any]] = []
     var order: [Int] = [], cursor = 0
     var selection = UUID()
     var eqAvailable = false
     var wantsToPlay = false
+    var preparing = false
     var tracks: [[String: Any]] = []
     var index = 0
     var repeatAll = false
@@ -101,7 +102,8 @@ final class AudioEngine {
     var artwork: MPMediaItemArtwork?
     var stopped = false
     var itemObservation: NSKeyValueObservation?
-    init() {
+    init(library: LocalLibrary = LocalLibrary(), registerRemoteCommands: Bool = true) {
+        self.library = library
         if let saved = UserDefaults.standard.data(forKey: "defaultQueue"), let queue = try? JSONSerialization.jsonObject(with: saved) as? [[String: Any]] { defaults = queue }
         if let settings = UserDefaults.standard.dictionary(forKey: "equalizer") { equalizer(settings) }
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
@@ -109,6 +111,7 @@ final class AudioEngine {
         NotificationCenter.default.addObserver(self, selector: #selector(ended), name: .AVPlayerItemDidPlayToEndTime, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(interrupted(_:)), name: AVAudioSession.interruptionNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(routeChanged(_:)), name: AVAudioSession.routeChangeNotification, object: nil)
+        if !registerRemoteCommands { return }
         let center = MPRemoteCommandCenter.shared()
         center.playCommand.addTarget { [weak self] _ in self?.play(); return .success }
         center.pauseCommand.addTarget { [weak self] _ in self?.pause(); return .success }
@@ -120,6 +123,7 @@ final class AudioEngine {
         }
         center.stopCommand.addTarget { [weak self] _ in self?.stop(); return .success }
     }
+    deinit { if let observer = observer { player.removeTimeObserver(observer) }; NotificationCenter.default.removeObserver(self) }
     func validURL(_ value: String) -> URL? {
         guard let url = URL(string: value), url.scheme == "https", url.host == "ehrlckdqud-cloud.github.io", url.path.hasPrefix("/newtworld-ranking/assets/") else { return nil }
         return url
@@ -155,7 +159,7 @@ final class AudioEngine {
     func pause() { wantsToPlay = false; player.pause(); report() }
     func play() {
         wantsToPlay = true
-        guard player.currentItem != nil else { report(); return }
+        guard !preparing, player.currentItem != nil else { report(); return }
         if player.currentItem?.status == .failed { select(index, autoplay: true); return }
         if let duration = player.currentItem?.duration.seconds, duration.isFinite, player.currentTime().seconds >= duration { seek(0) }
         do { stopped = false; try AVAudioSession.sharedInstance().setActive(true); player.play(); report() }
@@ -172,7 +176,7 @@ final class AudioEngine {
         if resetOrder { rebuildOrder() }
         let token = UUID(); selection = token
         let item = AVPlayerItem(url: url)
-        player.pause(); player.replaceCurrentItem(with: nil); eqAvailable = false
+        player.pause(); preparing = true; eqAvailable = false
         let asset = item.asset
         asset.loadTracks(withMediaType: .audio) { [weak self] audioTracks, _ in
             DispatchQueue.main.async {
@@ -183,12 +187,13 @@ final class AudioEngine {
                     let mix = AVMutableAudioMix(); mix.inputParameters = [input]; item.audioMix = mix
                     self.eqAvailable = true
                 }
+                self.preparing = false
                 self.player.replaceCurrentItem(with: item)
                 if self.wantsToPlay { self.play() } else { self.report() }
             }
         }
         itemObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
-            if item.status == .failed { DispatchQueue.main.async { self?.emit?(["type":"error", "message":"음원을 불러오지 못했습니다. 재생 버튼을 다시 눌러주세요."]) } }
+            if item.status == .failed { DispatchQueue.main.async { self?.pause(); self?.emit?(["type":"error", "message":"음원을 불러오지 못했습니다. 재생 버튼을 다시 눌러주세요."]) } }
         }
         report()
         let id = tracks[i]["id"] as? String
@@ -256,11 +261,11 @@ final class AudioEngine {
     }
     func report(updateMetadata: Bool = true) {
         guard tracks.indices.contains(index) else { emit?(["type":"state", "id":"", "position":0, "duration":0, "playing":false]); return }
-        let track = tracks[index], p = player.currentTime().seconds, d = player.currentItem?.duration.seconds ?? 0
+        let track = tracks[index], p = preparing ? 0 : player.currentTime().seconds, d = preparing ? 0 : (player.currentItem?.duration.seconds ?? 0)
         let position = p.isFinite ? p : 0, duration = d.isFinite ? d : 0
         emit?(["type":"state", "id":track["id"] ?? "", "position":position, "duration":duration, "playing":wantsToPlay, "eqAvailable":eqAvailable])
         if updateMetadata && !stopped {
-            var info: [String: Any] = [MPMediaItemPropertyTitle: track["title"] ?? "", MPMediaItemPropertyArtist: track["artist"] ?? "", MPNowPlayingInfoPropertyElapsedPlaybackTime: position, MPMediaItemPropertyPlaybackDuration: duration, MPNowPlayingInfoPropertyPlaybackRate: player.rate]
+            var info: [String: Any] = [MPMediaItemPropertyTitle: track["title"] ?? "", MPMediaItemPropertyArtist: track["artist"] ?? "", MPNowPlayingInfoPropertyElapsedPlaybackTime: position, MPMediaItemPropertyPlaybackDuration: duration, MPNowPlayingInfoPropertyPlaybackRate: wantsToPlay ? 1.0 : 0.0]
             if let artwork = artwork { info[MPMediaItemPropertyArtwork] = artwork }
             MPNowPlayingInfoCenter.default().nowPlayingInfo = info
         }

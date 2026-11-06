@@ -30,7 +30,7 @@ public class PlaybackTest {
    LocalLibrary restored=new LocalLibrary(context,folder);assertEquals(1,restored.read().length());assertTrue(new File(folder,id+".audio").isFile());assertTrue(restored.webTracks().getJSONObject(0).getBoolean("local"));
    try{restored.delete("builtin-1");fail("Default-song deletion must be rejected");}catch(IllegalArgumentException expected){}
    restored.delete(id);assertEquals(0,new LocalLibrary(context,folder).read().length());assertFalse(new File(folder,id+".audio").exists());
-  }finally{context.getContentResolver().delete(uri,null,null);File[] files=folder.listFiles();if(files!=null)for(File f:files)f.delete();folder.delete();}
+  }finally{try{context.getContentResolver().delete(uri,null,null);}catch(SecurityException ignored){}File[] files=folder.listFiles();if(files!=null)for(File f:files)f.delete();folder.delete();}
  }
  @Test public void nativeQueueAdvancesWithoutJavascript()throws Exception{
   Context context=InstrumentationRegistry.getInstrumentation().getTargetContext();File source=new File(context.getCacheDir(),"queue-test-"+UUID.randomUUID()+".wav");try(FileOutputStream out=new FileOutputStream(source)){out.write(wav());}

@@ -40,7 +40,7 @@ private boolean pageReady=false;
  @Override public void onCreate(Bundle state){
   super.onCreate(state);
   library=new LocalLibrary(this);try{defaultTracks=new JSONArray(getSharedPreferences("native-player",MODE_PRIVATE).getString("defaults","[]"));}catch(Exception ignored){}
-  web=new WebView(this);setContentView(web);
+  web=new WebView(this);setContentView(web);web.setWebChromeClient(new android.webkit.WebChromeClient());
   androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(web,(v,insets)->{androidx.core.graphics.Insets bars=insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());v.setPadding(bars.left,bars.top,bars.right,bars.bottom);return insets;});web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);
   web.getSettings().setAllowFileAccess(false);web.getSettings().setAllowContentAccess(false);
   WebViewAssetLoader loader=new WebViewAssetLoader.Builder().addPathHandler("/assets/",new WebViewAssetLoader.AssetsPathHandler(this)).addPathHandler("/local/",new WebViewAssetLoader.InternalStoragePathHandler(this,library.directory)).build();
@@ -107,7 +107,7 @@ private boolean pageReady=false;
  }catch(Exception e){emit("error","곡 목록 갱신에 실패했습니다.");}}
  private void modes(JSONObject m){controller.setRepeatMode(m.optString("repeat").equals("all")?Player.REPEAT_MODE_ALL:Player.REPEAT_MODE_OFF);controller.setShuffleModeEnabled(m.optBoolean("shuffle"));}
  private void emit(String type,String message){try{JSONObject o=new JSONObject().put("type",type);if(message!=null)o.put("message",message);send(o);}catch(Exception ignored){}}
- private void sendState(){if(controller==null)return;try{MediaItem item=controller.getCurrentMediaItem();send(new JSONObject().put("type","state").put("id",item==null?"":item.mediaId).put("position",Math.max(0,controller.getCurrentPosition())/1000.0).put("duration",Math.max(0,controller.getDuration())/1000.0).put("eqAvailable",PlaybackService.eqAvailable).put("playing",controller.getPlayWhenReady()&&controller.getPlaybackState()!=Player.STATE_ENDED));}catch(Exception ignored){}}
+ private void sendState(){if(controller==null)return;try{MediaItem item=controller.getCurrentMediaItem();send(new JSONObject().put("type","state").put("id",item==null?"":item.mediaId).put("position",Math.max(0,controller.getCurrentPosition())/1000.0).put("duration",Math.max(0,controller.getDuration())/1000.0).put("eqAvailable",PlaybackService.eqAvailable).put("playing",controller.getPlayWhenReady()&&controller.getPlaybackState()!=Player.STATE_ENDED&&controller.getPlaybackState()!=Player.STATE_IDLE));}catch(Exception ignored){}}
  private void send(JSONObject o){if(pageReady&&web!=null)web.evaluateJavascript("window.NWNativeReceive&&window.NWNativeReceive("+o.toString()+")",null);}
  @Override protected void onStart(){super.onStart();handler.post(tick);}
  @Override protected void onStop(){handler.removeCallbacks(tick);super.onStop();}

@@ -42,9 +42,10 @@ jobs:
       - run: xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -sdk iphonesimulator -configuration Debug -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO build
 
       - name: Test iOS persistent music library
+        timeout-minutes: 6
         run: |
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; devices=json.load(sys.stdin)["devices"]; print(next(d["udid"] for group in devices.values() for d in group if d["name"].startswith("iPhone")))')
-          xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO test
+          xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO -parallel-testing-enabled NO -test-timeouts-enabled YES -maximum-test-execution-time-allowance 60 test
   android-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -68,4 +69,5 @@ jobs:
           api-level: 35
           arch: x86_64
           disable-animations: true
-          script: gradle -p mobile/android connectedDebugAndroidTest
+          script: |
+            gradle -p mobile/android connectedDebugAndroidTest || { cat mobile/android/app/build/outputs/androidTest-results/connected/debug/*/*.xml; exit 1; }
