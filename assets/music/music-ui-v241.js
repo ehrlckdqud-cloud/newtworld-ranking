@@ -431,12 +431,12 @@
     if(collapsed){closeTrackMenu();$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
   }
   function rememberCollapsed(){localStorage.setItem('nwMusicCollapsed',collapsed?'1':'0');paintCollapsed();}
-  function ensurePlayerHistory(){
-    if(mobilePlayer.matches&&!collapsed&&!history.state?.nwMusicPlayer){history.pushState({...history.state,nwMusicPlayer:true},'',location.href);}
+  function ensurePlayerHistory(fromUser=false){
+    if(mobilePlayer.matches&&!collapsed&&!history.state?.nwMusicPlayer){window.NWExitGuard?.prepareForPlayer(fromUser);history.pushState({...history.state,nwMusicPlayer:true},'',location.href);}
   }
   $('nwCollapseBtn').onclick=()=>{
     collapsed=!collapsed;rememberCollapsed();
-    if(!collapsed){ensurePlayerHistory();lastLyricIndex=-1;syncLyrics();}
+    if(!collapsed){ensurePlayerHistory(true);lastLyricIndex=-1;syncLyrics();}
     else if(history.state?.nwMusicPlayer){history.back();}
   };
   $('nwPlayerSettings').onclick=()=>{
@@ -447,6 +447,7 @@
     collapsed=!history.state?.nwMusicPlayer;
     if(coverModal.classList.contains('open'))closeCoverModal();
     rememberCollapsed();
+    window.NWExitGuard?.afterPlayerChange();
   });
   mobilePlayer.addEventListener('change',()=>{ensurePlayerHistory();paint();lastLyricIndex=-1;syncLyrics();});
   ensurePlayerHistory();

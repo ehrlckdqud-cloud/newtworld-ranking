@@ -2432,7 +2432,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- v17: music files and track manifest are external for faster loading and easy expansion. -->
 
 <script id="nwBuiltInTracks" type="application/json">[]</script>
-<script src="assets/music/music-exit.js?v=20261106-exit2" defer></script>
+<script src="assets/music/music-exit.js?v=20261106-exit3" defer></script>
 <script src="assets/music/music-background-guide.js?v=20261106-bg-guide1" defer></script>
 <script src="assets/music/music-eq.js?v=20261106-eq-touch2" defer></script>
 <script src="assets/music/music-local.js?v=20261106-local1" defer></script>
@@ -2448,7 +2448,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-exit1';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-exit3';document.head.appendChild(script);
   });
 })();
 </script>
