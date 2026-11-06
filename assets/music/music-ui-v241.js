@@ -431,12 +431,12 @@
     if(collapsed){closeTrackMenu();$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
   }
   function rememberCollapsed(){localStorage.setItem('nwMusicCollapsed',collapsed?'1':'0');paintCollapsed();}
-  function ensurePlayerHistory(fromUser=false){
-    if(mobilePlayer.matches&&!collapsed&&!history.state?.nwMusicPlayer){window.NWExitGuard?.prepareForPlayer(fromUser);history.pushState({...history.state,nwMusicPlayer:true},'',location.href);}
+  function ensurePlayerHistory(){
+    if(mobilePlayer.matches&&!collapsed&&!history.state?.nwMusicPlayer){history.pushState({...history.state,nwMusicPlayer:true},'',location.href);}
   }
   $('nwCollapseBtn').onclick=()=>{
     collapsed=!collapsed;rememberCollapsed();
-    if(!collapsed){ensurePlayerHistory(true);lastLyricIndex=-1;syncLyrics();}
+    if(!collapsed){ensurePlayerHistory();lastLyricIndex=-1;syncLyrics();}
     else if(history.state?.nwMusicPlayer){history.back();}
   };
   $('nwPlayerSettings').onclick=()=>{
@@ -447,7 +447,6 @@
     collapsed=!history.state?.nwMusicPlayer;
     if(coverModal.classList.contains('open'))closeCoverModal();
     rememberCollapsed();
-    window.NWExitGuard?.afterPlayerChange();
   });
   mobilePlayer.addEventListener('change',()=>{ensurePlayerHistory();paint();lastLyricIndex=-1;syncLyrics();});
   ensurePlayerHistory();
@@ -466,14 +465,7 @@
   initMediaSession();
   const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  function stopForExit(){
-    ++trackLoadSerial;bgmOn=false;userStarted=true;pausePlayback();
-    document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);
-    localStorage.setItem('nwBgmOn','0');localStorage.setItem('nwMusicCollapsed','1');
-    localStorage.setItem('nwAudioResume',JSON.stringify({i:index,t:Number(audio.currentTime)||0,playing:false,at:Date.now()}));
-    try{navigator.mediaSession.playbackState='none';navigator.mediaSession.metadata=null;}catch(_){}
-  }
-  window.NWMusicAdminAPI={stopForExit,audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
+  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
 })();
 
 
