@@ -20,6 +20,10 @@
   ['batang','바탕','Batang,"바탕",AppleMyungjo,serif'],
   ['gungsuh','궁서','Gungsuh,"궁서",Batang,"바탕",AppleMyungjo,serif']
  ];
+ const webFonts=[["Noto Sans KR","본고딕"],["Noto Serif KR","본명조"],["Nanum Gothic","나눔고딕"],["Nanum Myeongjo","나눔명조"],["Nanum Pen Script","나눔손글씨 펜"],["Nanum Brush Script","나눔손글씨 붓"],["Gothic A1","고딕 A1"],["Gowun Dodum","고운돋움"],["Gowun Batang","고운바탕"],["Hahmlet","함렛"],["IBM Plex Sans KR","IBM Plex 산스"],["Black Han Sans","검은고딕"],["Jua","주아"],["Do Hyeon","도현"],["Gaegu","개구"],["Gugi","구기"],["Sunflower","해바라기"],["Stylish","스타일리시"],["Poor Story","푸어스토리"],["Cute Font","큐트"],["Song Myung","송명"],["East Sea Dokdo","동해독도"],["Hi Melody","하이멜로디"],["Gamja Flower","감자꽃"],["Single Day","싱글데이"],["Dongle","동글"],["Gasoek One","가석"],["Bagel Fat One","베이글 팻"],["Diphylleia","산하엽"],["Yeon Sung","연성"],["Kirang Haerang","기랑해랑"],["Black And White Picture","흑백사진"]];
+ webFonts.forEach(([family,label],i)=>fonts.push(['web-'+i,label,'"'+family+'","Malgun Gothic",sans-serif',family]));
+ const fontLinks=new Map();
+ function loadWebFont(family){if(!family||fontLinks.has(family))return;const link=document.createElement('link');link.rel='stylesheet';link.href='https://fonts.googleapis.com/css2?family='+encodeURIComponent(family)+'&display=swap';link.dataset.nwWebFont='1';fontLinks.set(family,link);document.head.append(link);}
  fonts.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;fontChoice.append(option);});
  $('nwAddTrack').after(fontChoice);
  const fontStyle=document.createElement('style');fontStyle.textContent=`
@@ -29,6 +33,7 @@
  `;document.head.append(fontStyle);
  function applyFont(value,save=false){
   const chosen=fonts.find(item=>item[0]===value)||fonts[0];fontChoice.value=chosen[0];
+  loadWebFont(chosen[3]);
   document.documentElement.classList.toggle('nw-custom-font',!!chosen[2]);
   if(chosen[2])document.documentElement.style.setProperty('--nw-selected-font',chosen[2]);else document.documentElement.style.removeProperty('--nw-selected-font');
   if(save)try{localStorage.setItem('nwDesktopFont',chosen[0]);}catch{}
@@ -66,8 +71,11 @@
  let barDrag=null;
  $('nwDesktopLyricsHandle').onpointerdown=e=>{if(e.button!==0||e.target.closest('button,input,label'))return;const r=lyricBar.getBoundingClientRect();barDrag={x:e.clientX-r.left,y:e.clientY-r.top};e.currentTarget.setPointerCapture(e.pointerId);};
  $('nwDesktopLyricsHandle').onpointermove=e=>{if(!barDrag)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,e.clientX-barDrag.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,e.clientY-barDrag.y))+'px';};
- $('nwDesktopLyricsHandle').onpointerup=$('nwDesktopLyricsHandle').onpointercancel=()=>{barDrag=null;};
- window.addEventListener('resize',()=>{lyricBar.style.left='';lyricBar.style.top='';});
+ $('nwDesktopLyricsHandle').onpointerup=$('nwDesktopLyricsHandle').onpointercancel=()=>{if(barDrag)rememberBarPosition();barDrag=null;};
+ let barPosition=null;try{const p=JSON.parse(localStorage.getItem('nwDesktopLyricsPosition')||'null');if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))barPosition=p;}catch{}
+ function keepBarPosition(){if(!barPosition||!matchMedia('(min-width:651px)').matches)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,barPosition.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,barPosition.y))+'px';}
+ function rememberBarPosition(){const r=lyricBar.getBoundingClientRect();barPosition={x:r.left,y:r.top};try{localStorage.setItem('nwDesktopLyricsPosition',JSON.stringify(barPosition));}catch{}}
+ window.addEventListener('resize',keepBarPosition);requestAnimationFrame(keepBarPosition);
  function initDesktopLyrics(){
   const api=window.NWMusicAdminAPI;if(!api)return;
   function text(id,value){if($(id).textContent!==value)$(id).textContent=value;}
@@ -128,5 +136,72 @@
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden){close();button.focus();}});
  window.addEventListener('popstate',close);$('nwCollapseBtn').addEventListener('click',close);$('nwPlayerSettings').addEventListener('click',close);
  let saved;try{saved=localStorage.getItem(key);}catch{}choose(/^#[0-9a-f]{6}$/i.test(saved||'')?saved:defaultColor,false);
+
+ // Relative text sizing keeps each heading/body/control's original hierarchy.
+ const sizeChoice=document.createElement('select');sizeChoice.id='nwFontSize';sizeChoice.className='nw-mini-btn';sizeChoice.setAttribute('aria-label','PC 글자 크기');
+ [80,90,100,110,120,130,140,150].forEach(n=>{const o=document.createElement('option');o.value=String(n);o.textContent='크기 '+n+'%';sizeChoice.append(o);});
+ const weightChoice=document.createElement('select');weightChoice.id='nwFontWeight';weightChoice.className='nw-mini-btn';weightChoice.setAttribute('aria-label','PC 글자 굵기');
+ [['default','굵기: 기본'],['300','가늘게'],['400','보통'],['500','중간'],['700','굵게'],['900','아주 굵게']].forEach(([v,t])=>{const o=document.createElement('option');o.value=v;o.textContent=t;weightChoice.append(o);});
+ fontChoice.after(sizeChoice,weightChoice);
+ let fontScale=100,fontWeight='default';
+ try{const n=Number(localStorage.getItem('nwDesktopFontSize'));if([80,90,100,110,120,130,140,150].includes(n))fontScale=n;fontWeight=localStorage.getItem('nwDesktopFontWeight')||'default';}catch{}
+ sizeChoice.value=String(fontScale);weightChoice.value=fontWeight;if(!weightChoice.value)weightChoice.value='default';
+ const typeStyle=document.createElement('style');typeStyle.textContent=`
+ @media(min-width:651px){
+ html.nw-sized body [data-nw-type-size]{font-size:calc(var(--nw-original-size) * var(--nw-font-scale,1))!important}
+ html.nw-weighted body,html.nw-weighted body *{font-weight:var(--nw-font-weight)!important}
+ #nwFontSize,#nwFontWeight{height:27px;padding:0 5px;max-width:108px;font-size:10px}
+ }
+ @media(max-width:650px){#nwFontSize,#nwFontWeight,#nwLyricsAlwaysOnTop,#nwLyricsPipStatus{display:none!important}}
+ `;document.head.append(typeStyle);
+ let typeFrame=0;
+ function measureType(){
+  typeFrame=0;const root=document.documentElement;root.classList.remove('nw-sized');
+  const nodes=[...document.body.querySelectorAll('*')].filter(el=>el instanceof HTMLElement&&!['SCRIPT','STYLE','LINK','META'].includes(el.tagName));
+  const sizes=nodes.map(el=>getComputedStyle(el).fontSize);
+  nodes.forEach((el,i)=>{el.style.setProperty('--nw-original-size',sizes[i]);el.setAttribute('data-nw-type-size','');});
+  root.style.setProperty('--nw-font-scale',String(fontScale/100));root.classList.toggle('nw-sized',fontScale!==100);keepBarPosition();
+ }
+ function scheduleType(){if(!typeFrame)typeFrame=requestAnimationFrame(measureType);}
+ function setWeight(){const v=weightChoice.value;document.documentElement.style.setProperty('--nw-font-weight',v==='default'?'400':v);document.documentElement.classList.toggle('nw-weighted',v!=='default');}
+ sizeChoice.onchange=()=>{fontScale=Number(sizeChoice.value);try{localStorage.setItem('nwDesktopFontSize',String(fontScale));}catch{}measureType();};
+ weightChoice.onchange=()=>{try{localStorage.setItem('nwDesktopFontWeight',weightChoice.value);}catch{}setWeight();};
+ new MutationObserver(records=>{if(records.some(r=>[...r.addedNodes].some(n=>n.nodeType===1)))scheduleType();}).observe(document.body,{childList:true,subtree:true});
+ window.addEventListener('resize',scheduleType);document.fonts?.addEventListener('loadingdone',scheduleType);setWeight();scheduleType();
+
+ const pipButton=document.createElement('button');pipButton.id='nwLyricsAlwaysOnTop';pipButton.className='nw-mini-btn';pipButton.type='button';pipButton.textContent='항상 위 가사창';pipButton.setAttribute('aria-pressed','false');weightChoice.after(pipButton);
+ const pipStatus=document.createElement('span');pipStatus.id='nwLyricsPipStatus';pipStatus.setAttribute('role','status');pipStatus.style.cssText='font-size:11px;flex-basis:100%';pipStatus.hidden=true;pipButton.after(pipStatus);
+ let pipWindow=null,pipObserver=null;
+ pipButton.onclick=async()=>{
+  if(pipWindow&&!pipWindow.closed){pipWindow.close();return;}
+  pipStatus.hidden=true;
+  if(!window.documentPictureInPicture?.requestWindow){pipStatus.textContent='이 브라우저에서는 항상 위 가사창을 지원하지 않습니다. 지원되는 최신 Chrome 또는 Edge에서 이용해주세요.';pipStatus.hidden=false;return;}
+  try{
+   pipWindow=await window.documentPictureInPicture.requestWindow({width:Math.round(Math.min(900,innerWidth*.5)),height:140});
+   const pd=pipWindow.document;pd.title='뉴트월드 · 항상 위 가사';
+   const style=pd.createElement('style');style.textContent='html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#071018;color:#fff}#pipBar{box-sizing:border-box;min-height:100%;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;padding:6px 110px 6px 12px;text-align:center}#pipBar::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;text-shadow:0 1px 3px #0008}#pipControls{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:96px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}button{width:28px;height:25px;padding:0;border:1px solid var(--nw-border);border-radius:5px;background:var(--nw-control);color:var(--nw-text);cursor:pointer}label{font-size:10px;display:flex;align-items:center;gap:3px}input{width:58px;margin:0;accent-color:var(--nw-accent)}';
+   pd.head.append(style);
+   pd.body.innerHTML='<section id="pipBar"><div class="line" id="pipCurrent"></div><div class="line" id="pipNext"></div><div id="pipControls"><button id="pipPrev" aria-label="이전 곡">⏮</button><button id="pipPlay" aria-label="재생 또는 일시정지">▶</button><button id="pipNextTrack" aria-label="다음 곡">⏭</button><label>투명도<input id="pipOpacity" type="range" min="0" max="100" aria-label="배경 투명도"></label></div></section>';
+   const target=pd.getElementById('pipBar'),copiedFonts=new Set();
+   function syncPip(){
+    if(!pipWindow||pipWindow.closed)return;
+    target.style.cssText=lyricBar.style.cssText;target.style.removeProperty('left');target.style.removeProperty('top');
+    for(const [from,to] of [['nwDesktopLyricsCurrent','pipCurrent'],['nwDesktopLyricsNext','pipNext']]){
+     const source=$(from),dest=pd.getElementById(to),cs=getComputedStyle(source);
+     if(dest.textContent!==source.textContent)dest.textContent=source.textContent;
+     dest.style.fontFamily=cs.fontFamily;dest.style.fontSize=cs.fontSize;dest.style.fontWeight=cs.fontWeight;dest.style.color=cs.color;
+    }
+    pd.getElementById('pipPlay').textContent=$('nwDesktopLyricsPlay').textContent;
+    pd.getElementById('pipOpacity').value=opacityInput.value;
+    document.querySelectorAll('link[data-nw-web-font]').forEach(link=>{if(!copiedFonts.has(link.href)){pd.head.append(link.cloneNode());copiedFonts.add(link.href);}});
+   }
+   pd.getElementById('pipPrev').onclick=()=>$('nwPrev').click();pd.getElementById('pipPlay').onclick=()=>$('nwPlay').click();pd.getElementById('pipNextTrack').onclick=()=>$('nwNext').click();
+   pd.getElementById('pipOpacity').oninput=e=>setBarTransparency(e.target.value,true);
+   pipObserver=new MutationObserver(syncPip);pipObserver.observe(lyricBar,{childList:true,subtree:true,attributes:true});pipObserver.observe(document.documentElement,{attributes:true,attributeFilter:['class','style']});syncPip();
+   pipButton.textContent='항상 위 가사창 닫기';pipButton.setAttribute('aria-pressed','true');
+   pipWindow.addEventListener('pagehide',()=>{pipObserver?.disconnect();pipObserver=null;pipWindow=null;pipButton.textContent='항상 위 가사창';pipButton.setAttribute('aria-pressed','false');},{once:true});
+  }catch(e){pipStatus.textContent='항상 위 가사창을 열지 못했습니다. 버튼을 다시 눌러주세요. '+e.message;pipStatus.hidden=false;}
+ };
+
 })();
 
