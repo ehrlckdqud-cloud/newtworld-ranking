@@ -43,7 +43,7 @@ function modes(){for(const [id,on] of [['nwShuffle',shuffle],['nwRepeatAll',repe
 $('nwShuffle').onclick=()=>{shuffle=!shuffle;localStorage.setItem('nwShuffleOn',shuffle);modes();post('modes',{repeat,shuffle})};
 $('nwRepeatAll').onclick=()=>{repeat=repeat==='all'?'off':'all';localStorage.setItem('nwRepeatMode',repeat);modes();post('modes',{repeat,shuffle})};
 $('nwPlayerSettings').onclick=()=>{const open=$('nwMusicDock').classList.toggle('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded',open)};
-let cover=localStorage.getItem('nwCoverOn')!=='0';function paintCover(){$('nwCoverWrap').classList.toggle('hidden',!cover);$('nwMusicDock').classList.toggle('nw-cover-off',!cover);$('nwCoverToggle').textContent=cover?'커버 ON':'커버 OFF';}paintCover();
+let cover=localStorage.getItem('nwCoverOn')!=='0';function paintCover(){const visible=cover&&window.innerHeight>=560;$('nwCoverWrap').classList.toggle('hidden',!visible);$('nwMusicDock').classList.toggle('nw-cover-off',!visible);$('nwCoverToggle').textContent=cover?'커버 ON':'커버 OFF';}paintCover();window.addEventListener('resize',paintCover);
 $('nwCoverToggle').onclick=()=>{cover=!cover;localStorage.setItem('nwCoverOn',cover?'1':'0');paintCover()};
 $('nwLyricsPanel').classList.add('open');$('nwLyricsToggle').onclick=()=>{};
 function closeMenu(){$('nwTrackMenu').hidden=true;$('nwTrackPickerButton').setAttribute('aria-expanded','false');}

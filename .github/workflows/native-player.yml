@@ -37,14 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 mobile/tools/bundle-web.py
+      - name: Start iPhone simulator while building
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; devices=json.load(sys.stdin)["devices"]; print(next(d["udid"] for group in devices.values() for d in group if d["name"].startswith("iPhone")))')
+          echo "NEWT_SIMULATOR_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$DEVICE_ID"
       - run: brew install xcodegen
       - run: xcodegen generate --spec mobile/ios/project.yml
       - run: xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -sdk iphonesimulator -configuration Debug -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO build
 
       - name: Test iOS persistent music library
-        timeout-minutes: 6
+        timeout-minutes: 12
         run: |
-          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import sys,json; devices=json.load(sys.stdin)["devices"]; print(next(d["udid"] for group in devices.values() for d in group if d["name"].startswith("iPhone")))')
+          DEVICE_ID="$NEWT_SIMULATOR_ID"
+          xcrun simctl bootstatus "$DEVICE_ID" -b
           xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO -parallel-testing-enabled NO -test-timeouts-enabled YES -maximum-test-execution-time-allowance 60 test
   android-tests:
     runs-on: ubuntu-latest

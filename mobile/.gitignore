@@ -6,3 +6,6 @@ android/app/src/main/assets/web/
 ios/*.xcodeproj/
 ios/GeneratedInfo.plist
 ios/build/
+
+android/app/src/main/res/drawable/app_icon.png
+ios/NewtWorld/Assets.xcassets/AppIcon.appiconset/AppIcon.png
