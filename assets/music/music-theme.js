@@ -11,26 +11,33 @@
 
  // Desktop lyrics stay inside the website and share the player's selected theme.
  const lyricBar=document.createElement('section');lyricBar.id='nwDesktopLyrics';lyricBar.setAttribute('aria-label','데스크탑 가사');
- lyricBar.innerHTML='<div id="nwDesktopLyricsHandle" title="드래그하여 이동"><span id="nwDesktopLyricsTitle">NEWT WORLD · 가사</span><div><button type="button" id="nwDesktopLyricsPlay" aria-label="재생 또는 일시정지">▶</button><button type="button" id="nwDesktopLyricsClose" aria-label="데스크탑 가사 닫기">×</button></div></div><div id="nwDesktopLyricsCurrent"></div><div id="nwDesktopLyricsNext"></div>';
+ lyricBar.innerHTML='<div id="nwDesktopLyricsHandle" title="드래그하여 이동"><span id="nwDesktopLyricsTitle">NEWT WORLD · 가사</span><div class="nw-desktop-controls"><button type="button" id="nwDesktopLyricsPrev" aria-label="이전 곡" title="이전 곡">⏮</button><button type="button" id="nwDesktopLyricsPlay" aria-label="재생 또는 일시정지">▶</button><button type="button" id="nwDesktopLyricsNextTrack" aria-label="다음 곡" title="다음 곡">⏭</button><button type="button" id="nwDesktopLyricsClose" aria-label="데스크탑 가사 닫기">×</button><label class="nw-desktop-opacity" title="배경 투명도: 오른쪽으로 갈수록 투명해집니다">투명도<input id="nwDesktopLyricsOpacity" type="range" min="0" max="100" step="1" value="0" aria-label="가사 바 배경 투명도"></label></div></div><div id="nwDesktopLyricsCurrent"></div><div id="nwDesktopLyricsNext"></div>';
  document.body.append(lyricBar);
+ const opacityInput=$('nwDesktopLyricsOpacity');
+ function setBarTransparency(value,save=false){const n=Math.max(0,Math.min(100,Number(value)||0));opacityInput.value=String(n);opacityInput.setAttribute('aria-valuetext',n+'% 투명');lyricBar.style.setProperty('--nw-lyrics-opacity',String(1-n/100));if(save)try{localStorage.setItem('nwDesktopLyricsTransparency',String(n));}catch{}}
+ let savedTransparency=0;try{savedTransparency=localStorage.getItem('nwDesktopLyricsTransparency')||0;}catch{}setBarTransparency(savedTransparency);
+ opacityInput.oninput=()=>setBarTransparency(opacityInput.value,true);
  const lyricToggle=document.createElement('button');lyricToggle.id='nwDesktopLyricsToggle';lyricToggle.type='button';lyricToggle.className='nw-mini-btn';$('nwLyricsToggle').after(lyricToggle);
  let desktopLyricsOn=true;try{desktopLyricsOn=localStorage.getItem('nwDesktopLyricsOn')!=='0';}catch{}
  function showDesktopLyrics(value){desktopLyricsOn=value;lyricBar.hidden=!value;lyricToggle.textContent='데스크탑 가사 '+(value?'ON':'OFF');lyricToggle.setAttribute('aria-pressed',String(value));try{localStorage.setItem('nwDesktopLyricsOn',value?'1':'0');}catch{}}
  lyricToggle.onclick=()=>showDesktopLyrics(!desktopLyricsOn);$('nwDesktopLyricsClose').onclick=()=>showDesktopLyrics(false);showDesktopLyrics(desktopLyricsOn);
  const barStyle=document.createElement('style');barStyle.textContent=`
- #nwDesktopLyrics{position:fixed;z-index:99970;left:25vw;top:18px;width:50vw;box-sizing:border-box;padding:8px 22px 16px;border:1px solid var(--nw-border);border-radius:14px;background:var(--nw-panel);color:var(--nw-text);box-shadow:0 10px 34px #0005;text-align:center}
+ #nwDesktopLyrics{position:fixed;z-index:99970;left:25vw;top:18px;width:50vw;box-sizing:border-box;padding:5px 112px 5px 12px;border:0;border-radius:10px;background:transparent;color:var(--nw-text);text-align:center;isolation:isolate}
+ #nwDesktopLyrics::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:1px solid var(--nw-border);border-radius:inherit;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}
  #nwDesktopLyrics[hidden]{display:none}
- #nwDesktopLyricsHandle{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:move;touch-action:none;user-select:none;color:var(--nw-muted);font-size:10px;letter-spacing:.08em;margin-bottom:3px}
- #nwDesktopLyricsTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- #nwDesktopLyricsHandle>div{display:flex;gap:5px}
- #nwDesktopLyrics button{padding:0;width:24px;height:24px;border-radius:6px;border:1px solid var(--nw-border);background:var(--nw-control);color:var(--nw-text);cursor:pointer;font-size:14px}
- #nwDesktopLyricsCurrent,#nwDesktopLyricsNext{overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere;line-height:1.3}
+ #nwDesktopLyricsHandle{position:absolute;inset:0;display:flex;justify-content:flex-end;align-items:center;padding-right:6px;cursor:move;touch-action:none;user-select:none;color:var(--nw-muted)}
+ #nwDesktopLyricsTitle{display:none}
+ #nwDesktopLyricsHandle .nw-desktop-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;width:100px;cursor:default}
+ #nwDesktopLyrics button{padding:0;width:22px;height:22px;border-radius:5px;border:1px solid var(--nw-border);background:var(--nw-control);color:var(--nw-text);cursor:pointer;font-size:13px}
+ #nwDesktopLyrics .nw-desktop-opacity{display:flex;align-items:center;gap:3px;font-size:9px;line-height:16px;white-space:nowrap}
+ #nwDesktopLyricsOpacity{width:62px;min-width:0;height:14px;padding:0;margin:0;accent-color:var(--nw-accent);cursor:pointer}
+ #nwDesktopLyricsCurrent,#nwDesktopLyricsNext{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:1.15;min-height:1.15em;pointer-events:none;text-shadow:0 1px 3px #0008}
  #nwDesktopLyricsCurrent{font-size:clamp(22px,2.2vw,38px);font-weight:850;color:var(--nw-text)}
- #nwDesktopLyricsNext{font-size:clamp(17px,1.6vw,28px);font-weight:700;color:var(--nw-muted);margin-top:4px}
+ #nwDesktopLyricsNext{font-size:clamp(17px,1.6vw,28px);font-weight:700;color:var(--nw-muted);margin-top:1px}
  @media(max-width:650px){#nwDesktopLyrics,#nwDesktopLyricsToggle{display:none!important}}
  `;document.head.append(barStyle);
  let barDrag=null;
- $('nwDesktopLyricsHandle').onpointerdown=e=>{if(e.button!==0||e.target.closest('button'))return;const r=lyricBar.getBoundingClientRect();barDrag={x:e.clientX-r.left,y:e.clientY-r.top};e.currentTarget.setPointerCapture(e.pointerId);};
+ $('nwDesktopLyricsHandle').onpointerdown=e=>{if(e.button!==0||e.target.closest('button,input,label'))return;const r=lyricBar.getBoundingClientRect();barDrag={x:e.clientX-r.left,y:e.clientY-r.top};e.currentTarget.setPointerCapture(e.pointerId);};
  $('nwDesktopLyricsHandle').onpointermove=e=>{if(!barDrag)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,e.clientX-barDrag.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,e.clientY-barDrag.y))+'px';};
  $('nwDesktopLyricsHandle').onpointerup=$('nwDesktopLyricsHandle').onpointercancel=()=>{barDrag=null;};
  window.addEventListener('resize',()=>{lyricBar.style.left='';lyricBar.style.top='';});
@@ -47,6 +54,8 @@
    text('nwDesktopLyricsPlay',api.audio.paused?'▶':'❚❚');
   }
   $('nwDesktopLyricsPlay').onclick=()=>$('nwPlay').click();
+  $('nwDesktopLyricsPrev').onclick=()=>$('nwPrev').click();
+  $('nwDesktopLyricsNextTrack').onclick=()=>$('nwNext').click();
   ['timeupdate','loadedmetadata','play','pause','emptied','seeking'].forEach(name=>api.audio.addEventListener(name,update));
   window.addEventListener('nw-music-library-updated',update);update();
  }
