@@ -10,7 +10,7 @@ function post(command,data={}){
  else if(window.webkit?.messageHandlers?.newt)window.webkit.messageHandlers.newt.postMessage(message);
  else status('앱 전용 재생 기능에 연결되지 않았습니다.');
 }
-function configure(){if(!ready||!tracks.length)return;post('queue',{tracks:tracks.map(t=>({id:t.id,url:t.audio,title:t.title||'',artist:t.artist||'',artwork:t.cover||''})),repeat,shuffle});pendingQueue=null;}
+function configure(){if(!ready||!tracks.length)return;post('queue',{tracks:tracks.map(t=>({id:t.id,url:t.audio,title:t.title||'',artist:t.artist||'',artwork:t.cover||''})),repeat,shuffle});post('volume',{value:Number($('nwVolume').value)});pendingQueue=null;}
 const fmt=x=>{x=Math.max(0,Math.floor(x||0));return Math.floor(x/60)+':'+String(x%60).padStart(2,'0')};
 let displayed='',active=-1;
 function renderTrack(){const t=tracks.find(t=>t.id===state.id)||tracks[0];if(!t||displayed===t.id)return;displayed=t.id;active=-1;
@@ -40,7 +40,7 @@ $('nwPlayerSettings').onclick=()=>{const open=$('nwMusicDock').classList.toggle(
 let cover=localStorage.getItem('nwCoverOn')!=='0';function paintCover(){$('nwCoverWrap').classList.toggle('hidden',!cover);$('nwMusicDock').classList.toggle('nw-cover-off',!cover);$('nwCoverToggle').textContent=cover?'커버 ON':'커버 OFF';}paintCover();
 $('nwCoverToggle').onclick=()=>{cover=!cover;localStorage.setItem('nwCoverOn',cover?'1':'0');paintCover()};
 $('nwLyricsPanel').classList.add('open');$('nwLyricsToggle').onclick=()=>{};
-$('nwTrackPickerButton').onclick=()=>{const menu=$('nwTrackMenu');menu.replaceChildren();for(const t of tracks){const b=document.createElement('button');b.type='button';b.className='nw-track-option';b.textContent=t.title;b.onclick=()=>{post('select',{id:t.id});menu.hidden=true};menu.append(b)}menu.hidden=!menu.hidden;};
+$('nwTrackPickerButton').onclick=()=>{const menu=$('nwTrackMenu');menu.replaceChildren();for(const t of tracks){const b=document.createElement('button');b.type='button';b.className='nw-track-option';b.textContent=t.title;b.onclick=()=>{post('select',{id:t.id});menu.hidden=true};menu.append(b)}menu.hidden=!menu.hidden;$('nwTrackPickerButton').setAttribute('aria-expanded',String(!menu.hidden));};
 // These controls remain visible but cannot silently fall back to WebAudio/blob playback.
 $('nwEqualizer').onclick=()=>status('시험판: 앱 전용 이퀄라이저는 아직 연결되지 않았습니다.');
 $('nwAddTrack').onclick=()=>status('시험판: 개인 MP3 가져오기는 아직 연결되지 않았습니다.');

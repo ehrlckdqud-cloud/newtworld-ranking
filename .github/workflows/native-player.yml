@@ -31,7 +31,7 @@ jobs:
           path: mobile/android/app/build/outputs/apk/debug/*.apk
           retention-days: 1
   ios:
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

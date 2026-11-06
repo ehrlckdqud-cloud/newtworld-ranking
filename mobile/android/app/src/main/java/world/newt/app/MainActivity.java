@@ -23,7 +23,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.ArrayList;
-import java.util.Set;
+import java.util.Collections;
 
 public final class MainActivity extends ComponentActivity {
  private WebView web;private MediaController controller;private ListenableFuture<MediaController> future;
@@ -42,7 +42,7 @@ public final class MainActivity extends ComponentActivity {
   if(!WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)){
    web.loadData("Android System WebView를 업데이트한 뒤 다시 실행해주세요.","text/html","UTF-8");return;
   }
-  WebViewCompat.addWebMessageListener(web,"NWAndroid",Set.of("https://appassets.androidplatform.net"),(view,message,origin,main,reply)->{
+  WebViewCompat.addWebMessageListener(web,"NWAndroid",Collections.singleton("https://appassets.androidplatform.net"),(view,message,origin,main,reply)->{
    if(main&&"appassets.androidplatform.net".equals(origin.getHost()))handler.post(()->command(message.getData()));
   });
   future=new MediaController.Builder(this,new SessionToken(this,new ComponentName(this,PlaybackService.class))).buildAsync();

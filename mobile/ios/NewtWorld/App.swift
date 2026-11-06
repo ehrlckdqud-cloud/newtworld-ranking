@@ -63,6 +63,7 @@ final class AudioEngine {
     var observer: Any?
     var resumeAfterInterruption = false
     var artwork: MPMediaItemArtwork?
+    var stopped = false
     var itemObservation: NSKeyValueObservation?
     init() {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
@@ -110,11 +111,11 @@ final class AudioEngine {
         shuffle = data["shuffle"] as? Bool ?? false
     }
     func play() {
-        do { try AVAudioSession.sharedInstance().setActive(true); player.play(); report() }
+        do { stopped = false; try AVAudioSession.sharedInstance().setActive(true); player.play(); report() }
         catch { emit?(["type":"error", "message":"오디오 재생을 시작하지 못했습니다."]) }
     }
     func stop() {
-        player.pause(); MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+        stopped = true; player.pause(); MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         report(updateMetadata: false)
     }
@@ -165,7 +166,7 @@ final class AudioEngine {
         let track = tracks[index], p = player.currentTime().seconds, d = player.currentItem?.duration.seconds ?? 0
         let position = p.isFinite ? p : 0, duration = d.isFinite ? d : 0
         emit?(["type":"state", "id":track["id"] ?? "", "position":position, "duration":duration, "playing":player.rate > 0])
-        if updateMetadata {
+        if updateMetadata && !stopped {
             var info: [String: Any] = [MPMediaItemPropertyTitle: track["title"] ?? "", MPMediaItemPropertyArtist: track["artist"] ?? "", MPNowPlayingInfoPropertyElapsedPlaybackTime: position, MPMediaItemPropertyPlaybackDuration: duration, MPNowPlayingInfoPropertyPlaybackRate: player.rate]
             if let artwork = artwork { info[MPMediaItemPropertyArtwork] = artwork }
             MPNowPlayingInfoCenter.default().nowPlayingInfo = info
