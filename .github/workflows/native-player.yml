@@ -1,0 +1,41 @@
+name: Native player preview
+on:
+  push:
+    branches: [feature/native-player]
+    paths: ['mobile/**', '.github/workflows/native-player.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-player-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - run: python3 mobile/tools/bundle-web.py
+      - run: node --test mobile/tests/*.test.cjs
+      - run: gradle -p mobile/android assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newtworld-android-preview
+          path: mobile/android/app/build/outputs/apk/debug/*.apk
+          retention-days: 1
+  ios:
+    runs-on: macos-14
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 mobile/tools/bundle-web.py
+      - run: brew install xcodegen
+      - run: xcodegen generate --spec mobile/ios/project.yml
+      - run: xcodebuild -project mobile/ios/NewtWorld.xcodeproj -scheme NewtWorld -sdk iphonesimulator -configuration Debug -derivedDataPath mobile/ios/build CODE_SIGNING_ALLOWED=NO build

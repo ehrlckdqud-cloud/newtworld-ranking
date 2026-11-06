@@ -1,0 +1,8 @@
+shared/web/
+android/.gradle/
+android/local.properties
+android/**/build/
+android/app/src/main/assets/web/
+ios/*.xcodeproj/
+ios/GeneratedInfo.plist
+ios/build/
