@@ -409,6 +409,10 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 #nwEQPanel{position:absolute;z-index:25;left:12px;right:12px;bottom:55px;background:#10271f;border:1px solid #789284;border-radius:16px;padding:16px;color:#e5f3e9;box-shadow:0 12px 35px #0008;max-height:75dvh;overflow:auto}#nwEQPanel[hidden]{display:none}#nwEQPanel button,#nwEQPanel select{background:#254b36;color:#e5f3e9;border:1px solid #678a73;border-radius:8px;padding:8px;cursor:pointer}.nw-eq-head,.nw-eq-options{display:flex;justify-content:space-between;align-items:center;gap:8px}.nw-eq-options{margin:12px 0}.nw-eq-options select{min-width:0;flex:1}#nwEQEnabled[aria-pressed="true"]{background:#4c825c}.nw-eq-bands{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:18px 0}.nw-eq-bands label{min-width:0;display:flex;align-items:center;flex-direction:column;gap:12px;font-size:11px;white-space:nowrap}#nwEQPanel .nw-eq-slider{position:relative;width:100%;min-width:0;height:161px;touch-action:none;user-select:none;cursor:ns-resize;outline-offset:2px}#nwEQPanel .nw-eq-rail{position:absolute;top:8px;bottom:8px;left:50%;width:6px;transform:translateX(-50%);border-radius:5px;background:linear-gradient(to bottom,#63746a 0%,#63746a var(--eq-position,50%),#a7dcb0 var(--eq-position,50%),#a7dcb0 100%);pointer-events:none}#nwEQPanel .nw-eq-thumb{position:absolute;left:50%;top:var(--eq-position,50%);width:16px;height:16px;transform:translate(-50%,-50%);border-radius:50%;background:#c2edc8;box-shadow:0 1px 5px #0005;pointer-events:none}.nw-eq-bands output{font-variant-numeric:tabular-nums}#nwEQPanel small{display:block;font-size:10px;color:#a0b6a9;line-height:1.6}#nwEQStatus{margin:6px 0 0;font-size:11px;color:#ffc9a9}
 @media(max-width:650px){#nwEQPanel{top:calc(96px + env(safe-area-inset-top,0px));bottom:auto;left:24px;right:24px;max-height:calc(100dvh - 164px)}}
 
+
+.nw-background-help{display:none}
+#nwBackgroundGuide{box-sizing:border-box;width:calc(100vw - 36px);max-width:390px;max-height:calc(100dvh - 40px);overflow:auto;margin:auto;padding:24px;border:1px solid #6e9d7d;border-radius:20px;background:#102b20;color:#e5f3e9;box-shadow:0 20px 60px #0008;font-family:inherit}#nwBackgroundGuide::backdrop{background:#03120cbb}#nwBackgroundGuide h2{font-size:20px;line-height:1.5;margin:0 0 16px;word-break:keep-all}#nwBackgroundGuide p{font-size:14px;line-height:1.7;margin:12px 0}#nwBackgroundGuide strong{color:#bcf0c6}#nwBackgroundGuide ol{padding:16px 16px 16px 36px;background:#1e4432;border-radius:12px;font-size:14px;line-height:2}#nwBackgroundGuide .nw-bg-guide-note{font-size:12px;color:#a9c3b2}#nwBackgroundGuideConfirm{width:100%;min-height:44px;margin-top:10px;border:0;border-radius:12px;background:#c7ebc9;color:#123326;font:inherit;font-weight:700;cursor:pointer}
+@media(max-width:650px){#nwMusicDock:not(.nw-music-collapsed) .nw-background-help{display:block;position:absolute;left:82px;top:calc(6px + env(safe-area-inset-top,0px));height:36px;padding:0 10px;border:1px solid #7da98c55;border-radius:18px;font-size:11px;background:#143b2b;color:#d9efdf;cursor:pointer}}
 /* Mobile player: artwork, visible lyrics, fixed transport. */
 .nw-player-settings,.nw-track-picker{display:none}
 @media(min-width:651px){.nw-transport-mode{display:inline-flex;align-items:center;justify-content:center;width:26px;height:32px;padding:3px;border:1px solid #456353;border-radius:8px;background:#142b21;color:#8ba594;flex-shrink:0}.nw-transport-mode svg{width:18px;height:18px}.nw-transport-mode.active{background:#376048;color:#e6ffe9}#nwShuffle{order:0}#nwPrev{order:1}#nwPlay{order:2}#nwNext{order:3}#nwRepeatAll{order:4}#nwTrackSelect{order:5}}
@@ -2350,6 +2354,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <div id="nwMusicDock" aria-label="뉴트월드 배경음악 플레이어">
   <div id="nwMusicTicker" hidden aria-label="현재 곡"><span class="nw-ticker-note" aria-hidden="true">♪</span><div class="nw-ticker-viewport"><div class="nw-ticker-track"><span class="nw-ticker-copy"></span><span class="nw-ticker-copy" aria-hidden="true"></span></div></div></div>
   <button class="nw-player-settings" id="nwPlayerSettings" type="button" aria-expanded="false" aria-controls="nwPlayerTools">설정</button>
+  <button class="nw-background-help" id="nwBackgroundHelp" type="button" aria-haspopup="dialog" aria-controls="nwBackgroundGuide">백그라운드 재생</button>
   <button class="nw-collapse-btn" id="nwCollapseBtn" type="button">플레이어 접기</button>
   <div class="nw-music-shell">
     <div class="nw-music-main" id="nwMusicMain">
@@ -2426,6 +2431,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- v17: music files and track manifest are external for faster loading and easy expansion. -->
 
 <script id="nwBuiltInTracks" type="application/json">[]</script>
+<script src="assets/music/music-background-guide.js?v=20261106-bg-guide1" defer></script>
 <script src="assets/music/music-eq.js?v=20261106-eq-touch2" defer></script>
 <script src="assets/music/music-local.js?v=20261106-local1" defer></script>
 <script src="assets/music/music-theme.js?v=20261106-local1" defer></script>
@@ -2440,7 +2446,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-local1';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261106-bg-guide1';document.head.appendChild(script);
   });
 })();
 </script>

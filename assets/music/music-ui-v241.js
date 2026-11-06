@@ -392,6 +392,7 @@
   let collapsed=savedCollapsed===null ? mobilePlayer.matches : savedCollapsed==='1';
   function paintCollapsed(){
     $('nwMusicDock').classList.toggle('nw-music-collapsed',collapsed);
+    if(!collapsed)window.NWShowBackgroundGuide?.();
     $('nwCollapseBtn').textContent=collapsed?'🎵 플레이어 열기':'플레이어 접기';
     $('nwCollapseBtn').setAttribute('aria-expanded',String(!collapsed));
     if(collapsed){closeTrackMenu();$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
