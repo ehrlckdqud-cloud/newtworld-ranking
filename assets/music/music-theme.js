@@ -45,6 +45,7 @@
  const lyricBar=document.createElement('section');lyricBar.id='nwDesktopLyrics';lyricBar.setAttribute('aria-label','데스크탑 가사');
  lyricBar.innerHTML='<div id="nwDesktopLyricsHandle" title="드래그하여 이동"><span id="nwDesktopLyricsTitle">NEWT WORLD · 가사</span><div class="nw-desktop-controls"><button type="button" id="nwDesktopLyricsPrev" aria-label="이전 곡" title="이전 곡">⏮</button><button type="button" id="nwDesktopLyricsPlay" aria-label="재생 또는 일시정지">▶</button><button type="button" id="nwDesktopLyricsNextTrack" aria-label="다음 곡" title="다음 곡">⏭</button><button type="button" id="nwDesktopLyricsClose" aria-label="데스크탑 가사 닫기">×</button><label class="nw-desktop-opacity" title="배경 투명도: 오른쪽으로 갈수록 투명해집니다">투명도<input id="nwDesktopLyricsOpacity" type="range" min="0" max="100" step="1" value="0" aria-label="가사 바 배경 투명도"></label></div></div><div id="nwDesktopLyricsCurrent"></div><div id="nwDesktopLyricsNext"></div>';
  document.body.append(lyricBar);
+ const resizeGrip=document.createElement('div');resizeGrip.id='nwDesktopLyricsResize';resizeGrip.tabIndex=0;resizeGrip.setAttribute('role','separator');resizeGrip.setAttribute('aria-orientation','vertical');resizeGrip.setAttribute('aria-label','가사 바 너비 조절');resizeGrip.title='좌우로 드래그하여 너비 조절 · 방향키로 조절';lyricBar.append(resizeGrip);
  const opacityInput=$('nwDesktopLyricsOpacity');
  function setBarTransparency(value,save=false){const n=Math.max(0,Math.min(100,Number(value)||0));opacityInput.value=String(n);opacityInput.setAttribute('aria-valuetext',n+'% 투명');lyricBar.style.setProperty('--nw-lyrics-opacity',String(1-n/100));if(save)try{localStorage.setItem('nwDesktopLyricsTransparency',String(n));}catch{}}
  let savedTransparency=0;try{savedTransparency=localStorage.getItem('nwDesktopLyricsTransparency')||0;}catch{}setBarTransparency(savedTransparency);
@@ -56,8 +57,11 @@
  const barStyle=document.createElement('style');barStyle.textContent=`
  #nwDesktopLyrics{position:fixed;z-index:99970;left:25vw;top:18px;width:50vw;box-sizing:border-box;padding:5px 112px 5px 12px;border:0;border-radius:10px;background:transparent;color:var(--nw-text);text-align:center;isolation:isolate}
  #nwDesktopLyrics::before{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;border:1px solid var(--nw-border);border-radius:inherit;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}
+ #nwDesktopLyricsResize{position:absolute;z-index:3;top:0;right:0;bottom:0;width:7px;cursor:ew-resize;touch-action:none;border-radius:0 10px 10px 0}
+ #nwDesktopLyricsResize::after{content:'';position:absolute;top:30%;bottom:30%;right:2px;width:2px;background:var(--nw-border);border-radius:2px}
+ #nwDesktopLyricsResize:hover,#nwDesktopLyricsResize:focus-visible{background:var(--nw-active);outline:1px solid var(--nw-accent)}
  #nwDesktopLyrics[hidden]{display:none}
- #nwDesktopLyricsHandle{position:absolute;inset:0;display:flex;justify-content:flex-end;align-items:center;padding-right:6px;cursor:move;touch-action:none;user-select:none;color:var(--nw-muted)}
+ #nwDesktopLyricsHandle{position:absolute;inset:0;display:flex;justify-content:flex-end;align-items:flex-start;padding:4px 10px 0 0;box-sizing:border-box;cursor:move;touch-action:none;user-select:none;color:var(--nw-muted)}
  #nwDesktopLyricsTitle{display:none}
  #nwDesktopLyricsHandle .nw-desktop-controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:3px;width:100px;cursor:default}
  #nwDesktopLyrics button{display:inline-flex!important;align-items:center!important;justify-content:center!important;box-sizing:border-box;flex:0 0 22px;line-height:1!important;text-align:center;letter-spacing:0!important;font-family:Arial,sans-serif!important;font-size:13px!important;font-weight:400!important;padding:0;width:22px;height:22px;border-radius:5px;border:1px solid var(--nw-border);background:var(--nw-control);color:var(--nw-text);cursor:pointer;font-size:13px}
@@ -73,7 +77,15 @@
  $('nwDesktopLyricsHandle').onpointermove=e=>{if(!barDrag)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,e.clientX-barDrag.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,e.clientY-barDrag.y))+'px';};
  $('nwDesktopLyricsHandle').onpointerup=$('nwDesktopLyricsHandle').onpointercancel=()=>{if(barDrag)rememberBarPosition();barDrag=null;};
  let barPosition=null;try{const p=JSON.parse(localStorage.getItem('nwDesktopLyricsPosition')||'null');if(p&&Number.isFinite(p.x)&&Number.isFinite(p.y))barPosition=p;}catch{}
- function keepBarPosition(){if(!barPosition||!matchMedia('(min-width:651px)').matches)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,barPosition.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,barPosition.y))+'px';}
+ let barWidth=null;try{const n=Number(localStorage.getItem('nwDesktopLyricsWidth'));if(Number.isFinite(n)&&n>=300)barWidth=n;}catch{}
+ function applyBarWidth(){if(!matchMedia('(min-width:651px)').matches)return;if(barWidth!==null)lyricBar.style.width=Math.min(Math.max(300,barWidth),innerWidth)+'px';resizeGrip.setAttribute('aria-valuemin','300');resizeGrip.setAttribute('aria-valuemax',String(innerWidth));resizeGrip.setAttribute('aria-valuenow',String(Math.round(lyricBar.getBoundingClientRect().width)));}
+ function saveBarWidth(){try{localStorage.setItem('nwDesktopLyricsWidth',String(barWidth));}catch{}}
+ let widthDrag=null;
+ resizeGrip.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();e.stopPropagation();const r=lyricBar.getBoundingClientRect();widthDrag={x:e.clientX,width:r.width,left:r.left};resizeGrip.setPointerCapture(e.pointerId);};
+ resizeGrip.onpointermove=e=>{if(!widthDrag)return;barWidth=Math.max(300,Math.min(innerWidth-widthDrag.left,widthDrag.width+e.clientX-widthDrag.x));applyBarWidth();};
+ resizeGrip.onpointerup=resizeGrip.onpointercancel=()=>{if(widthDrag){saveBarWidth();rememberBarPosition();}widthDrag=null;};
+ resizeGrip.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const r=lyricBar.getBoundingClientRect(),max=Math.max(300,innerWidth-r.left);barWidth=e.key==='Home'?300:e.key==='End'?max:Math.max(300,Math.min(max,r.width+(e.key==='ArrowRight'?1:-1)*(e.shiftKey?50:10)));applyBarWidth();saveBarWidth();rememberBarPosition();};
+ function keepBarPosition(){applyBarWidth();if(!barPosition||!matchMedia('(min-width:651px)').matches)return;lyricBar.style.left=Math.max(0,Math.min(innerWidth-lyricBar.offsetWidth,barPosition.x))+'px';lyricBar.style.top=Math.max(0,Math.min(innerHeight-lyricBar.offsetHeight,barPosition.y))+'px';}
  function rememberBarPosition(){const r=lyricBar.getBoundingClientRect();barPosition={x:r.left,y:r.top};try{localStorage.setItem('nwDesktopLyricsPosition',JSON.stringify(barPosition));}catch{}}
  window.addEventListener('resize',keepBarPosition);requestAnimationFrame(keepBarPosition);
  function initDesktopLyrics(){
@@ -180,13 +192,13 @@
   try{
    pipWindow=await window.documentPictureInPicture.requestWindow({width:Math.round(Math.min(900,innerWidth*.5)),height:140});
    const pd=pipWindow.document;pd.title='뉴트월드 · 항상 위 가사';
-   const style=pd.createElement('style');style.textContent='html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#071018;color:#fff}#pipBar{box-sizing:border-box;min-height:100%;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;padding:6px 110px 6px 12px;text-align:center}#pipBar::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;text-shadow:0 1px 3px #0008}#pipControls{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:96px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1;text-align:center;letter-spacing:0;font-family:Arial,sans-serif;font-size:14px;font-weight:400;width:28px;height:25px;padding:0;border:1px solid var(--nw-border);border-radius:5px;background:var(--nw-control);color:var(--nw-text);cursor:pointer}label{font-size:10px;display:flex;align-items:center;gap:3px}input{width:58px;margin:0;accent-color:var(--nw-accent)}';
+   const style=pd.createElement('style');style.textContent='html,body{margin:0;width:100%;height:100%;overflow:hidden}body{background:#071018;color:#fff}#pipBar{box-sizing:border-box;min-height:100%;position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:center;padding:6px 138px 6px 12px;text-align:center}#pipBar::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--nw-panel);opacity:var(--nw-lyrics-opacity,1)}.line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15;text-shadow:0 1px 3px #0008}#pipControls{position:absolute;right:6px;top:6px;width:124px;display:flex;flex-wrap:wrap;gap:3px;justify-content:center}button{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;line-height:1;text-align:center;letter-spacing:0;font-family:Arial,sans-serif;font-size:14px;font-weight:400;width:28px;height:25px;padding:0;border:1px solid var(--nw-border);border-radius:5px;background:var(--nw-control);color:var(--nw-text);cursor:pointer}label{font-size:10px;display:flex;align-items:center;gap:3px}input{width:58px;margin:0;accent-color:var(--nw-accent)}';
    pd.head.append(style);
-   pd.body.innerHTML='<section id="pipBar"><div class="line" id="pipCurrent"></div><div class="line" id="pipNext"></div><div id="pipControls"><button id="pipPrev" aria-label="이전 곡">⏮</button><button id="pipPlay" aria-label="재생 또는 일시정지">▶</button><button id="pipNextTrack" aria-label="다음 곡">⏭</button><label>투명도<input id="pipOpacity" type="range" min="0" max="100" aria-label="배경 투명도"></label></div></section>';
+   pd.body.innerHTML='<section id="pipBar"><div class="line" id="pipCurrent"></div><div class="line" id="pipNext"></div><div id="pipControls"><button id="pipPrev" aria-label="이전 곡">⏮</button><button id="pipPlay" aria-label="재생 또는 일시정지">▶</button><button id="pipNextTrack" aria-label="다음 곡">⏭</button><button id="pipClose" aria-label="가사창 닫기">×</button><label>투명도<input id="pipOpacity" type="range" min="0" max="100" aria-label="배경 투명도"></label></div></section>';
    const target=pd.getElementById('pipBar'),copiedFonts=new Set();
    function syncPip(){
     if(!pipWindow||pipWindow.closed)return;
-    target.style.cssText=lyricBar.style.cssText;target.style.removeProperty('left');target.style.removeProperty('top');
+    target.style.cssText=lyricBar.style.cssText;target.style.removeProperty('left');target.style.removeProperty('top');target.style.removeProperty('width');
     for(const [from,to] of [['nwDesktopLyricsCurrent','pipCurrent'],['nwDesktopLyricsNext','pipNext']]){
      const source=$(from),dest=pd.getElementById(to),cs=getComputedStyle(source);
      if(dest.textContent!==source.textContent)dest.textContent=source.textContent;
@@ -196,6 +208,7 @@
     pd.getElementById('pipOpacity').value=opacityInput.value;
     document.querySelectorAll('link[data-nw-web-font]').forEach(link=>{if(!copiedFonts.has(link.href)){pd.head.append(link.cloneNode());copiedFonts.add(link.href);}});
    }
+   pd.getElementById('pipClose').onclick=()=>pipWindow?.close();
    pd.getElementById('pipPrev').onclick=()=>$('nwPrev').click();pd.getElementById('pipPlay').onclick=()=>$('nwPlay').click();pd.getElementById('pipNextTrack').onclick=()=>$('nwNext').click();
    pd.getElementById('pipOpacity').oninput=e=>setBarTransparency(e.target.value,true);
    pipObserver=new MutationObserver(syncPip);pipObserver.observe(lyricBar,{childList:true,subtree:true,attributes:true});pipObserver.observe(document.documentElement,{attributes:true,attributeFilter:['class','style']});syncPip();
