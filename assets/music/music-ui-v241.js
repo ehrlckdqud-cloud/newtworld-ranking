@@ -207,6 +207,7 @@
     updateMediaSession();
   }
   let trackLoadSerial=0;
+  let loadedSourceKey=null;
   const resolvedSources=new Map();
   const sourceKey=t=>t.id+':'+(t.audioFile||t.audio);
   function prepareTrackSources(){
@@ -220,21 +221,27 @@
   function setTrack(i,autoplay){
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));localStorage.setItem('nwMusicTrackId',tracks[index].id);
     const t=current(),serial=++trackLoadSerial;
+    const requestedKey=sourceKey(t);
+    loadedSourceKey=null;
     trackTransitionPlaying=!!(autoplay&&bgmOn);
     if(!trackTransitionPlaying)audio.pause();
     const applySource=src=>{
       if(serial!==trackLoadSerial)return;
       // A direct replacement preserves the media element/session. Do not empty src
       // or call load() between consecutive songs (it resets pending playback).
+      if(!src)throw Error('음악 파일 주소가 없습니다. 곡을 다시 선택해주세요.');
       audio.src=src;
+      loadedSourceKey=requestedKey;
       $('nwAutoplayNote').classList.remove('show','nw-audio-status');
       if(trackTransitionPlaying)tryPlay();
     };
     const ready=t.audioFile?resolvedSources.get(sourceKey(t)):t.audio;
     if(ready)applySource(ready);
     else{
+      // Never leave the previous song playable while the selected source is pending.
+      audio.pause();audio.removeAttribute('src');audio.load();
       $('nwAutoplayNote').textContent='음악 파일을 불러오는 중…';$('nwAutoplayNote').classList.add('show','nw-audio-status');
-      window.NWResolveMusicAudio(t).then(src=>{resolvedSources.set(sourceKey(t),src);applySource(src);}).catch(e=>{
+      window.NWResolveMusicAudio(t).then(src=>{resolvedSources.set(requestedKey,src);applySource(src);}).catch(e=>{
         if(serial!==trackLoadSerial)return;
         pausePlayback();$('nwAutoplayNote').textContent=e.message||'음악을 불러오지 못했습니다. 곡을 다시 선택해주세요.';$('nwAutoplayNote').classList.add('show');
       });
@@ -249,15 +256,19 @@
     tracks.splice(0,tracks.length,...next);
     prepareTrackSources();
     const found=tracks.findIndex(t=>t.id===(previous?.id||remembered));
-    if(found>=0){index=found;populateSelect();paint();localStorage.setItem('nwMusicIndex',String(index));}
+    if(found>=0){
+      if(loadedSourceKey!==sourceKey(tracks[found]))setTrack(found,playing||trackTransitionPlaying);
+      else{index=found;populateSelect();paint();localStorage.setItem('nwMusicIndex',String(index));}
+    }
     else if(tracks.length){setTrack(0,playing);}
-    else{++trackLoadSerial;trackTransitionPlaying=false;index=0;audio.pause();audio.removeAttribute('src');audio.load();populateSelect();
+    else{++trackLoadSerial;loadedSourceKey=null;trackTransitionPlaying=false;index=0;audio.pause();audio.removeAttribute('src');audio.load();populateSelect();
       $('nwTrackTitle').textContent='등록된 곡이 없습니다';$('nwTrackArtist').textContent='';$('nwCover').style.display='none';renderLyrics(null);
       $('nwNow').textContent='0:00';$('nwDur').textContent='0:00';$('nwSeek').value=0;updateMediaSession();}
     window.dispatchEvent(new Event('nw-music-library-updated'));
   }
   async function tryPlay(){
     if(!bgmOn||!current())return;
+    if(loadedSourceKey!==sourceKey(current())){setTrack(index,true);return;}
     const serial=trackLoadSerial;
     trackTransitionPlaying=true;updateMediaSession(true);
     try{
@@ -478,7 +489,7 @@
   initMediaSession();
   const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,renderLyrics,syncLyrics,paint,populateSelect,current};
+  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,tryPlay,renderLyrics,syncLyrics,paint,populateSelect,current};
 })();
 
 
@@ -528,7 +539,7 @@
   btn.onclick=open;$('nwSyncClose').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close();});
   $('nwSyncTrack').onchange=e=>{trackIndex=Number(e.target.value);lineIndex=0;api.setTrack(trackIndex,false);render();};
   $('nwSyncStamp').onclick=stamp;$('nwSyncPrevLine').onclick=()=>select(-1);$('nwSyncNextLine').onclick=()=>select(1);$('nwSyncMinus01').onclick=()=>shiftLine(-.1);$('nwSyncPlus01').onclick=()=>shiftLine(.1);$('nwSyncMinus05').onclick=()=>shiftLine(-.5);$('nwSyncPlus05').onclick=()=>shiftLine(.5);$('nwSyncGoto').onclick=gotoLine;
-  $('nwSyncPlayPause').onclick=()=>{api.audio.paused?api.audio.play().catch(()=>{}):api.audio.pause();};$('nwSyncSave').onclick=saveRemote;$('nwSyncExport').onclick=exportTracks;$('nwSyncExportLrc').onclick=exportLrc;$('nwSyncReset').onclick=resetTrack;
+  $('nwSyncPlayPause').onclick=()=>{api.audio.paused?api.tryPlay():api.audio.pause();};$('nwSyncSave').onclick=saveRemote;$('nwSyncExport').onclick=exportTracks;$('nwSyncExportLrc').onclick=exportLrc;$('nwSyncReset').onclick=resetTrack;
   document.addEventListener('keydown',e=>{
     if(!modal.classList.contains('open'))return;
     const tag=(e.target&&e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='select'||tag==='textarea')return;
