@@ -24,4 +24,11 @@ static void process(MTAudioProcessingTapRef tap,CMItemCount frames,MTAudioProces
   for(size_t i=0;i<count;i++)samples[i]=NWProcessEQ(&c->eq,samples[i],offset+(unsigned)(i%channels));offset+=channels;
  }
 }
-MTAudioProcessingTapRef NWCreateEqualizerTap(void){MTAudioProcessingTapCallbacks callbacks={kMTAudioProcessingTapCallbacksVersion_0,NULL,initialize,finalize,prepare,unprepare,process};MTAudioProcessingTapRef tap=NULL;if(MTAudioProcessingTapCreate(kCFAllocatorDefault,&callbacks,kMTAudioProcessingTapCreationFlag_PreEffects,&tap)!=noErr)return NULL;return tap;}
+MTAudioProcessingTapRef NWCreateEqualizerTap(void){
+ volatile MTAudioProcessingTapCallbacks callbacks;
+ memset((void *)&callbacks,0,sizeof(callbacks));
+ callbacks.version=kMTAudioProcessingTapCallbacksVersion_0;callbacks.init=initialize;callbacks.finalize=finalize;callbacks.prepare=prepare;callbacks.unprepare=unprepare;callbacks.process=process;
+ MTAudioProcessingTapRef tap=NULL;
+ if(MTAudioProcessingTapCreate(kCFAllocatorDefault,(const MTAudioProcessingTapCallbacks *)&callbacks,kMTAudioProcessingTapCreationFlag_PreEffects,&tap)!=noErr)return NULL;
+ return tap;
+}

@@ -15,7 +15,8 @@ import java.util.UUID;
 public final class LocalLibrary {
  private final Context context;
  public final File directory;
- public LocalLibrary(Context context){this.context=context.getApplicationContext();directory=new File(context.getFilesDir(),"music");directory.mkdirs();}
+ public LocalLibrary(Context context){this(context,new File(context.getFilesDir(),"music"));}
+ LocalLibrary(Context context,File directory){this.context=context.getApplicationContext();this.directory=directory;directory.mkdirs();}
  public synchronized JSONArray read(){try{return new JSONArray(new String(new AtomicFile(new File(directory,"library.json")).readFully(),StandardCharsets.UTF_8));}catch(Exception e){return new JSONArray();}}
  private void save(JSONArray tracks)throws Exception{
   AtomicFile file=new AtomicFile(new File(directory,"library.json"));FileOutputStream stream=null;

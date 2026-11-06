@@ -4,8 +4,8 @@ import UIKit
 
 final class LocalLibrary {
     let directory: URL
-    init() {
-        directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Music", isDirectory: true)
+    init(directory custom: URL? = nil) {
+        directory = custom ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Music", isDirectory: true)
         try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
     }
     func read() -> [[String: Any]] {

@@ -58,14 +58,14 @@ private boolean pageReady=false;
   future.addListener(()->{try{controller=future.get();controller.addListener(new Player.Listener(){
    @Override public void onEvents(Player player,Player.Events events){sendState();}
    @Override public void onPlayerError(PlaybackException e){emit("error",e.getErrorCodeName());}
-  });if(pageReady){emit("ready",null);sendLibrary();sendState();}}catch(Exception e){emit("error","재생 서비스 연결 실패");}},androidx.core.content.ContextCompat.getMainExecutor(this));
+  });if(pageReady){if(controller.getMediaItemCount()==0)refreshQueue();emit("ready",null);sendLibrary();sendState();}}catch(Exception e){emit("error","재생 서비스 연결 실패");}},androidx.core.content.ContextCompat.getMainExecutor(this));
   web.loadUrl("https://appassets.androidplatform.net/assets/web/index.html");
   getOnBackPressedDispatcher().addCallback(this,new OnBackPressedCallback(true){@Override public void handleOnBackPressed(){moveTaskToBack(true);}});
  }
  private boolean validURL(String value){Uri u=Uri.parse(value);return "https".equals(u.getScheme())&&"ehrlckdqud-cloud.github.io".equals(u.getHost())&&u.getPath()!=null&&u.getPath().startsWith("/newtworld-ranking/assets/");}
  private void command(String raw){try{
   JSONObject m=new JSONObject(raw);if(m.optInt("version")!=1)return;String command=m.optString("command");
-  if(command.equals("ready")){pageReady=true;if(controller!=null){emit("ready",null);sendLibrary();sendState();}return;}
+  if(command.equals("ready")){pageReady=true;if(controller!=null){if(controller.getMediaItemCount()==0)refreshQueue();emit("ready",null);sendLibrary();sendState();}return;}
   if(controller==null){emit("error","재생 기능을 준비하는 중입니다.");return;}
   switch(command){
    case "queue":{

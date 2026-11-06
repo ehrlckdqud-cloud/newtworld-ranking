@@ -29,3 +29,20 @@ targets:
       properties:
         UIBackgroundModes: [audio]
         UILaunchScreen: {}
+  NewtWorldTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: NewtWorld
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  NewtWorld:
+    build:
+      targets:
+        NewtWorld: all
+        NewtWorldTests: [test]
+    test:
+      targets: [NewtWorldTests]

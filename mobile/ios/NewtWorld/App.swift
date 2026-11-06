@@ -126,7 +126,7 @@ final class AudioEngine {
     }
     func command(_ data: [String: Any]) {
         switch data["command"] as? String {
-        case "ready": emit?(["type": "ready"]); sendLibrary()
+        case "ready": if tracks.isEmpty { refreshQueue() }; emit?(["type": "ready"]); sendLibrary()
         case "queue":
             guard let incoming = data["tracks"] as? [[String: Any]], incoming.allSatisfy({ validURL($0["url"] as? String ?? "") != nil && !(($0["id"] as? String ?? "").hasPrefix("local-")) }) else { return }
             defaults = incoming
