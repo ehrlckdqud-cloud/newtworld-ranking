@@ -18,7 +18,7 @@ export function localArcadeCore(original){
 }
 export const controls=[
  {KeyW:1,KeyS:2,KeyA:4,KeyD:8,KeyJ:16,KeyK:32,KeyU:64,Digit1:256},
- {ArrowUp:1,ArrowDown:2,ArrowLeft:4,ArrowRight:8,Numpad1:16,Numpad2:32,Numpad3:64,Digit2:256}
+ {ArrowUp:1,ArrowDown:2,ArrowLeft:4,ArrowRight:8,KeyI:16,KeyO:32,KeyP:64,Numpad1:16,Numpad2:32,Numpad3:64,Digit2:256}
 ];
 export function inputMask(keys,ports,coin){
  const mask=mapping=>Object.entries(mapping).reduce((v,[key,bit])=>v|(keys.has(key)?bit:0),0);
