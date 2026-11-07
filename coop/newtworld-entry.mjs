@@ -2,7 +2,7 @@ import {claimGameTab} from './tab-owner.mjs?v=1';
 import {initRankings} from './rankings.mjs?v=98';
 import {claimSiteSession,blockSite} from './site-session.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
-import {initLobby} from './lobby.mjs?v=solo125';
+import {initLobby} from './lobby.mjs?v=ms1';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
 const form=document.getElementById('joinForm');
