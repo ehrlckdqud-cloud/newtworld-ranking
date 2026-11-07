@@ -1,4 +1,4 @@
-import {openLocalArcade} from './local-arcade.mjs?v=2';
+import {openLocalArcade} from './local-arcade.mjs?v=3';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
@@ -12,7 +12,7 @@ function render(){const list=$('roomList');list.replaceChildren();
  if(channel===3){
   $('roomCount').textContent=channelLabel();
   const game=document.createElement('button');
-  game.className='room-card';game.type='button';
+  game.className='room-card arcade-game-card';game.type='button';
   const logo=document.createElement('img');
   logo.src='./mslug3-logo.png';logo.alt='';logo.className='arcade-card-logo';
   game.append(logo,text('b','메탈슬러그 3'),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
