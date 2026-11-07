@@ -74,3 +74,8 @@ dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch
 .arcade-vertical-frame{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;pointer-events:none}
 .arcade-local .arcade-screen.gunbird-preparing{min-height:160px}
 .arcade-local .arcade-boot{z-index:1}
+
+.room-list.arcade-catalog{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start}
+.arcade-gem-price{display:inline-flex;align-items:center;gap:.25em;vertical-align:middle;white-space:nowrap}
+.arcade-gem-price img{width:1.15em;height:1.15em;object-fit:contain}
+.arcade-local.playing [data-aine]{display:none}
