@@ -4,13 +4,26 @@ const bytes=hex=>Uint8Array.from(hex.match(/../g),pair=>parseInt(pair,16));
 const oldCallback=bytes('0041002102024020000d0020014101470d00200341084d047f20034102742802f8e5080541000b4198ddc8022802007141004721020b20020b');
 const twoPorts=bytes('0002402001410147200041014b720d00200341084b0d0020034102742802f8e5084198ddc802280200200041096c76714100470f0b41000b');
 
-export function localArcadeCore(original){
+// In nw_load the host writes "100%" as the value of fbneo-cpu-speed-adjust.
+// The packed little-endian string is an i32.const instruction followed by a store.
+// Use the same length instruction for "125%" so section and function sizes stay valid.
+const defaultClock=bytes('41003a0004200041b1e0c0a902360000');
+const soloClock=bytes('41003a0004200041b1e4d4a902360000');
+
+function uniqueOffset(original,pattern){
  const hits=[];
- for(let pos=original.indexOf(oldCallback[0]);pos>=0;pos=original.indexOf(oldCallback[0],pos+1)){
-  if(oldCallback.every((b,i)=>original[pos+i]===b))hits.push(pos);
+ for(let pos=original.indexOf(pattern[0]);pos>=0;pos=original.indexOf(pattern[0],pos+1)){
+  if(pattern.every((b,i)=>original[pos+i]===b))hits.push(pos);
  }
  if(hits.length!==1)throw Error('원작 실행 코어 버전을 확인해주세요.');
- const result=original.slice(),at=hits[0];
+ return hits[0];
+}
+
+export function localArcadeCore(original){
+ const at=uniqueOffset(original,oldCallback);
+ const clockAt=uniqueOffset(original,defaultClock);
+ const result=original.slice();
+ result.set(soloClock,clockAt);
  result.set(twoPorts.subarray(0,-1),at);
  result.fill(1,at+twoPorts.length-1,at+oldCallback.length-1);
  if(!WebAssembly.validate(result))throw Error('원작 2인 입력 코어를 준비하지 못했습니다.');

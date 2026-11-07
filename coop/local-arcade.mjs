@@ -3,7 +3,7 @@ import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
-import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=2';
+import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=cpu125';
 
 import {selectMetalSlug2,mountMetalSlug2} from './mslug2.mjs';
 
