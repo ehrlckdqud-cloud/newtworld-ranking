@@ -3,7 +3,7 @@ const decode=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 export async function downloadGame({member,game='mslug3',headers={},onProgress=()=>{},fetcher=fetch}){
  const response=await fetcher(API+'/api/game-package',{method:'POST',headers:{'content-type':'application/json',...headers},body:JSON.stringify({member,game})});
  if(!response.ok)throw Error(response.status===403?'테스트 비밀번호를 다시 확인해주세요.':'설치 정보를 받지 못했습니다. 잠시 후 다시 시도해주세요.');
- const manifest=await response.json();if(!['mslug','mslug2','gunbird2','mslug3','puyopuyo2'].includes(game)||manifest.id!==game+'-v1'||!Number.isSafeInteger(manifest.bytes)||manifest.bytes<1||manifest.bytes>80*1024*1024||!Array.isArray(manifest.parts)||!manifest.parts.length||manifest.parts.length>64||!/^[a-f0-9]{64}$/.test(manifest.sha256))throw Error('설치 정보가 올바르지 않습니다.');
+ const manifest=await response.json();if(!['mslug','mslug2','mslugx','gunbird2','mslug3','puyopuyo2'].includes(game)||manifest.id!==game+'-v1'||!Number.isSafeInteger(manifest.bytes)||manifest.bytes<1||manifest.bytes>80*1024*1024||!Array.isArray(manifest.parts)||!manifest.parts.length||manifest.parts.length>64||!/^[a-f0-9]{64}$/.test(manifest.sha256))throw Error('설치 정보가 올바르지 않습니다.');
  const key=await crypto.subtle.importKey('raw',decode(manifest.key),{name:'AES-GCM'},false,['decrypt']);
  const data=new Uint8Array(manifest.bytes);let offset=0;onProgress(0);
  for(const part of manifest.parts){
