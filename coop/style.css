@@ -79,3 +79,5 @@ dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch
 .arcade-gem-price{display:inline-flex;align-items:center;gap:.25em;vertical-align:middle;white-space:nowrap}
 .arcade-gem-price img{width:1.15em;height:1.15em;object-fit:contain}
 .arcade-local.playing [data-aine]{display:none}
+
+.arcade-game-preview{position:fixed;z-index:1000;pointer-events:none;width:auto;height:auto;max-width:min(360px,calc(100vw - 16px));box-sizing:border-box;border:1px solid #a89960;border-radius:6px;background:#10130e;box-shadow:0 4px 16px #0009;object-fit:contain}
