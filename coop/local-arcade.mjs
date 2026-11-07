@@ -1,14 +1,14 @@
-import {downloadGame} from './download-game.mjs?v=ms4';
+import {downloadGame} from './download-game.mjs?v=ms5';
 import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=cpu125';
 
-import {selectMetalSlug,mountMetalSlug} from './mslug2.mjs?v=ms4';
+import {selectMetalSlug,mountMetalSlug} from './mslug2.mjs?v=ms5';
 
 const api='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
-const games=new Map([['mslug',{title:'메탈슬러그 1',ports:2}],['mslug2',{title:'메탈슬러그 2',ports:2}],['mslugx',{title:'메탈슬러그 X',ports:2}],['mslug3',{title:'메탈슬러그 3',ports:2}],['mslug4',{title:'메탈슬러그 4',ports:2}],['gunbird2',{title:'건버드 2',ports:2}],['puyopuyo2',{title:'뿌요뿌요 2',ports:2}]]);
+const games=new Map([['mslug',{title:'메탈슬러그 1',ports:2}],['mslug2',{title:'메탈슬러그 2',ports:2}],['mslugx',{title:'메탈슬러그 X',ports:2}],['mslug3',{title:'메탈슬러그 3',ports:2}],['mslug4',{title:'메탈슬러그 4',ports:2}],['mslug5',{title:'메탈슬러그 5',ports:2}],['gunbird2',{title:'건버드 2',ports:2}],['puyopuyo2',{title:'뿌요뿌요 2',ports:2}]]);
 export function arcadePrice(){
  const price=document.createElement('span'),icon=document.createElement('img');
  price.className='arcade-gem-price';icon.src='../assets/newt-gem.svg';icon.alt='뉴트젬';
