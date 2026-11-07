@@ -1,5 +1,5 @@
 const originalPath = new TextEncoder().encode('/roms/mslug3fd.zip\0');
-const paths = {mslug: '/roms/xx/mslug.zip', mslug2: '/roms/x/mslug2.zip'};
+const paths = {mslug: '/roms/xx/mslug.zip', mslug2: '/roms/x/mslug2.zip', mslugx: '/roms/x/mslugx.zip'};
 
 // The shared host opens a fixed-length path. Select the original game's driver
 // without modifying either game's ROM or the shared WebAssembly asset.
