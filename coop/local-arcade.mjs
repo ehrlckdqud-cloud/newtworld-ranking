@@ -14,20 +14,35 @@ export async function openLocalArcade(game='mslug3'){
  active=true;
  const launch=crypto.randomUUID(),keys=new Set(),dialog=document.createElement('dialog');
  dialog.className='arcade-local';
- dialog.innerHTML='<h2></h2><p data-status role="status"></p><div class="arcade-screen" hidden><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
+ dialog.innerHTML='<h2></h2><p data-status role="status"></p><div class="arcade-screen" hidden><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-fullscreen hidden>전체화면</button><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
  const find=selector=>dialog.querySelector(selector),canvas=find('canvas'),status=find('[data-status]'),start=find('[data-start]'),close=find('[data-close]');
  find('h2').textContent=spec.title+' · 혼자하기';
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 상단 2 · 이동 방향키 · 숫자패드 1 공격 / 2 점프 / 4 폭탄 (I/O/P도 가능)':'')+' ｜ 코인 추가 5';
  document.body.append(dialog);dialog.showModal();
- let enteredFullscreen=false;
- const root=document.documentElement;
- if(!document.fullscreenElement&&document.fullscreenEnabled&&root.requestFullscreen){
-  root.requestFullscreen().then(()=>{
-   enteredFullscreen=true;
-   if(dialog.open){dialog.close();dialog.showModal();}
-   else if(document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});
-  }).catch(()=>{});
+ const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
+ function screenMode(on){
+  dialog.classList.toggle('screen-only',on);
+  if(running)canvas.focus();
  }
+ function fullscreenChanged(){screenMode(document.fullscreenElement===screen);}
+ function leaveScreen(){
+  if(document.fullscreenElement===screen)document.exitFullscreen().catch(()=>{});
+  screenMode(false);
+ }
+ function escape(e){
+  if(e.key==='Escape'&&dialog.classList.contains('screen-only')){
+   e.preventDefault();e.stopImmediatePropagation();leaveScreen();
+  }
+ }
+ fullscreen.onclick=async()=>{
+  if(!running)return;
+  screenMode(true);
+  if(document.fullscreenEnabled&&screen.requestFullscreen){
+   try{await screen.requestFullscreen();}catch{/* Keep the game-only viewport. */}
+  }
+ };
+ document.addEventListener('fullscreenchange',fullscreenChanged);
+ window.addEventListener('keydown',escape,true);
  let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
  const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
  const ctx=canvas.getContext('2d');
@@ -69,15 +84,15 @@ export async function openLocalArcade(game='mslug3'){
   if(e.type==='keydown')keys.add(e.code);else keys.delete(e.code);
  }
  function reset(){keys.clear();last=clock=nextAudio=0;}
- function finish(){
-  if(charging)return;
-  if(running&&!confirm('게임을 종료할까요? 다시 실행하면 500뉴트젬이 차감됩니다.'))return;
+ function finish(external=false){
+  if(disposed||(!external&&charging))return;
+  if(!external&&running&&!confirm('게임을 종료할까요? 다시 실행하면 500뉴트젬이 차감됩니다.'))return;
   disposed=true;running=false;cancelAnimationFrame(raf);reset();
   window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',reset);
   if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
-  dialog.close();dialog.remove();if(enteredFullscreen&&document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});active=false;lobbyAudio.setWaiting(true);
+  document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('keydown',escape,true);leaveScreen();dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
  }
- close.onclick=finish;dialog.oncancel=e=>{e.preventDefault();finish();};
+ close.onclick=()=>finish();dialog.addEventListener('close',()=>finish(true));dialog.oncancel=e=>{e.preventDefault();if(dialog.classList.contains('screen-only'))leaveScreen();else if(!running)finish();};
  find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);canvas.focus();};
  start.onclick=async()=>{
   if(!core||charging||running)return;
@@ -87,7 +102,8 @@ export async function openLocalArcade(game='mslug3'){
    const response=await fetch(api+'/api/arcade-entry',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch})});
    const result=await response.json();
    if(!response.ok||!result.ok||result.launch!==launch||result.game!==game||result.cost!==500)throw Error(result.error||'입장 결과를 확인하지 못했습니다.');
-   running=true;start.hidden=true;close.textContent='게임 종료';status.textContent='입장 완료 · 게임 내 코인 추가와 이어하기는 무료입니다.';
+   if(disposed)return;
+   running=true;start.hidden=true;fullscreen.hidden=false;close.textContent='게임 종료';status.textContent='입장 완료 · 게임 내 코인 추가와 이어하기는 무료입니다.';
    dialog.classList.add('playing');find('.arcade-screen').hidden=find('[data-help]').hidden=find('[data-coins]').hidden=false;
    lobbyAudio.setWaiting(false);core.onVideo=video;core.onAudio=sound;
    window.addEventListener('keydown',input,true);window.addEventListener('keyup',input,true);window.addEventListener('blur',reset);document.addEventListener('visibilitychange',reset);
