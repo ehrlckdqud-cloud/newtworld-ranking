@@ -1,3 +1,4 @@
+import {attachGamePreview,hideGamePreview} from './game-preview.mjs';
 import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms1';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -8,7 +9,7 @@ const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:
 const channelLabel=()=>String(channel).padStart(2,'0')+' '+channels[channel].name;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
-function render(){const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
+function render(){hideGamePreview();const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
  if(channel===3){
   $('roomCount').textContent=channelLabel();
   const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
@@ -18,7 +19,8 @@ function render(){const list=$('roomList');list.replaceChildren();list.classList
    logo.src=art;logo.alt='';logo.className='arcade-card-logo';
    const detail=text('span','한 PC에서 1~2인 · ');detail.append(arcadePrice());
    button.append(logo,text('b',name),detail);
-   button.onclick=()=>openLocalArcade(id);list.append(button);
+   attachGamePreview(button,id,name);
+   button.onclick=()=>{hideGamePreview();openLocalArcade(id);};list.append(button);
   }
   return;
  }
