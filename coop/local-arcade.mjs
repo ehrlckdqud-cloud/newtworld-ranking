@@ -1,14 +1,14 @@
-import {downloadGame} from './download-game.mjs?v=ms2';
+import {downloadGame} from './download-game.mjs?v=ms1';
 import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=cpu125';
 
-import {selectMetalSlug2,mountMetalSlug2} from './mslug2.mjs';
+import {selectMetalSlug,mountMetalSlug} from './mslug2.mjs?v=ms1';
 
 const api='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
-const games=new Map([['mslug2',{title:'메탈슬러그 2',ports:2}],['mslug3',{title:'메탈슬러그 3',ports:2}],['gunbird2',{title:'건버드 2',ports:2}],['puyopuyo2',{title:'뿌요뿌요 2',ports:2}]]);
+const games=new Map([['mslug',{title:'메탈슬러그 1',ports:2}],['mslug2',{title:'메탈슬러그 2',ports:2}],['mslug3',{title:'메탈슬러그 3',ports:2}],['gunbird2',{title:'건버드 2',ports:2}],['puyopuyo2',{title:'뿌요뿌요 2',ports:2}]]);
 export function arcadePrice(){
  const price=document.createElement('span'),icon=document.createElement('img');
  price.className='arcade-gem-price';icon.src='../assets/newt-gem.svg';icon.alt='뉴트젬';
@@ -163,9 +163,9 @@ export async function openLocalArcade(game='mslug3'){
   if(!source){source=await downloadGame({game,member,headers:testHeaders(),onProgress:p=>{status.textContent='게임 준비 중 '+Math.round(p*100)+'%';}});if(!disposed&&game==='mslug3')try{await saveROM(source);}catch{}}
   if(disposed)return;
   let portsReady=false;
-  const loaded=await window.createMS3({localArcadeCore(bytes){const adapted=localArcadeCore(bytes);portsReady=true;return game==='mslug2'?selectMetalSlug2(adapted):adapted;},print:()=>{},printErr:()=>{}});
+  const loaded=await window.createMS3({localArcadeCore(bytes){const adapted=localArcadeCore(bytes);portsReady=true;return game==='mslug3'?adapted:selectMetalSlug(adapted,game);},print:()=>{},printErr:()=>{}});
   if(!portsReady)throw Error('실행 코어가 갱신되었습니다. 새로고침해주세요.');
-  if(game==='mslug2')await mountMetalSlug2(loaded,source);
+  if(game!=='mslug3')await mountMetalSlug(loaded,source,game);
   else {
   await window.prepareROM(loaded,source,{});
   // The supplied decrypted set needs FBNeo's alternate-ROM directory for CRC
