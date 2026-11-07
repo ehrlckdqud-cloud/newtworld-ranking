@@ -1,0 +1,107 @@
+import {downloadGame} from './download-game.mjs?v=98';
+import {readSavedROM,saveROM} from './rom-cache.mjs';
+import {testHeaders} from './test-access.mjs?v=98';
+import {lobbyAudio} from './lobby-audio.mjs?v=98';
+import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=1';
+
+const api='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
+const games=new Map([['mslug3',{title:'메탈슬러그 3',ports:2}]]);
+let active=false;
+export async function openLocalArcade(game='mslug3'){
+ if(active)return;
+ const spec=games.get(game);
+ if(!spec)throw Error('등록되지 않은 게임입니다.');
+ active=true;
+ const launch=crypto.randomUUID(),keys=new Set(),dialog=document.createElement('dialog');
+ dialog.className='nw-dialog arcade-local';
+ dialog.innerHTML='<h2></h2><p data-status role="status"></p><canvas width="304" height="224" tabindex="0" hidden></canvas><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
+ const find=selector=>dialog.querySelector(selector),canvas=find('canvas'),status=find('[data-status]'),start=find('[data-start]'),close=find('[data-close]');
+ find('h2').textContent=spec.title+' · 혼자하기';
+ find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 2 · 이동 방향키 · 공격 I/O/P 또는 숫자패드 1/2/3':'')+' ｜ 코인 추가 5';
+ Object.assign(canvas.style,{width:'min(720px, 75vw)',height:'auto',imageRendering:'pixelated',background:'#000'});
+ dialog.style.maxWidth='95vw';canvas.style.maxHeight='60vh';canvas.style.objectFit='contain';
+ document.body.append(dialog);dialog.showModal();
+ let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
+ const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
+ const ctx=canvas.getContext('2d');
+ function video(ptr,w,h,pitch,format){
+  if(!ptr||format!==1)return;
+  if(!image||canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;image=ctx.createImageData(w,h);}
+  const heap=core.HEAPU8;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+   const a=ptr+y*pitch+x*4,i=(y*w+x)*4;
+   image.data[i]=heap[a+2];image.data[i+1]=heap[a+1];image.data[i+2]=heap[a];image.data[i+3]=255;
+  }
+  ctx.putImageData(image,0,0);
+ }
+ function sound(ptr,n){
+  if(!audio||audio.state!=='running'||!n||document.hidden)return;
+  const b=audio.createBuffer(2,n,core._nw_rate()),src=core.HEAP16.subarray(ptr/2,ptr/2+n*2);
+  for(let c=0;c<2;c++){const dst=b.getChannelData(c);for(let i=0;i<n;i++)dst[i]=src[i*2+c]/32768;}
+  const source=audio.createBufferSource();source.buffer=b;source.connect(audio.destination);
+  nextAudio=Math.max(audio.currentTime,nextAudio);source.start(nextAudio);nextAudio+=b.duration;
+ }
+ function tick(t){
+  if(!running||disposed)return;
+  if(!document.hidden){
+   clock+=last?Math.min(t-last,80):0;
+   const dt=1000/core._nw_fps();
+   while(clock>=dt){
+    if(!pulse&&owed){owed--;pulse=18;}
+    core._nw_input(inputMask(keys,spec.ports,pulse>12));if(pulse)pulse--;
+    core._nw_run(++frame);clock-=dt;
+   }
+  }
+  last=t;raf=requestAnimationFrame(tick);
+ }
+ const used=new Set([...Object.keys(controls[0]),...(spec.ports===2?Object.keys(controls[1]):[]),'Digit5']);
+ function input(e){
+  if(!running||!used.has(e.code)||e.target.tagName==='INPUT')return;
+  e.preventDefault();e.stopImmediatePropagation();
+  if(e.code==='Digit5'){if(e.type==='keydown'&&!e.repeat)owed=Math.min(owed+1,99);return;}
+  if(e.type==='keydown')keys.add(e.code);else keys.delete(e.code);
+ }
+ function reset(){keys.clear();last=clock=nextAudio=0;}
+ function finish(){
+  if(charging)return;
+  if(running&&!confirm('게임을 종료할까요? 다시 실행하면 500뉴트젬이 차감됩니다.'))return;
+  disposed=true;running=false;cancelAnimationFrame(raf);reset();
+  window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',reset);
+  if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
+  dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
+ }
+ close.onclick=finish;dialog.oncancel=e=>{e.preventDefault();finish();};
+ find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);canvas.focus();};
+ start.onclick=async()=>{
+  if(!core||charging||running)return;
+  start.disabled=close.disabled=charging=true;status.textContent='입장 확인 중…';
+  try{
+   audio??=new AudioContext();await audio.resume();
+   const response=await fetch(api+'/api/arcade-entry',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch})});
+   const result=await response.json();
+   if(!response.ok||!result.ok||result.launch!==launch||result.game!==game||result.cost!==500)throw Error(result.error||'입장 결과를 확인하지 못했습니다.');
+   running=true;start.hidden=true;close.textContent='게임 종료';status.textContent='입장 완료 · 게임 내 코인 추가와 이어하기는 무료입니다.';
+   canvas.hidden=find('[data-help]').hidden=find('[data-coins]').hidden=false;
+   lobbyAudio.setWaiting(false);core.onVideo=video;core.onAudio=sound;
+   window.addEventListener('keydown',input,true);window.addEventListener('keyup',input,true);window.addEventListener('blur',reset);document.addEventListener('visibilitychange',reset);
+   canvas.focus();raf=requestAnimationFrame(tick);
+  }catch(e){status.textContent=e.message+' · 같은 화면에서 다시 시도할 수 있습니다.';start.disabled=false;}
+  finally{charging=close.disabled=false;}
+ };
+ try{
+  status.textContent='원작 게임을 준비하는 중…';
+  let source=await readSavedROM();
+  if(!source){source=await downloadGame({member,headers:testHeaders(),onProgress:p=>{status.textContent='게임 준비 중 '+Math.round(p*100)+'%';}});if(!disposed)try{await saveROM(source);}catch{}}
+  if(disposed)return;
+  let portsReady=false;
+  const loaded=await window.createMS3({localArcadeCore(bytes){const adapted=localArcadeCore(bytes);portsReady=true;return adapted;},print:()=>{},printErr:()=>{}});
+  if(!portsReady)throw Error('실행 코어가 갱신되었습니다. 새로고침해주세요.');
+  await window.prepareROM(loaded,source,{});
+  // The supplied decrypted set needs FBNeo's alternate-ROM directory for CRC
+  // compatibility. Copy exactly the same unmodified ROM bytes to that path.
+  loaded.FS.writeFile('/system/fbneo/patched/mslug3fd.zip',loaded.FS.readFile('/roms/mslug3fd.zip'));
+  if(!loaded._nw_load()||!loaded._nw_ram()){loaded._nw_close();throw Error('원본 게임 파일을 불러오지 못했습니다.');}
+  if(disposed){loaded._nw_close();return;}
+  core=loaded;status.textContent='이번 실행의 입장료는 500뉴트젬입니다. 게임을 종료한 뒤 다시 실행하면 새 입장료가 적용됩니다.';start.disabled=false;
+ }catch(e){if(!disposed)status.textContent=e.message;}
+}
