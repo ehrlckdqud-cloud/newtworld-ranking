@@ -1,4 +1,4 @@
-import {openLocalArcade} from './local-arcade.mjs?v=1';
+import {openLocalArcade} from './local-arcade.mjs?v=2';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
@@ -13,7 +13,9 @@ function render(){const list=$('roomList');list.replaceChildren();
   $('roomCount').textContent=channelLabel();
   const game=document.createElement('button');
   game.className='room-card';game.type='button';
-  game.append(text('b','메탈슬러그 3'),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
+  const logo=document.createElement('img');
+  logo.src='./mslug3-logo.png';logo.alt='';logo.className='arcade-card-logo';
+  game.append(logo,text('b','메탈슬러그 3'),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
   game.onclick=()=>openLocalArcade('mslug3');list.append(game);return;
  }
  const shown=rooms.filter(r=>!$('waitingOnly').checked||r.status==='waiting');$('roomCount').textContent=`${channelLabel()} · ${rooms.length}개 방`;if(!channels[channel].games.length){list.append(text('p','아직 등록된 대결 게임이 없습니다.','empty'));return;}if(!shown.length){list.append(text('p','대기 중인 작전실이 없습니다. 첫 번째 방을 만들어보세요.','empty'));return;}
