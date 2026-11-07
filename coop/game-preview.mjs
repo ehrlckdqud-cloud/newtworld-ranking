@@ -1,3 +1,6 @@
+import {lobbyAudio} from './lobby-audio.mjs?v=98';
+
+let hoverSound;
 let active;
 
 export function hideGamePreview() {
@@ -47,8 +50,17 @@ function showGamePreview(card, game, name) {
 }
 
 export function attachGamePreview(card, game, name) {
+  if (!hoverSound) {
+    hoverSound = new Audio();
+    hoverSound.preload = 'auto';
+    hoverSound.src = new URL('./audio/card-hover.mp3', import.meta.url).href;
+  }
   card.addEventListener('pointerenter', event => {
-    if (event.pointerType !== 'touch') showGamePreview(card, game, name);
+    if (event.pointerType === 'touch') return;
+    showGamePreview(card, game, name);
+    hoverSound.volume = lobbyAudio.effectsVolume;
+    hoverSound.currentTime = 0;
+    if (hoverSound.volume > 0) hoverSound.play().catch(() => {});
   });
   card.addEventListener('pointerleave', () => {
     if (active?.card === card) hideGamePreview();
