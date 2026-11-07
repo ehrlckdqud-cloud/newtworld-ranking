@@ -1,12 +1,12 @@
-import {downloadGame} from './download-game.mjs?v=gunbird2';
-import {prepareGunbird2} from './gunbird2-runtime.mjs?v=1';
+import {downloadGame} from './download-game.mjs?v=puyo1';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=2';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=2';
 
 const api='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
-const games=new Map([['mslug3',{title:'메탈슬러그 3',ports:2}],['gunbird2',{title:'건버드 2',ports:2}]]);
+const games=new Map([['mslug3',{title:'메탈슬러그 3',ports:2}],['gunbird2',{title:'건버드 2',ports:2}],['puyopuyo2',{title:'뿌요뿌요 2',ports:2}]]);
 export function arcadePrice(){
  const price=document.createElement('span'),icon=document.createElement('img');
  price.className='arcade-gem-price';icon.src='../assets/newt-gem.svg';icon.alt='뉴트젬';
@@ -20,7 +20,7 @@ export async function openLocalArcade(game='mslug3'){
  active=true;
  const launch=crypto.randomUUID(),keys=new Set(),dialog=document.createElement('dialog');
  dialog.className='arcade-local';
- dialog.innerHTML='<h2></h2><p data-status role="status"></p><p data-aine hidden></p><div class="arcade-screen" hidden><div class="arcade-boot" role="status"><img src="../assets/branding/newtworld-top-logo.png" alt="뉴트월드"><span>Loading...</span></div><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-fullscreen hidden>전체화면</button><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled aria-label="500뉴트젬으로 게임 시작"></button></div>';
+ dialog.innerHTML='<h2></h2><p data-status role="status"></p><p data-aine hidden></p><div class="arcade-screen" hidden><div class="arcade-boot" role="status"><img src="../assets/branding/newtworld-top-logo.png" alt="뉴트월드"><span>Loading...</span></div><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><label data-puyo-players hidden>조작 모드 <select><option value="1">1인 플레이</option><option value="2">한 PC 2인 대전</option></select></label><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-fullscreen hidden>전체화면</button><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled aria-label="500뉴트젬으로 게임 시작"></button></div>';
  const find=selector=>dialog.querySelector(selector),canvas=find('canvas'),status=find('[data-status]'),start=find('[data-start]'),close=find('[data-close]');
  start.append(arcadePrice());
  if(game==='gunbird2'){
@@ -30,11 +30,14 @@ export async function openLocalArcade(game='mslug3'){
  find('h2').textContent=spec.title+' · 혼자하기';
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 상단 2 · 이동 방향키 · 숫자패드 1 공격 / 2 점프 / 4 폭탄 (I/O/P도 가능)':'')+' ｜ 코인 추가 5';
  if(game==='gunbird2')find('[data-help]').textContent='1P 시작 상단 1 · 이동 WASD · J 사격 / K 폭탄 / U 보조 ｜ 2P 시작 상단 2 · 방향키 · 숫자패드 1/2/4 또는 I/O/P ｜ 코인 추가 5';
+ if(game==='puyopuyo2')find('[data-help]').textContent='1P 이동·내리기 A/D/S · 회전 J/K · 메뉴 이동 W/S, 선택 1 또는 J ｜ 2P 방향키 · 회전 숫자패드 1/2 ｜ 원작에서 2인 대전을 선택하면 조작 모드도 2인으로 바꿔주세요.';
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
+ screen.tabIndex=-1;
+ const focusGame=()=>{(cabinet?screen:canvas).focus();};
  function screenMode(on){
   dialog.classList.toggle('screen-only',on);
-  if(running)canvas.focus();
+  if(running)focusGame();
  }
  function fullscreenChanged(){screenMode(document.fullscreenElement===screen);}
  function leaveScreen(){
@@ -88,6 +91,7 @@ export async function openLocalArcade(game='mslug3'){
   const source=audio.createBufferSource();source.buffer=b;source.connect(audio.destination);
   nextAudio=Math.max(audio.currentTime,nextAudio);source.start(nextAudio);nextAudio+=b.duration;
  }
+ find('[data-puyo-players] select').onchange=e=>{keys.clear();cabinet?.setPlayers(Number(e.target.value));};
  function tick(t){
   if(!running||disposed)return;
   if(!document.hidden){
@@ -105,7 +109,7 @@ export async function openLocalArcade(game='mslug3'){
  function input(e){
   if(!running||!used.has(e.code)||e.target.tagName==='INPUT')return;
   e.preventDefault();e.stopImmediatePropagation();
-  if(e.code==='Digit5'){if(e.type==='keydown'&&!e.repeat)owed=Math.min(owed+1,99);return;}
+  if(e.code==='Digit5'){if(game!=='puyopuyo2'&&e.type==='keydown'&&!e.repeat)owed=Math.min(owed+1,99);return;}
   if(e.type==='keydown')keys.add(e.code);else keys.delete(e.code);
  }
  function reset(){keys.clear();last=clock=nextAudio=0;cabinet?.input(0);}
@@ -119,7 +123,7 @@ export async function openLocalArcade(game='mslug3'){
   document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('keydown',escape,true);leaveScreen();dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
  }
  close.onclick=()=>finish();dialog.addEventListener('close',()=>finish(true));dialog.oncancel=e=>{e.preventDefault();if(dialog.classList.contains('screen-only'))leaveScreen();else if(!running)finish();};
- find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);canvas.focus();};
+ find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);focusGame();};
  start.onclick=async()=>{
   if((!core&&!cabinet)||charging||running)return;
   start.disabled=close.disabled=charging=true;status.textContent='입장 확인 중…';
@@ -129,22 +133,23 @@ export async function openLocalArcade(game='mslug3'){
    const result=await response.json();
    if(!response.ok||!result.ok||result.launch!==launch||result.game!==game||result.cost!==500)throw Error(result.error||'입장 결과를 확인하지 못했습니다.');
    if(disposed)return;
-   running=true;start.hidden=true;fullscreen.hidden=false;close.textContent='게임 종료';status.textContent='입장 완료 · 게임 내 코인 추가와 이어하기는 무료입니다.';
-   dialog.classList.add('playing');find('.arcade-screen').hidden=find('[data-help]').hidden=find('[data-coins]').hidden=false;
+   running=true;start.hidden=true;fullscreen.hidden=false;close.textContent='게임 종료';status.textContent='입장 완료';
+   dialog.classList.add('playing');find('.arcade-screen').hidden=find('[data-help]').hidden=false;
+   find('[data-coins]').hidden=game==='puyopuyo2';find('[data-puyo-players]').hidden=game!=='puyopuyo2';
    lobbyAudio.setWaiting(false);if(cabinet){cabinet.play();boot.hidden=true;}else{core.onVideo=video;core.onAudio=sound;}
    window.addEventListener('keydown',input,true);window.addEventListener('keyup',input,true);window.addEventListener('blur',reset);document.addEventListener('visibilitychange',visibility);
-   canvas.focus();raf=requestAnimationFrame(tick);
+   focusGame();raf=requestAnimationFrame(tick);
   }catch(e){status.textContent=e.message+' · 같은 화면에서 다시 시도할 수 있습니다.';start.disabled=false;}
   finally{charging=close.disabled=false;}
  };
  try{
   status.textContent='원작 게임을 준비하는 중…';
-  if(game==='gunbird2'){
+  if(game==='gunbird2'||game==='puyopuyo2'){
    canvas.hidden=true;screen.hidden=false;
    screen.classList.add('gunbird-preparing');
-   const bytes=await downloadGame({game,member,headers:testHeaders(),onProgress:p=>{status.textContent='건버드 2 준비 중 '+Math.round(p*100)+'%';}});
+   const bytes=await downloadGame({game,member,headers:testHeaders(),onProgress:p=>{status.textContent=spec.title+' 준비 중 '+Math.round(p*100)+'%';}});
    if(disposed)return;
-   cabinet=await prepareGunbird2(screen,bytes,{signal:preparation.signal,onFailure:message=>{status.textContent=message;}});
+   cabinet=await prepareCabinet(game,screen,bytes,{signal:preparation.signal,onFailure:message=>{status.textContent=message;}});
    screen.classList.remove('gunbird-preparing');screen.hidden=true;
   }else{
   let source=await readSavedROM();
