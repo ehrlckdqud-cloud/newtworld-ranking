@@ -13,14 +13,21 @@ export async function openLocalArcade(game='mslug3'){
  if(!spec)throw Error('등록되지 않은 게임입니다.');
  active=true;
  const launch=crypto.randomUUID(),keys=new Set(),dialog=document.createElement('dialog');
- dialog.className='nw-dialog arcade-local';
- dialog.innerHTML='<h2></h2><p data-status role="status"></p><canvas width="304" height="224" tabindex="0" hidden></canvas><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
+ dialog.className='arcade-local';
+ dialog.innerHTML='<h2></h2><p data-status role="status"></p><div class="arcade-screen" hidden><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
  const find=selector=>dialog.querySelector(selector),canvas=find('canvas'),status=find('[data-status]'),start=find('[data-start]'),close=find('[data-close]');
  find('h2').textContent=spec.title+' · 혼자하기';
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 2 · 이동 방향키 · 공격 I/O/P 또는 숫자패드 1/2/3':'')+' ｜ 코인 추가 5';
- Object.assign(canvas.style,{width:'min(720px, 75vw)',height:'auto',imageRendering:'pixelated',background:'#000'});
- dialog.style.maxWidth='95vw';canvas.style.maxHeight='60vh';canvas.style.objectFit='contain';
  document.body.append(dialog);dialog.showModal();
+ let enteredFullscreen=false;
+ const root=document.documentElement;
+ if(!document.fullscreenElement&&document.fullscreenEnabled&&root.requestFullscreen){
+  root.requestFullscreen().then(()=>{
+   enteredFullscreen=true;
+   if(dialog.open){dialog.close();dialog.showModal();}
+   else if(document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});
+  }).catch(()=>{});
+ }
  let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
  const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
  const ctx=canvas.getContext('2d');
@@ -68,7 +75,7 @@ export async function openLocalArcade(game='mslug3'){
   disposed=true;running=false;cancelAnimationFrame(raf);reset();
   window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',reset);
   if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
-  dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
+  dialog.close();dialog.remove();if(enteredFullscreen&&document.fullscreenElement===root)document.exitFullscreen().catch(()=>{});active=false;lobbyAudio.setWaiting(true);
  }
  close.onclick=finish;dialog.oncancel=e=>{e.preventDefault();finish();};
  find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);canvas.focus();};
@@ -81,7 +88,7 @@ export async function openLocalArcade(game='mslug3'){
    const result=await response.json();
    if(!response.ok||!result.ok||result.launch!==launch||result.game!==game||result.cost!==500)throw Error(result.error||'입장 결과를 확인하지 못했습니다.');
    running=true;start.hidden=true;close.textContent='게임 종료';status.textContent='입장 완료 · 게임 내 코인 추가와 이어하기는 무료입니다.';
-   canvas.hidden=find('[data-help]').hidden=find('[data-coins]').hidden=false;
+   dialog.classList.add('playing');find('.arcade-screen').hidden=find('[data-help]').hidden=find('[data-coins]').hidden=false;
    lobbyAudio.setWaiting(false);core.onVideo=video;core.onAudio=sound;
    window.addEventListener('keydown',input,true);window.addEventListener('keyup',input,true);window.addEventListener('blur',reset);document.addEventListener('visibilitychange',reset);
    canvas.focus();raf=requestAnimationFrame(tick);
