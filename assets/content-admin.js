@@ -7,6 +7,60 @@
  function renderAdjustMembers(){const box=document.getElementById('adjustMembers'),q=document.getElementById('adjustSearch').value;box.replaceChildren();const visible=members.slice().sort((a,b)=>a.name.localeCompare(b.name,'ko')||a.id.localeCompare(b.id)).filter(m=>matches(m,q));for(const m of visible){const label=document.createElement('label'),input=document.createElement('input'),name=document.createElement('span');input.type='checkbox';input.checked=selectedMembers.has(m.id);input.disabled=!!pendingAdjustment;input.onchange=()=>{if(input.checked)selectedMembers.add(m.id);else selectedMembers.delete(m.id);showBalance();};name.textContent=m.name+' · '+m.id+' · '+Number(m.balance).toLocaleString()+'젬';label.append(input,name);box.append(label);}if(!visible.length)box.textContent='검색 결과가 없습니다.';showBalance();}
  async function openUsage(m){usageMember=m;const dialog=document.getElementById('usageDialog');if(!dialog.open)dialog.showModal();const generation=++usageGeneration;document.getElementById('usageTitle').textContent=m.name+' · 게임 이용 내역';const list=document.getElementById('usageList'),message=document.getElementById('usageStatus');list.replaceChildren();message.textContent='불러오는 중…';document.getElementById('usageRetry').hidden=true;try{const r=await NWContent.call('contentAdminList',{guestToken:'',historyAccount:'member:'+m.id});if(generation!==usageGeneration||!dialog.open)return;if(!r.ok)throw Error(r.error);const history=r.history||[];message.textContent=history.length?'최근 '+history.length+'건 (최대 50건)':'게임 이용 내역이 없습니다.';for(const h of history){const li=document.createElement('li');li.textContent=new Date(h.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+' · '+h.note+' · '+Number(h.amount).toLocaleString()+'젬';list.append(li);}}catch(e){if(generation!==usageGeneration||!dialog.open)return;message.textContent=e.message;document.getElementById('usageRetry').hidden=false;}}
  document.getElementById('gemSearch').oninput=renderGemMembers;document.getElementById('adjustSearch').oninput=renderAdjustMembers;document.getElementById('clearSelection').onclick=()=>{if(pendingAdjustment)return;selectedMembers.clear();renderAdjustMembers();};document.getElementById('usageClose').onclick=()=>document.getElementById('usageDialog').close();document.getElementById('usageDialog').addEventListener('close',()=>{usageGeneration++;document.getElementById('usageList').replaceChildren();});document.getElementById('usageRetry').onclick=()=>openUsage(usageMember);
+ const recentDialog=document.getElementById('recentUsageDialog');
+ const recentPager=document.getElementById('recentPager');
+ let recentGeneration=0,recentSnapshot=null;
+ function renderRecentPager(page,pages){
+  recentPager.replaceChildren();
+  if(pages<=1)return;
+  function add(label,target,current=false){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=label;
+   button.disabled=current||target<1||target>pages;
+   if(current)button.setAttribute('aria-current','page');
+   button.onclick=()=>loadRecentPage(target);
+   recentPager.append(button);
+  }
+  add('이전',page-1);
+  const visible=[...new Set([1,page-1,page,page+1,pages])].filter(n=>n>=1&&n<=pages).sort((a,b)=>a-b);
+  visible.forEach((n,i)=>{
+   if(i&&n>visible[i-1]+1)recentPager.append(' … ');
+   add(String(n),n,n===page);
+  });
+  add('다음',page+1);
+ }
+ async function loadRecentPage(page){
+  const generation=++recentGeneration;
+  const message=document.getElementById('recentStatus'),table=document.getElementById('recentTable');
+  const body=document.getElementById('recentRows'),retry=document.getElementById('recentRetry');
+  recentPager.replaceChildren();body.replaceChildren();table.hidden=true;retry.hidden=true;
+  recentDialog.scrollTop=0;message.textContent='사용내역을 불러오는 중…';
+  try{
+   const r=await NWContent.call('contentAdminList',{guestToken:'',usagePage:page,snapshot:recentSnapshot});
+   if(generation!==recentGeneration||!recentDialog.open)return;
+   if(!r.ok||!Array.isArray(r.history)||!Number.isInteger(r.total))throw Error(r.error||'전체 사용내역을 불러올 수 없습니다.');
+   recentSnapshot=r.snapshot;
+   const pages=Math.ceil(r.total/50);
+   message.textContent=r.total?'전체 '+r.total.toLocaleString('ko-KR')+'건 · '+page+' / '+pages+'페이지':'뉴트젬 사용내역이 없습니다.';
+   for(const h of r.history){
+    const row=document.createElement('tr');
+    const member=h.name===h.memberId?h.memberId:h.name+' · '+h.memberId;
+    for(const value of [member,new Date(h.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}),h.place,Number(h.cost).toLocaleString('ko-KR')+'젬']){
+     const cell=document.createElement('td');cell.textContent=value;row.append(cell);
+    }
+    body.append(row);
+   }
+   table.hidden=!r.history.length;renderRecentPager(page,pages);
+  }catch(e){
+   if(generation!==recentGeneration||!recentDialog.open)return;
+   message.textContent=e.message;retry.hidden=false;retry.onclick=()=>loadRecentPage(page);
+  }
+ }
+ document.getElementById('recentUsage').onclick=()=>{
+  recentSnapshot=null;recentDialog.showModal();loadRecentPage(1);
+ };
+ document.getElementById('recentClose').onclick=()=>recentDialog.close();
+ recentDialog.addEventListener('close',()=>{recentGeneration++;});
  async function mutate(data,button){button.disabled=true;const key=button.dataset.requestId||(button.dataset.requestId=crypto.randomUUID());try{const r=await NWContent.call('contentAdminSave',{...data,guestToken:'',requestId:key});if(!r.ok){delete button.dataset.requestId;throw Error(r.error);}delete button.dataset.requestId;await load();status.textContent=r.invite?'등록된 고객 이메일로 이 링크를 전달하세요:\n'+r.invite:r.replayed?'이미 처리된 요청입니다.':r.balance!=null?'처리 완료 · '+Number(r.before).toLocaleString()+'젬 → '+Number(r.balance).toLocaleString()+'젬':'저장했습니다.';}catch(e){status.textContent=e.message;}finally{button.disabled=false;}}
  document.getElementById('settings').onsubmit=e=>{e.preventDefault();const f=e.target;mutate({operation:'config',config:{...config,courses:Object.fromEntries([...document.querySelectorAll('[data-course]')].map(x=>[x.dataset.course,Number(x.value)])),enabled:f.elements.enabled.value==='true',welcome:Number(f.elements.welcome.value),contact:f.elements.contact.value,games:{...config.games,marble:{price:Number(f.elements.price.value),public:f.elements.public.value==='true'}}}},f.querySelector('button'));};
  form.elements.id.onchange=()=>{const c=customers.find(x=>x.id===form.elements.id.value);form.elements.name.value=c?.name||'';form.elements.email.value=c?.email||'';form.elements.mode.value=c?.mode||'days';};
@@ -21,6 +75,3 @@
  };
  NWAdminAccess.initialize({load,status,body:document.getElementById('adminBody'),retry:document.getElementById('adminRetry')});
 })();
-
-
-
