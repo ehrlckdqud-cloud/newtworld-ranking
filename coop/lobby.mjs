@@ -1,4 +1,4 @@
-import {openLocalArcade} from './local-arcade.mjs?v=4';
+import {openLocalArcade} from './local-arcade.mjs?v=5';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
