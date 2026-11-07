@@ -279,7 +279,15 @@
       trackTransitionPlaying=false;updateMediaSession(true);$('nwAutoplayNote').classList.add('show');
     }
   }
-  function syncPlayIcon(){ const playing=!audio.paused&&!audio.ended; const g=$('nwPlay').querySelector('.nw-icon-glyph'); if(g) g.textContent=playing?'❚❚':'▶'; $('nwLiveDot').style.opacity=playing?'1':'.35'; updateMediaSession(true); }
+  function syncPlayIcon(){
+    const playing=!audio.paused&&!audio.ended;
+    const button=$('nwPlay');
+    button.dataset.playing=String(playing);
+    button.title=playing?'일시정지':'재생';
+    button.setAttribute('aria-label',button.title);
+    $('nwLiveDot').style.opacity=playing?'1':'.35';
+    updateMediaSession(true);
+  }
   function nextTrack(auto=true){
     if(shuffleOn){
       if(current())shuffleVisited.add(current().id);
@@ -449,7 +457,6 @@
   let collapsed=savedCollapsed===null ? mobilePlayer.matches : savedCollapsed==='1';
   function paintCollapsed(){
     $('nwMusicDock').classList.toggle('nw-music-collapsed',collapsed);
-    if(!collapsed)window.NWShowBackgroundGuide?.();
     $('nwCollapseBtn').textContent=collapsed?'🎵 플레이어 열기':'플레이어 접기';
     $('nwCollapseBtn').setAttribute('aria-expanded',String(!collapsed));
     if(collapsed){closeTrackMenu();$('nwMusicDock').classList.remove('nw-settings-open');$('nwPlayerSettings').setAttribute('aria-expanded','false');}
