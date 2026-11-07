@@ -1,22 +1,25 @@
-import {openLocalArcade} from './local-arcade.mjs?v=5';
+import {openLocalArcade} from './local-arcade.mjs?v=6';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
 const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 let channel=1,rooms=[],inside=false,requestId=0;
-const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:[]},3:{name:'혼자하기',games:['mslug3']}};
+const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:[]},3:{name:'혼자하기',games:['mslug3','gunbird2']}};
 const channelLabel=()=>String(channel).padStart(2,'0')+' '+channels[channel].name;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
 function render(){const list=$('roomList');list.replaceChildren();
  if(channel===3){
   $('roomCount').textContent=channelLabel();
-  const game=document.createElement('button');
-  game.className='room-card arcade-game-card';game.type='button';
-  const logo=document.createElement('img');
-  logo.src='./mslug3-logo.png';logo.alt='';logo.className='arcade-card-logo';
-  game.append(logo,text('b','메탈슬러그 3'),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
-  game.onclick=()=>openLocalArcade('mslug3');list.append(game);return;
+  const titles={mslug3:['메탈슬러그 3','./mslug3-logo.png'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp']};
+  for(const id of channels[channel].games){
+   const [name,art]=titles[id],button=document.createElement('button'),logo=document.createElement('img');
+   button.className='room-card arcade-game-card';button.type='button';
+   logo.src=art;logo.alt='';logo.className='arcade-card-logo';
+   button.append(logo,text('b',name),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
+   button.onclick=()=>openLocalArcade(id);list.append(button);
+  }
+  return;
  }
  const shown=rooms.filter(r=>!$('waitingOnly').checked||r.status==='waiting');$('roomCount').textContent=`${channelLabel()} · ${rooms.length}개 방`;if(!channels[channel].games.length){list.append(text('p','아직 등록된 대결 게임이 없습니다.','empty'));return;}if(!shown.length){list.append(text('p','대기 중인 작전실이 없습니다. 첫 번째 방을 만들어보세요.','empty'));return;}
  for(const room of shown){const b=document.createElement('button');b.className='room-card';const top=text('div','METAL SLUG 3','room-top'),state={waiting:'대기 중',playing:'플레이 중',paused:'일시 중단',complete:'미션 완료'}[room.status];top.append(text('span',state,'badge '+(room.status==='waiting'?'':'playing')));b.append(top,text('b',room.title||room.host+'의 작전실'));const foot=document.createElement('footer');foot.append(text('span','방장 '+room.host),text('span',`${room.count} / ${room.max}`));b.append(foot);b.disabled=room.status==='paused';b.onclick=()=>window.nwChooseRole(room);list.append(b);}}
