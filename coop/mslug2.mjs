@@ -1,5 +1,5 @@
 const originalPath = new TextEncoder().encode('/roms/mslug3fd.zip\0');
-const paths = {mslug: '/roms/xx/mslug.zip', mslug2: '/roms/x/mslug2.zip', mslugx: '/roms/x/mslugx.zip'};
+const paths = {mslug: '/roms/xx/mslug.zip', mslug2: '/roms/x/mslug2.zip', mslugx: '/roms/x/mslugx.zip', mslug4: '/roms/mslug4fd.zip'};
 
 // The shared host opens a fixed-length path. Select the original game's driver
 // without modifying either game's ROM or the shared WebAssembly asset.
@@ -20,6 +20,8 @@ export async function mountMetalSlug(core, bytes, game = 'mslug2') {
   core.FS.mkdirTree(romDirectory);
   core.FS.mkdirTree('/system/fbneo/patched');
   core.FS.writeFile(gamePath, rom);
+  // The supplied decrypted set uses legacy program and sound ROM variants.
+  if (game === 'mslug4') core.FS.writeFile('/system/fbneo/patched/mslug4fd.zip', rom);
   core.FS.writeFile(romDirectory + '/neogeo.zip', bios);
   core.FS.writeFile('/system/fbneo/patched/neogeo.zip', bios);
 }
