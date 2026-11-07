@@ -7,6 +7,11 @@ import {localArcadeCore,inputMask,controls} from './arcade-input.mjs?v=2';
 
 const api='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 const games=new Map([['mslug3',{title:'메탈슬러그 3',ports:2}],['gunbird2',{title:'건버드 2',ports:2}]]);
+export function arcadePrice(){
+ const price=document.createElement('span'),icon=document.createElement('img');
+ price.className='arcade-gem-price';icon.src='../assets/newt-gem.svg';icon.alt='뉴트젬';
+ price.append(icon,'500');return price;
+}
 let active=false;
 export async function openLocalArcade(game='mslug3'){
  if(active)return;
@@ -15,8 +20,13 @@ export async function openLocalArcade(game='mslug3'){
  active=true;
  const launch=crypto.randomUUID(),keys=new Set(),dialog=document.createElement('dialog');
  dialog.className='arcade-local';
- dialog.innerHTML='<h2></h2><p data-status role="status"></p><div class="arcade-screen" hidden><div class="arcade-boot" role="status"><img src="../assets/branding/newtworld-top-logo.png" alt="뉴트월드"><span>Loading...</span></div><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-fullscreen hidden>전체화면</button><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled>500뉴트젬으로 시작</button></div>';
+ dialog.innerHTML='<h2></h2><p data-status role="status"></p><p data-aine hidden></p><div class="arcade-screen" hidden><div class="arcade-boot" role="status"><img src="../assets/branding/newtworld-top-logo.png" alt="뉴트월드"><span>Loading...</span></div><canvas width="304" height="224" tabindex="0"></canvas></div><p data-help hidden></p><div data-coins hidden><label>추가할 크레딧 <input type="number" min="1" max="99" value="1"></label> <button type="button" data-add>코인 넣기</button></div><div class="dialog-actions"><button type="button" data-fullscreen hidden>전체화면</button><button type="button" data-close>취소</button><button type="button" class="primary" data-start disabled aria-label="500뉴트젬으로 게임 시작"></button></div>';
  const find=selector=>dialog.querySelector(selector),canvas=find('canvas'),status=find('[data-status]'),start=find('[data-start]'),close=find('[data-close]');
+ start.append(arcadePrice());
+ if(game==='gunbird2'){
+  const hint=find('[data-aine]');hint.hidden=false;
+  hint.textContent="캐릭터 선택의 ? 에서 방향키를 뒤로 누르면 히든 캐릭 '아인'을 선택할 수 있습니다.";
+ }
  find('h2').textContent=spec.title+' · 혼자하기';
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 상단 2 · 이동 방향키 · 숫자패드 1 공격 / 2 점프 / 4 폭탄 (I/O/P도 가능)':'')+' ｜ 코인 추가 5';
  if(game==='gunbird2')find('[data-help]').textContent='1P 시작 상단 1 · 이동 WASD · J 사격 / K 폭탄 / U 보조 ｜ 2P 시작 상단 2 · 방향키 · 숫자패드 1/2/4 또는 I/O/P ｜ 코인 추가 5';
@@ -102,7 +112,7 @@ export async function openLocalArcade(game='mslug3'){
  function visibility(){reset();if(cabinet&&running){if(document.hidden)cabinet.pause();else cabinet.play();}}
  function finish(external=false){
   if(disposed||(!external&&charging))return;
-  if(!external&&running&&!confirm('게임을 종료할까요? 다시 실행하면 500뉴트젬이 차감됩니다.'))return;
+  if(!external&&running&&!confirm('게임을 종료할까요? 다시 실행하면 입장료가 다시 차감됩니다.'))return;
   disposed=true;running=false;cancelAnimationFrame(raf);reset();
   window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',visibility);
   cabinet?.close();preparation.abort();if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
@@ -151,6 +161,6 @@ export async function openLocalArcade(game='mslug3'){
   if(disposed){loaded._nw_close();return;}
   core=loaded;
   }
-  status.textContent='이번 실행의 입장료는 500뉴트젬입니다. 게임을 종료한 뒤 다시 실행하면 새 입장료가 적용됩니다.';start.disabled=false;
+  status.replaceChildren('이번 실행의 입장료는 ',arcadePrice(),'입니다. 게임을 종료한 뒤 다시 실행하면 새 입장료가 적용됩니다.');start.disabled=false;
  }catch(e){if(!disposed){screen.hidden=true;status.textContent=e.message;}}
 }
