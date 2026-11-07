@@ -12,7 +12,7 @@ export async function applyPuyoDuelKeys(bytes) {
 
   const table = new DataView(executable.buffer, executable.byteOffset + 0x33d90, 320 * 4);
   const keyOffset = key => key.charCodeAt(0) * 4;
-  for (const [source, target] of [['F', 'A'], ['B', 'S'], ['H', 'D'], ['G', 'J']]) {
+  for (const [source, target] of [['T', 'W'], ['F', 'A'], ['B', 'S'], ['H', 'D'], ['G', 'J']]) {
     table.setUint32(keyOffset(target), table.getUint32(keyOffset(source), true), true);
     if (source !== 'G') table.setUint32(keyOffset(source), 0, true);
   }

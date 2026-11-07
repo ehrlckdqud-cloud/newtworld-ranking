@@ -32,7 +32,7 @@ export async function openLocalArcade(game='mslug3'){
  find('h2').textContent=spec.title+' · 혼자하기';
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 상단 2 · 이동 방향키 · 숫자패드 1 공격 / 2 점프 / 4 폭탄 (I/O/P도 가능)':'')+' ｜ 코인 추가 5';
  if(game==='gunbird2')find('[data-help]').textContent='1P 시작 상단 1 · 이동 WASD · J 사격 / K 폭탄 / U 보조 ｜ 2P 시작 상단 2 · 방향키 · 숫자패드 1/2/4 또는 I/O/P ｜ 코인 추가 5';
- if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P ASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
+ if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P WASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
  screen.tabIndex=-1;
@@ -152,7 +152,7 @@ export async function openLocalArcade(game='mslug3'){
    if(disposed)return;
    let gameBytes=bytes;
    if(game==='puyopuyo2'){
-    const {applyPuyoDuelKeys}=await import('./puyo-keys.mjs');
+    const {applyPuyoDuelKeys}=await import('./puyo-keys.mjs?v=2');
     gameBytes=await applyPuyoDuelKeys(bytes);
     if(disposed)return;
    }
