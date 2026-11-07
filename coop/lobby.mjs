@@ -1,4 +1,4 @@
-import {openLocalArcade} from './local-arcade.mjs?v=6';
+import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=7';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
@@ -8,7 +8,7 @@ const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:
 const channelLabel=()=>String(channel).padStart(2,'0')+' '+channels[channel].name;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
-function render(){const list=$('roomList');list.replaceChildren();
+function render(){const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
  if(channel===3){
   $('roomCount').textContent=channelLabel();
   const titles={mslug3:['메탈슬러그 3','./mslug3-logo.png'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp']};
@@ -16,7 +16,8 @@ function render(){const list=$('roomList');list.replaceChildren();
    const [name,art]=titles[id],button=document.createElement('button'),logo=document.createElement('img');
    button.className='room-card arcade-game-card';button.type='button';
    logo.src=art;logo.alt='';logo.className='arcade-card-logo';
-   button.append(logo,text('b',name),text('span','한 PC에서 1~2인 · 실행당 500뉴트젬'));
+   const detail=text('span','한 PC에서 1~2인 · ');detail.append(arcadePrice());
+   button.append(logo,text('b',name),detail);
    button.onclick=()=>openLocalArcade(id);list.append(button);
   }
   return;
