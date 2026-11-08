@@ -1,0 +1,62 @@
+{
+  "id": "gunbird2-v1",
+  "bytes": 21287331,
+  "sha256": "f91e5bbedac2d7e75b7f8838d0671f20b520747eb1853a7c51e26ce8eaf20ce3",
+  "parts": [
+    {
+      "path": "/game-packages/gunbird2-v1/part-00.bin",
+      "iv": "OtCg7WsyaojNcIzi",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-01.bin",
+      "iv": "FSXJNa6Knm/s9wR9",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-02.bin",
+      "iv": "/Z/l6+lhX6OwXV1P",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-03.bin",
+      "iv": "7bZ3SPORXs66+QKR",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-04.bin",
+      "iv": "u6nhVuLSu4b/MRFK",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-05.bin",
+      "iv": "mdM8bKRJQ/N/xps2",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-06.bin",
+      "iv": "kWwKxWxemSSleOX+",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-07.bin",
+      "iv": "Kg8JGqvD80fDSyTY",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-08.bin",
+      "iv": "8UNhj9f4N9D84vzQ",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-09.bin",
+      "iv": "Frtpp1HnQKodi/Yv",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/gunbird2-v1/part-10.bin",
+      "iv": "v+Vr/PbyZmmDV+8+",
+      "bytes": 315827
+    }
+  ]
+}

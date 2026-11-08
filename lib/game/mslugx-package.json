@@ -1,0 +1,77 @@
+{
+  "id": "mslugx-v1",
+  "bytes": 27966072,
+  "sha256": "8df448b4101a630ae4452b022b6248e58a2e0b9f4eb3faa10bab5b2b0e6d5f79",
+  "parts": [
+    {
+      "path": "/game-packages/mslugx-v1/part-00.bin",
+      "iv": "m+15j8JRSRm/Ipgi",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-01.bin",
+      "iv": "PERUUMC+hHinPbdR",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-02.bin",
+      "iv": "J1fxwReYdDDwvked",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-03.bin",
+      "iv": "tcm3hIwCtMBRdhhk",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-04.bin",
+      "iv": "03w+x+7F4NhSR+fR",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-05.bin",
+      "iv": "jvbYJuK7IU2JwiC6",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-06.bin",
+      "iv": "/uT6+SpfbPHfwwF6",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-07.bin",
+      "iv": "HZ9x6n4H4uMGEzU1",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-08.bin",
+      "iv": "AT3kmev5NuqlY66Y",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-09.bin",
+      "iv": "eyeBk+QDFsfwzhSw",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-10.bin",
+      "iv": "hfIgRMlsQFCIJ9cG",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-11.bin",
+      "iv": "0nArN5nkzE4ZO+/o",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-12.bin",
+      "iv": "ecVDjKcfa+eEgxrB",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslugx-v1/part-13.bin",
+      "iv": "MOWAer5nYQPC2zTG",
+      "bytes": 703112
+    }
+  ]
+}

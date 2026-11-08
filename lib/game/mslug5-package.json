@@ -1,0 +1,82 @@
+{
+  "id": "mslug5-v1",
+  "bytes": 30899094,
+  "sha256": "4a444a27e47d65ceb0331a450121b5f0b90bb6323bd769d448b105598aeb5020",
+  "parts": [
+    {
+      "path": "/game-packages/mslug5-v1/part-00.bin",
+      "iv": "YhBbhS4Usan/1LKt",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-01.bin",
+      "iv": "ckW/Pc2t9v7mtJGk",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-02.bin",
+      "iv": "Kl2aW9fGd6bw8h+q",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-03.bin",
+      "iv": "fxb2MYbGGh7fTa1q",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-04.bin",
+      "iv": "rJfP5/tPdDKIRuZR",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-05.bin",
+      "iv": "SVPnBqto2q6mHta+",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-06.bin",
+      "iv": "uosVBdeuDQpnzDQo",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-07.bin",
+      "iv": "vSeIjVwqkv41FU5I",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-08.bin",
+      "iv": "bJWKBeIEpDryzL0o",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-09.bin",
+      "iv": "OVbGiOxda16snLbE",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-10.bin",
+      "iv": "Xu6s+KrFvKGvnZje",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-11.bin",
+      "iv": "1ntH111/J4m9UvKl",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-12.bin",
+      "iv": "VsmERUJmbGeBT/GL",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-13.bin",
+      "iv": "3tp7LU4dUk+8Mu1W",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug5-v1/part-14.bin",
+      "iv": "8pqvv0EaLtc1gLmn",
+      "bytes": 1538982
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "id": "mslug3-v1",
+  "bytes": 35421251,
+  "sha256": "2343cf8353f9f63fe32a82146378837869021705bf0cf3c63fc681c4e7b9f5a5",
+  "parts": [
+    {
+      "path": "/game-packages/mslug3-v1/part-00.bin",
+      "iv": "148c5ow3GXB3jI7r",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-01.bin",
+      "iv": "mKtcV1T2A0hN3UUg",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-02.bin",
+      "iv": "pgF+ufXgOdka9lUP",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-03.bin",
+      "iv": "MqL0RFeo0IH04Xxv",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-04.bin",
+      "iv": "V7EqfysHYxjLlpyF",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-05.bin",
+      "iv": "Kz5X0GjAk+b/kCi6",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-06.bin",
+      "iv": "o/I1W6eDPsUXpj1I",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-07.bin",
+      "iv": "Ox3pbhyGoamrjnLQ",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-08.bin",
+      "iv": "RPAilzEmPELQjZjS",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-09.bin",
+      "iv": "BE8r5I5OHTjDhGLI",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-10.bin",
+      "iv": "mK7sfiksN0TztgyP",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-11.bin",
+      "iv": "PdWUfKBD3hIfc5di",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-12.bin",
+      "iv": "96AqgIGHfCdXM+t/",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-13.bin",
+      "iv": "VlbuDslT7s5y+8UU",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-14.bin",
+      "iv": "YDtE7/dlGHfRJQOc",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-15.bin",
+      "iv": "cQdmO7mtcIkj8iFe",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug3-v1/part-16.bin",
+      "iv": "Ikia6bsUWpNbAzmQ",
+      "bytes": 1866835
+    }
+  ]
+}

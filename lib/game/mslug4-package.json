@@ -1,0 +1,82 @@
+{
+  "id": "mslug4-v1",
+  "bytes": 31338700,
+  "sha256": "a1dbbdabd2fd6d7ae145ea11daca38f3e7cc09326f3be159a76ad4a2501dcad8",
+  "parts": [
+    {
+      "path": "/game-packages/mslug4-v1/part-00.bin",
+      "iv": "ywzwWkk/4xXNphsy",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-01.bin",
+      "iv": "95M0uTLwnQVJRmgr",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-02.bin",
+      "iv": "0GAOxljtk7Tkcc1Y",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-03.bin",
+      "iv": "VOFG0XRS/vnah2Bp",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-04.bin",
+      "iv": "GdSGfovhg4lbl9JT",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-05.bin",
+      "iv": "uIvV5ln3tatN62WB",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-06.bin",
+      "iv": "7KXMNkvIGYjrmnD7",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-07.bin",
+      "iv": "LVDyNM5nvW9g9TaZ",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-08.bin",
+      "iv": "hyc/fwNO1WVLrQUg",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-09.bin",
+      "iv": "U1z68sWAZdPmc+UY",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-10.bin",
+      "iv": "3ldCfNkS0WiU4gVU",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-11.bin",
+      "iv": "69xs00dBaiCposcq",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-12.bin",
+      "iv": "2OviF0L1+fPb4RNU",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-13.bin",
+      "iv": "TLxtw+XqIADt4otD",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/mslug4-v1/part-14.bin",
+      "iv": "kkHR6NZp0hE0WqWq",
+      "bytes": 1978588
+    }
+  ]
+}

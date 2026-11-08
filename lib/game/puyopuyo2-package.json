@@ -1,0 +1,27 @@
+{
+  "id": "puyopuyo2-v1",
+  "bytes": 6491040,
+  "sha256": "195f9b564c5ff85133a0ecf22c17a5dffc444d39ad5e6735b20edb80a2553a2d",
+  "parts": [
+    {
+      "path": "/game-packages/puyopuyo2-v1/part-00.bin",
+      "iv": "EgdjKSrTprfJjzNn",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/puyopuyo2-v1/part-01.bin",
+      "iv": "DPen8DgGheq61HZf",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/puyopuyo2-v1/part-02.bin",
+      "iv": "8c3GTIJ3mlf63Fif",
+      "bytes": 2097168
+    },
+    {
+      "path": "/game-packages/puyopuyo2-v1/part-03.bin",
+      "iv": "A1qZFqXXzbXbEgHb",
+      "bytes": 199600
+    }
+  ]
+}
