@@ -1,4 +1,4 @@
-import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=hover-sound';
+import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=ms6-boss';
 import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms6-psp2';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
