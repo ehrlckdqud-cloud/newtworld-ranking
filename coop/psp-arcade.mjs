@@ -1,7 +1,6 @@
 // Metal Slug 6 uses the PSP/PPSSPP runtime, not the FBNeo Metal Slug 1–5 core.
 // This module intentionally stays separate from local-arcade.mjs.
 // The corresponding server route must support the 'mslug6' game id before activation.
-import {downloadGame} from './download-game.mjs?v=ms5';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 
@@ -47,7 +46,7 @@ export async function openPspArcade(game='mslug6'){
     if(charged&&!confirm('게임을 종료할까요? 다시 실행하면 입장료가 새로 차감됩니다.'))return;
     disposed=true;
     if(document.fullscreenElement===gameRoot)document.exitFullscreen().catch(()=>{});
-    if(blobUrl) URL.revokeObjectURL(blobUrl);
+    // Server-provided URL is managed by the server; no browser blob to revoke.
     // PSP iframe/loader resources are removed with the dialog. Avoid reusing EJS singletons.
     dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
     location.reload(); // EmulatorJS is a single-instance global; reset cleanly before another game.
@@ -57,10 +56,13 @@ export async function openPspArcade(game='mslug6'){
   try{
     if(!member.token||!member.device)throw Error('뉴트월드 회원식별 후 이용해주세요.');
     status.textContent='PSP 게임 파일 준비 중…';
-    const bytes=await downloadGame({game,member,headers:testHeaders(),onProgress:p=>{if(!disposed)status.textContent='PSP 게임 준비 중 '+Math.round(p*100)+'%';}});
-    if(disposed)return;
-    if(!(bytes?.byteLength>0))throw Error('PSP 게임 파일이 비어 있습니다.');
-    blobUrl=URL.createObjectURL(new Blob([bytes],{type:'application/octet-stream'}));
+    // Existing /api/game-package accepts at most 80 MiB and cannot hold the PSP ISO.
+    // The server must issue an authenticated, time-limited URL to a streamable ISO.
+    const response=await fetch(API+'/api/psp-package',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game})});
+    if(!response.ok)throw Error('PSP 게임 파일 서버가 아직 준비되지 않았습니다.');
+    const manifest=await response.json();
+    if(manifest.game!==game||typeof manifest.url!=='string'||!manifest.url.startsWith('https://'))throw Error('PSP 게임 다운로드 정보가 올바르지 않습니다.');
+    blobUrl=manifest.url;
     status.textContent='준비 완료 · 게임 시작 시 500뉴트젬 차감';start.disabled=false;
     start.onclick=async()=>{
       if(charging||charged||disposed)return;
