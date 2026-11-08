@@ -2,6 +2,7 @@
 // This module intentionally stays separate from local-arcade.mjs.
 // The corresponding server route must support the 'mslug6' game id before activation.
 import {testHeaders} from './test-access.mjs?v=98';
+import {assertPspSupport,validatePspPackage,validateArcadeCharge} from './psp-contract.mjs?v=1';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 
 const API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
@@ -49,20 +50,20 @@ export async function openPspArcade(game='mslug6'){
     // Server-provided URL is managed by the server; no browser blob to revoke.
     // PSP iframe/loader resources are removed with the dialog. Avoid reusing EJS singletons.
     dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
-    location.reload(); // EmulatorJS is a single-instance global; reset cleanly before another game.
+    if(charged)location.reload(); // Reset PSP runtime only after launching it.
   };
   close.onclick=cleanup;dialog.oncancel=e=>{e.preventDefault();cleanup();};
   fullscreen.onclick=()=>gameRoot.requestFullscreen?.().catch(()=>{});
   try{
     if(!member.token||!member.device)throw Error('뉴트월드 회원식별 후 이용해주세요.');
+    assertPspSupport(window); // Reject incompatible hosting before requesting any charge.
     status.textContent='PSP 게임 파일 준비 중…';
     // Existing /api/game-package accepts at most 80 MiB and cannot hold the PSP ISO.
     // The server must issue an authenticated, time-limited URL to a streamable ISO.
     const response=await fetch(API+'/api/psp-package',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game})});
     if(!response.ok)throw Error('PSP 게임 파일 서버가 아직 준비되지 않았습니다.');
     const manifest=await response.json();
-    if(manifest.game!==game||typeof manifest.url!=='string'||!manifest.url.startsWith('https://'))throw Error('PSP 게임 다운로드 정보가 올바르지 않습니다.');
-    blobUrl=manifest.url;
+    blobUrl=validatePspPackage(manifest,API);
     status.textContent='준비 완료 · 게임 시작 시 500뉴트젬 차감';start.disabled=false;
     start.onclick=async()=>{
       if(charging||charged||disposed)return;
@@ -70,22 +71,26 @@ export async function openPspArcade(game='mslug6'){
       try{
         const response=await fetch(API+'/api/arcade-entry',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch})});
         const result=await response.json();
-        if(!response.ok||!result.ok||result.launch!==launch||result.game!==game||result.cost!==500)throw Error(result.error||'입장료 확인 실패');
+        if(!response.ok)throw Error(result.error||'입장 요청을 처리하지 못했습니다.');
+        validateArcadeCharge(result,launch);
         charged=true;
         // EmulatorJS embeds the PPSSPP runtime in the same on-page game slot.
         window.EJS_player='#'+slot.id;
-        window.EJS_core='psp';
+        window.EJS_core='ppsspp';
+        window.EJS_threads=true; // Official PSP core requirement.
         window.EJS_gameUrl=blobUrl;
         window.EJS_pathtodata=DATA;
         window.EJS_startOnLoaded=true;
         gameRoot.hidden=false;
         await loadEmulatorJS();
         fullscreen.hidden=false;start.hidden=true;close.textContent='게임 종료';
-        status.textContent='메탈슬러그 6 실행 중 · 500뉴트젬 차감 완료';
+        status.textContent='PSP 실행 엔진 로딩 중 · 500뉴트젬 차감 승인';
         lobbyAudio.setWaiting(false);
       }catch(error){
         status.textContent=charged?'입장료는 차감되었지만 PSP 실행에 실패했습니다: '+error.message:'게임을 시작하지 못했습니다: '+error.message;
         if(!charged)start.disabled=false;
+        // Never retry a paid launch in the same dialog: server side must
+        // deduplicate by (member,game,launch) and explicitly refund failed starts.
       }finally{charging=false;close.disabled=false;}
     };
   }catch(error){status.textContent=error.message;start.disabled=true;}
