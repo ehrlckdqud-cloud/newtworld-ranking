@@ -1,3 +1,4 @@
+import { pspSolo } from "../lib/game/psp-solo.mjs";
 import { packageBytes } from "../lib/game/package-bytes.mjs";
 import { gateway } from "../lib/game/newtworld-gateway.mjs";
 import handler from "vinext/server/fetch-handler";
@@ -7,6 +8,7 @@ import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 const worker = {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
     const path = new URL(request.url).pathname;
+    if(path.startsWith("/psp6/")) return pspSolo(request,env);
     if(path.startsWith("/api/package-bytes/") || path.startsWith("/game-packages/mslug5-v1/")) return packageBytes(request,env);
     if((path.startsWith("/api/rooms") || path === "/api/social" || path === "/api/site-session" || path === "/api/rankings" || path === "/api/lobby" || path === "/api/test-access" || path === "/api/arcade-entry" || path === "/api/game-package" || path === "/api/wallet" || path === "/api/gems") || path === "/native-config" || path === "/health") return gateway(request,env);
     let binding = ctx.props?.CONNECTORS;
