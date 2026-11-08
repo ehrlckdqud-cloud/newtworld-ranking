@@ -1,0 +1,69 @@
+--- a/src/00-regions.wat
++++ b/src/00-regions.wat
+@@ -264,7 +264,7 @@
+   ;; The texts on the shutting-down / safe-to-turn-off screens.
+   (region.declare $POWER_SCREEN_STRINGS (size 0x000000C0) (align 0x00000010)
+     (owner "09c3-controls4-shell-dialogs.wat:$POWER_SCREEN_STRINGS"))
+-  (region.declare-fixed $GUEST_BASE (base 0x00012000) (size 0x03C00000) (align 0x00001000)
++  (region.declare-fixed $GUEST_BASE (base 0x00012000) (size 0x07C00000) (align 0x00001000)
+     (owner "01-header.wat:$GUEST_BASE"))
+   ;; Per-owner USER activation history fits in the remaining aligned table gap
+   ;; before the fixed guest mirror. Keep the address allocator-owned rather
+@@ -282,7 +282,7 @@
+   ;; where a bound is checked, not in an anonymous hole beside it — reclaiming
+   ;; that hole moved the page indexes down to 0x03E12000 and left the heap with
+   ;; one chunk, which is a broken emulator, not a broken declaration.
+-  (region.declare-derived $GUEST_HEAP_BASE (base (g2w 0x04100000)) (size 0x003EE000) (align 0x00001000)
++  (region.declare-derived $GUEST_HEAP_BASE (base (g2w 0x08100000)) (size 0x003EE000) (align 0x00001000)
+     (owner "01-header.wat:$GUEST_HEAP_BASE"))
+   (region.declare $HANDLER_PAIR_HIST_COUNTS (size 0x00100000) (align 0x00001000)
+     (owner "04-cache.wat:$handler_hist_record"))
+@@ -408,9 +408,9 @@
+   (region.declare $XMM_FILE (size 0x00000800) (align 0x00000040)
+     (stride 0x80 (count $REGFILE_THREADS))
+     (owner "01-header.wat:$XMM_FILE"))
+-  (region.declare-derived $GUEST_STACK (base (g2w 0x07400000)) (size 0x00100000) (align 0x00001000)
++  (region.declare-derived $GUEST_STACK (base (g2w 0x0B400000)) (size 0x00100000) (align 0x00001000)
+     (owner "01-header.wat:$GUEST_STACK"))
+-  (region.declare-derived $THUNK_BASE (base (g2w 0x07500000)) (size 0x00040000) (align 0x00001000)
++  (region.declare-derived $THUNK_BASE (base (g2w 0x0B500000)) (size 0x00040000) (align 0x00001000)
+     (owner "08-pe-loader.wat:$load_pe"))
+   ;; Guest memory a program may reserve at a FIXED address past its image
+   ;; window. The direct window translates every guest address up to
+@@ -421,14 +421,14 @@
+   ;; (docs/re-notes/crusaders-mm-demo.md), so the pools must be those
+   ;; addresses, not merely somewhere. VirtualAlloc hands them out only to a
+   ;; fixed MEM_RESERVE inside one of them ($guest_fixed_pool_of).
+-  (region.declare-derived $GUEST_FIXED_POOL_A (base (g2w 0x04000000)) (size 0x00080000) (align 0x00001000)
++  (region.declare-derived $GUEST_FIXED_POOL_A (base (g2w 0x08000000)) (size 0x00080000) (align 0x00001000)
+     (owner "09a0-handlers-base.wat:$guest_fixed_pool_of"))
+-  (region.declare-derived $GUEST_FIXED_POOL_B (base (g2w 0x06000000)) (size 0x00EE1000) (align 0x00001000)
++  (region.declare-derived $GUEST_FIXED_POOL_B (base (g2w 0x0A000000)) (size 0x00EE1000) (align 0x00001000)
+     (owner "09a0-handlers-base.wat:$guest_fixed_pool_of"))
+-  (region.declare-derived $GUEST_FIXED_POOL_C (base (g2w 0x08000000)) (size 0x00100000) (align 0x00001000)
++  (region.declare-derived $GUEST_FIXED_POOL_C (base (g2w 0x0C000000)) (size 0x00100000) (align 0x00001000)
+     (owner "09a0-handlers-base.wat:$guest_fixed_pool_of"))
+   ;; ...and a fourth, committed at once: 0x29040 bytes at 0x05000000 (0x450fc0).
+-  (region.declare-derived $GUEST_FIXED_POOL_D (base (g2w 0x05000000)) (size 0x0002A000) (align 0x00001000)
++  (region.declare-derived $GUEST_FIXED_POOL_D (base (g2w 0x09000000)) (size 0x0002A000) (align 0x00001000)
+     (owner "09a0-handlers-base.wat:$guest_fixed_pool_of"))
+   (region.declare $PE_STAGING (size 0x00800000) (align 0x00001000)
+     (owner "08-pe-loader.wat:$load_pe"))
+@@ -922,7 +922,7 @@
+   ;; the layout-shake slack below 0x08000000.
+   (region.declare-fixed $GUEST_PAGE_TABLE (base 0x1BC00000) (size 0x00400000) (align 0x00001000)
+     (owner "01-header.wat:$GUEST_PAGE_TABLE"))
+-  (region.declare-fixed $VIRTUAL_BACKING_BASE (base 0x08000000) (size 0x12000000) (align 0x00001000)
++  (region.declare-fixed $VIRTUAL_BACKING_BASE (base 0x0C000000) (size 0x0E000000) (align 0x00001000)
+     (owner "01-header.wat:$VIRTUAL_BACKING_BASE"))
+   (region.declare-fixed $DIB_BACKING_BASE (base 0x1C000000) (size 0x03F00000) (align 0x00001000)
+     (owner "10-helpers.wat:$dib_free_locked"))
+@@ -975,7 +975,7 @@
+   ;; 0x08000000 is backing store reached through a translation, never directly.
+   ;; Written as the bare literal 0x8000000 three times in 03-registers.wat until
+   ;; this declaration; those three sites now spell it (region.end $DIRECT_WINDOW).
+-  (region.declare-span $DIRECT_WINDOW (base 0x00000000) (end 0x08000000)
++  (region.declare-span $DIRECT_WINDOW (base 0x00000000) (end 0x0C000000)
+     (owner "03-registers.wat:$g2w"))
+ 
+   ;; Append new allocations to preserve existing canonical placements. Moving
