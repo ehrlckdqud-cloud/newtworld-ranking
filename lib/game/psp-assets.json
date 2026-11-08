@@ -174,8 +174,7 @@
   "ejs/compression/extractzip.js": {
     "sha": "3cc825428724213acd43d30552a78008e0869b2326de17dee240dbff9ee2f629",
     "bytes": 196199,
-    "type": "text/javascript",
-    "bundled": true
+    "type": "text/javascript"
   },
   "ejs/cores/ppsspp-assets.zip": {
     "sha": "046f52792a06e3b6d07c8ff3961f11271102080760be4b2c38b1a3260054bad4",
@@ -192,8 +191,7 @@
   "ejs/cores/reports/ppsspp.json": {
     "sha": "4816d70f1ba5f7081da671ca185d0e048035362df3329b532c7892d4bad343bb",
     "bytes": 167,
-    "type": "application/json",
-    "bundled": true
+    "type": "application/json"
   },
   "ejs/emulator.min.css": {
     "sha": "16406c60b2dc3b04ae9b115e308613e6f567a0cc7068e21d9d0c1e5030fb395e",
