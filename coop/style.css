@@ -84,3 +84,5 @@ dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch
 
 .arcade-card-logo[src$="/mslug5/card.webp"]{object-view-box:inset(9% 3% 9% 3%)}
 .arcade-card-logo[src$="mslug6-logo.webp"]{transform:scale(1.16);transform-origin:center}
+
+.arcade-card-logo[src$="/mslugxx/card.webp"]{width:min(100%,135px);margin-inline:auto;transform:scale(1.16)}

@@ -1,3 +1,4 @@
+import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
 import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
@@ -66,6 +67,7 @@ export async function openLocalArcade(game='mslug3'){
  let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
  const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
  const ctx=canvas.getContext('2d'),boot=find('.arcade-boot');
+ let scaled,sourcePixels,scaledPixels;
  function video(ptr,w,h,pitch,format){
   if(!ptr||format!==1)return;
   if(!boot.hidden){
@@ -80,13 +82,20 @@ export async function openLocalArcade(game='mslug3'){
    if(lit<10)return;
    boot.hidden=true;
   }
-  if(!image||canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;image=ctx.createImageData(w,h);}
+  if(!image||image.width!==w||image.height!==h){
+   const factor=game==='mslug5'?2:1;
+   canvas.width=w*factor;canvas.height=h*factor;image=ctx.createImageData(w,h);
+   if(factor===2){
+    scaled=ctx.createImageData(w*2,h*2);sourcePixels=new Uint32Array(image.data.buffer);scaledPixels=new Uint32Array(scaled.data.buffer);
+   }
+  }
   const heap=core.HEAPU8;
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){
    const a=ptr+y*pitch+x*4,i=(y*w+x)*4;
    image.data[i]=heap[a+2];image.data[i+1]=heap[a+1];image.data[i+2]=heap[a];image.data[i+3]=255;
   }
-  ctx.putImageData(image,0,0);
+  if(scaled)scale2x(sourcePixels,scaledPixels,w,h);
+  ctx.putImageData(scaled||image,0,0);
  }
  function sound(ptr,n){
   if(!audio||audio.state!=='running'||!n||document.hidden)return;
