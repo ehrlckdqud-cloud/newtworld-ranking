@@ -81,3 +81,6 @@ dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch
 .arcade-local.playing [data-aine]{display:none}
 
 .arcade-game-preview{position:fixed;z-index:1000;pointer-events:none;width:auto;height:auto;max-width:min(360px,calc(100vw - 16px));box-sizing:border-box;border:1px solid #a89960;border-radius:6px;background:#10130e;box-shadow:0 4px 16px #0009;object-fit:contain}
+
+.arcade-card-logo[src$="/mslug5/card.webp"]{object-view-box:inset(9% 3% 9% 3%)}
+.arcade-card-logo[src$="mslug6-logo.webp"]{transform:scale(1.16);transform-origin:center}
