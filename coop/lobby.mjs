@@ -1,5 +1,5 @@
 import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=hover-sound';
-import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms5';
+import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms6-psp1';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
@@ -12,15 +12,15 @@ const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=v
 function render(){hideGamePreview();const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
  if(channel===3){
   $('roomCount').textContent=channelLabel();
-  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6',null],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
+  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6',API+'/arcade-runtime/mslug6/card.webp'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
   for(const id of channels[channel].games){
    const [name,art]=titles[id],button=document.createElement('button'),logo=document.createElement('img');
    button.className='room-card arcade-game-card';button.type='button';
    if(art){logo.src=art;logo.alt='';logo.className='arcade-card-logo';}
    const detail=text('span',id==='mslug6'?'PSP판 · 1인 · ':'한 PC에서 1~2인 · ');detail.append(arcadePrice());
    if(art)button.append(logo);button.append(text('b',name),detail);
-   if(id!=='mslug6')attachGamePreview(button,id,name);
-   if(id==='mslug6'){button.disabled=true;button.title='PSP 게임 데이터와 서버 결제 연결이 준비되면 활성화됩니다.';detail.append(' · 서버 연동 대기');}else button.onclick=()=>{hideGamePreview();openLocalArcade(id);};list.append(button);
+   attachGamePreview(button,id,name);
+   button.onclick=()=>{hideGamePreview();openLocalArcade(id);};list.append(button);
   }
   return;
  }
@@ -47,3 +47,4 @@ export function initLobby(name){$('memberName').textContent=name;$('openCreate')
  window.nwOperations=()=>{document.body.classList.remove('in-game');$('gameView').hidden=true;$('playerColumn').append($('playerChat'));$('observerRail').append($('viewerChat'));$('viewerChat').hidden=false;$('chatForm').hidden=false;lobbyAudio.setWaiting(true);};
  window.nwGameStarted=()=>{lobbyAudio.setWaiting(false);document.body.classList.add('in-game');$('gameView').hidden=false;$('gameChatStack').append($('playerChat'),$('viewerChat'));$('viewerChat').hidden=false;};refreshRooms();setInterval(refreshRooms,5000);
 }
+

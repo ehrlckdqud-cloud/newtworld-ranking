@@ -1,4 +1,4 @@
-import {openPspArcade} from './psp-arcade.mjs?v=1';
+import {openPspArcade} from './psp-arcade.mjs?v=ms6-psp1';
 import {downloadGame} from './download-game.mjs?v=ms5';
 import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
@@ -181,3 +181,4 @@ export async function openLocalArcade(game='mslug3'){
   status.replaceChildren('이번 실행의 입장료는 ',arcadePrice(),'입니다. 게임을 종료한 뒤 다시 실행하면 새 입장료가 적용됩니다.');start.disabled=false;
  }catch(e){if(!disposed){screen.hidden=true;status.textContent=e.message;}}
 }
+
