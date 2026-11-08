@@ -1,3 +1,5 @@
+import {qualitySwitch} from './quality-switch.mjs';
+import {enableDotFilter} from './dot-filter.mjs?v=options';
 import {assertPspSupport,validateArcadeCharge} from './contract.mjs?v=xx1';
 import {attachAudioStream} from './audio-stream.mjs';
 import {restoreTitle,insertCredit} from './game.mjs?v=3';
@@ -12,6 +14,21 @@ const lobbyURL='https://ehrlckdqud-cloud.github.io/newtworld-ranking/coop/#solo'
 const dataPath='/arcade-runtime/mslug6/ejs-v3/';
 let state='initial',blobURL,expired=false,restarting=false;
 const bootController=new AbortController();
+let filterEngine;
+const quality=qualitySwitch(game,enabled=>{
+ if(filterEngine){
+  if(enabled)enableDotFilter(filterEngine);
+  else filterEngine.enableShader('disabled');
+ }
+ if(state==='playing')document.querySelector('#game canvas')?.focus();
+});
+function placeQuality(){
+ if(document.fullscreenElement===screen){
+  screen.append(quality.button);quality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:2147483647';
+ }else{full.before(quality.button);quality.button.style.cssText='';}
+}
+placeQuality();
+document.addEventListener('fullscreenchange',placeQuality);
 const endpoint=action=>base+launch+'/'+action;
 async function api(action){
  const response=await fetch(endpoint(action),{method:'POST',cache:'no-store',signal:AbortSignal.timeout(35000)});
@@ -52,8 +69,8 @@ async function boot(){
      status.textContent='타이틀 화면을 복원하고 있습니다…';
      if(xx)await restoreXX(EJS_emulator,checkpoint,bootController.signal);
      else await restoreTitle(EJS_emulator,checkpoint,bootController.signal);
-     const {enableDotFilter}=await import('./dot-filter.mjs');
-     enableDotFilter(EJS_emulator);
+     filterEngine=EJS_emulator;
+     if(quality.enabled)enableDotFilter(filterEngine);
      checkpoint=null;
      if(state!=='loading')return;
      clearTimeout(startupTimer);EJS_emulator.pause();state='ready';screen.classList.add('picture');
