@@ -1,0 +1,11 @@
+--- a/lib/mem-utils.js
++++ b/lib/mem-utils.js
+@@ -13,7 +13,7 @@
+ // bound, not a placed region, so the generated mirror does not carry it — and
+ // this one is a hard ABI number anyway: it is where image-relative translation
+ // stops and the VirtualAlloc map takes over.
+-const DIRECT_GUEST_WINDOW = 0x08000000;
++const DIRECT_GUEST_WINDOW = 0x0C000000;
+ const NULL_SENTINEL = 0xF0;
+ const GUEST_PAGE_TABLE = _regionMap.BASE.GUEST_PAGE_TABLE;
+ const GUEST_PAGE_TABLE_SIZE = _regionMap.SIZE.GUEST_PAGE_TABLE;
