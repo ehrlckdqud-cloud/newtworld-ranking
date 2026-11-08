@@ -38,9 +38,8 @@ void main(){
  gl_FragColor=vec4(b!=h && d!=f && side==vertical?side:e,1.);
 }
 #endif`;
-export function enableDotFilter(emulator){
- emulator.shaders??={};
- emulator.shaders.Scale2x={
+export function enableDotFilter(emulator, registry=emulator.shaders??={}){
+ registry.Scale2x={
   shader:{type:'text',value:'shaders = 1\nshader0 = dot2.glsl\nfilter_linear0 = false\nscale_type0 = source\nscale0 = 2.0\n'},
   resources:[{name:'dot2.glsl',type:'text',value:program}]
  };
