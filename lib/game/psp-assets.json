@@ -165,49 +165,50 @@
     "type": "application/octet-stream",
     "bundled": true
   },
-  "ejs/compression/extract7z.js": {
+  "ejs-v2/compression/extract7z.js": {
     "sha": "4ac9933b995a516cb6b3ca4027db860278372a20c21c405d93ceb1998498853a",
     "bytes": 280155,
     "type": "text/javascript",
     "bundled": true
   },
-  "ejs/compression/extractzip.js": {
+  "ejs-v2/compression/extractzip.js": {
     "sha": "3cc825428724213acd43d30552a78008e0869b2326de17dee240dbff9ee2f629",
     "bytes": 196199,
     "type": "text/javascript"
   },
-  "ejs/cores/ppsspp-assets.zip": {
-    "sha": "046f52792a06e3b6d07c8ff3961f11271102080760be4b2c38b1a3260054bad4",
-    "bytes": 10873836,
+  "ejs-v2/cores/ppsspp-assets.zip": {
+    "sha": "34feaaedffd564fe0b0fae95cbf269fffaaf0273e74113c202f222a0fb8c20d9",
+    "bytes": 10289741,
     "type": "application/zip",
     "bundled": true
   },
-  "ejs/cores/ppsspp-thread-wasm.data": {
-    "sha": "cb46c33a3a8444b707f7a03fe00414d916ab55a41e85fbf0c59611aa643252da",
-    "bytes": 4581537,
+  "ejs-v2/cores/ppsspp-thread-wasm.data": {
+    "sha": "f0d48536aaf45880efa6f4fabe3ab6db218687461f961f93b6d31a1b734d8022",
+    "bytes": 4505724,
     "type": "application/octet-stream",
     "bundled": true
   },
-  "ejs/cores/reports/ppsspp.json": {
-    "sha": "4816d70f1ba5f7081da671ca185d0e048035362df3329b532c7892d4bad343bb",
+  "ejs-v2/cores/reports/ppsspp.json": {
+    "sha": "a1cd13efdedf83f3141d2fb1c6d7276adc6fdab98ee5b46155234d9a35235b5e",
     "bytes": 167,
-    "type": "application/json"
+    "type": "application/json",
+    "bundled": true
   },
-  "ejs/emulator.min.css": {
-    "sha": "16406c60b2dc3b04ae9b115e308613e6f567a0cc7068e21d9d0c1e5030fb395e",
-    "bytes": 25630,
+  "ejs-v2/emulator.min.css": {
+    "sha": "183f83f82a85c7fbf212863506700efe62c0646dba4c4acafcac432de9235248",
+    "bytes": 29064,
     "type": "text/css",
     "bundled": true
   },
-  "ejs/emulator.min.js": {
-    "sha": "6aec3fd7bb2721255801b0a6af02e47e78b05e28a1822b1f213aacbd348abaee",
-    "bytes": 426343,
+  "ejs-v2/emulator.min.js": {
+    "sha": "c5013a903fd54a889cf2d938416155ef6011ef924b44daa5b7b5e20375f7f618",
+    "bytes": 492884,
     "type": "text/javascript",
     "bundled": true
   },
-  "ejs/loader.js": {
-    "sha": "69e0903bf1e2f62ced78895e7e511fa26e11316f7eb734925c35e919ba1287b2",
-    "bytes": 7594,
+  "ejs-v2/loader.js": {
+    "sha": "32371c536fa5c793ef80bb87a2b89e4022c891c68d9d4d562bd2818a26ce005d",
+    "bytes": 8921,
     "type": "text/javascript",
     "bundled": true
   }

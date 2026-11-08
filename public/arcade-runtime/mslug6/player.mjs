@@ -1,8 +1,11 @@
 import {assertPspSupport,validateArcadeCharge} from './contract.mjs';
+import {attachAudioStream} from './audio-stream.mjs';
+import {prepareTitle,insertCredit} from './game.mjs?v=2';
 const root=document.querySelector('#cabinet');
 const launch=root.dataset.launch;
 const start=document.querySelector('#start'),status=document.querySelector('#status'),screen=document.querySelector('#screen'),full=document.querySelector('#fullscreen');
-const dataPath='/arcade-runtime/mslug6/ejs/';
+const lobbyURL='https://ehrlckdqud-cloud.github.io/newtworld-ranking/coop/#solo';
+const dataPath='/arcade-runtime/mslug6/ejs-v2/';
 let state='initial',blobURL,expired=false;
 async function api(action){
  const response=await fetch('/psp6/api/'+launch+'/'+action,{method:'POST',cache:'no-store',signal:AbortSignal.timeout(35000)});
@@ -35,34 +38,17 @@ function fail(error){
  clearTimeout(startupTimer);state='error';start.disabled=true;
  status.textContent='게임 준비 실패 · '+error.message+' · 뉴트젬 차감 없음';
 }
-const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-async function waitForPicture(){
- // A core-start event alone can precede a black screen or a failed PSP boot.
- const probe=document.createElement('canvas');probe.width=80;probe.height=45;
- const ctx=probe.getContext('2d',{willReadFrequently:true});
- for(let i=0;i<180&&state==='loading';i++){
-  await new Promise(requestAnimationFrame);
-  const canvas=window.EJS_emulator?.canvas;
-  if(canvas?.width&&canvas.height){
-   ctx.drawImage(canvas,0,0,80,45);
-   const pixels=ctx.getImageData(0,0,80,45).data;
-   let light=0,dark=0;
-   for(let n=0;n<pixels.length;n+=4){const sum=pixels[n]+pixels[n+1]+pixels[n+2];if(sum>160)light++;if(sum<80)dark++;}
-   if(light>30&&dark>30)return;
-  }
-  await wait(200);
- }
- throw Error('PSP 게임 화면이 나타나지 않았습니다.');
-}
 async function boot(){
  state='loading';start.disabled=true;
  try{
   blobURL=await loadISO();
   status.textContent='PSP 실행 중…';
-  Object.assign(window,{EJS_player:'#game',EJS_core:'psp',EJS_threads:true,EJS_gameUrl:blobURL,EJS_gameName:'Metal Slug 6.iso',EJS_pathtodata:dataPath,EJS_startOnLoaded:true,EJS_disableAutoLang:false,EJS_language:'en-US',
+  Object.assign(window,{nwPspAudioStream:attachAudioStream,EJS_player:'#game',EJS_core:'psp',EJS_threads:true,EJS_gameUrl:blobURL,EJS_gameID:'nw-ms6-psp-v2',EJS_gameName:'Metal Slug 6.iso',EJS_pathtodata:dataPath,EJS_startOnLoaded:true,EJS_disableAutoLang:false,EJS_language:'en-US',
+   EJS_defaultOptions:{ppsspp_cpu_core:'IR JIT',ppsspp_internal_resolution:'480x272',ppsspp_auto_frameskip:'enabled',ppsspp_frameskip:'1',ppsspp_texture_anisotropic_filtering:'disabled'},
+   EJS_retroarchOpts:{audio_sync:true,audio_rate_control:true},
    EJS_onGameStart:async()=>{
     try{
-     await waitForPicture();
+     await prepareTitle(EJS_emulator,()=>state==='loading');
      if(state!=='loading')return;
      clearTimeout(startupTimer);EJS_emulator.pause();state='ready';screen.classList.add('picture');
      start.textContent='게임 시작 · 500 뉴트젬';start.disabled=false;
@@ -83,30 +69,47 @@ async function charge(){
  }catch(e){
   state='retry';start.disabled=false;start.textContent='같은 입장 요청 확인';status.textContent=e.message+' · 이 창에서 다시 확인해 주세요.';return;
  }
- state='playing';clearInterval(heartbeat);screen.inert=false;start.hidden=true;full.hidden=false;
- EJS_emulator.play();EJS_emulator.canvas?.focus();
- status.textContent='이동 WASD / 방향키 · 사격 J · 선택·점프 K · 수류탄 U · 시작 Enter';
+ state='playing';screen.inert=false;start.hidden=true;full.hidden=false;
+ EJS_emulator.play();document.querySelector('#game canvas')?.focus();
+ status.textContent='이동 WASD / 방향키 · 사격 J · 선택·점프 K · 수류탄 U · 무기 교체 I · 크레딧 5 · 시작 Enter';
 }
 start.onclick=()=>{if(state==='initial')return boot();if(state==='retry'||(state==='ready'&&confirm('뉴트젬 500 차감됩니다. 진행하시겠습니까?')))return charge();};
 full.onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else screen.requestFullscreen();};
 document.querySelector('#exit').onclick=()=>{
  if(state==='charging')return;
  if(state==='playing'&&!confirm('게임을 종료할까요? 재입장 시 500뉴트젬이 차감됩니다.'))return;
- window.close();location.replace('/psp6/');
+ location.replace(lobbyURL);
 };
-const keymap={KeyW:4,ArrowUp:4,KeyS:5,ArrowDown:5,KeyA:6,ArrowLeft:6,KeyD:7,ArrowRight:7,KeyJ:1,KeyK:0,KeyU:8,Enter:3};
-const down=new Map();
+const keymap={KeyW:4,ArrowUp:4,KeyS:5,ArrowDown:5,KeyA:6,ArrowLeft:6,KeyD:7,ArrowRight:7,KeyJ:1,KeyK:0,KeyU:8,KeyI:11,Enter:3};
+const down=new Map(),pressedAt=new Map(),releaseTimers=new Map();
 function key(e,pressed){
  if(state!=='playing'){if(!['Tab','Escape','Enter','Space'].includes(e.code)||e.target.tagName!=='BUTTON')e.stopImmediatePropagation();return;}
+ if(e.code==='Digit5'||e.code==='Numpad5'){
+  e.preventDefault();e.stopImmediatePropagation();
+  if(pressed&&!e.repeat&&!insertCredit(EJS_emulator.Module.HEAPU8))status.textContent='현재 화면에서 게임 크레딧을 추가할 수 없습니다.';
+  return;
+ }
  if(!(e.code in keymap))return;
  e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
- if(pressed)down.set(e.code,keymap[e.code]);else down.delete(e.code);
- EJS_emulator.gameManager.simulateInput(0,keymap[e.code],[...down.values()].includes(keymap[e.code])?1:0);
+ const id=keymap[e.code];
+ clearTimeout(releaseTimers.get(e.code));releaseTimers.delete(e.code);
+ if(pressed){
+  down.set(e.code,id);pressedAt.set(e.code,performance.now());
+  EJS_emulator.gameManager.simulateInput(0,id,1);
+ }else{
+  const release=()=>{
+   down.delete(e.code);pressedAt.delete(e.code);releaseTimers.delete(e.code);
+   EJS_emulator.gameManager.simulateInput(0,id,[...down.values()].includes(id)?1:0);
+  };
+  const remaining=[0,1,3,8,11].includes(id)?80-(performance.now()-(pressedAt.get(e.code)??0)):0;
+  if(remaining>0)releaseTimers.set(e.code,setTimeout(release,remaining));else release();
+ }
 }
 window.addEventListener('keydown',e=>key(e,true),true);window.addEventListener('keyup',e=>key(e,false),true);
-window.addEventListener('blur',()=>{for(const id of down.values())window.EJS_emulator?.gameManager?.simulateInput(0,id,0);down.clear();});
-const heartbeat=setInterval(()=>{if(!expired&&state!=='playing')api('renew').catch(e=>{if(/EXPIRED|REQUIRED/.test(e.message)){expired=true;start.disabled=true;status.textContent='회원 인증이 만료되었습니다. 대기실에서 다시 입장해 주세요.';}});},35000);
-window.addEventListener('pagehide',()=>{clearInterval(heartbeat);if(blobURL)URL.revokeObjectURL(blobURL);});
+window.addEventListener('blur',()=>{for(const timer of releaseTimers.values())clearTimeout(timer);releaseTimers.clear();pressedAt.clear();for(const id of down.values())window.EJS_emulator?.gameManager?.simulateInput(0,id,0);down.clear();});
+const heartbeat=setInterval(()=>{if(!expired)api('renew').catch(e=>{if(/EXPIRED|REQUIRED/.test(e.message)){expired=true;start.disabled=true;status.textContent='회원 인증이 만료되었습니다. 대기실에서 다시 입장해 주세요.';}});},35000);
+window.addEventListener('pageshow',event=>{if(event.persisted)location.replace(lobbyURL);});
+window.addEventListener('pagehide',()=>{clearInterval(heartbeat);fetch('/psp6/api/'+launch+'/leave',{method:'POST',keepalive:true}).catch(()=>{});if(blobURL)URL.revokeObjectURL(blobURL);});
 try{
  assertPspSupport(window);
  if(!document.createElement('canvas').getContext('webgl2')||!window.DecompressionStream)throw Error('WebGL2와 gzip 압축 해제를 지원하는 PC 브라우저가 필요합니다.');
