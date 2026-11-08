@@ -1,5 +1,5 @@
 import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=hover-sound';
-import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms6-psp1';
+import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms6-psp2';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
@@ -12,7 +12,7 @@ const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=v
 function render(){hideGamePreview();const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
  if(channel===3){
   $('roomCount').textContent=channelLabel();
-  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6',API+'/arcade-runtime/mslug6/card.webp'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
+  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6','./mslug6-logo.webp'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
   for(const id of channels[channel].games){
    const [name,art]=titles[id],button=document.createElement('button'),logo=document.createElement('img');
    button.className='room-card arcade-game-card';button.type='button';
@@ -45,6 +45,5 @@ export function initLobby(name){$('memberName').textContent=name;$('openCreate')
  window.nwLobbyConfig=()=>({channel,game:'mslug3',title:$('roomTitle').value.trim()||name+'의 작전실',listed:true});window.nwEnterRoom=(title)=>{inside=true;$('playerColumn').append($('playerChat'));$('observerRail').append($('viewerChat'));$('viewerChat').hidden=false;$('createDialog').close();$('channelView').hidden=true;$('roomView').hidden=false;$('roomName').textContent=title||'작전 대기실';$('roomChannel').textContent=channelLabel();};
  window.nwBackToChannel=()=>{inside=false;window.nwOperations();$('roomView').hidden=true;$('channelView').hidden=false;refreshRooms();};
  window.nwOperations=()=>{document.body.classList.remove('in-game');$('gameView').hidden=true;$('playerColumn').append($('playerChat'));$('observerRail').append($('viewerChat'));$('viewerChat').hidden=false;$('chatForm').hidden=false;lobbyAudio.setWaiting(true);};
- window.nwGameStarted=()=>{lobbyAudio.setWaiting(false);document.body.classList.add('in-game');$('gameView').hidden=false;$('gameChatStack').append($('playerChat'),$('viewerChat'));$('viewerChat').hidden=false;};refreshRooms();setInterval(refreshRooms,5000);
+ window.nwGameStarted=()=>{lobbyAudio.setWaiting(false);document.body.classList.add('in-game');$('gameView').hidden=false;$('gameChatStack').append($('playerChat'),$('viewerChat'));$('viewerChat').hidden=false;};if(location.hash==='#solo')document.querySelector('[data-channel="3"]')?.click();else refreshRooms();setInterval(refreshRooms,5000);
 }
-

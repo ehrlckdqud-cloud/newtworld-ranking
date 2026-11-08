@@ -48,8 +48,8 @@ body.in-game #stage #gameChatStack #playerChat,body.in-game #stage #gameChatStac
 /* Equal tracks in both room and channel audio panels. */
 .equipment>.volume-control{display:grid;grid-template-columns:64px minmax(0,1fr) 38px;gap:8px}.equipment>.volume-control input{width:100%;min-width:0;margin:0}
 
-.room-list .arcade-game-card{grid-column:1/-1;justify-self:start;box-sizing:border-box;width:fit-content;max-width:100%;border-width:1px;text-align:center}
-.arcade-game-card .arcade-card-logo{display:block;width:0;min-width:100%;height:90px;object-fit:contain;object-position:center}
+.room-list .arcade-game-card{box-sizing:border-box;width:100%;min-width:0;max-width:100%;border-width:1px;text-align:center}
+.arcade-game-card .arcade-card-logo{display:block;width:100%;min-width:0;height:90px;object-fit:contain;object-position:center}
 dialog.arcade-local{box-sizing:border-box;position:fixed;inset:0;margin:0;width:100%;height:100vh;height:100dvh;max-width:none;max-height:none;border:0;border-radius:0;padding:clamp(8px,2vw,20px);background:#081510;color:#f5f8f5;overflow:auto}
 dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch;gap:8px}
 .arcade-local h2,.arcade-local p{margin:0}
@@ -75,7 +75,7 @@ dialog.arcade-local[open]{display:flex;flex-direction:column;align-items:stretch
 .arcade-local .arcade-screen.gunbird-preparing{min-height:160px}
 .arcade-local .arcade-boot{z-index:1}
 
-.room-list.arcade-catalog{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start}
+.room-list.arcade-catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));grid-auto-rows:1fr;align-items:stretch;align-content:start}
 .arcade-gem-price{display:inline-flex;align-items:center;gap:.25em;vertical-align:middle;white-space:nowrap}
 .arcade-gem-price img{width:1.15em;height:1.15em;object-fit:contain}
 .arcade-local.playing [data-aine]{display:none}
