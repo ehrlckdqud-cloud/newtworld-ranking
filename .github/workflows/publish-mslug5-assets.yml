@@ -1,0 +1,39 @@
+name: Publish encrypted Metal Slug 5 package
+on:
+  push:
+    branches: [assets/mslug5-v1]
+    paths: [.github/workflows/publish-mslug5-assets.yml]
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify and publish encrypted parts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for part in {00..14}; do
+            curl -fsSL --retry 3 "https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/api/package-bytes/mslug5/$part" -o "part-$part.bin"
+          done
+          sha256sum -c <<'SUMS'
+          3c18498071d39f481316f5c067028f0bfe2483e0901841aefd0b15e232d3a38d  part-00.bin
+          a1d4cc145fc3dabe15279547f80ab44ff65a83370242ca35c714205d8e46e7f6  part-01.bin
+          17c6a3c7bbefa01ca4175cec2a66b4df30e77236b005ced92e1a8b4e6973e504  part-02.bin
+          51148d52e370be25b0ed23173dd918a23f9a10c99098b6a1471e8c8603bf5678  part-03.bin
+          dc3a8184c8e8108d7b60fe02db7f2a5f4f6ac985d1e460b66994edb4b7ae8e5d  part-04.bin
+          ebaa43ce4a23b5dce141d5e44ed9406f7589d568cabf21b30f45d4ee2daaf673  part-05.bin
+          9c59a07e61483f128e7f20fc4f442c8ec712c5fb3946f1be88a0eaf85a096922  part-06.bin
+          b1d1977ce6ec73adee8cd78ca75e80a3328f9c269b9034215b2ac23449fa77af  part-07.bin
+          07b7b5857c7bdbfd0cac6fffdbf93f5ad7830160f4ae33e5f113ace55b10ed1d  part-08.bin
+          fc3207f5aac79ab8be54ad187eb0b484c14afdaf9f95fa41eb9c5a63b881edc7  part-09.bin
+          cd6f61863a1469c960ed9691fb64c381d5d11f6a2309e3759f224f5e05615598  part-10.bin
+          4d164d7cec985937ef121b3ba69ad102099d3c4d637b8119847091575fb75a7d  part-11.bin
+          197f0efc6b83f908e7a6525889160193076ccc09c0c6f0049d435793ace7119f  part-12.bin
+          c1c05bfa49ebfc34d3958c42a94947105e164dd4f09862890d2314626268e988  part-13.bin
+          93c38b4071833aa39f7f32b3607eb6d894ff0653cdaed0972c2535cf2531818c  part-14.bin
+          SUMS
+          gh release create arcade-mslug5-v1 part-*.bin --target "$GITHUB_SHA" --title "Metal Slug 5 encrypted install package v1" --notes "Versioned install files for NewtWorld." --latest=false
