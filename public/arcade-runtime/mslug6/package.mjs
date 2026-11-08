@@ -8,12 +8,12 @@ async function unpack(response,chunk,key){
  if(part.size!==chunk.size)throw Error('게임 파일이 손상되었습니다.');
  return part;
 }
-export async function buildDisc(manifest,onProgress,signal){
- if(manifest.game!=='mslug6'||manifest.price!==500||!manifest.chunks?.length)throw Error('게임 패키지를 확인할 수 없습니다.');
+export async function buildDisc(manifest,onProgress,signal,game='mslug6'){
+ if(manifest.game!==game||manifest.price!==500||!manifest.chunks?.length)throw Error('게임 패키지를 확인할 수 없습니다.');
  const raw=Uint8Array.from(atob(manifest.key.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));
  const key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
  let cache;
- try{cache=await caches.open(cacheName);}catch{}
+ try{cache=await caches.open(game==='mslug6'?cacheName:'newtworld-pspxx-encrypted-v1');}catch{}
  let next=0,bytes=0;
  const parts=new Array(manifest.chunks.length);
  async function worker(){

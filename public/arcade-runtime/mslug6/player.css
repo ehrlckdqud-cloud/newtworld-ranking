@@ -2,3 +2,5 @@
 #screen.picture[inert]::after{content:'';display:block;background:#000 url('./title-frame.webp') center/contain no-repeat}
 
 #game canvas{image-rendering:pixelated!important}
+
+#cabinet[data-game=mslugxx] #screen.picture[inert]::after{background-image:url('/arcade-runtime/mslugxx/ready.webp')}

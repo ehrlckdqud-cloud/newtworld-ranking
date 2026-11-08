@@ -18,8 +18,8 @@ export function validatePspPackage(manifest,base){
   if(url.protocol!=='https:'||url.origin!==origin)throw Error('PSP 게임 파일 주소가 승인된 서버가 아닙니다.');
   return url.href;
 }
-export function validateArcadeCharge(result,launch){
-  if(!result?.ok||result.game!==PSP_GAME||result.launch!==launch||result.cost!==PSP_PRICE)
+export function validateArcadeCharge(result,launch,game=PSP_GAME){
+  if(!result?.ok||result.game!==game||result.launch!==launch||result.cost!==PSP_PRICE)
     throw Error(result?.error||'입장료 승인 정보를 확인하지 못했습니다.');
   return true;
 }

@@ -34,3 +34,20 @@ test('isolated PSP admission limits each encrypted ticket to a single verified l
  const debits=calls.filter(c=>c[0]==='/api/arcade-entry');assert.equal(debits.length,2);
  for(const [,body,session] of debits){assert.equal(body.launch,launch);assert.equal(body.game,'mslug6');assert.equal(session,'verified-session');assert.equal(body.member.token,'member-test');}
 });
+
+test('XX tickets open the XX package and bill only the matching game',async()=>{
+ const settings={...env,NW_PSPXX_MASTER:btoa('xx-private-test-key-012345678901')};
+ const calls=[];
+ const verify=async req=>{calls.push([new URL(req.url).pathname,await req.json()]);return Response.json({ok:true});};
+ const begin=await pspSolo(new Request(site+'/pspxx/',{method:'POST',headers:{origin:lobby},body:new URLSearchParams({memberToken:'test'})}),settings,verify);
+ const html=await begin.text(),launch=html.match(/data-launch="([a-f0-9-]+)"/)[1],cookie=begin.headers.get('set-cookie').split(';')[0];
+ assert.match(html,/메탈슬러그 XX/);
+ const call=(path,action)=>pspSolo(new Request(site+path+'/api/'+launch+'/'+action,{method:'POST',headers:{origin:site,cookie}}),settings,verify);
+ assert.equal((await call('/psp6','package')).status,401);
+ const manifest=await (await call('/pspxx','package')).json();
+ assert.equal(manifest.game,'mslugxx');assert.equal(manifest.price,500);
+ assert.ok(manifest.chunks.every(c=>c.path.startsWith('/arcade-runtime/mslugxx/data/')));
+ assert.equal((await call('/pspxx','charge')).status,200);
+ assert.ok(calls.every(([,body])=>body.game==='mslugxx'));
+ assert.equal(calls.filter(([path])=>path==='/api/arcade-entry').length,1);
+});
