@@ -48,7 +48,7 @@ function showGamePreview(card, game, name) {
   document.body.append(image);
   const url = new URL('./previews/' + game + '.webp', import.meta.url);
   if (game === 'mslug6') url.searchParams.set('v', 'boss');
-  image.src = url.href;
+  image.src = game === 'mslugxx' ? 'https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/arcade-runtime/mslugxx/preview.webp' : url.href;
 }
 
 export function attachGamePreview(card, game, name) {
