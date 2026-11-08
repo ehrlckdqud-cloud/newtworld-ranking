@@ -83,7 +83,7 @@ export async function openLocalArcade(game='mslug3'){
    boot.hidden=true;
   }
   if(!image||image.width!==w||image.height!==h){
-   const factor=game==='mslug5'?2:1;
+   const factor=['mslug','mslug2','mslug3','mslug4','mslug5'].includes(game)?2:1;
    canvas.width=w*factor;canvas.height=h*factor;image=ctx.createImageData(w,h);
    if(factor===2){
     scaled=ctx.createImageData(w*2,h*2);sourcePixels=new Uint32Array(image.data.buffer);scaledPixels=new Uint32Array(scaled.data.buffer);
