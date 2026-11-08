@@ -1,3 +1,5 @@
+import {qualitySwitch} from './quality-switch.mjs';
+import {scale2x} from './scale2x.mjs';
 import {PeerInput} from './peer-input.mjs?v=94';
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
 import {createDiagnostics} from './diagnostics.mjs?v=95';
@@ -238,11 +240,38 @@ function roomSnapshot(frame){
 }
 function paint(ptr,w,h,pitch,fmt){if(nativeCanvas.width!==w||nativeCanvas.height!==h){nativeCanvas.width=w;nativeCanvas.height=h;pixels=null;}pixels??=ctx.createImageData(w,h);const src=module.HEAPU8,d=pixels.data;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const s=ptr+y*pitch+x*(fmt===1?4:2),o=(y*w+x)*4;if(fmt===1){d[o]=src[s+2];d[o+1]=src[s+1];d[o+2]=src[s];}else{const v=src[s]|src[s+1]<<8;d[o]=(v>>11&31)*255/31;d[o+1]=(v>>5&63)*255/63;d[o+2]=(v&31)*255/31;}d[o+3]=255;}ctx.putImageData(pixels,0,0);if(engine?.nativeContinue)return;drawFiveSelection(ctx,module,engine,colors);if(engine?.phase!=='playing')return;paintHUD?.();if(paintResults?.(paintHUD)){drawFiveContinue(ctx,module,engine,colors);return;}drawFiveContinue(ctx,module,engine,colors);
 }
+const coopQuality=qualitySwitch('mslug3-coop',()=>{
+ if(pixels)present();
+ coopQuality.button.blur();
+});
+function placeQualityButton(){
+ if(document.body.classList.contains('in-game')&&(document.fullscreenElement||document.body.classList.contains('expanded-view'))){
+  $('gameSurface').append(coopQuality.button);
+  coopQuality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:10';
+ }else{
+  $('full').before(coopQuality.button);
+  coopQuality.button.style.cssText='';
+ }
+}
+placeQualityButton();
+document.addEventListener('fullscreenchange',placeQualityButton);
+new MutationObserver(placeQualityButton).observe(document.body,{attributes:true,attributeFilter:['class']});
+const qualityCanvas=document.createElement('canvas'),qualityCtx=qualityCanvas.getContext('2d');
+let filtered;
 function present(target=canvas){
  const output=target===canvas?displayCtx:target.getContext('2d',{alpha:false});
  const width=nativeCanvas.width*DISPLAY_SCALE,height=nativeCanvas.height*DISPLAY_SCALE;
  if(target.width!==width||target.height!==height){target.width=width;target.height=height;}
- output.imageSmoothingEnabled=false;output.drawImage(nativeCanvas,0,0,width,height);
+ output.imageSmoothingEnabled=false;
+ if(coopQuality.enabled){
+  const w=nativeCanvas.width,h=nativeCanvas.height;
+  if(!filtered||filtered.width!==2*w||filtered.height!==2*h){
+   qualityCanvas.width=2*w;qualityCanvas.height=2*h;filtered=qualityCtx.createImageData(2*w,2*h);
+  }
+  const frame=ctx.getImageData(0,0,w,h);
+  scale2x(new Uint32Array(frame.data.buffer),new Uint32Array(filtered.data.buffer),w,h);
+  qualityCtx.putImageData(filtered,0,0);output.drawImage(qualityCanvas,0,0,width,height);
+ }else output.drawImage(nativeCanvas,0,0,width,height);
  if(engine?.phase!=='playing'||engine.long(0x10039c)===0xed682)return;
  const players=[];for(let i=0;i<engine.playerCount;i++){if(engine.players[i].state!=='active')continue;const a=engine.x.actors[i],signed=v=>v>32767?v-65536:v;players.push({slot:i+1,name:roster[i]?.name||`P${i+1}`,x:signed(engine.word(a+0x3c))-8,y:496-signed(engine.word(a+0x40)),mounted:engine.word([0x10ec14,0x10ec40,0x1053a2,0x105192,0x104f82][i])!==0});}
  drawClearLabels(output,{width,height,players,bubbles,colors,now:performance.now()});

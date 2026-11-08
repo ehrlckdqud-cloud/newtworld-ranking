@@ -1,7 +1,8 @@
+import {qualitySwitch} from './quality-switch.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
-import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=quality1';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -38,10 +39,18 @@ export async function openLocalArcade(game='mslug3'){
  if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P WASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
+ const quality=['gunbird2','puyopuyo2'].includes(game)?qualitySwitch(game,enabled=>{
+  cabinet?.quality(enabled);if(running)focusGame();
+ }):null;
+ if(quality)fullscreen.before(quality.button);
  screen.tabIndex=-1;
  const focusGame=()=>{if(game==='puyopuyo2'&&cabinet)cabinet.focus();else (cabinet?screen:canvas).focus();};
  function screenMode(on){
   dialog.classList.toggle('screen-only',on);
+  if(quality){
+   if(on){screen.append(quality.button);quality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:10';}
+   else{fullscreen.before(quality.button);quality.button.style.cssText='';}
+  }
   if(running)focusGame();
  }
  function fullscreenChanged(){screenMode(document.fullscreenElement===screen);}
@@ -168,6 +177,7 @@ export async function openLocalArcade(game='mslug3'){
     if(disposed)return;
    }
    cabinet=await prepareCabinet(game,screen,gameBytes,{signal:preparation.signal,onEscape:()=>{if(dialog.classList.contains('screen-only'))leaveScreen();},onFailure:message=>{status.textContent=message;}});
+   if(quality.enabled)cabinet.quality(true);
    screen.classList.remove('gunbird-preparing');screen.hidden=true;
   }else{
   let source=game==='mslug3'?await readSavedROM():null;

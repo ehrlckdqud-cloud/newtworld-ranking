@@ -20,6 +20,7 @@ export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape}){
    if(event.data.type==='ready'&&!ready){
     ready=true;clearTimeout(timeout);resolve({
      play(){previous=-1;if(game==='puyopuyo2')frame.style.pointerEvents='auto';post('play');},pause(){previous=-1;post('pause');},
+     quality(enabled){post('quality',{enabled});},
      focus(){frame.focus();post('focus');},
      input(mask){if(mask!==previous){post('input',{mask});previous=mask;}},close
     });
@@ -27,7 +28,7 @@ export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape}){
   }
   window.addEventListener('message',receive);signal.addEventListener('abort',abort,{once:true});
   if(signal.aborted){abort();return;}
-  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+(game==='puyopuyo2'?'?v=2':'');screen.prepend(frame);
+  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+'?v=quality1';screen.prepend(frame);
  });
 }
 
