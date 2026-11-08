@@ -51,7 +51,11 @@ async function boot(){
      clearInterval(engineProgress);
      status.textContent='타이틀 화면을 복원하고 있습니다…';
      if(xx)await restoreXX(EJS_emulator,checkpoint,bootController.signal);
-     else await restoreTitle(EJS_emulator,checkpoint,bootController.signal);
+     else {
+      await restoreTitle(EJS_emulator,checkpoint,bootController.signal);
+      const {enableDotFilter}=await import('./dot-filter.mjs');
+      enableDotFilter(EJS_emulator);
+     }
      checkpoint=null;
      if(state!=='loading')return;
      clearTimeout(startupTimer);EJS_emulator.pause();state='ready';screen.classList.add('picture');
