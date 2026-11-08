@@ -1,23 +1,23 @@
-import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=ms6-boss';
-import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=ms6-psp2';
+import {attachGamePreview,hideGamePreview} from './game-preview.mjs?v=xx1';
+import {openLocalArcade,arcadePrice} from './local-arcade.mjs?v=xx1';
 import {roomError} from './room-feedback.mjs?v=99';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {testHeaders} from './test-access.mjs?v=98';
 const $=id=>document.getElementById(id),API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 let channel=1,rooms=[],inside=false,requestId=0;
-const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:[]},3:{name:'혼자하기',games:['mslug','mslug2','mslugx','mslug3','mslug4','mslug5','mslug6','gunbird2','puyopuyo2']}};
+const channels={1:{name:'협동전',games:['mslug3']},2:{name:'대결전',games:[]},3:{name:'혼자하기',games:['mslug','mslug2','mslugx','mslug3','mslug4','mslug5','mslug6','mslugxx','gunbird2','puyopuyo2']}};
 const channelLabel=()=>String(channel).padStart(2,'0')+' '+channels[channel].name;
 const credentials=()=>({token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')});
 const text=(tag,value,cls)=>{const e=document.createElement(tag);e.textContent=value;if(cls)e.className=cls;return e;};
 function render(){hideGamePreview();const list=$('roomList');list.replaceChildren();list.classList.toggle('arcade-catalog',channel===3);
  if(channel===3){
   $('roomCount').textContent=channelLabel();
-  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6','./mslug6-logo.webp'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
+  const titles={mslug:['메탈슬러그 1',API+'/arcade-runtime/mslug/card.webp'],mslug2:['메탈슬러그 2',API+'/arcade-runtime/mslug2/card.webp'],mslugx:['메탈슬러그 X',API+'/arcade-runtime/mslugx/card.webp'],mslug3:['메탈슬러그 3','./mslug3-logo.png'],mslug4:['메탈슬러그 4',API+'/arcade-runtime/mslug4/card.webp'],mslug5:['메탈슬러그 5',API+'/arcade-runtime/mslug5/card.webp'],mslug6:['메탈슬러그 6','./mslug6-logo.webp'],mslugxx:['메탈슬러그 XX',API+'/arcade-runtime/mslugxx/card.webp'],gunbird2:['건버드 2',API+'/arcade-runtime/gunbird2/card.webp'],puyopuyo2:['뿌요뿌요 2',API+'/arcade-runtime/puyopuyo2/card.webp']};
   for(const id of channels[channel].games){
    const [name,art]=titles[id],button=document.createElement('button'),logo=document.createElement('img');
    button.className='room-card arcade-game-card';button.type='button';
    if(art){logo.src=art;logo.alt='';logo.className='arcade-card-logo';}
-   const detail=text('span',id==='mslug6'?'PSP판 · 1인 · ':'한 PC에서 1~2인 · ');detail.append(arcadePrice());
+   const detail=text('span',['mslug6','mslugxx'].includes(id)?'PSP판 · 1인 · ':'한 PC에서 1~2인 · ');detail.append(arcadePrice());
    if(art)button.append(logo);button.append(text('b',name),detail);
    attachGamePreview(button,id,name);
    button.onclick=()=>{hideGamePreview();openLocalArcade(id);};list.append(button);

@@ -2,9 +2,10 @@ import {testHeaders} from './test-access.mjs?v=98';
 
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 
-const launcher='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/psp6/';
+const origin='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 export function openPspArcade(game='mslug6'){
- if(game!=='mslug6')return;
+ if(!['mslug6','mslugxx'].includes(game))return;
+ const launcher=origin+(game==='mslugxx'?'/pspxx/':'/psp6/');
  const session=new Headers(testHeaders());
  const fields={handoff:'1',
   memberToken:localStorage.getItem('nwProfileToken'),

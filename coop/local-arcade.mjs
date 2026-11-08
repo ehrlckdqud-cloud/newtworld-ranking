@@ -1,4 +1,4 @@
-import {openPspArcade} from './psp-arcade.mjs?v=ms6-psp2';
+import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
 import {prepareCabinet} from './gunbird2-runtime.mjs?v=3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
@@ -17,7 +17,7 @@ export function arcadePrice(){
 }
 let active=false;
 export async function openLocalArcade(game='mslug3'){
- if(game==='mslug6')return openPspArcade(game);
+ if(game==='mslug6'||game==='mslugxx')return openPspArcade(game);
  if(active)return;
  const spec=games.get(game);
  if(!spec)throw Error('등록되지 않은 게임입니다.');
