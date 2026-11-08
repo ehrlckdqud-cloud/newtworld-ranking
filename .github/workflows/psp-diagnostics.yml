@@ -7,6 +7,7 @@ on:
       - 'coop/psp-diagnostics.html'
       - 'tools/psp-diagnostics-server.mjs'
       - 'tests/psp-*.test.mjs'
+      - 'server/psp-integration-adapter.mjs'
       - '.github/workflows/psp-diagnostics.yml'
   workflow_dispatch:
 
@@ -28,5 +29,6 @@ jobs:
           node --check coop/psp-arcade.mjs
           node --check coop/psp-diagnostics.mjs
           node --check tools/psp-diagnostics-server.mjs
+          node --check server/psp-integration-adapter.mjs
       - name: Run PSP contract and diagnostic host tests
-        run: node --test tests/psp-contract.test.mjs tests/psp-diagnostics-server.test.mjs
+        run: node --test tests/psp-contract.test.mjs tests/psp-diagnostics-server.test.mjs tests/psp-integration-adapter.test.mjs
