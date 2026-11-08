@@ -46,7 +46,9 @@ function showGamePreview(card, game, name) {
     if (event.key === 'Escape') hideGamePreview();
   }, options);
   document.body.append(image);
-  image.src = new URL('./previews/' + game + '.webp', import.meta.url).href;
+  const url = new URL('./previews/' + game + '.webp', import.meta.url);
+  if (game === 'mslug6') url.searchParams.set('v', 'boss');
+  image.src = url.href;
 }
 
 export function attachGamePreview(card, game, name) {
