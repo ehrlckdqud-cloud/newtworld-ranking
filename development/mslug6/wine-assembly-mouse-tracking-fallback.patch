@@ -1,0 +1,11 @@
+--- a/src/09a6-handlers-crt.wat
++++ b/src/09a6-handlers-crt.wat
+@@ -4307,6 +4307,8 @@
+ 
+   ;; fallback: unknown API — crash with full details
+   (func $handle_fallback (param $name_ptr i32) (param $api_id i32)
++    ;; Return a documented unsupported-operation result for optional mouse tracking.
++    (if (i32.and (i32.eq (i32.load offset=8 (local.get $name_ptr)) (i32.const 0x76456573)) (i32.and (i32.eq (i32.load offset=4 (local.get $name_ptr)) (i32.const 0x756f4d6b)) (i32.and (i32.eq (i32.load offset=0 (local.get $name_ptr)) (i32.const 0x63617254)) (i32.eq (i32.load offset=12 (local.get $name_ptr)) (i32.const 0x746e65))))) (then (global.set $last_error (i32.const 120)) (i32.store (global.get $reg_base) (i32.const 0)) (i32.store offset=16 (global.get $reg_base) (i32.add (i32.load offset=16 (global.get $reg_base)) (i32.const 8))) (return)))
+     (call $host_log_i32 (local.get $api_id))
+     (call $host_crash_unimplemented
+       (local.get $name_ptr)
