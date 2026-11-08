@@ -20,8 +20,7 @@ export function makePspDiagnosticsServer(){
       'Cross-Origin-Resource-Policy':'same-origin',
       'X-Content-Type-Options':'nosniff',
       'Referrer-Policy':'no-referrer',
-      'Cache-Control':'no-store',
-      'Access-Control-Allow-Origin':'null'
+      'Cache-Control':'no-store'
     };
     // No remote ROM endpoints, filesystem browsing, login or payment are exposed.
     const url=new URL(req.url||'/', 'http://localhost');
