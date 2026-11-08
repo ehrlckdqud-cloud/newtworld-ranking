@@ -1,0 +1,24 @@
+--- a/src/09al-d3d-reset.wat
++++ b/src/09al-d3d-reset.wat
+@@ -47,6 +47,8 @@
+     ;; One physical back buffer supports DISCARD and COPY, not FLIP's extra
+     ;; front/back ownership. Only LOCKABLE_BACKBUFFER is supported among flags.
+     (local.set $swap (call $gl32 (i32.add (local.get $pp) (i32.const 24))))
++    ;; MS6 compatibility experiment: present the rendered back buffer using DISCARD.
++    (if (i32.eq (local.get $swap) (i32.const 2)) (then (local.set $swap (i32.const 1))))
+     (if (i32.and (i32.ne (local.get $swap) (i32.const 1)) (i32.ne (local.get $swap) (i32.const 3))) (then (return)))
+     (if (i32.and (call $gl32 (i32.add (local.get $pp) (i32.const 44))) (i32.const -2)) (then (return)))
+     (local.set $refresh (call $gl32 (i32.add (local.get $pp) (i32.const 48))))
+--- a/src/09ae-d3d9-resources.wat
++++ b/src/09ae-d3d9-resources.wat
+@@ -1830,6 +1830,10 @@
+ 
+   (func $d3d9_texture_create (param $device i32) (param $width i32) (param $height i32)
+     (param $levels i32) (param $usage i32) (param $format i32) (param $pool i32) (param $out i32)
++    ;; No hardware mip generation: create the single accessible base level.
++    (if (i32.and (local.get $usage) (i32.const 1024))
++      (then (local.set $usage (i32.and (local.get $usage) (i32.const -1025)))
++            (local.set $levels (i32.const 1))))
+     (call $d3d9_texture_create_kind (local.get $device) (local.get $width) (local.get $height)
+       (local.get $levels) (local.get $usage) (local.get $format) (local.get $pool) (local.get $out) (i32.const 3)))
+ 
