@@ -47,3 +47,22 @@
 
 이 PR은 `feat/mslug5-solo` 기반의 **초안 PR**입니다.
 운영 `main` 및 서버에 직접 반영하지 마세요.
+
+
+## 구현된 서버측 통합 어댑터 (운영 서버 미연결)
+`server/psp-integration-adapter.mjs`는 서버 이식용 코드이며 HTTP 서버가 아닙니다.
+- `packageManifest`: 회원 검증 후 짧은 수명의 HMAC 서명 파일 접근 티켓 발급
+- `resolveTicket`: 서명/만료/회원 일치 확인. 실제 ISO 바이트/Range 스트림은 운영 호스트가 제공
+- `arcadeEntry`: 기존 500젬 원자적 장부 차감 함수 `chargeOnce`로 위임하고 결과 검증
+- `chargeStatus`: 오류/타임아웃 시 결제 여부 조회용 기능
+
+**필수 서버 주의사항:**
+- `chargeOnce` 구현은 DB 고유 제약과 트랜잭션으로 재호출을 한 번만 차감하도록 보장해야 함. 어댑터만으로 멱등성 보장되지 않음.
+- /api/psp-package/stream/{ticket} 접근 시, 요청자의 세션을 안전한 HTTP-only 쿠키 또는 서버 세션에 바인딩하여 `resolveTicket`에 전달해야 함. URL 자체만으로 인증을 통과시키지 말 것.
+- 서명 티켓은 재사용 방지 / Range 요청 재개 정책과 회원별 접근 제한, 사용 횟수·동시접속 제한이 필요. 이 정책은 서버에서 구현되지 않았음.
+- 상태 조회 API는 특정 회원 소유의 launch만 조회할 것.
+- 실패 환불은 신뢰 가능한 서버 측 실행 증거가 확보될 때만 진행해야 함.
+- API와 전용 격리 호스트의 CORS 및 인증/쿠키 설정은 실제 운영 구성을 보고 결정해야 함.
+
+테스트:
+`node --test tests/psp-contract.test.mjs tests/psp-diagnostics-server.test.mjs tests/psp-integration-adapter.test.mjs`
