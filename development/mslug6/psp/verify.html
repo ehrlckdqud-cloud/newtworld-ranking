@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>메탈슬러그 6 실행 검증</title>
+<style>
+  html,body { margin:0; background:#121212; color:white; font:16px system-ui; }
+  main { max-width:960px; margin:auto; }
+  #game { width:100%; aspect-ratio:30/17; }
+</style>
+<main>
+  <label>미국판 Metal Slug Anthology CSO <input type="file" id="disc" accept=".cso"></label>
+  <p role="status" id="status"></p>
+  <div id="game"></div>
+</main>
+<script>
+const fileInput = document.querySelector('#disc');
+const statusMessage = document.querySelector('#status');
+fileInput.addEventListener('change', () => {
+  const game = fileInput.files[0];
+  if (!game) return;
+  if (!window.crossOriginIsolated || typeof SharedArrayBuffer === 'undefined') {
+    statusMessage.textContent = '이 페이지에 COOP same-origin과 COEP require-corp 헤더가 필요합니다.';
+    return;
+  }
+  fileInput.disabled = true;
+  Object.assign(window, {
+    EJS_player: '#game',
+    EJS_core: 'psp',
+    EJS_threads: true,
+    EJS_pathtodata: '/data/',
+    EJS_gameUrl: game,
+    EJS_gameName: 'Metal Slug Anthology',
+    EJS_CacheLimit: 0
+  });
+  statusMessage.textContent = '합본에서 메탈슬러그 6을 고르고 Single Player Game을 선택하세요.';
+  const loader = document.createElement('script');
+  loader.src = '/data/loader.js';
+  loader.onerror = () => { statusMessage.textContent = 'EmulatorJS 4.2.3의 실행 파일을 불러올 수 없습니다.'; fileInput.disabled = false; };
+  document.head.appendChild(loader);
+});
+</script></html>
