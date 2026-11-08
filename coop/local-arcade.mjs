@@ -39,10 +39,10 @@ export async function openLocalArcade(game='mslug3'){
  if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P WASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
- const quality=['gunbird2','puyopuyo2'].includes(game)?qualitySwitch(game,enabled=>{
+ const quality=qualitySwitch(game,enabled=>{
   cabinet?.quality(enabled);if(running)focusGame();
- }):null;
- if(quality)fullscreen.before(quality.button);
+ });
+ fullscreen.before(quality.button);
  screen.tabIndex=-1;
  const focusGame=()=>{if(game==='puyopuyo2'&&cabinet)cabinet.focus();else (cabinet?screen:canvas).focus();};
  function screenMode(on){
@@ -91,8 +91,9 @@ export async function openLocalArcade(game='mslug3'){
    if(lit<10)return;
    boot.hidden=true;
   }
-  if(!image||image.width!==w||image.height!==h){
-   const factor=['mslug','mslug2','mslug3','mslug4','mslug5'].includes(game)?2:1;
+  const factor=quality.enabled?2:1;
+  if(!image||image.width!==w||image.height!==h||canvas.width!==w*factor){
+   scaled=null;
    canvas.width=w*factor;canvas.height=h*factor;image=ctx.createImageData(w,h);
    if(factor===2){
     scaled=ctx.createImageData(w*2,h*2);sourcePixels=new Uint32Array(image.data.buffer);scaledPixels=new Uint32Array(scaled.data.buffer);
