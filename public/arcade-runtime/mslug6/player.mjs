@@ -2,6 +2,7 @@ import {assertPspSupport,validateArcadeCharge} from './contract.mjs';
 import {attachAudioStream} from './audio-stream.mjs';
 import {restoreTitle,insertCredit} from './game.mjs?v=3';
 import {buildDisc,loadCheckpoint} from './package.mjs?v=3';
+import {createKeyboard} from './keyboard.mjs';
 const root=document.querySelector('#cabinet');
 const launch=root.dataset.launch;
 const start=document.querySelector('#start'),status=document.querySelector('#status'),screen=document.querySelector('#screen'),full=document.querySelector('#fullscreen');
@@ -41,8 +42,8 @@ async function boot(){
    status.textContent='게임 엔진 시작 중 · '+Math.floor((performance.now()-engineStart)/1000)+'초';
   },1000);
   Object.assign(window,{nwPspAudible:()=>state==='playing',nwPspAudioStream:attachAudioStream,EJS_player:'#game',EJS_core:'psp',EJS_threads:true,EJS_gameUrl:blobURL,EJS_gameID:'nw-ms6-psp-v2',EJS_gameName:'Metal Slug 6.iso',EJS_pathtodata:dataPath,EJS_startOnLoaded:true,EJS_disableAutoLang:false,EJS_language:'en-US',
-   EJS_defaultOptions:{ppsspp_cpu_core:'IR JIT',ppsspp_internal_resolution:'480x272',ppsspp_auto_frameskip:'enabled',ppsspp_frameskip:'1',ppsspp_texture_anisotropic_filtering:'disabled'},
-   EJS_retroarchOpts:{audio_sync:true,audio_rate_control:true},
+   EJS_defaultOptions:{ppsspp_cpu_core:'IR JIT',ppsspp_internal_resolution:'480x272',ppsspp_auto_frameskip:'enabled',ppsspp_frameskip:'1',ppsspp_texture_anisotropic_filtering:'disabled',ppsspp_texture_filtering:'Nearest'},
+   EJS_retroarchOpts:{audio_sync:true,audio_rate_control:true,video_smooth:false},
    EJS_onGameStart:async()=>{
     try{
      clearInterval(engineProgress);
@@ -81,7 +82,11 @@ document.querySelector('#exit').onclick=()=>{
  location.replace(lobbyURL);
 };
 const keymap={KeyW:4,ArrowUp:4,KeyS:5,ArrowDown:5,KeyA:6,ArrowLeft:6,KeyD:7,ArrowRight:7,KeyJ:1,KeyK:0,KeyU:8,KeyI:11,Enter:3};
-const down=new Map(),pressedAt=new Map(),releaseTimers=new Map();
+const keyboard=createKeyboard({
+ frame:()=>EJS_emulator.Module._get_current_frame_count(),
+ send:(id,value)=>EJS_emulator.gameManager.simulateInput(0,id,value),
+ schedule:fn=>requestAnimationFrame(fn),cancel:id=>cancelAnimationFrame(id)
+});
 function key(e,pressed){
  if(state!=='playing'){if(!['Tab','Escape','Enter','Space'].includes(e.code)||e.target.tagName!=='BUTTON')e.stopImmediatePropagation();return;}
  if(e.code==='Digit5'||e.code==='Numpad5'){
@@ -91,22 +96,11 @@ function key(e,pressed){
  }
  if(!(e.code in keymap))return;
  e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;
- const id=keymap[e.code];
- clearTimeout(releaseTimers.get(e.code));releaseTimers.delete(e.code);
- if(pressed){
-  down.set(e.code,id);pressedAt.set(e.code,performance.now());
-  EJS_emulator.gameManager.simulateInput(0,id,1);
- }else{
-  const release=()=>{
-   down.delete(e.code);pressedAt.delete(e.code);releaseTimers.delete(e.code);
-   EJS_emulator.gameManager.simulateInput(0,id,[...down.values()].includes(id)?1:0);
-  };
-  const remaining=[0,1,3,8,11].includes(id)?80-(performance.now()-(pressedAt.get(e.code)??0)):0;
-  if(remaining>0)releaseTimers.set(e.code,setTimeout(release,remaining));else release();
- }
+ keyboard.change(e.code,keymap[e.code],pressed);
 }
 window.addEventListener('keydown',e=>key(e,true),true);window.addEventListener('keyup',e=>key(e,false),true);
-window.addEventListener('blur',()=>{for(const timer of releaseTimers.values())clearTimeout(timer);releaseTimers.clear();pressedAt.clear();for(const id of down.values())window.EJS_emulator?.gameManager?.simulateInput(0,id,0);down.clear();});
+window.addEventListener('blur',keyboard.reset);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)keyboard.reset();});
 const heartbeat=setInterval(()=>{if(!expired)api('renew').catch(e=>{if(/EXPIRED|REQUIRED/.test(e.message)){expired=true;start.disabled=true;status.textContent='회원 인증이 만료되었습니다. 대기실에서 다시 입장해 주세요.';}});},35000);
 window.addEventListener('pageshow',event=>{if(event.persisted)location.replace(lobbyURL);});
 window.addEventListener('pagehide',()=>{clearInterval(heartbeat);bootController.abort();if(!restarting)fetch('/psp6/api/'+launch+'/leave',{method:'POST',keepalive:true}).catch(()=>{});if(blobURL)URL.revokeObjectURL(blobURL);});
