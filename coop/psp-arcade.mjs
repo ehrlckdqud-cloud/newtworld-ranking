@@ -41,7 +41,7 @@ export async function openPspArcade(game='mslug6'){
   const close=document.createElement('button');close.type='button';close.textContent='취소';
   const start=document.createElement('button');start.type='button';start.className='primary';start.textContent='💎 500 · 게임 시작';start.disabled=true;
   actions.append(fullscreen,close,start);dialog.append(heading,status,gameRoot,actions);document.body.append(dialog);dialog.showModal();
-  let disposed=false,charging=false,charged=false,blobUrl=null;
+  let disposed=false,charging=false,charged=false,chargeAttempted=false,blobUrl=null;
   const cleanup=()=>{
     if(disposed||charging)return;
     if(charged&&!confirm('게임을 종료할까요? 다시 실행하면 입장료가 새로 차감됩니다.'))return;
@@ -66,8 +66,8 @@ export async function openPspArcade(game='mslug6'){
     blobUrl=validatePspPackage(manifest,API);
     status.textContent='준비 완료 · 게임 시작 시 500뉴트젬 차감';start.disabled=false;
     start.onclick=async()=>{
-      if(charging||charged||disposed)return;
-      charging=true;start.disabled=close.disabled=true;status.textContent='회원 및 뉴트젬 확인 중…';
+      if(charging||chargeAttempted||disposed)return;
+      charging=chargeAttempted=true;start.disabled=close.disabled=true;status.textContent='회원 및 뉴트젬 확인 중…';
       try{
         const response=await fetch(API+'/api/arcade-entry',{method:'POST',headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch})});
         const result=await response.json();
@@ -78,6 +78,8 @@ export async function openPspArcade(game='mslug6'){
         window.EJS_player='#'+slot.id;
         window.EJS_core='ppsspp';
         window.EJS_threads=true; // Official PSP core requirement.
+        window.EJS_onGameStart=()=>{if(!disposed){status.textContent='PSP 게임 시작 콜백 수신 · 미션 1 진입은 별도 확인 필요';}};
+        window.EJS_onExit=()=>{if(!disposed)status.textContent='PSP 코어 종료 · 재입장 전 결제내역 확인 필요';};
         window.EJS_gameUrl=blobUrl;
         window.EJS_pathtodata=DATA;
         window.EJS_startOnLoaded=true;
@@ -88,9 +90,9 @@ export async function openPspArcade(game='mslug6'){
         lobbyAudio.setWaiting(false);
       }catch(error){
         status.textContent=charged?'입장료는 차감되었지만 PSP 실행에 실패했습니다: '+error.message:'게임을 시작하지 못했습니다: '+error.message;
-        if(!charged)start.disabled=false;
-        // Never retry a paid launch in the same dialog: server side must
-        // deduplicate by (member,game,launch) and explicitly refund failed starts.
+        // A network failure does not prove that payment was refused.
+        // Never retry a possibly charged launch from this dialog.
+        if(!charged)status.textContent+=' · 결제 여부가 불명확할 수 있습니다. 재시도 전 뉴트젬 사용내역을 확인하세요.';
       }finally{charging=false;close.disabled=false;}
     };
   }catch(error){status.textContent=error.message;start.disabled=true;}
