@@ -1,0 +1,32 @@
+name: PSP diagnostics validation
+
+on:
+  pull_request:
+    paths:
+      - 'coop/psp-*.mjs'
+      - 'coop/psp-diagnostics.html'
+      - 'tools/psp-diagnostics-server.mjs'
+      - 'tests/psp-*.test.mjs'
+      - '.github/workflows/psp-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check PSP scripts syntax
+        run: |
+          node --check coop/psp-contract.mjs
+          node --check coop/psp-arcade.mjs
+          node --check coop/psp-diagnostics.mjs
+          node --check tools/psp-diagnostics-server.mjs
+      - name: Run PSP contract and diagnostic host tests
+        run: node --test tests/psp-contract.test.mjs tests/psp-diagnostics-server.test.mjs
