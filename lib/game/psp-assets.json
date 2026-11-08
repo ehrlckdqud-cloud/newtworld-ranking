@@ -165,51 +165,58 @@
     "type": "application/octet-stream",
     "bundled": true
   },
-  "ejs-v2/compression/extract7z.js": {
+  "ejs-v3/compression/extract7z.js": {
     "sha": "4ac9933b995a516cb6b3ca4027db860278372a20c21c405d93ceb1998498853a",
     "bytes": 280155,
     "type": "text/javascript",
     "bundled": true
   },
-  "ejs-v2/compression/extractzip.js": {
+  "ejs-v3/compression/extractzip.js": {
     "sha": "3cc825428724213acd43d30552a78008e0869b2326de17dee240dbff9ee2f629",
     "bytes": 196199,
     "type": "text/javascript"
   },
-  "ejs-v2/cores/ppsspp-assets.zip": {
+  "ejs-v3/cores/ppsspp-assets.zip": {
     "sha": "34feaaedffd564fe0b0fae95cbf269fffaaf0273e74113c202f222a0fb8c20d9",
     "bytes": 10289741,
     "type": "application/zip",
     "bundled": true
   },
-  "ejs-v2/cores/ppsspp-thread-wasm.data": {
-    "sha": "f0d48536aaf45880efa6f4fabe3ab6db218687461f961f93b6d31a1b734d8022",
-    "bytes": 4505724,
+  "ejs-v3/cores/ppsspp-thread-wasm.data": {
+    "sha": "4c7a84fe9586d363ac4a36f1e1d1a6159c19f0062cba21b5833172b38235c5d2",
+    "bytes": 4504898,
     "type": "application/octet-stream",
     "bundled": true
   },
-  "ejs-v2/cores/reports/ppsspp.json": {
+  "ejs-v3/cores/reports/ppsspp.json": {
     "sha": "a1cd13efdedf83f3141d2fb1c6d7276adc6fdab98ee5b46155234d9a35235b5e",
     "bytes": 167,
     "type": "application/json",
     "bundled": true
   },
-  "ejs-v2/emulator.min.css": {
+  "ejs-v3/emulator.min.css": {
     "sha": "183f83f82a85c7fbf212863506700efe62c0646dba4c4acafcac432de9235248",
     "bytes": 29064,
     "type": "text/css",
     "bundled": true
   },
-  "ejs-v2/emulator.min.js": {
+  "ejs-v3/emulator.min.js": {
     "sha": "c5013a903fd54a889cf2d938416155ef6011ef924b44daa5b7b5e20375f7f618",
     "bytes": 492884,
     "type": "text/javascript",
     "bundled": true
   },
-  "ejs-v2/loader.js": {
+  "ejs-v3/loader.js": {
     "sha": "32371c536fa5c793ef80bb87a2b89e4022c891c68d9d4d562bd2818a26ce005d",
     "bytes": 8921,
     "type": "text/javascript",
     "bundled": true
+  },
+  "private/title.gz": {
+    "sha": "33538fdab09dde6c8172f6ee106751bcbdf72e9d85435ddde510b5d9adc4f782",
+    "bytes": 6253343,
+    "rawBytes": 41943064,
+    "type": "application/octet-stream",
+    "private": true
   }
 }

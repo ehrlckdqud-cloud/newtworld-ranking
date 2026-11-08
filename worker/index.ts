@@ -9,7 +9,7 @@ import type { ConnectorBinding } from "../lib/connector-contract.mjs";
 const worker = {
   fetch(request: Request, env: Cloudflare.Env, ctx: ExecutionContext<{ CONNECTORS?: ConnectorBinding }>) {
     const path = new URL(request.url).pathname;
-    if(path.startsWith("/arcade-runtime/mslug6/data/") || path.startsWith("/arcade-runtime/mslug6/ejs-v2/") || path.startsWith("/psp6/publish/")) return pspAssets(request,env);
+    if(path.startsWith("/arcade-runtime/mslug6/data/") || path.startsWith("/arcade-runtime/mslug6/ejs-v3/") || path.startsWith("/psp6/publish/")) return pspAssets(request,env);
     if(path.startsWith("/psp6/")) return pspSolo(request,env);
     if(path.startsWith("/api/package-bytes/") || path.startsWith("/game-packages/mslug5-v1/")) return packageBytes(request,env);
     if((path.startsWith("/api/rooms") || path === "/api/social" || path === "/api/site-session" || path === "/api/rankings" || path === "/api/lobby" || path === "/api/test-access" || path === "/api/arcade-entry" || path === "/api/game-package" || path === "/api/wallet" || path === "/api/gems") || path === "/native-config" || path === "/health") return gateway(request,env);

@@ -20,6 +20,15 @@ test('isolated PSP admission limits each encrypted ticket to a single verified l
  assert.equal((await pspSolo(req('package',launch,cookie+'x'),env,gateway)).status,401);
  assert.equal((await pspSolo(req('charge',launch,cookie,lobby),env,gateway)).status,403);
  const manifest=await (await pspSolo(req('package'),env,gateway)).json();assert.equal(manifest.price,500);assert.ok(manifest.chunks.length>1);assert.equal(manifest.key.length,43);
+ assert.equal(manifest.bootState.rawBytes,41943064);
+ assert.equal((await pspSolo(req('title',launch,''),env,gateway)).status,401);
+ assert.equal((await pspSolo(req('title'),env,gateway)).status,503);
+ const restored=await pspSolo(req('title'),{...env,PSP_ASSETS:{get:async key=>{
+  assert.equal(key,'mslug6/v1/'+manifest.bootState.sha);return {size:manifest.bootState.bytes,body:'fixture'};
+ }}},gateway);
+ assert.equal(await restored.text(),'fixture');assert.equal(restored.headers.get('cache-control'),'no-store');
+ const reopen=new Request(site+'/psp6/api/'+launch+'/player',{headers:{cookie}});
+ assert.match(await (await pspSolo(reopen,env,gateway)).text(),new RegExp(launch));
  assert.ok(!calls.some(c=>c[0]==='/api/arcade-entry'));
  for(let i=0;i<2;i++)assert.equal((await pspSolo(req('charge'),env,gateway)).status,200);
  const debits=calls.filter(c=>c[0]==='/api/arcade-entry');assert.equal(debits.length,2);

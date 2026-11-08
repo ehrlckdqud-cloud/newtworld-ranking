@@ -26,8 +26,13 @@ test('only signed exact assets can be published and retries are idempotent',asyn
 });
 
 test('bundled PSP assets use the same origin and the declared media type',async()=>{
- const name='ejs-v2/loader.js';let seen;
+ const name='ejs-v3/loader.js';let seen;
  const env={ASSETS:{fetch:async request=>{seen=request.url;return new Response('fixture');}}};
  const url='https://nw.test/arcade-runtime/mslug6/'+name;
  const res=await pspAssets(new Request(url),env);assert.equal(seen,url);assert.equal(res.headers.get('content-type'),'text/javascript');assert.equal(await res.text(),'fixture');
+});
+
+test('the title checkpoint cannot be downloaded through the static assets handler',async()=>{
+ const response=await pspAssets(new Request('https://nw.test/arcade-runtime/mslug6/private/title.gz'),{});
+ assert.equal(response.status,404);
 });
