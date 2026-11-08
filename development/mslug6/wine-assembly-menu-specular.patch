@@ -1,0 +1,13 @@
+--- a/lib/d3d9-software-backend.js
++++ b/lib/d3d9-software-backend.js
+@@ -286,7 +286,9 @@
+         fogColor:snapshot.fogState.color,fogTableMode:snapshot.fogState.tableMode}:original;
+       const stage=f&&f.stages&&f.stages[0];
+       if(!f||!stage)invalid('missing fixed-function state');
+-      const unsupported=['specular'].filter(flag=>f[flag]);
++      // With lighting disabled and no secondary color, the specular contribution is zero.
++      const hasSecondaryColor = (snapshot.attributes || []).some(a => a.usage === 10 && a.usageIndex === 1);
++      const unsupported = f.specular && (f.lighting || hasSecondaryColor || !fixedVS) ? ['specular'] : [];
+       if(f.fog&&f.fogTableMode)f={...f,fog:false}; // pixel fog takes precedence over vertex generation
+       if(unsupported.length)invalid(`fixed-function features are not implemented: ${unsupported.join(', ')}`);
+       const attributes=fixedVS?snapshot.attributes||[]:[];
