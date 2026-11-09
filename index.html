@@ -425,15 +425,15 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   html:has(#nwMusicDock:not(.nw-music-collapsed)),
   body:has(#nwMusicDock:not(.nw-music-collapsed)){overflow:hidden;overscroll-behavior:none}
   #nwMusicDock:not(.nw-music-collapsed) #nwPlayerLogo{
-    display:block;position:absolute;top:calc(6px + env(safe-area-inset-top,0px));left:50%;
-    transform:translateX(-50%);height:36px;width:min(88px,22vw);object-fit:contain;pointer-events:none
+    display:block;position:absolute;top:calc(2px + env(safe-area-inset-top,0px));left:50%;
+    transform:translateX(-50%);height:var(--nw-logo-room-y,44px);width:var(--nw-logo-room-x,min(88px,22vw));object-fit:contain;object-view-box:inset(9.7% 5.3% 19% 6.2%);pointer-events:none
   }
   #nwMusicDock:not(.nw-music-collapsed){inset:0;box-sizing:border-box;width:auto;height:auto;overflow:clip;filter:none;background:#071d16;padding:calc(50px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));background:var(--nw-player-bg,radial-gradient(ellipse at 45% 12%,#315641 0%,#102f23 48%,#071d16 100%))}
   #nwMusicDock:not(.nw-music-collapsed) .nw-collapse-btn,.nw-player-settings{top:calc(6px + env(safe-area-inset-top,0px));height:36px;padding:0 14px;border:1px solid #7da98c55;border-radius:18px;font-size:12px;background:#143b2b;color:#d9efdf}
   #nwMusicDock:not(.nw-music-collapsed) .nw-collapse-btn{right:18px}
   #nwMusicDock:not(.nw-music-collapsed) .nw-player-actions{position:absolute;top:calc(6px + env(safe-area-inset-top,0px));left:max(8px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:4px}
   #nwMusicDock .nw-player-actions :is(.nw-player-settings,#nwMusicAppInstall){display:inline-flex;align-items:center;justify-content:center;position:static;box-sizing:border-box;height:36px;padding:0 8px;border:1px solid #7da98c55;border-radius:18px;font-size:12px;background:#143b2b;color:#d9efdf;cursor:pointer}
-  #nwMusicDock:not(.nw-music-collapsed) #nwPlayerLogo{max-width:calc(100% - 242px)}
+
   #nwMusicDock:not(.nw-music-collapsed) .nw-music-shell{height:100%;display:grid;grid-template-columns:1fr 52px 64px 52px 1fr;grid-template-rows:minmax(0,1fr) 24px 18px 96px 34px 28px 54px;gap:6px 10px;overflow:hidden;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
   #nwMusicDock:not(.nw-music-collapsed) .nw-music-main,#nwMusicDock:not(.nw-music-collapsed) .nw-player-info,#nwMusicDock:not(.nw-music-collapsed) .nw-player-row{display:contents}
   .nw-cover-wrap{grid-column:1/-1;grid-row:1;height:auto;width:min(100%,50dvh,calc(100dvh - 388px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));max-height:100%;aspect-ratio:1;align-self:center;justify-self:center;border-radius:16px;border-color:#91b99c66;box-shadow:0 10px 30px #0005}.nw-cover-wrap img{object-fit:contain}
@@ -2421,6 +2421,25 @@ function placeInstallLink(){
 }
 placeInstallLink();
 mobilePlayer.addEventListener('change',placeInstallLink);
+const musicDock=document.getElementById('nwMusicDock');
+const playerLogo=document.getElementById('nwPlayerLogo');
+function fitPlayerLogo(){
+  if(!mobilePlayer.matches || musicDock.classList.contains('nw-music-collapsed'))return;
+  const rect=node=>node.getBoundingClientRect();
+  const panel=rect(musicDock),center=panel.left+panel.width/2;
+  const left=rect(musicDock.querySelector('.nw-player-actions')).right;
+  const right=rect(document.getElementById('nwCollapseBtn')).left;
+  const cover=rect(document.getElementById('nwCoverWrap'));
+  const tools=rect(document.getElementById('nwPlayerTools'));
+  let bottom=cover.height?cover.top:rect(musicDock.querySelector('.nw-music-shell')).top;
+  if(tools.height)bottom=Math.min(bottom,tools.top);
+  playerLogo.style.setProperty('--nw-logo-room-x',Math.max(0,2*(Math.min(center-left,right-center)-4))+'px');
+  playerLogo.style.setProperty('--nw-logo-room-y',Math.max(0,bottom-rect(playerLogo).top-4)+'px');
+}
+const logoLayout=new ResizeObserver(fitPlayerLogo);
+for(const node of [musicDock,musicDock.querySelector('.nw-player-actions'),document.getElementById('nwCollapseBtn'),document.getElementById('nwCoverWrap'),document.getElementById('nwPlayerTools'),musicDock.querySelector('.nw-music-shell')])logoLayout.observe(node);
+new MutationObserver(fitPlayerLogo).observe(musicDock,{attributes:true,attributeFilter:['class']});
+fitPlayerLogo();
 document.getElementById('nwMusicAppInstall').addEventListener('click',function(event){
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1)){
     event.preventDefault();
