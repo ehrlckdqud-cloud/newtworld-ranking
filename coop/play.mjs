@@ -245,7 +245,7 @@ const coopQuality=qualitySwitch('mslug3-coop',()=>{
  coopQuality.button.blur();
 });
 function placeQualityButton(){
- if(document.body.classList.contains('in-game')&&(document.fullscreenElement||document.body.classList.contains('expanded-view'))){
+ if(document.body.classList.contains('in-game')){
   $('gameSurface').append(coopQuality.button);
   coopQuality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:10';
  }else{
