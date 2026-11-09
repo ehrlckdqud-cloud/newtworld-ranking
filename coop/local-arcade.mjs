@@ -1,3 +1,4 @@
+import {neoRecord} from './solo-neo-record.mjs';
 import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
@@ -79,6 +80,10 @@ export async function openLocalArcade(game='mslug3'){
  const preparation=new AbortController();let cabinet=null;
  let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
  const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
+ const record=neoRecord(game,async(score,completed)=>{
+  const response=await fetch(api+'/api/solo-record',{method:'POST',keepalive:true,headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch,score,completed})});
+  if(!response.ok)throw Error('기록 저장 실패');
+ });
  const ctx=canvas.getContext('2d'),boot=find('.arcade-boot');
  let scaled,sourcePixels,scaledPixels;
  function video(ptr,w,h,pitch,format){
@@ -130,7 +135,7 @@ export async function openLocalArcade(game='mslug3'){
    while(clock>=dt){
     if(!pulse&&owed){owed--;pulse=18;}
     const mask=inputMask(keys,spec.ports,pulse>12);if(pulse)pulse--;
-    if(cabinet)cabinet.input(mask);else{core._nw_input(mask);core._nw_run(++frame);}clock-=dt;
+    if(cabinet)cabinet.input(mask);else{core._nw_input(mask);core._nw_run(++frame);record?.sample(core);}clock-=dt;
    }
   }
   last=t;raf=requestAnimationFrame(tick);
@@ -139,6 +144,7 @@ export async function openLocalArcade(game='mslug3'){
  function input(e){
   if(!running||!used.has(e.code)||e.target.tagName==='INPUT')return;
   e.preventDefault();e.stopImmediatePropagation();
+  if(e.code==='Digit1'&&e.type==='keydown')record?.start();
   if(e.code==='Digit5'){if(game!=='puyopuyo2'&&e.type==='keydown'&&!e.repeat)owed=Math.min(owed+1,99);return;}
   if(e.type==='keydown')keys.add(e.code);else keys.delete(e.code);
  }
@@ -147,7 +153,7 @@ export async function openLocalArcade(game='mslug3'){
  function finish(external=false){
   if(disposed||(!external&&charging))return;
   if(!external&&running&&!confirm('게임을 종료할까요? 다시 실행하면 입장료가 다시 차감됩니다.'))return;
-  disposed=true;running=false;cancelAnimationFrame(raf);reset();
+  record?.flush();disposed=true;running=false;cancelAnimationFrame(raf);reset();
   window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',visibility);
   cabinet?.close();preparation.abort();if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
   document.removeEventListener('fullscreenchange',fullscreenChanged);window.removeEventListener('keydown',escape,true);leaveScreen();dialog.close();dialog.remove();active=false;lobbyAudio.setWaiting(true);
