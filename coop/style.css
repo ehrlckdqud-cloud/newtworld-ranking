@@ -101,3 +101,5 @@ body.in-game #gameSurface>.quality-bar{width:100%;flex:none}
 
 .quality-bar .picture-quality{width:auto;max-width:min(100%,14em);flex:none}
 :root:fullscreen body.in-game #gameSurface .coop-picture canvas,body.in-game.expanded-view #gameSurface .coop-picture canvas{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%}
+
+#roomView .room-actions{align-items:stretch}#roomView .room-actions button{min-height:42px;display:inline-flex;align-items:center;justify-content:center}#rankingsDialog [hidden]{display:none}
