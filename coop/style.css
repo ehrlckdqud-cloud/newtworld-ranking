@@ -120,3 +120,5 @@ body.in-game #gameSurface>.quality-bar{width:100%;flex:none}
  #rankRail{position:absolute;right:12px;top:var(--rail-top)}
 }
 @media(max-width:959px){#rankRail{grid-column:1/-1;width:100%;margin-top:10px}.rail-lists{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
+
+#rankRail .rail-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:12px}#rankRail .rail-heading h2{margin:0}#rankRail .rail-heading button{font-size:12px;padding:4px 8px}

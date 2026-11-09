@@ -1,5 +1,5 @@
 import {claimGameTab} from './tab-owner.mjs?v=1';
-import {initRankings} from './rankings.mjs?v=rankmanual1';
+import {initRankings} from './rankings.mjs?v=rankdetail1';
 import {claimSiteSession,blockSite} from './site-session.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
 import {initLobby} from './lobby.mjs?v=soloranks3';
