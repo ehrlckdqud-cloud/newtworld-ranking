@@ -103,3 +103,20 @@ body.in-game #gameSurface>.quality-bar{width:100%;flex:none}
 :root:fullscreen body.in-game #gameSurface .coop-picture canvas,body.in-game.expanded-view #gameSurface .coop-picture canvas{position:absolute;inset:0;margin:auto;max-width:100%;max-height:100%}
 
 #roomView .room-actions{align-items:stretch}#roomView .room-actions button{min-height:42px;display:inline-flex;align-items:center;justify-content:center}#rankingsDialog [hidden]{display:none}
+
+#rankRail{padding:16px;box-sizing:border-box;width:208px;z-index:1}
+#rankRail label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+#rankRail select{max-width:100%;width:100%;font-size:13px}
+#rankRail h2{font-size:17px;margin:0 0 12px}
+#rankRail h3{font-size:13px;color:var(--accent);margin:0 0 6px}
+#rankRail section{padding-top:12px;margin-top:12px;border-top:1px solid var(--edge)}
+#rankRail p{font-size:12px;color:var(--muted);margin:0}
+#rankRail .rail-status:empty{display:none}
+.rail-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px;font-size:12px;padding:5px 0;align-items:baseline}
+.rail-row span:nth-child(2){overflow-wrap:anywhere}
+.rail-row span:last-child{font-variant-numeric:tabular-nums}
+@media(min-width:960px){
+ #appShell:has(#rankRail:not([hidden])){--rail-margin:max(0px,calc((100% - 1450px)/2));margin-left:var(--rail-margin);width:min(1450px,calc(100% - var(--rail-margin) - 224px))}
+ #rankRail{position:absolute;right:12px;top:var(--rail-top)}
+}
+@media(max-width:959px){#rankRail{grid-column:1/-1;width:100%;margin-top:10px}.rail-lists{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
