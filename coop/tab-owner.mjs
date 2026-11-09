@@ -21,9 +21,9 @@ export async function claimGameTab(member, claim, status) {
   for(;;){
    if(hidden)throw Error('PAGE_CLOSED');
    try {
-    await claim(member);
+    const nickname=await claim(member);
     if(locks)localStorage.setItem(key,sessionStorage.getItem('nwCoopSiteSession'));
-    return;
+    return nickname;
    }catch(error){
     if(error.message!=='MEMBER_ALREADY_ONLINE'||Date.now()>=deadline)throw error;
     status.textContent='이전 게임 접속이 종료됐는지 확인 중입니다. 종료가 확인되면 자동으로 입장합니다.';
