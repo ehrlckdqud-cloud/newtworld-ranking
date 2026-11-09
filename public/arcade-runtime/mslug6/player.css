@@ -4,3 +4,8 @@
 #game canvas{image-rendering:pixelated!important}
 
 #cabinet[data-game=mslugxx] #screen.picture[inert]::after{background-image:url('/arcade-runtime/mslugxx/ready.webp')}
+
+#screen:fullscreen{display:grid;grid-template-rows:minmax(0,1fr) auto}
+#screen:fullscreen #game{min-height:0;height:100%;grid-row:1;overflow:hidden}
+.quality-bar{display:flex;align-items:center;justify-content:flex-end;padding:2px 8px;background:#0c171a;grid-row:2}
+.picture-quality{font:inherit;font-size:13px;max-width:100%;color:#ecf8ef;background:#263e37;border:1px solid #658273;border-radius:4px;padding:2px 4px}

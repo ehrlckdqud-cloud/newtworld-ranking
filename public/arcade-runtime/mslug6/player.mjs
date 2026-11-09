@@ -1,5 +1,5 @@
-import {qualitySwitch} from './quality-switch.mjs';
-import {enableDotFilter} from './dot-filter.mjs?v=options';
+import {pictureQuality,qualityBar} from '../picture-quality.mjs';
+import {applyPictureMode} from './dot-filter.mjs?v=allquality';
 import {assertPspSupport,validateArcadeCharge} from './contract.mjs?v=xx1';
 import {attachAudioStream} from './audio-stream.mjs';
 import {restoreTitle,insertCredit} from './game.mjs?v=3';
@@ -15,17 +15,15 @@ const dataPath='/arcade-runtime/mslug6/ejs-v3/';
 let state='initial',blobURL,expired=false,restarting=false;
 const bootController=new AbortController();
 let filterEngine;
-const quality=qualitySwitch(game,enabled=>{
- if(filterEngine){
-  if(enabled)enableDotFilter(filterEngine);
-  else filterEngine.enableShader('disabled');
- }
+const bar=qualityBar();
+const quality=pictureQuality(game,mode=>{
+ if(filterEngine)applyPictureMode(filterEngine,mode);
  if(state==='playing')document.querySelector('#game canvas')?.focus();
 });
 function placeQuality(){
  if(document.fullscreenElement===screen){
-  screen.append(quality.button);quality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:2147483647';
- }else{full.before(quality.button);quality.button.style.cssText='';}
+  screen.append(bar);bar.append(quality.button);
+ }else{full.before(quality.button);bar.remove();}
 }
 placeQuality();
 document.addEventListener('fullscreenchange',placeQuality);
@@ -70,7 +68,7 @@ async function boot(){
      if(xx)await restoreXX(EJS_emulator,checkpoint,bootController.signal);
      else await restoreTitle(EJS_emulator,checkpoint,bootController.signal);
      filterEngine=EJS_emulator;
-     if(quality.enabled)enableDotFilter(filterEngine);
+     if(quality.enabled)applyPictureMode(filterEngine,quality.mode);
      checkpoint=null;
      if(state!=='loading')return;
      clearTimeout(startupTimer);EJS_emulator.pause();state='ready';screen.classList.add('picture');

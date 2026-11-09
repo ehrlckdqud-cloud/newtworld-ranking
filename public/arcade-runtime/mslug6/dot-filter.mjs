@@ -1,3 +1,5 @@
+import xbrzProgram from './xbrz-program.mjs';
+import {xbrzFactor} from '../picture-quality.mjs';
 // Scale2x operates on the PSP framebuffer before it is stretched to the viewport.
 const program = `
 #ifdef GL_ES
@@ -44,4 +46,16 @@ export function enableDotFilter(emulator, registry=emulator.shaders??={}){
   resources:[{name:'dot2.glsl',type:'text',value:program}]
  };
  emulator.enableShader('Scale2x');
+}
+
+export function applyPictureMode(emulator,mode,registry=emulator.shaders??={}){
+ if(mode==='on'){enableDotFilter(emulator,registry);return;}
+ const factor=xbrzFactor(mode);
+ if(!factor){emulator.enableShader('disabled');return;}
+ const name='xBRZ'+factor;
+ registry[name]??={
+  shader:{type:'text',value:'shaders = 1\nshader0 = xbrz.glsl\nfilter_linear0 = false\nscale_type0 = source\nscale0 = '+factor+'.0\n'},
+  resources:[{name:'xbrz.glsl',type:'text',value:xbrzProgram}]
+ };
+ emulator.enableShader(name);
 }

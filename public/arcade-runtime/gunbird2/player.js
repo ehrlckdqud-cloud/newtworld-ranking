@@ -1,4 +1,4 @@
-import {enableDotFilter} from '../mslug6/dot-filter.mjs?v=options';
+import {applyPictureMode} from '../mslug6/dot-filter.mjs?v=allquality';
 const parentOrigin='https://ehrlckdqud-cloud.github.io';
 const emit=(type,data={})=>parent.postMessage({scope:'nw-gunbird2',type,...data},parentOrigin);
 const buttons=[[1,4],[2,5],[4,6],[8,7],[16,0],[32,8],[64,1],[128,2],[256,3]];
@@ -53,8 +53,7 @@ window.addEventListener('message',e=>{
  if(type==='load'&&!started&&bytes instanceof ArrayBuffer)load(bytes);
  if(!prepared)return;
  if(type==='quality'){
-  if(e.data.enabled===true)enableDotFilter(window.EJS_emulator,window.EJS_emulator.config.shaders??={});
-  else window.EJS_emulator.enableShader('disabled');
+  applyPictureMode(window.EJS_emulator,e.data.mode??(e.data.enabled?'on':'off'),window.EJS_emulator.config.shaders??={});
  }
  if(type==='play'){playing=true;manager.toggleMainLoop(1);window.EJS_emulator.Module.AL?.currentCtx?.audioCtx?.resume()?.catch(()=>{});}
  if(type==='input'&&playing&&Number.isInteger(mask))inputs(mask);

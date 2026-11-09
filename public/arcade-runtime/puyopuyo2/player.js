@@ -1,26 +1,33 @@
+import {createFilterWorker} from '../filter-worker.mjs';
+import {xbrzFactor} from '../picture-quality.mjs';
 import {scale2x} from '../scale2x.mjs';
 const parentOrigin='https://ehrlckdqud-cloud.github.io',scope='nw-puyopuyo2';
 const send=(type,extra={})=>parent.postMessage({scope,type,...extra},parentOrigin);
 const canvas=document.querySelector('#canvas');
-let quality=false,overlay,scaled,originalPut;
-function setQuality(enabled){
- if(enabled===quality)return;
- quality=enabled;
+let mode='off',overlay,scaled,originalPut;
+const filter=createFilterWorker();
+function setQuality(next){
+ if(next===mode)return;
  const ctx=canvas.getContext('2d');
- if(!enabled){
-  ctx.putImageData=originalPut;overlay.remove();overlay=null;scaled=null;return;
- }
- overlay=document.createElement('canvas');
- overlay.style.cssText='grid-area:1/1;pointer-events:none;z-index:1';
- canvas.style.gridArea='1/1';canvas.after(overlay);
+ filter.reset();mode=next;
+ if(overlay){ctx.putImageData=originalPut;overlay.remove();overlay=null;scaled=null;}
+ if(mode==='off')return;
+ overlay=document.createElement('canvas');overlay.hidden=true;
+ overlay.style.cssText='grid-area:1/1;pointer-events:none;z-index:1';canvas.style.gridArea='1/1';canvas.after(overlay);
  const output=overlay.getContext('2d');originalPut=ctx.putImageData;
  function draw(frame){
-  const w=frame.width,h=frame.height;
-  if(!scaled||scaled.width!==2*w||scaled.height!==2*h){
-   overlay.width=w*2;overlay.height=h*2;scaled=output.createImageData(w*2,h*2);
+  const w=frame.width,h=frame.height,factor=xbrzFactor(mode)||2;
+  if(overlay.width!==factor*w||overlay.height!==factor*h){overlay.width=w*factor;overlay.height=h*factor;scaled=null;}
+  if(mode==='on'){
+   scaled??=output.createImageData(w*2,h*2);
+   scale2x(new Uint32Array(frame.data.buffer,frame.data.byteOffset,w*h),new Uint32Array(scaled.data.buffer),w,h);
+   output.putImageData(scaled,0,0);overlay.hidden=false;
+  }else if(!filter.busy){
+   // The guest owns the SDL pixels. Transfer a copy to the display worker.
+   filter.submit(new ImageData(new Uint8ClampedArray(frame.data),w,h),factor,bitmap=>{
+    output.drawImage(bitmap,0,0);overlay.hidden=false;
+   },()=>{setQuality('off');send('quality-failed');});
   }
-  scale2x(new Uint32Array(frame.data.buffer,frame.data.byteOffset,w*h),new Uint32Array(scaled.data.buffer),w,h);
-  output.putImageData(scaled,0,0);
  }
  draw(ctx.getImageData(0,0,canvas.width,canvas.height));
  ctx.putImageData=function(frame,...args){originalPut.call(ctx,frame,...args);draw(frame);};
@@ -68,7 +75,7 @@ window.addEventListener('message',event=>{
  const {type,bytes}=event.data;
  if(type==='load'&&!initiated&&bytes instanceof ArrayBuffer){initiated=true;boot(bytes).catch(e=>send('error',{message:e.message}));}
  if(!ready)return;
- if(type==='quality')setQuality(event.data.enabled===true);
+ if(type==='quality')setQuality(event.data.mode??(event.data.enabled?'on':'off'));
  if(type==='focus'&&playing)canvas.focus();
  if(type==='play'&&!playing){
   playing=true;canvas.focus();Module.resumeMainLoop();
