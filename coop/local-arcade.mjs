@@ -3,7 +3,7 @@ import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
-import {prepareCabinet} from './gunbird2-runtime.mjs?v=solorecord2';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=scorehelp2';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -38,6 +38,9 @@ export async function openLocalArcade(game='mslug3'){
  find('[data-help]').textContent='1P 시작 1 · 이동 WASD · 공격 J/K/U'+(spec.ports===2?' ｜ 2P 시작 상단 2 · 이동 방향키 · 숫자패드 1 공격 / 2 점프 / 4 폭탄 (I/O/P도 가능)':'')+' ｜ 코인 추가 5';
  if(game==='gunbird2')find('[data-help]').textContent='1P 시작 상단 1 · 이동 WASD · J 사격 / K 폭탄 / U 보조 ｜ 2P 시작 상단 2 · 방향키 · 숫자패드 1/2/4 또는 I/O/P ｜ 코인 추가 5';
  if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P WASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
+ const scoring=document.createElement('p');
+ scoring.textContent=game==='puyopuyo2'?'순위 기록 · 나홀로 뿌요뿌요에서 얻은 1P 점수만 개인 최고점에 반영합니다. 나홀로 최종 스테이지를 클리어하면 완주 별 1개를 받습니다.':'순위 기록 · 1P 개인 최고점을 기록합니다. 2P 점수는 제외되며, 처음부터 마지막 스테이지까지 완주하면 별 1개를 받습니다.';
+ find('[data-help]').append(document.createElement('br'),scoring.textContent);
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
  let Scaler,xbrz;
