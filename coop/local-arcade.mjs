@@ -4,7 +4,7 @@ import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
-import {prepareCabinet} from './gunbird2-runtime.mjs?v=scorehelp2';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=cabinetclear3';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -90,11 +90,24 @@ export async function openLocalArcade(game='mslug3'){
   if(completed&&!disposed)showAward(launch,picture);
  }
  const record=neoRecord(game,sendRecord);
- let cabinetScore=0,cabinetStar=false,cabinetSending=false;
- async function cabinetRecord({score,completed}){
-  if(!running||cabinetSending||!Number.isSafeInteger(score)||score<0||score>99999999||typeof completed!=='boolean'||(score<=cabinetScore&&(!completed||cabinetStar)))return;
-  cabinetSending=true;
-  try{await sendRecord(score,completed);cabinetScore=Math.max(cabinetScore,score);cabinetStar ||= completed;}catch{}finally{cabinetSending=false;}
+ let cabinetScore=0,cabinetStar=false,saving=false,retryTimer=0;
+ let wantedScore=0,wantedStar=false;
+ async function saveCabinet(){
+  if(saving||retryTimer||(wantedScore<=cabinetScore&&(!wantedStar||cabinetStar)))return;
+  saving=true;
+  const score=wantedScore,star=wantedStar;
+  try{
+   await sendRecord(score,star);
+   cabinetScore=score;cabinetStar=star;
+  }catch{
+   if(!disposed)retryTimer=setTimeout(()=>{retryTimer=0;void saveCabinet();},2000);
+  }finally{saving=false;}
+  if(!retryTimer&&!disposed)void saveCabinet();
+ }
+ function cabinetRecord({score,completed}){
+  if(!running||!Number.isSafeInteger(score)||score<0||score>99999999||typeof completed!=='boolean')return;
+  wantedScore=Math.max(wantedScore,score);wantedStar ||= completed;
+  void saveCabinet();
  }
  const ctx=canvas.getContext('2d'),boot=find('.arcade-boot');
  let scaled,sourcePixels,scaledPixels;
@@ -165,6 +178,8 @@ export async function openLocalArcade(game='mslug3'){
  function finish(external=false){
   if(disposed||(!external&&charging))return;
   if(!external&&running&&!confirm('게임을 종료할까요? 다시 실행하면 입장료가 다시 차감됩니다.'))return;
+  if(cabinetGame&&wantedStar&&!cabinetStar&&saving)void sendRecord(wantedScore,true).catch(()=>{});
+  clearTimeout(retryTimer);retryTimer=0;if(cabinetGame&&!saving)void saveCabinet();
   record?.flush();disposed=true;running=false;cancelAnimationFrame(raf);reset();
   window.removeEventListener('keydown',input,true);window.removeEventListener('keyup',input,true);window.removeEventListener('blur',reset);document.removeEventListener('visibilitychange',visibility);
   cabinet?.close();preparation.abort();if(core){core._nw_close();core=null;}audio?.close().catch(()=>{});
