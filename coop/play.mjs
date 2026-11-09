@@ -62,6 +62,7 @@ async function refreshWallet(){const w=await post('/api/wallet',{member:{token:l
 
 let viewers=[],viewer=false,entryRole='player',commandBusy=false,gameReady=false;const handledCommands=new Set(),startApprovals=new Set();
 let continueInputPending=false;
+let recoveringWindow=false;
 let session,roster=[],module,engine,profile,ac,audioNext=0,playing=false,completed=false,seq=0,bits=0,lastSent=-1,lastSentAt=0,lastTick=0,clock=0,chatOpen=false,composing=false,pendingChat=false,enterHeld=false,transportAlive=false,config;
 const creditReceipts=new Map();
 const peers=new Map(),held=[0,0,0,0,0],heldAt=[0,0,0,0,0],bubbles=new Map();
@@ -434,7 +435,6 @@ window.newtOnlineDiagnostics=()=>({wallet:{balance:coins.balance,revision:coins.
 
 async function listenPoll(own=session,epoch=roomEpoch){let cursor=pollCursor,retries=0;while(session===own&&epoch===roomEpoch){try{const r=await apiFetch(`/api/rooms/${own.room}/poll?after=${cursor}`,{headers:{Authorization:'Bearer '+own.token}}),d=await r.json();if(session!==own||epoch!==roomEpoch)return;if(!r.ok){diagnostics.record('poll-refused',{status:r.status,code:d.error});if(r.status>=500||r.status===429||d.error==='ROOM_BUSY_RETRY'||d.error==='SITE_SESSION_EXPIRED')throw Error(d.error);if(!endRoom(Error(d.error),own))stop(d.error);return;}if(d.slot)session.slot=d.slot;if((d.hostEpoch||0)>hostEpoch&&hasGame)await migrateCoordinator({hostSlot:d.hostSlot,hostEpoch:d.hostEpoch,players:d.players,commands:d.commands||[]});if('launch' in d)applyLaunch(d.launch);roomPhase=d.phase||roomPhase;if(d.completed||roomPhase==='game-over')completed=true;if(d.snapshot)await event({type:'snapshot',...d.snapshot});for(const e of d.events){if(session!==own||epoch!==roomEpoch)return;await event(e);pollCursor=e.id;}roomPhase=d.phase||roomPhase;if(session!==own)return;if(d.players&&(!d.revision||d.revision>=rosterRevision))roster=d.players;if(d.viewers)viewers=d.viewers;if(d.phase==='native'&&!hasGame&&coreReady)await event({type:'native-start',players:roster});if(d.wallet)updateCoins(d.wallet);if(d.phase==='native'&&!completed&&!playing&&hasGame&&synced&&!syncFault){playing=true;lastTick=0;clock=0;}render();cursor=d.cursor;pollCursor=cursor;retries=0;await new Promise(resolve=>setTimeout(resolve,250));}catch(error){if(session!==own||epoch!==roomEpoch)return;diagnostics.record('poll-retry',{code:error.message});await new Promise(resolve=>setTimeout(resolve,Math.min(3000,300*++retries)));}}}
 let creditReceiptFlush=null;
-await refreshWallet().catch(()=>{});
 function flushCreditReceipts(){if(creditReceiptFlush)return creditReceiptFlush;const own=session;creditReceiptFlush=(async()=>{for(const [id,receipt]of creditReceipts){if(session!==own)return;await act(receipt);if(session!==own)return;creditReceipts.delete(id);}})().finally(()=>creditReceiptFlush=null);return creditReceiptFlush;}
 setInterval(()=>{if(session&&creditReceipts.size)flushCreditReceipts().catch(()=>{});},1000);
 
@@ -444,7 +444,6 @@ const gameControls=document.createElement('div');gameControls.id='gameControls';
 
 window.addEventListener('nw-site-blocked',()=>{playing=false;transportAlive=false;roomEpoch++;disposeGame();session=null;lobbyAudio.setWaiting(false);});
 
-let recoveringWindow=false;
 async function recoverWindow(){
  if(recoveringWindow||!session||completed)return;
  recoveringWindow=true;const recoveringSession=session;
@@ -566,3 +565,5 @@ setInterval(()=>{const frame=frameQueue?.frame||0;if(hasGame){gameDiagnostics.ca
 // Persist outside active simulation; export still includes all in-memory samples.
 window.addEventListener('pagehide',()=>diagnostics.save(true));
 
+// Finish registering game state and handlers before the initial wallet lookup yields.
+await refreshWallet().catch(()=>{});
