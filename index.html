@@ -416,7 +416,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 #nwPlay .nw-pause-shape,#nwPlay[data-playing="true"] .nw-play-shape{display:none}
 #nwPlay[data-playing="true"] .nw-pause-shape{display:block}
 /* Mobile player: artwork, visible lyrics, fixed transport. */
-.nw-player-settings,.nw-track-picker{display:none}
+.nw-player-settings,.nw-track-picker,.nw-player-actions{display:none}
 #nwMusicAppInstall{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap}
 @media(min-width:651px){.nw-transport-mode{display:inline-flex;align-items:center;justify-content:center;width:26px;height:32px;padding:3px;border:1px solid #456353;border-radius:8px;background:#142b21;color:#8ba594;flex-shrink:0}.nw-transport-mode svg{width:18px;height:18px}.nw-transport-mode.active{background:#376048;color:#e6ffe9}#nwShuffle{order:0}#nwPrev{order:1}#nwPlay{order:2}#nwNext{order:3}#nwRepeatAll{order:4}#nwTrackSelect{order:5}}
 
@@ -431,7 +431,9 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
   #nwMusicDock:not(.nw-music-collapsed){inset:0;box-sizing:border-box;width:auto;height:auto;overflow:clip;filter:none;background:#071d16;padding:calc(50px + env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) calc(48px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));background:var(--nw-player-bg,radial-gradient(ellipse at 45% 12%,#315641 0%,#102f23 48%,#071d16 100%))}
   #nwMusicDock:not(.nw-music-collapsed) .nw-collapse-btn,.nw-player-settings{top:calc(6px + env(safe-area-inset-top,0px));height:36px;padding:0 14px;border:1px solid #7da98c55;border-radius:18px;font-size:12px;background:#143b2b;color:#d9efdf}
   #nwMusicDock:not(.nw-music-collapsed) .nw-collapse-btn{right:18px}
-  #nwMusicDock:not(.nw-music-collapsed) .nw-player-settings{display:block;position:absolute;left:18px;cursor:pointer}
+  #nwMusicDock:not(.nw-music-collapsed) .nw-player-actions{position:absolute;top:calc(6px + env(safe-area-inset-top,0px));left:max(8px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:4px}
+  #nwMusicDock .nw-player-actions :is(.nw-player-settings,#nwMusicAppInstall){display:inline-flex;align-items:center;justify-content:center;position:static;box-sizing:border-box;height:36px;padding:0 8px;border:1px solid #7da98c55;border-radius:18px;font-size:12px;background:#143b2b;color:#d9efdf;cursor:pointer}
+  #nwMusicDock:not(.nw-music-collapsed) #nwPlayerLogo{max-width:calc(100% - 242px)}
   #nwMusicDock:not(.nw-music-collapsed) .nw-music-shell{height:100%;display:grid;grid-template-columns:1fr 52px 64px 52px 1fr;grid-template-rows:minmax(0,1fr) 24px 18px 96px 34px 28px 54px;gap:6px 10px;overflow:hidden;border:0;border-radius:0;background:none;box-shadow:none;backdrop-filter:none}
   #nwMusicDock:not(.nw-music-collapsed) .nw-music-main,#nwMusicDock:not(.nw-music-collapsed) .nw-player-info,#nwMusicDock:not(.nw-music-collapsed) .nw-player-row{display:contents}
   .nw-cover-wrap{grid-column:1/-1;grid-row:1;height:auto;width:min(100%,50dvh,calc(100dvh - 388px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)));max-height:100%;aspect-ratio:1;align-self:center;justify-self:center;border-radius:16px;border-color:#91b99c66;box-shadow:0 10px 30px #0005}.nw-cover-wrap img{object-fit:contain}
@@ -2375,7 +2377,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 <div id="nwMusicDock" aria-label="뉴트월드 배경음악 플레이어">
   <div id="nwMusicTicker" hidden aria-label="현재 곡"><span class="nw-ticker-note" aria-hidden="true">♪</span><div class="nw-ticker-viewport"><div class="nw-ticker-track"><span class="nw-ticker-copy"></span><span class="nw-ticker-copy" aria-hidden="true"></span></div></div></div>
-  <button class="nw-player-settings" id="nwPlayerSettings" type="button" aria-expanded="false" aria-controls="nwPlayerTools">설정</button>
+  <div class="nw-player-actions"><button class="nw-player-settings" id="nwPlayerSettings" type="button" aria-expanded="false" aria-controls="nwPlayerTools">설정</button></div>
   <img id="nwPlayerLogo" src="assets/branding/newtworld-top-logo.png" alt="뉴트월드">
   <button class="nw-collapse-btn" id="nwCollapseBtn" type="button">플레이어 접기</button>
   <div class="nw-music-shell">
@@ -2409,6 +2411,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 
 <script>
+const installLink=document.getElementById('nwMusicAppInstall');
+const installSlot=document.createComment('music install');
+installLink.before(installSlot);
+const mobilePlayer=window.matchMedia('(max-width:650px)');
+function placeInstallLink(){
+  if(mobilePlayer.matches)document.querySelector('#nwMusicDock .nw-player-actions').append(installLink);
+  else installSlot.after(installLink);
+}
+placeInstallLink();
+mobilePlayer.addEventListener('change',placeInstallLink);
 document.getElementById('nwMusicAppInstall').addEventListener('click',function(event){
   if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1)){
     event.preventDefault();
