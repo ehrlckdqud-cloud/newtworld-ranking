@@ -29,13 +29,14 @@ function initRankRail(){
  rail.id='rankRail';rail.hidden=true;rail.setAttribute('aria-label','채널 게임 순위');
  rail.innerHTML='<h2></h2><label>게임 <select aria-label="혼자하기 순위 게임"></select></label><p class="rail-status" role="status"></p><div class="rail-lists"></div>';
  const pick=rail.querySelector('select'),content=rail.querySelector('.rail-lists'),status=rail.querySelector('.rail-status');
- let active='',generation=0,updated=0,busy=false;
+ const snapshots=new Map();
+ let active='',generation=0;
  function sync(){
   const channel=!room.hidden?1:Number(document.querySelector('[data-channel].active')?.dataset.channel);
   const target=!room.hidden?room:lobby;
   const visible=!target.hidden&&!document.body.classList.contains('in-game')&&!document.hidden&&
    !document.querySelector('.arcade-local[open]')&&(channel===1||channel===3);
-  if(!visible){if(!rail.hidden){rail.hidden=true;generation++;active='';busy=false;}return;}
+  if(!visible){if(!rail.hidden){rail.hidden=true;generation++;active='';}return;}
   if(target!==rail.parentNode)target.append(rail);
   rail.hidden=false;
   rail.style.setProperty('--rail-top',target.getBoundingClientRect().top+window.scrollY+'px');
@@ -50,10 +51,11 @@ function initRankRail(){
   }
   const game=channel===3?pick.value:'mslug3',key=channel+'-'+game;
   if(!game)return;
-  if(active!==key){active=key;generation++;busy=false;updated=0;content.replaceChildren();status.textContent='순위를 불러오는 중…';}
-  if(busy||Date.now()-updated<60000)return;
-  updated=Date.now();busy=true;const id=generation;
-  Promise.all(['stars','score'].map(sort=>fetchRanks(channel,game,sort))).then(results=>{
+  if(active===key)return;
+  active=key;const id=++generation;
+  content.replaceChildren();status.textContent='순위를 불러오는 중…';
+  if(!snapshots.has(key))snapshots.set(key,Promise.all(['stars','score'].map(sort=>fetchRanks(channel,game,sort))));
+  snapshots.get(key).then(results=>{
    if(id!==generation)return;
    const blocks=results.map((result,i)=>{
     const section=document.createElement('section'),heading=document.createElement('h3');
@@ -67,12 +69,15 @@ function initRankRail(){
     }return section;
    });
    content.replaceChildren(...blocks);status.textContent='';
-  }).catch(()=>{if(id===generation)status.textContent='순위를 불러오지 못했습니다.';}).finally(()=>{if(id===generation)busy=false;});
+  }).catch(()=>{if(id===generation)status.textContent='순위를 불러오지 못했습니다.';});
  }
  pick.onchange=sync;
  const observer=new MutationObserver(sync);
  for(const node of [room,lobby,document.body])observer.observe(node,{attributes:true,attributeFilter:['hidden','class'],childList:node===document.body});
  for(const node of lobby.querySelectorAll('[data-channel]'))observer.observe(node,{attributes:true,attributeFilter:['class']});
  document.addEventListener('visibilitychange',sync);window.addEventListener('resize',sync);
- setInterval(sync,15000);sync();
+ function refresh(){snapshots.clear();active='';generation++;sync();}
+ document.getElementById('refreshRooms').addEventListener('click',refresh);
+ window.addEventListener('pageshow',event=>{if(event.persisted)refresh();});
+ sync();
 }
