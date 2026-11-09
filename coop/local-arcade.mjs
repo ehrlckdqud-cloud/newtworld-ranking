@@ -1,3 +1,4 @@
+import {prepareAwardSound,showAward} from './completion-award.mjs';
 import {neoRecord} from './solo-neo-record.mjs?v=2';
 import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
@@ -86,6 +87,7 @@ export async function openLocalArcade(game='mslug3'){
  async function sendRecord(score,completed){
   const response=await fetch(api+'/api/solo-record',{method:'POST',keepalive:true,headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch,score,completed})});
   if(!response.ok)throw Error('기록 저장 실패');
+  if(completed&&!disposed)showAward(launch,picture);
  }
  const record=neoRecord(game,sendRecord);
  let cabinetScore=0,cabinetStar=false,cabinetSending=false;
@@ -171,6 +173,7 @@ export async function openLocalArcade(game='mslug3'){
  close.onclick=()=>finish();dialog.addEventListener('close',()=>finish(true));dialog.oncancel=e=>{e.preventDefault();if(dialog.classList.contains('screen-only'))leaveScreen();else if(!running)finish();};
  find('[data-add]').onclick=()=>{const n=Number(find('input').value);if(Number.isInteger(n)&&n>=1&&n<=99)owed=Math.min(99,owed+n);focusGame();};
  start.onclick=async()=>{
+  prepareAwardSound();
   if((!core&&!cabinet)||charging||running)return;
   start.disabled=close.disabled=charging=true;status.textContent='입장 확인 중…';
   try{
