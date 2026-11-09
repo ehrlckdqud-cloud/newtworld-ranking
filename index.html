@@ -417,6 +417,7 @@ tr.top20{background:linear-gradient(90deg,rgba(61,178,236,.07),transparent 45%)}
 #nwPlay[data-playing="true"] .nw-pause-shape{display:block}
 /* Mobile player: artwork, visible lyrics, fixed transport. */
 .nw-player-settings,.nw-track-picker{display:none}
+#nwMusicAppInstall{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap}
 @media(min-width:651px){.nw-transport-mode{display:inline-flex;align-items:center;justify-content:center;width:26px;height:32px;padding:3px;border:1px solid #456353;border-radius:8px;background:#142b21;color:#8ba594;flex-shrink:0}.nw-transport-mode svg{width:18px;height:18px}.nw-transport-mode.active{background:#376048;color:#e6ffe9}#nwShuffle{order:0}#nwPrev{order:1}#nwPlay{order:2}#nwNext{order:3}#nwRepeatAll{order:4}#nwTrackSelect{order:5}}
 
 @media(max-width:650px){
@@ -2398,6 +2399,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <button class="nw-mini-btn active" id="nwCoverToggle" type="button">커버 ON</button>
       <button class="nw-mini-btn nw-eq-toggle" id="nwEqualizer" type="button" aria-label="이퀄라이저" title="이퀄라이저" aria-expanded="false" aria-controls="nwEQPanel"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3v8m0 4v6M12 3v3m0 4v11M19 3v12m0 4v2M2 11h6v4H2zM9 6h6v4H9zM16 15h6v4h-6z"/></svg></button>
       <button class="nw-mini-btn" id="nwBackgroundColor" type="button" aria-expanded="false" aria-controls="nwColorPanel"><span class="nw-color-dot" aria-hidden="true"></span>배경 색상</button>
+      <a class="nw-mini-btn" id="nwMusicAppInstall" href="downloads/newtworld-music-0.3.9.apk" download="newtworld-music-0.3.9.apk" title="안드로이드 음악플레이어 0.3.9 다운로드" aria-label="어플설치 · 안드로이드 음악플레이어 APK 다운로드">어플설치</a>
       <button class="nw-mini-btn" id="nwAddTrack" type="button">+ 내 MP3 불러오기</button>
       <label class="nw-volume-label">🔊 <div class="nw-range-wrap" id="nwVolumeWrap"><div class="nw-range-rail" id="nwVolumeRail"><div class="nw-range-fill" id="nwVolumeFill"></div></div><div class="nw-range-thumb" id="nwVolumeThumb"></div><input class="nw-volume" id="nwVolume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="볼륨"></div></label>
       <input class="nw-add-input" id="nwAddInput" type="file" accept="audio/mpeg,.mp3" multiple>
@@ -2406,6 +2408,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
+<script>
+document.getElementById('nwMusicAppInstall').addEventListener('click',function(event){
+  if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1)){
+    event.preventDefault();
+    alert('이 파일은 안드로이드용입니다. 아이폰용 음악플레이어 앱은 준비 중입니다.');
+  }
+});
+</script>
 <div class="nw-cover-modal" id="nwCoverModal" aria-hidden="true">
   <button class="nw-cover-modal-close" id="nwCoverModalClose" type="button" aria-label="닫기">×</button>
   <img id="nwCoverModalImg" alt="확대된 곡 커버">
