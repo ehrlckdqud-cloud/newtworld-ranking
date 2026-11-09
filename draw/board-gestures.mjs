@@ -25,7 +25,7 @@ export function installBoardGestures(canvas,camera,worldScale){
   dragging=true;blockClick=true;camera.lock(false);camera.manualUntil=Infinity;
   const size=worldScale(),oldZoom=camera.zoom;
   if(!(size>0&&oldZoom>0))return;
-  if(last.distance>1&&next.distance>1)camera.zoomFromGesture(oldZoom*last.distance/next.distance);
+  if(last.distance>1&&next.distance>1)camera.zoomFromGesture(oldZoom*next.distance/last.distance);
   const rect=canvas.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
   const target={x:camera.x+(prev.x-cx)/size-(next.x-cx)*oldZoom/(size*camera.zoom),
                 y:camera.y+(prev.y-cy)/size-(next.y-cy)*oldZoom/(size*camera.zoom)};
