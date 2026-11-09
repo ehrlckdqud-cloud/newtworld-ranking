@@ -1,3 +1,4 @@
+import {prepareAwardSound} from './completion-award.mjs';
 import {pictureQuality,xbrzFactor,qualityBar} from './picture-quality.mjs';
 import {createFilterWorker} from './filter-worker.mjs';
 import {scale2x} from './scale2x.mjs';
@@ -193,7 +194,7 @@ async function signal(from,s){
  if(s.type==='offer'){await pc.setLocalDescription(await pc.createAnswer());const description=await gatherDescription(pc);if(peers.get(from)!==r)return;await act({type:'signal',to:from,signal:{...description,epoch:hostEpoch,attempt:r.attempt}});r.descriptionSent();}
 }
 
-async function initAudio(){ac??=new AudioContext();if(!gameGain){gameGain=ac.createGain();gameGain.gain.value=gameVolume;gameGain.connect(ac.destination);}await ac.resume();}
+async function initAudio(){prepareAwardSound();ac??=new AudioContext();if(!gameGain){gameGain=ac.createGain();gameGain.gain.value=gameVolume;gameGain.connect(ac.destination);}await ac.resume();}
 let roomSpeed=1,soundClock=null,audioLoad=null,normalNext=0;
 function canSelectRoomGame(){return !!session&&!viewer&&session.slot===hostSlot&&!hasGame&&!launchBusy&&!remoteLaunch;}
 function roomSettings(){return {game:'mslug3',speed:roomSpeed,cpu:320};}
