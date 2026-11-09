@@ -30,7 +30,7 @@ export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape,onQu
   }
   window.addEventListener('message',receive);signal.addEventListener('abort',abort,{once:true});
   if(signal.aborted){abort();return;}
-  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+'?v=scorehelp2';screen.prepend(frame);
+  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+'?v=cabinetclear3';screen.prepend(frame);
  });
 }
 
