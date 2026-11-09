@@ -236,16 +236,19 @@ window.NWConfigReady.then(()=>{
       renderProfile(cached.profile,true);if(cached.profile.memberProfile)loadEditableProfile(cached.profile.memberProfile,true);
       $('saveProfileBtn').disabled=true;status.textContent='최근 정보 표시 중 · 최신 정보를 확인하고 있어요.';
     }else{status.textContent='회원정보를 불러오는 중…';}
-    const photoVersion=avatarEditVersion;const d=await jsonp('profileData',{token,device:device()});
+    const photoVersion=avatarEditVersion;let d=await jsonp('profileCore',{token,device:device()},45000);
+    if(!d?.ok && d?.auth!==false){status.textContent='회원 서버의 응답이 늦어 다시 확인 중입니다…';d=await jsonp('profileCore',{token,device:device()},45000);}
+    if(localStorage.getItem('nwProfileToken')!==token)return;
     if(!d?.ok||!d.auth){
       // 통신 실패는 인증 해제로 처리하지 않는다.
-      if(d?.auth!==false){status.textContent='최신 정보를 불러오지 못했어요. 잠시 후 내페이지를 다시 열어주세요.';return;}
+      if(d?.auth!==false){status.textContent='회원정보 조회 실패 · '+(d?.error||'서버 응답을 확인하지 못했어요.')+' ';const retry=document.createElement('button');retry.textContent='다시 불러오기';retry.onclick=()=>{retry.disabled=true;loadProfile();};status.append(retry);return;}
       clearCoreCache();localStorage.removeItem('nwProfileToken');
       if(await recoverExisting())return loadProfile();
       status.textContent='';show('authView');loadCandidates();$('authStatus').classList.remove('hidden');$('authStatus').textContent=d?.error||'다시 인증해주세요.';return;
     }
     if(avatarEditVersion!==photoVersion&&ownProfile?.memberProfile){d.profile.memberProfile=d.profile.memberProfile||{};Object.assign(d.profile.memberProfile,{imageUrl:ownProfile.memberProfile.imageUrl,avatarSrc:ownProfile.memberProfile.avatarSrc});}
     saveCoreCache(d.profile);renderProfile(d.profile,false);$('saveProfileBtn').disabled=false;status.textContent='';loadProfileExtras();
+    jsonp('profileGemBalance',{token,device:device()},45000).then(result=>{if(result?.ok&&Number.isFinite(result.gemBalance)&&ownProfile?.memberId===d.profile.memberId&&localStorage.getItem('nwProfileToken')===token){ownProfile.gemBalance=result.gemBalance;$('nwGemBalance').textContent=fmt(result.gemBalance);saveCoreCache(ownProfile);}});
   }
   function renderProfileIdentity(p){
     const value=String(p.role||'').trim(),staff=['방장','부방장'].includes(value)?value:'';
