@@ -2,7 +2,7 @@ import {claimGameTab} from './tab-owner.mjs?v=1';
 import {initRankings} from './rankings.mjs?v=98';
 import {claimSiteSession,blockSite} from './site-session.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
-import {initLobby} from './lobby.mjs?v=xbrz6';
+import {initLobby} from './lobby.mjs?v=allquality';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
 const form=document.getElementById('joinForm');
@@ -30,7 +30,7 @@ try{
  lobbyAudio.arm(); // Start waiting music before downloading the game engine.
  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/core.js?v=arcade100';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=livequality');document.getElementById('channelView').hidden=false;initLobby(response.profile.nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
+ await import('./play.mjs?v=allquality');document.getElementById('channelView').hidden=false;initLobby(response.profile.nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
  }catch(error){

@@ -1,4 +1,5 @@
-import {qualitySwitch} from './quality-switch.mjs';
+import {pictureQuality,xbrzFactor,qualityBar} from './picture-quality.mjs';
+import {createFilterWorker} from './filter-worker.mjs';
 import {scale2x} from './scale2x.mjs';
 import {PeerInput} from './peer-input.mjs?v=94';
 import {endedRoomMessage,leaveRoomSafely} from './room-session.mjs?v=84';
@@ -240,32 +241,42 @@ function roomSnapshot(frame){
 }
 function paint(ptr,w,h,pitch,fmt){if(nativeCanvas.width!==w||nativeCanvas.height!==h){nativeCanvas.width=w;nativeCanvas.height=h;pixels=null;}pixels??=ctx.createImageData(w,h);const src=module.HEAPU8,d=pixels.data;for(let y=0;y<h;y++)for(let x=0;x<w;x++){const s=ptr+y*pitch+x*(fmt===1?4:2),o=(y*w+x)*4;if(fmt===1){d[o]=src[s+2];d[o+1]=src[s+1];d[o+2]=src[s];}else{const v=src[s]|src[s+1]<<8;d[o]=(v>>11&31)*255/31;d[o+1]=(v>>5&63)*255/63;d[o+2]=(v&31)*255/31;}d[o+3]=255;}ctx.putImageData(pixels,0,0);if(engine?.nativeContinue)return;drawFiveSelection(ctx,module,engine,colors);if(engine?.phase!=='playing')return;paintHUD?.();if(paintResults?.(paintHUD)){drawFiveContinue(ctx,module,engine,colors);return;}drawFiveContinue(ctx,module,engine,colors);
 }
-const coopQuality=qualitySwitch('mslug3-coop',()=>{
+const coopWorker=createFilterWorker(),coopBar=qualityBar();
+const coopQuality=pictureQuality('mslug3-coop',()=>{
+ coopWorker.reset();hasFiltered=false;
  if(pixels)present();
  coopQuality.button.blur();
 });
 function placeQualityButton(){
  if(document.body.classList.contains('in-game')){
-  $('gameSurface').append(coopQuality.button);
-  coopQuality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:10';
+  $('gameSurface').append(coopBar);coopBar.append(coopQuality.button);
  }else{
-  $('full').before(coopQuality.button);
-  coopQuality.button.style.cssText='';
+  $('full').before(coopQuality.button);coopBar.remove();
  }
 }
 placeQualityButton();
 document.addEventListener('fullscreenchange',placeQualityButton);
 new MutationObserver(placeQualityButton).observe(document.body,{attributes:true,attributeFilter:['class']});
 const qualityCanvas=document.createElement('canvas'),qualityCtx=qualityCanvas.getContext('2d');
-let filtered;
+let filtered,hasFiltered=false;
 function present(target=canvas){
  const output=target===canvas?displayCtx:target.getContext('2d',{alpha:false});
- const width=nativeCanvas.width*DISPLAY_SCALE,height=nativeCanvas.height*DISPLAY_SCALE;
+ const factor=xbrzFactor(coopQuality.mode),scale=factor||DISPLAY_SCALE;
+ const width=nativeCanvas.width*scale,height=nativeCanvas.height*scale;
  if(target.width!==width||target.height!==height){target.width=width;target.height=height;}
  output.imageSmoothingEnabled=false;
- if(coopQuality.enabled){
+ if(factor){
+  if(!coopWorker.busy){
+   const frame=ctx.getImageData(0,0,nativeCanvas.width,nativeCanvas.height);
+   coopWorker.submit(frame,factor,bitmap=>{
+    if(qualityCanvas.width!==bitmap.width||qualityCanvas.height!==bitmap.height){qualityCanvas.width=bitmap.width;qualityCanvas.height=bitmap.height;}
+    qualityCtx.drawImage(bitmap,0,0);hasFiltered=true;
+   },()=>coopQuality.unavailable());
+  }
+  output.drawImage(hasFiltered?qualityCanvas:nativeCanvas,0,0,width,height);
+ }else if(coopQuality.enabled){
   const w=nativeCanvas.width,h=nativeCanvas.height;
-  if(!filtered||filtered.width!==2*w||filtered.height!==2*h){
+  if(!filtered||qualityCanvas.width!==2*w||qualityCanvas.height!==2*h||filtered.width!==2*w||filtered.height!==2*h){
    qualityCanvas.width=2*w;qualityCanvas.height=2*h;filtered=qualityCtx.createImageData(2*w,2*h);
   }
   const frame=ctx.getImageData(0,0,w,h);

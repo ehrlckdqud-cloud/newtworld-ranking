@@ -1,9 +1,8 @@
-import {metal3Selector} from './metal3-selector.mjs?v=xbrz6';
-import {qualitySwitch} from './quality-switch.mjs';
+import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
-import {prepareCabinet} from './gunbird2-runtime.mjs?v=quality1';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=allquality';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -41,18 +40,21 @@ export async function openLocalArcade(game='mslug3'){
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
  let Scaler,xbrz;
- const quality=game==='mslug3'?metal3Selector(()=>{if(running)focusGame();}):qualitySwitch(game,enabled=>{
-  cabinet?.quality(enabled);if(running)focusGame();
+ const cabinetGame=game==='gunbird2'||game==='puyopuyo2';
+ const picture=document.createElement('div');picture.className='arcade-picture';
+ while(screen.firstChild)picture.append(screen.firstChild);
+ screen.append(picture);
+ const bar=qualityBar();
+ const quality=pictureQuality(game,mode=>{
+  cabinet?.quality(mode);if(running)focusGame();
  });
  fullscreen.before(quality.button);
  screen.tabIndex=-1;
  const focusGame=()=>{if(game==='puyopuyo2'&&cabinet)cabinet.focus();else (cabinet?screen:canvas).focus();};
  function screenMode(on){
   dialog.classList.toggle('screen-only',on);
-  if(quality){
-   if(on){screen.append(quality.button);quality.button.style.cssText='position:absolute;right:8px;top:8px;z-index:10';}
-   else{fullscreen.before(quality.button);quality.button.style.cssText='';}
-  }
+  if(on){screen.append(bar);bar.append(quality.button);}
+  else{fullscreen.before(quality.button);bar.remove();}
   if(running)focusGame();
  }
  function fullscreenChanged(){screenMode(document.fullscreenElement===screen);}
@@ -172,8 +174,8 @@ export async function openLocalArcade(game='mslug3'){
  };
  try{
   status.textContent='원작 게임을 준비하는 중…';
-  if(game==='mslug3'){
-   try{({Scaler}=await import('./vendor/xbrz-1.1.2/lib/main/Scaler.js'));quality.allowXbrz();}
+  if(!cabinetGame){
+   try{({Scaler}=await import('./vendor/xbrz-1.1.2/lib/main/Scaler.js'));}
    catch{quality.unavailable();}
   }
   if(game==='gunbird2'||game==='puyopuyo2'){
@@ -187,8 +189,8 @@ export async function openLocalArcade(game='mslug3'){
     gameBytes=await applyPuyoDuelKeys(bytes);
     if(disposed)return;
    }
-   cabinet=await prepareCabinet(game,screen,gameBytes,{signal:preparation.signal,onEscape:()=>{if(dialog.classList.contains('screen-only'))leaveScreen();},onFailure:message=>{status.textContent=message;}});
-   if(quality.enabled)cabinet.quality(true);
+   cabinet=await prepareCabinet(game,picture,gameBytes,{signal:preparation.signal,onQualityFailure:()=>quality.unavailable(),onEscape:()=>{if(dialog.classList.contains('screen-only'))leaveScreen();},onFailure:message=>{status.textContent=message;}});
+   cabinet.quality(quality.mode);
    screen.classList.remove('gunbird-preparing');screen.hidden=true;
   }else{
   let source=game==='mslug3'?await readSavedROM():null;
