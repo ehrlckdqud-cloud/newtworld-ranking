@@ -1,4 +1,4 @@
-import {metal3Selector} from './metal3-selector.mjs';
+import {metal3Selector} from './metal3-selector.mjs?v=xbrz4';
 import {qualitySwitch} from './quality-switch.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
@@ -93,12 +93,13 @@ export async function openLocalArcade(game='mslug3'){
    if(lit<10)return;
    boot.hidden=true;
   }
-  const factor=quality.enabled?2:1;
-  if(!image||image.width!==w||image.height!==h||canvas.width!==w*factor){
+  const factor=quality.mode==='xbrz4'?4:quality.enabled?2:1;
+  const outputWidth=factor===4?Math.max(320,w)*4:w*factor;
+  if(!image||image.width!==w||image.height!==h||canvas.width!==outputWidth){
    scaled=null;
-   canvas.width=w*factor;canvas.height=h*factor;image=ctx.createImageData(w,h);
-   if(factor===2){
-    scaled=ctx.createImageData(w*2,h*2);sourcePixels=new Uint32Array(image.data.buffer);scaledPixels=new Uint32Array(scaled.data.buffer);
+   canvas.width=outputWidth;canvas.height=h*factor;image=ctx.createImageData(w,h);
+   if(factor>1){
+    scaled=ctx.createImageData(w*factor,h*factor);sourcePixels=new Uint32Array(image.data.buffer);scaledPixels=new Uint32Array(scaled.data.buffer);
    }
   }
   const heap=core.HEAPU8;
@@ -106,11 +107,11 @@ export async function openLocalArcade(game='mslug3'){
    const a=ptr+y*pitch+x*4,i=(y*w+x)*4;
    image.data[i]=heap[a+2];image.data[i+1]=heap[a+1];image.data[i+2]=heap[a];image.data[i+3]=255;
   }
-  if(quality.mode==='xbrz'&&Scaler){
-   if(!xbrz||xbrz.sourceWidth!==w||xbrz.sourceHeight!==h)xbrz=new Scaler(w,h,2);
+  if((quality.mode==='xbrz'||factor===4)&&Scaler){
+   if(!xbrz||xbrz.sourceWidth!==w||xbrz.sourceHeight!==h||xbrz.factor!==factor)xbrz=new Scaler(w,h,factor);
    scaled.data.set(xbrz.scale(image.data));
   }else if(scaled)scale2x(sourcePixels,scaledPixels,w,h);
-  ctx.putImageData(scaled||image,0,0);
+  ctx.putImageData(scaled||image,(outputWidth-w*factor)/2,0);
  }
  function sound(ptr,n){
   if(!audio||audio.state!=='running'||!n||document.hidden)return;
