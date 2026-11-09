@@ -1,3 +1,4 @@
+import {metal3Selector} from './metal3-selector.mjs';
 import {qualitySwitch} from './quality-switch.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
@@ -39,7 +40,8 @@ export async function openLocalArcade(game='mslug3'){
  if(game==='puyopuyo2')find('[data-help]').replaceChildren('1인 : 방향키 이동, Z/X/ENTER 회전',document.createElement('br'),'2인 : 1P WASD 이동, J/Z/X/G 회전, 2P 방향키 이동, 마침표(.)와 슬래시(/) 또는 숫자패드 5/0 회전');
  document.body.append(dialog);dialog.showModal();
  const screen=find('.arcade-screen'),fullscreen=find('[data-fullscreen]');
- const quality=qualitySwitch(game,enabled=>{
+ let Scaler,xbrz;
+ const quality=game==='mslug3'?metal3Selector(()=>{if(running)focusGame();}):qualitySwitch(game,enabled=>{
   cabinet?.quality(enabled);if(running)focusGame();
  });
  fullscreen.before(quality.button);
@@ -104,7 +106,10 @@ export async function openLocalArcade(game='mslug3'){
    const a=ptr+y*pitch+x*4,i=(y*w+x)*4;
    image.data[i]=heap[a+2];image.data[i+1]=heap[a+1];image.data[i+2]=heap[a];image.data[i+3]=255;
   }
-  if(scaled)scale2x(sourcePixels,scaledPixels,w,h);
+  if(quality.mode==='xbrz'&&Scaler){
+   if(!xbrz||xbrz.sourceWidth!==w||xbrz.sourceHeight!==h)xbrz=new Scaler(w,h,2);
+   scaled.data.set(xbrz.scale(image.data));
+  }else if(scaled)scale2x(sourcePixels,scaledPixels,w,h);
   ctx.putImageData(scaled||image,0,0);
  }
  function sound(ptr,n){
@@ -166,6 +171,10 @@ export async function openLocalArcade(game='mslug3'){
  };
  try{
   status.textContent='원작 게임을 준비하는 중…';
+  if(game==='mslug3'){
+   try{({Scaler}=await import('./vendor/xbrz-1.1.2/lib/main/Scaler.js'));quality.allowXbrz();}
+   catch{quality.unavailable();}
+  }
   if(game==='gunbird2'||game==='puyopuyo2'){
    canvas.hidden=true;screen.hidden=false;
    screen.classList.add('gunbird-preparing');
