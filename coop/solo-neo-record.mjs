@@ -6,7 +6,7 @@ const layouts={
 export function neoRecord(game, report){
  const layout=layouts[game];if(!layout)return null;
  const [scoreAt,stageAt,ending]=layout;
- let armed=false,lastStage=-1,best=0,star=false,saved=0,savedStar=false,pending=false,next=0;
+ let sawFinalBoss=false,armed=false,lastStage=-1,best=0,star=false,saved=0,savedStar=false,pending=false,next=0;
  async function flush(force=false){
   if(pending||(saved===best&&savedStar===star)||(!force&&Date.now()<next))return;
   const score=best,completed=star;pending=true;next=Date.now()+5000;
@@ -16,12 +16,17 @@ export function neoRecord(game, report){
   if(!armed)return;
   const ram=core.HEAPU8,base=core._nw_ram(),read=i=>ram[base+i];
   const state=read(0xfdb7),stage=read(stageAt);
-  if(state===3){armed=false;lastStage=-1;return;}
+  if(state===3){armed=false;lastStage=-1;sawFinalBoss=false;return;}
   if(state!==1&&state!==2)return;
   if(stage===lastStage+1)lastStage=stage;
   if(lastStage<0)return;
   const digits=[1,0,3,2].map(n=>read(scoreAt+n).toString(16).padStart(2,'0')).join('');
   if(/^\d{8}$/.test(digits))best=Math.max(best,Number(digits));
+  if(game==='mslug4'&&lastStage===5){
+   const field=a=>read(a)|(read(a+1)<<8);
+   if(field(0x42aa)>0)sawFinalBoss=true;
+   if(sawFinalBoss&&field(0x42aa)===0&&field(0xb5e)===0x9fd4)star=true;
+  }
   if(lastStage===ending)star=true;
   void flush();
  },flush:()=>flush(true)};

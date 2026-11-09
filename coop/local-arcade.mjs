@@ -1,4 +1,4 @@
-import {neoRecord} from './solo-neo-record.mjs';
+import {neoRecord} from './solo-neo-record.mjs?v=2';
 import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
