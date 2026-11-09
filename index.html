@@ -2406,7 +2406,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <label class="nw-volume-label">🔊 <div class="nw-range-wrap" id="nwVolumeWrap"><div class="nw-range-rail" id="nwVolumeRail"><div class="nw-range-fill" id="nwVolumeFill"></div></div><div class="nw-range-thumb" id="nwVolumeThumb"></div><input class="nw-volume" id="nwVolume" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="볼륨"></div></label>
       <input class="nw-add-input" id="nwAddInput" type="file" accept="audio/mpeg,.mp3" multiple>
     </div>
-    <div class="nw-autoplay-note" id="nwAutoplayNote">브라우저 자동재생 정책으로 대기 중입니다. 화면을 한 번 누르면 음악이 시작됩니다.</div>
+    <div class="nw-autoplay-note" id="nwAutoplayNote">음악을 들으려면 ▶ 재생 버튼을 눌러주세요.</div>
   </div>
 </div>
 
@@ -2488,7 +2488,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
   });
   var domReady=document.readyState==='loading'?new Promise(function(resolve){document.addEventListener('DOMContentLoaded',resolve,{once:true});}):Promise.resolve();
   Promise.all([tracksReady,domReady]).then(function(){
-    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=20261108-player-layout';document.head.appendChild(script);
+    var script=document.createElement('script');script.async=true;script.src='assets/music/music-ui-v241.js?v=manual-play1';document.head.appendChild(script);
   });
 })();
 </script>
@@ -2812,7 +2812,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(nwResumeBusy)return;
     const s=nwMusicState(); if(!s)return;
     let st={}; try{st=JSON.parse(localStorage.getItem('nwAudioResume')||'{}')}catch(_){}
-    if(!st.playing || !s.audio.paused || s.audio.ended)return;
+    if(!s.api.canResume?.() || !st.playing || !s.audio.paused || s.audio.ended)return;
     nwResumeBusy=true;
     try{
       // Restore position only when the same track is still selected and drift is meaningful.

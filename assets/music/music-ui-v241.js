@@ -15,7 +15,7 @@
   if(!['all','one','off'].includes(repeatMode))repeatMode='all';
   let shuffleOn=localStorage.getItem('nwShuffleOn')==='1';
   let shuffleVisited=new Set();
-  let userStarted=false, seeking=false;
+  let userStarted=false, playbackRequested=false, seeking=false;
   let trackTransitionPlaying=false;
 
   const fmt=t=>{ if(!Number.isFinite(t)||t<0)return '0:00'; const m=Math.floor(t/60),s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); };
@@ -128,7 +128,7 @@
   function initMediaSession(){
     if(!('mediaSession' in navigator)) return;
     const safe=(name,handler)=>{try{navigator.mediaSession.setActionHandler(name,handler);}catch(_){}};
-    safe('play',()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();tryPlay();});
+    safe('play',requestPlay);
     safe('pause',pausePlayback);
     safe('previoustrack',()=>{prevTrack();});
     safe('nexttrack',()=>{nextTrack(true);});
@@ -217,13 +217,14 @@
       window.NWResolveMusicAudio(t,{prefetch:true}).then(src=>resolvedSources.set(key,src)).catch(()=>{});
     });
   }
-  function pausePlayback(){trackTransitionPlaying=false;audio.pause();updateMediaSession(true);}
+  function requestPlay(){playbackRequested=true;bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();return tryPlay();}
+  function pausePlayback(){playbackRequested=false;trackTransitionPlaying=false;audio.pause();updateMediaSession(true);}
   function setTrack(i,autoplay){
     if(!tracks.length)return; index=(i+tracks.length)%tracks.length; localStorage.setItem('nwMusicIndex',String(index));localStorage.setItem('nwMusicTrackId',tracks[index].id);
     const t=current(),serial=++trackLoadSerial;
     const requestedKey=sourceKey(t);
     loadedSourceKey=null;
-    trackTransitionPlaying=!!(autoplay&&bgmOn);
+    trackTransitionPlaying=!!(autoplay&&bgmOn&&playbackRequested);
     if(!trackTransitionPlaying)audio.pause();
     const applySource=src=>{
       if(serial!==trackLoadSerial)return;
@@ -267,7 +268,7 @@
     window.dispatchEvent(new Event('nw-music-library-updated'));
   }
   async function tryPlay(){
-    if(!bgmOn||!current())return;
+    if(!playbackRequested||!bgmOn||!current())return;
     if(loadedSourceKey!==sourceKey(current())){setTrack(index,true);return;}
     const serial=trackLoadSerial;
     trackTransitionPlaying=true;updateMediaSession(true);
@@ -300,7 +301,7 @@
   }
   function prevTrack(){setTrack(index-1,true);}
 
-  $('nwPlay').onclick=()=>{bgmOn=true;localStorage.setItem('nwBgmOn','1');paint();(trackTransitionPlaying||!audio.paused)?pausePlayback():tryPlay();};
+  $('nwPlay').onclick=()=>{(trackTransitionPlaying||!audio.paused)?pausePlayback():requestPlay();};
   $('nwPrev').onclick=prevTrack; $('nwNext').onclick=()=>nextTrack(true);
   $('nwTrackSelect').onchange=e=>setTrack(Number(e.target.value),true);
   $('nwTrackPickerButton').onclick=()=>{$('nwTrackMenu').hidden?openTrackMenu():closeTrackMenu();};
@@ -491,12 +492,9 @@
     if(savedIndex>=0&&rememberedPersonalTrack?.startsWith('local-')&&!userStarted)setTrack(savedIndex,false);
     window.dispatchEvent(new Event('nw-music-library-updated'));
   }).catch(error=>{console.warn('Personal music storage unavailable',error);});
-  // Attempt autoplay. If blocked, the first real user gesture starts BGM once.
-  if(bgmOn) tryPlay();
   initMediaSession();
-  const unlock=()=>{if(bgmOn&&audio.paused&&!userStarted)tryPlay();document.removeEventListener('pointerdown',unlock,true);document.removeEventListener('keydown',unlock,true);};
-  document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,tryPlay,renderLyrics,syncLyrics,paint,populateSelect,current};
+  window.addEventListener('pagehide',pausePlayback);
+  window.NWMusicAdminAPI={audio,tracks,replaceTracks,getIndex:()=>index,setTrack,tryPlay,requestPlay,pausePlayback,canResume:()=>playbackRequested,renderLyrics,syncLyrics,paint,populateSelect,current};
 })();
 
 
@@ -546,7 +544,7 @@
   btn.onclick=open;$('nwSyncClose').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close();});
   $('nwSyncTrack').onchange=e=>{trackIndex=Number(e.target.value);lineIndex=0;api.setTrack(trackIndex,false);render();};
   $('nwSyncStamp').onclick=stamp;$('nwSyncPrevLine').onclick=()=>select(-1);$('nwSyncNextLine').onclick=()=>select(1);$('nwSyncMinus01').onclick=()=>shiftLine(-.1);$('nwSyncPlus01').onclick=()=>shiftLine(.1);$('nwSyncMinus05').onclick=()=>shiftLine(-.5);$('nwSyncPlus05').onclick=()=>shiftLine(.5);$('nwSyncGoto').onclick=gotoLine;
-  $('nwSyncPlayPause').onclick=()=>{api.audio.paused?api.tryPlay():api.audio.pause();};$('nwSyncSave').onclick=saveRemote;$('nwSyncExport').onclick=exportTracks;$('nwSyncExportLrc').onclick=exportLrc;$('nwSyncReset').onclick=resetTrack;
+  $('nwSyncPlayPause').onclick=()=>{api.audio.paused?api.requestPlay():api.pausePlayback();};$('nwSyncSave').onclick=saveRemote;$('nwSyncExport').onclick=exportTracks;$('nwSyncExportLrc').onclick=exportLrc;$('nwSyncReset').onclick=resetTrack;
   document.addEventListener('keydown',e=>{
     if(!modal.classList.contains('open'))return;
     const tag=(e.target&&e.target.tagName||'').toLowerCase(); if(tag==='input'||tag==='select'||tag==='textarea')return;
