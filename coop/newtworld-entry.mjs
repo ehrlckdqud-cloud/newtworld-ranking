@@ -30,7 +30,7 @@ try{
  lobbyAudio.arm(); // Start waiting music before downloading the game engine.
  await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/core.js?v=arcade100';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
  if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=allquality');document.getElementById('channelView').hidden=false;initLobby(response.profile.nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
+ await import('./play.mjs?v=allquality2');document.getElementById('channelView').hidden=false;initLobby(response.profile.nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
  }catch(error){

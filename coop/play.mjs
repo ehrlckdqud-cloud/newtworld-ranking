@@ -285,7 +285,10 @@ function present(target=canvas){
  }else output.drawImage(nativeCanvas,0,0,width,height);
  if(engine?.phase!=='playing'||engine.long(0x10039c)===0xed682)return;
  const players=[];for(let i=0;i<engine.playerCount;i++){if(engine.players[i].state!=='active')continue;const a=engine.x.actors[i],signed=v=>v>32767?v-65536:v;players.push({slot:i+1,name:roster[i]?.name||`P${i+1}`,x:signed(engine.word(a+0x3c))-8,y:496-signed(engine.word(a+0x40)),mounted:engine.word([0x10ec14,0x10ec40,0x1053a2,0x105192,0x104f82][i])!==0});}
- drawClearLabels(output,{width,height,players,bubbles,colors,now:performance.now()});
+ output.save();
+ output.scale(scale/DISPLAY_SCALE,scale/DISPLAY_SCALE);
+ drawClearLabels(output,{width:nativeCanvas.width*DISPLAY_SCALE,height:nativeCanvas.height*DISPLAY_SCALE,players,bubbles,colors,now:performance.now()});
+ output.restore();
 }
 
 // CREDIT override changes only native text rendering, never emulated RAM or paid lifecycle.
