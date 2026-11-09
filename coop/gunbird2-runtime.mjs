@@ -1,5 +1,5 @@
 const origin='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
-export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape,onQualityFailure}){
+export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape,onQualityFailure,onRecord}){
  const title=game==='gunbird2'?'건버드 2':game==='puyopuyo2'?'뿌요뿌요 2':null;
  if(!title)throw Error('지원하지 않는 게임입니다.');
  const scope='nw-'+game;
@@ -15,6 +15,7 @@ export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape,onQu
   function receive(event){
    if(event.origin!==origin||event.source!==frame.contentWindow||event.data?.scope!==scope)return;
    if(event.data.type==='listening'&&!sent){sent=true;post('load',{bytes},[bytes]);}
+   if(event.data.type==='record'&&ready)onRecord?.(event.data);
    if(event.data.type==='quality-failed')onQualityFailure?.();
    if(event.data.type==='escape'&&ready)onEscape?.();
    if(event.data.type==='error')fail(event.data.message||'게임 구동 오류');
@@ -29,7 +30,7 @@ export function prepareCabinet(game,screen,bytes,{signal,onFailure,onEscape,onQu
   }
   window.addEventListener('message',receive);signal.addEventListener('abort',abort,{once:true});
   if(signal.aborted){abort();return;}
-  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+'?v=allquality';screen.prepend(frame);
+  frame.src=origin+'/arcade-runtime/'+game+'/player.html'+'?v=solorecord2';screen.prepend(frame);
  });
 }
 

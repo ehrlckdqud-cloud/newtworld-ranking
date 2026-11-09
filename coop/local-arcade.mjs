@@ -3,7 +3,7 @@ import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
 import {downloadGame} from './download-game.mjs?v=ms5';
-import {prepareCabinet} from './gunbird2-runtime.mjs?v=allquality';
+import {prepareCabinet} from './gunbird2-runtime.mjs?v=solorecord2';
 import {readSavedROM,saveROM} from './rom-cache.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
@@ -80,10 +80,17 @@ export async function openLocalArcade(game='mslug3'){
  const preparation=new AbortController();let cabinet=null;
  let core=null,audio=null,running=false,disposed=false,charging=false,raf=0,frame=0,owed=0,pulse=0,nextAudio=0,image=null,last=0,clock=0;
  const member={token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')};
- const record=neoRecord(game,async(score,completed)=>{
+ async function sendRecord(score,completed){
   const response=await fetch(api+'/api/solo-record',{method:'POST',keepalive:true,headers:{'content-type':'application/json',...testHeaders()},body:JSON.stringify({member,game,launch,score,completed})});
   if(!response.ok)throw Error('기록 저장 실패');
- });
+ }
+ const record=neoRecord(game,sendRecord);
+ let cabinetScore=0,cabinetStar=false,cabinetSending=false;
+ async function cabinetRecord({score,completed}){
+  if(!running||cabinetSending||!Number.isSafeInteger(score)||score<0||score>99999999||typeof completed!=='boolean'||(score<=cabinetScore&&(!completed||cabinetStar)))return;
+  cabinetSending=true;
+  try{await sendRecord(score,completed);cabinetScore=Math.max(cabinetScore,score);cabinetStar ||= completed;}catch{}finally{cabinetSending=false;}
+ }
  const ctx=canvas.getContext('2d'),boot=find('.arcade-boot');
  let scaled,sourcePixels,scaledPixels;
  function video(ptr,w,h,pitch,format){
@@ -195,7 +202,7 @@ export async function openLocalArcade(game='mslug3'){
     gameBytes=await applyPuyoDuelKeys(bytes);
     if(disposed)return;
    }
-   cabinet=await prepareCabinet(game,picture,gameBytes,{signal:preparation.signal,onQualityFailure:()=>quality.unavailable(),onEscape:()=>{if(dialog.classList.contains('screen-only'))leaveScreen();},onFailure:message=>{status.textContent=message;}});
+   cabinet=await prepareCabinet(game,picture,gameBytes,{signal:preparation.signal,onRecord:cabinetRecord,onQualityFailure:()=>quality.unavailable(),onEscape:()=>{if(dialog.classList.contains('screen-only'))leaveScreen();},onFailure:message=>{status.textContent=message;}});
    cabinet.quality(quality.mode);
    screen.classList.remove('gunbird-preparing');screen.hidden=true;
   }else{
