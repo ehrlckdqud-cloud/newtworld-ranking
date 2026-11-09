@@ -1,3 +1,4 @@
+import {showAward} from './completion-award.mjs';
 import {testHeaders} from './test-access.mjs?v=98';
 const API='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 export const starLabel=n=>n>5?`★ × ${n}`:n>0?'★'.repeat(n):'☆';
@@ -23,7 +24,7 @@ export function initRankings(){
  initRankRail(openDetails);
  game.onchange=()=>load(selectedSort);dialog.querySelector('[data-close-rankings]').onclick=()=>dialog.close();dialog.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>load(b.dataset.sort));
 }
-export function showCompletionStar(run){const key='nwCompletionStar:'+run;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');const box=document.getElementById('completionAward');box.hidden=false;box.classList.remove('celebrate');void box.offsetWidth;box.classList.add('celebrate');setTimeout(()=>{box.hidden=true;},5000);}
+export function showCompletionStar(run){showAward(run,null,document.getElementById('completionAward'));}
 
 function initRankRail(openDetails){
  const lobby=document.getElementById('channelView'),room=document.getElementById('roomView');
