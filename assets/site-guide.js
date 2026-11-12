@@ -23,9 +23,13 @@
     if(row){
       const p=document.createElement('div');
       p.className='nw-guide-mobile-portal';
+      const logoWrap=document.createElement('div');
+      logoWrap.className='nw-guide-mobile-header-logo';
       const logo=document.createElement('img');
       logo.src='assets/branding/newtworld-top-logo.png';logo.alt='NEWT WORLD';logo.className='nw-guide-mobile-logo';logo.loading='eager';
-      p.append(logo,makeButton('nwGuideMobileLaunch','nw-guide-mobile-launch',true));
+      logoWrap.append(logo);
+      row.insertAdjacentElement('beforebegin',logoWrap);
+      p.append(makeButton('nwGuideMobileLaunch','nw-guide-mobile-launch',true));
       // Mobile-only compact shortcuts. Keep the existing homepage sections and click handlers intact.
       const nav=document.createElement('nav');
       nav.className='nw-guide-quick-nav';
