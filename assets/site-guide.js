@@ -3,6 +3,7 @@
   'use strict';
   const SEEN_KEY='nwSiteGuideFirstShownV1';
   const MAIN_ROOM='https://open.kakao.com/o/gHSfUKXh';
+  const TRADE_ROOM='https://open.kakao.com/o/gGVbYqNi';
   const OWNER_CHAT='https://open.kakao.com/me/LSEE';
   const ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c3.2-1.5 5.8-1.4 8 .2 2.2-1.6 4.8-1.7 8-.2v13c-3.2-1.5-5.8-1.4-8 .2-2.2-1.6-4.8-1.7-8-.2zM12 5.7v13"/></svg>';
   const $=id=>document.getElementById(id);
@@ -44,15 +45,17 @@
         {key:'attendance',icon:'✅',name:'출석체크'},
         {key:'workout',icon:'🏋️',name:'오운완'},
         {key:'game',icon:'🎮',name:'게임'},
-        {key:'main',icon:'🦎',name:'메인방'},
+        {key:'main',icon:'🐸',name:'메인방'},
+        {key:'trade',icon:'🛍️',name:'거래방'},
         {key:'draw',icon:'🎲',name:'생존추첨'},
         {key:'event',icon:'🎁',name:'월간 이벤트'}
       ];
       options.forEach(item=>{
         let el;
-        if(item.key==='game'||item.key==='main'){
+        if(item.key==='game'||item.key==='main'||item.key==='trade'){
           el=document.createElement('a');
           if(item.key==='main')el.href=MAIN_ROOM;
+          else if(item.key==='trade')el.href=TRADE_ROOM;
           else el.href=document.querySelector('a[href*="coop/index.html"]')?.getAttribute('href')||'coop/index.html?release=99';
           el.target='_blank';
           el.rel='noopener noreferrer';
@@ -62,7 +65,7 @@
           el.dataset.nwQuick=item.key;
         }
         el.className='nw-guide-quick-item';
-        el.setAttribute('aria-label',item.name+(item.key==='game'||item.key==='main'?' 새 창에서 열기':' 바로가기'));
+        el.setAttribute('aria-label',item.name+(item.key==='game'||item.key==='main'||item.key==='trade'?' 새 창에서 열기':' 바로가기'));
         const icon=document.createElement('span');
         icon.className='nw-guide-quick-icon';icon.setAttribute('aria-hidden','true');icon.textContent=item.icon;
         const name=document.createElement('span');name.className='nw-guide-quick-name';name.textContent=item.name;
