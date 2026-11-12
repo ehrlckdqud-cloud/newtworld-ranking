@@ -94,6 +94,7 @@
       '<div class="nw-guide-head"><div><h2 id="nwGuideTitle">📖 뉴트월드 이용안내</h2><p>기존 회원도, 고전게임 및 온라인게임을 즐기러 오신 분도 환영합니다!</p></div><button type="button" class="nw-guide-close" data-nw-guide-close aria-label="이용안내 닫기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M5 5L19 19M19 5L5 19" /></svg></button></div>',
       '<div class="nw-guide-scroll" id="nwGuideScroll">',
       '<p class="nw-guide-intro" id="nwGuideIntro">뉴트월드는 <strong>양서류 커뮤니티의 교류와 메인방 활성화, 추첨 이벤트 및 온라인게임</strong>을 위해 만들어졌습니다. 유튜브에서 고전게임 및 온라인게임 영상을 보고 오신 분도 환영해요! 다만 게임 이용에는 <strong>메인방 가입과 회원식별</strong>이 필요합니다.</p>',
+      '<section class="nw-guide-exit-warning" role="note" aria-label="중요: 메인방 퇴장 시 정보 자동 삭제"><strong class="nw-guide-exit-title">⚠️ 중요 주의사항 · 메인방 퇴장 시 전체 정보 삭제</strong><p><strong>뉴트월드 메인방에서 한 번이라도 나가면</strong> 실수로 퇴장한 뒤 다시 들어오더라도 <strong>기존 뉴트월드 사이트의 모든 회원정보와 활동 기록이 시스템상 자동 삭제</strong>됩니다. 재입장해도 이전 기록은 이어지지 않으니 <strong>각별히 주의해 주세요.</strong></p></section>',
       '<div class="nw-guide-tabs" role="tablist" aria-label="이용안내 회원 유형">',
       '<button type="button" class="nw-guide-tab" role="tab" id="nwGuideTabNew" aria-controls="nwGuidePanelNew" aria-selected="true" data-nw-guide-tab="new">🎮 처음 방문했어요</button>',
       '<button type="button" class="nw-guide-tab" role="tab" id="nwGuideTabMember" aria-controls="nwGuidePanelMember" aria-selected="false" data-nw-guide-tab="member">👤 기존 메인방 회원</button>',
