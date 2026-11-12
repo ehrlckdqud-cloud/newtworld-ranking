@@ -14,7 +14,11 @@ export function neoRecord(game, report){
   try{await report(score,completed);saved=score;savedStar=completed;retrying=false;}catch{retrying=true;next=Date.now()+5000;return;}finally{pending=false;}
   if((star&&!completed)||closing)void flush(closing);
  }
- return {start(){armed=true;},sample(core){
+ return {start(){armed=true;},resumeBoss(core){
+  const base=core._nw_ram(),ram=core.HEAPU8;
+  if(game!=='mslug2'||ram[base+0xfdb7]!==1||ram[base+stageAt]!==5||ram[base+0xc320]!==2)throw Error('최종 보스 저장 지점을 확인할 수 없습니다.');
+  lastStage=5;armed=true;
+ },sample(core){
   if(star)void flush();
   if(!armed)return;
   const ram=core.HEAPU8,base=core._nw_ram(),read=i=>ram[base+i];
