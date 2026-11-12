@@ -7,15 +7,22 @@ export function neoRecord(game, report){
  const layout=layouts[game];if(!layout)return null;
  const [scoreAt,stageAt,ending]=layout;
  let sawFinalBoss=false,armed=false,lastStage=-1,best=0,star=false,saved=0,savedStar=false,pending=false,next=0;
+ let retrying=false,closing=false;
  async function flush(force=false){
-  if(pending||(saved===best&&savedStar===star)||(!force&&Date.now()<next))return;
+  if(pending||(saved===best&&savedStar===star)||(!force&&!(star&&!savedStar&&!retrying)&&Date.now()<next))return;
   const score=best,completed=star;pending=true;next=Date.now()+5000;
-  try{await report(score,completed);saved=score;savedStar=completed;}catch{}finally{pending=false;}
+  try{await report(score,completed);saved=score;savedStar=completed;retrying=false;}catch{retrying=true;next=Date.now()+5000;return;}finally{pending=false;}
+  if((star&&!completed)||closing)void flush(closing);
  }
  return {start(){armed=true;},sample(core){
+  if(star)void flush();
   if(!armed)return;
   const ram=core.HEAPU8,base=core._nw_ram(),read=i=>ram[base+i];
   const state=read(0xfdb7),stage=read(stageAt);
+  // Ending and game mode can change on the same emulated frame.
+  if(lastStage===ending-1&&stage===ending&&(state===1||state===2||state===3)){
+   star=true;void flush();
+  }
   if(state===3){armed=false;lastStage=-1;sawFinalBoss=false;return;}
   if(state!==1&&state!==2)return;
   if(stage===lastStage+1)lastStage=stage;
@@ -29,5 +36,5 @@ export function neoRecord(game, report){
   }
   if(lastStage===ending)star=true;
   void flush();
- },flush:()=>flush(true)};
+ },flush:()=>{closing=true;return flush(true);}};
 }
