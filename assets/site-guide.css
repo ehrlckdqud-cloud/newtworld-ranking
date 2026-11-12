@@ -11,9 +11,9 @@
  .pc-top-spacer .nw-guide-pc-launch{display:flex}
 }
 @media(max-width:1040px){
- .nw-guide-mobile-header-logo{display:flex;align-items:center;justify-content:center;width:100%;margin:0 0 8px}
+ .nw-guide-mobile-header-logo{box-sizing:border-box;display:flex;align-items:center;justify-content:center;width:100%;max-width:100%;min-width:0;margin:0 0 8px;padding:0 2px;position:relative;z-index:1;overflow:hidden}
  .nw-guide-mobile-portal{display:flex;flex-direction:column;align-items:center;gap:8px;margin:4px 0 14px;padding:0}
- .nw-guide-mobile-logo{display:block;width:180px;height:58px;max-width:60vw;object-fit:contain}
+ .nw-guide-mobile-header-logo .nw-guide-mobile-logo{display:block;flex:none;width:100%;max-width:760px;height:auto;max-height:160px;object-fit:contain;object-position:center;margin:0 auto}
  .nw-guide-mobile-portal .nw-guide-launch{min-height:50px;flex-wrap:wrap;font-size:14px}
  .nw-guide-mobile-portal .nw-guide-launch small{display:block;width:100%;font-size:10px;font-weight:500;line-height:1.25;font-family:inherit;color:#e0fff3}
 }
@@ -88,4 +88,19 @@
 }
 @media(prefers-reduced-motion:reduce){
   .nw-guide-quick-rail{scroll-behavior:auto}
+}
+
+/* High-visibility policy warning, separate from mint UI actions. */
+#nwGuideModal .nw-guide-exit-warning{display:block;margin:0 0 17px;padding:14px 15px;border:2px solid #f5a04d;border-left:5px solid #ff756d;border-radius:13px;background:linear-gradient(135deg,#49272a,#32202a);box-shadow:0 7px 25px #0005;color:#fff1e2}
+#nwGuideModal .nw-guide-exit-title{display:block;margin:0 0 7px;color:#ffd390;font-size:14px;font-weight:900;line-height:1.5;word-break:keep-all}
+#nwGuideModal .nw-guide-exit-warning p{margin:0;color:#fff0e6;font-size:12.5px;line-height:1.85;word-break:keep-all}
+#nwGuideModal .nw-guide-exit-warning p strong{color:#ffcf91;font-weight:850}
+.nw-room-exit-warning{display:block;margin:12px 0 2px;padding:14px 16px;border:2px solid #f5a04d;border-left:5px solid #ff756d;border-radius:13px;background:linear-gradient(135deg,#46262c,#33212b);box-shadow:0 7px 18px #0004;color:#fff0e5;text-align:left;line-height:1.75;word-break:keep-all}
+.nw-room-exit-warning strong{display:block;color:#ffd390;font-size:14px;font-weight:900;margin-bottom:5px}
+.nw-room-exit-warning p{margin:0;font-size:12.5px;line-height:1.85;color:#fff0e5}
+.nw-room-exit-warning b{color:#ffca93}
+@media(max-width:600px){
+ #nwGuideModal .nw-guide-exit-warning{padding:12px}
+ .nw-room-exit-warning{margin:10px 0 2px;padding:12px 13px}
+ .nw-room-exit-warning strong{font-size:13px}
 }
