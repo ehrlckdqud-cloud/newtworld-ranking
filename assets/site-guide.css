@@ -48,9 +48,11 @@
 .nw-guide-action.secondary{border-color:#446f78;background:#183943}
 .nw-guide-section{padding:15px 0;border-top:1px solid #2a4a4f}
 .nw-guide-section h3{display:flex;align-items:center;gap:7px}
-.nw-guide-score{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:11px 0}
-.nw-guide-score>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:11px;background:#17373e;border:1px solid #36575b;padding:12px 4px;font-size:12px}
-.nw-guide-score strong{font-size:18px}
+.nw-guide-score{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:11px 0}
+.nw-guide-score>div{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;min-height:90px;border-radius:11px;background:#17373e;border:1px solid #36575b;padding:12px 5px;font-size:12px;text-align:center}
+.nw-guide-score-label{display:block;min-height:36px;font-size:12px;line-height:1.5;text-align:center;word-break:keep-all;white-space:normal}
+.nw-guide-score strong{font-size:18px;white-space:nowrap}
+@media(max-width:600px){.nw-guide-score{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .nw-guide-note{margin:11px 0;padding:11px 12px;background:#132e30;border-left:3px solid #b2f5dc;border-radius:8px;font-size:12px;line-height:1.75;color:#d4f4eb}
 .nw-guide-section ul{padding-left:18px;margin:8px 0}
 .nw-guide-section details{border:1px solid #32545b;border-radius:9px;margin:7px 0;background:#152d35}
