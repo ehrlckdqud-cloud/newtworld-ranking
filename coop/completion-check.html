@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>뉴트월드 · 완주별 점검</title>
+<style>body{max-width:42rem;margin:8vh auto;padding:1rem;font:17px/1.6 system-ui;color:#e8eff5;background:#122033}button{padding:.6rem 1rem;margin:.2rem;font:inherit;cursor:pointer}#screen{position:relative;min-height:14rem;background:#20364b;border-radius:1rem}output{display:block;margin:1rem 0}</style>
+<h1>혼자하기 완주별 점검</h1><p>게임을 선택하면 모의 마지막 미션 전환을 운영 기록기에 입력합니다. 뉴트젬 사용과 회원 순위 저장 없이 별 표시와 효과음을 확인합니다.</p><div id="games"></div><output aria-live="polite"></output><div id="screen"></div>
+<script type="module">
+import {neoRecord} from './solo-neo-record.mjs?v=ending188';
+import {prepareAwardSound,showAward} from './completion-award.mjs';
+const games=[['1','mslug',0x6ed1,6,0x81b6],['2','mslug2',0xe877,6,0xe86e],['X','mslugx',0xc2f4,6,0xc46a],['3','mslug3',0x040d,5,0xed18],['4','mslug4',0x0bcd,6,0x66d6],['5','mslug5',0x0bad,5,0xde14]];
+const screen=document.querySelector('#screen'),status=document.querySelector('output');
+for(const [label,game,stage,end,score] of games){
+ const button=document.createElement('button');button.textContent='메탈슬러그 '+label;document.querySelector('#games').append(button);
+ button.onclick=async()=>{
+  prepareAwardSound();screen.replaceChildren();const ram=new Uint8Array(65536),core={HEAPU8:ram,_nw_ram:()=>0};
+  let release,awards=0;const run='preview-'+crypto.randomUUID();
+  const reader=neoRecord(game,async(points,complete)=>{
+   if(!complete){await new Promise(resolve=>{release=resolve});return}
+   awards++;showAward(run,screen);
+  });
+  reader.start();ram[0xfdb7]=1;ram[score]=1;
+  for(let step=0;step<end;step++){ram[stage]=step;reader.sample(core)}
+  ram[stage]=end;ram[0xfdb7]=3;reader.sample(core);release?.();
+  await new Promise(resolve=>setTimeout(resolve,0));
+  status.textContent=button.textContent+' · '+(awards===1?'완주 신호 1회 확인':'점검 실패');
+ };
+}
+</script></html>
