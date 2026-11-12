@@ -1,0 +1,37 @@
+name: Android download build
+on:
+  push:
+    branches: [feature/native-player]
+    paths: ['.github/workflows/native-android-download.yml', 'mobile/android/**', 'mobile/shared/**', 'mobile/tools/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android-download:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - run: python3 mobile/tools/bundle-web.py
+      - run: node --test mobile/tests/*.test.cjs
+      - run: gradle -p mobile/android assembleRelease
+      - name: Package unsigned app and official signing tool for offline signing
+        run: |
+          mkdir -p android-package
+          cp mobile/android/app/build/outputs/apk/release/*-unsigned.apk android-package/newtworld-unsigned.apk
+          SIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner.jar | sort -V | tail -1)
+          test -n "$SIGNER"
+          cp "$SIGNER" android-package/apksigner.jar
+          sha256sum android-package/* > android-package/SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: newtworld-android-unsigned
+          path: android-package/*
+          retention-days: 3

@@ -1,0 +1,49 @@
+name: NewtWorld
+options:
+  bundleIdPrefix: world.newt
+  deploymentTarget:
+    iOS: '15.0'
+targets:
+  NewtWorld:
+    type: application
+    platform: iOS
+    sources:
+      - NewtWorld
+      - path: ../shared/web
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: world.newt.app
+        SWIFT_VERSION: '5.0'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_OBJC_BRIDGING_HEADER: NewtWorld/BridgingHeader.h
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UIBackgroundModes: audio
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_CFBundleDisplayName: 뉴트월드 시험판
+        TARGETED_DEVICE_FAMILY: '1,2'
+        MARKETING_VERSION: '0.2.0'
+        CURRENT_PROJECT_VERSION: '2'
+    info:
+      path: GeneratedInfo.plist
+      properties:
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+  NewtWorldTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: NewtWorld
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  NewtWorld:
+    build:
+      targets:
+        NewtWorld: all
+        NewtWorldTests: [test]
+    test:
+      targets: [NewtWorldTests]
