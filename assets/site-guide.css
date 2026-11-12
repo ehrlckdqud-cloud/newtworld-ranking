@@ -1,5 +1,5 @@
 /* NewtWorld visitor guide. Uses the profile wallet mint (#b2f5dc). */
-.nw-guide-launch{appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:1px solid #62e3bd;border-radius:12px;background:linear-gradient(135deg,#116c60,#188875);color:#f7fffc;font:800 13px/1.3 inherit;font-family:inherit;letter-spacing:-.015em;padding:11px 12px;min-height:42px;box-shadow:0 4px 20px #001b1b55;cursor:pointer;transition:transform .15s,filter .15s;box-sizing:border-box}
+.nw-guide-launch{appearance:none;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:1px solid #62e3bd;border-radius:12px;background:linear-gradient(135deg,#116c60,#188875);color:#f7fffc;font-size:13px;font-weight:800;line-height:1.3;font-family:inherit;letter-spacing:-.015em;padding:11px 12px;min-height:42px;box-shadow:0 4px 20px #001b1b55;cursor:pointer;transition:transform .15s,filter .15s;box-sizing:border-box}
 .nw-guide-launch:hover,.nw-guide-launch:focus-visible{filter:brightness(1.15);transform:translateY(-1px)}
 .nw-guide-launch:focus-visible,.nw-guide-action:focus-visible,.nw-guide-close:focus-visible,.nw-guide-tab:focus-visible,.nw-guide-modal a:focus-visible{outline:2px solid #b2f5dc;outline-offset:3px}
 .nw-guide-launch svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
@@ -13,7 +13,7 @@
  .nw-guide-mobile-portal{display:flex;flex-direction:column;align-items:center;gap:8px;margin:4px 0 14px;padding:0}
  .nw-guide-mobile-logo{display:block;width:180px;height:58px;max-width:60vw;object-fit:contain}
  .nw-guide-mobile-portal .nw-guide-launch{min-height:50px;flex-wrap:wrap;font-size:14px}
- .nw-guide-mobile-portal .nw-guide-launch small{display:block;width:100%;font:500 10px/1.25 inherit;font-family:inherit;color:#e0fff3}
+ .nw-guide-mobile-portal .nw-guide-launch small{display:block;width:100%;font-size:10px;font-weight:500;line-height:1.25;font-family:inherit;color:#e0fff3}
 }
 .nw-guide-modal[hidden]{display:none!important}
 .nw-guide-modal{position:fixed;inset:0;z-index:100002;display:flex;align-items:center;justify-content:center;background:rgba(3,14,20,.82);backdrop-filter:blur(7px);padding:14px;box-sizing:border-box}
@@ -35,7 +35,7 @@
 .nw-guide-panel ol{padding-left:22px;margin:10px 0}
 .nw-guide-panel li{padding:2px 0;font-size:13px;line-height:1.65}
 .nw-guide-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-.nw-guide-action{display:inline-flex;justify-content:center;align-items:center;text-decoration:none!important;border:1px solid #53bd9c;border-radius:9px;padding:9px 12px;background:#195f53;color:#fff!important;font:750 12px/1.35 inherit;font-family:inherit;cursor:pointer}
+.nw-guide-action{display:inline-flex;justify-content:center;align-items:center;text-decoration:none!important;border:1px solid #53bd9c;border-radius:9px;padding:9px 12px;background:#195f53;color:#fff!important;font-size:12px;font-weight:750;line-height:1.35;font-family:inherit;cursor:pointer}
 .nw-guide-action.secondary{border-color:#446f78;background:#183943}
 .nw-guide-section{padding:15px 0;border-top:1px solid #2a4a4f}
 .nw-guide-section h3{display:flex;align-items:center;gap:7px}
