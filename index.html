@@ -217,9 +217,18 @@ color:var(--text);font-family:Inter,system-ui,-apple-system,"Noto Sans KR","Malg
 input,select,button{background:#0d1923;color:#eff8ff;border:1px solid #294656;border-radius:11px;padding:11px 12px}
 input{flex:1;min-width:210px} button{cursor:pointer} button.active{border-color:#55c8ff;box-shadow:0 0 0 2px rgba(85,200,255,.13) inset}
 
-.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .stat{background:#0d1821;border:1px solid #1f3544;border-radius:15px;padding:14px}
 .stat small{display:block;color:#86a1b5} .stat strong{display:block;font-size:21px;margin-top:2px}
+/* v2026.11.12: distinct monthly and lifetime leaders above the ranking. */
+.stats .stat{min-width:0}
+.stats .stat strong{overflow-wrap:anywhere;line-height:1.35}
+.stats .stat-leader-monthly{border-color:#376c82;background:linear-gradient(145deg,#112b39,#0d1821)}
+.stats .stat-leader-lifetime{border-color:#8b7541;background:linear-gradient(145deg,#302718,#0d1821)}
+.stats .stat-leader-monthly strong{color:#a8e6f9}
+.stats .stat-leader-lifetime strong{color:#f3d9a0}
+@media(min-width:881px) and (max-width:1150px){.stats .stat strong{font-size:clamp(13px,1.55vw,19px)}}
+
 
 .table-wrap{background:#0a141c;border:1px solid #1e3442;border-radius:18px;overflow:hidden}
 table{width:100%;border-collapse:collapse}
@@ -2100,13 +2109,14 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <div class="controls">
 <input id="q" placeholder="닉네임 / 회원ID 검색"/>
 <select id="scoreBasis" aria-label="랭킹 점수 기준"><option value="season">월간점수</option><option value="lifetime">누적</option></select>
-<select id="limit"><option value="all">전체 회원</option><option selected="" value="40">TOP 40</option><option value="20">TOP 20</option><option value="10">TOP 10</option><option value="staff">운영진</option></select>
+<select id="limit"><option selected="" value="all">전체 회원</option><option value="40">TOP 40</option><option value="20">TOP 20</option><option value="10">TOP 10</option><option value="staff">운영진</option></select>
 <button class="active" id="allBtn">전체</button>
 <button id="gradedBtn">등급 보유자</button>
 </div>
 <p id="syncStatus" class="sync-status" role="status" style="margin:10px 0;color:#bdd8e3">랭킹을 불러오는 중…</p>
 <div class="stats">
-<div class="stat"><small>현재 1위</small><strong id="leader"></strong></div>
+<div class="stat stat-leader-monthly"><small>🏆 월간 1위</small><strong id="leader">-</strong></div>
+<div class="stat stat-leader-lifetime"><small>🏅 누적 1위</small><strong id="lifetimeLeader">-</strong></div>
 <div class="stat"><small>TOP10 커트</small><strong id="cut10"></strong></div>
 <div class="stat"><small>TOP20 커트</small><strong id="cut20"></strong></div>
 <div class="stat"><small>해금된 등급</small><strong id="unlockCount"></strong></div>
@@ -2322,7 +2332,7 @@ function lifetimeCountsText(x,splitRows=false){const items=['채팅','사진','�
 function renderRanking(){
   const q=document.getElementById('q').value.trim().toLowerCase(),limitVal=document.getElementById('limit').value;
   const lifetime=document.getElementById('scoreBasis').value==='lifetime',scoreField=lifetime?'lifetimeTotal':'seasonTotal';
-  const sorted=DATA.filter(x=>x[scoreField]>0).slice().sort((a,b)=>b[scoreField]-a[scoreField]||a.rank-b.rank);
+  const sorted=DATA.filter(x=>limitVal==='all'||x[scoreField]>0).slice().sort((a,b)=>b[scoreField]-a[scoreField]||a.rank-b.rank);
   const members=sorted.map(x=>({...x,viewRank:lifetime?1+sorted.filter(y=>y.lifetimeTotal>x.lifetimeTotal).length:x.rank}));
   const staff=members.filter(isStaff);
   let list;
@@ -2345,8 +2355,11 @@ function renderRanking(){
     return `<div class="card" data-rank-tier="${Math.max(0,badgeIndexFor(x.lifetimeTotal)+1)}"><div class="card-head"><div><b>${firstCell} · [${x.name}]${staffStar(x)}${lifetime?'':rankMovementBadge(x)}</b><div style="color:#8da8ba;font-size:12px">${x.date}</div></div><div class="card-head-right">${rankingAvatarSlot(x,true)}${x.memberId?`<button class="nw-member-detail-btn" data-member-id="${x.memberId}" type="button">상세보기</button>`:''}<div class="card-grade-column"><div class="card-grade">${memberBadge(x.lifetimeTotal)}</div>${window.NWMemberVerificationHTML(x.memberId)}</div></div></div><div class="card-score">월간 ${fmt(x.seasonTotal)}점</div><div class="bar"><i style="width:${x.seasonTotal/max*100}%"></i></div><div class="card-meta">채팅 ${fmt(x.chat)} · 사진 ${x.photo} · 영상 ${x.video} · 소개 ${x.intro} · 출석 ${x.attendance||0}<br><span class="card-lifetime-text">누적 ${fmt(x.lifetimeTotal)}점</span><div class="bar lifetime-bar" aria-hidden="true"><i style="width:${Math.max(0,x.lifetimeTotal)/maxLifetime*100}%"></i></div><div class="lifetime-breakdown">${lifetimeCountsText(x)}</div></div></div>`;
   }).join('');
   window.NWPaintRankingAvatars?.();
-  const top=members[0]||{name:'-',seasonTotal:0,lifetimeTotal:0};
-  document.getElementById('leader').textContent=top.name+' · '+fmt(top[scoreField])+'점';
+  // Both leaders are independent of the selected ranking basis, search and table limit.
+  const monthlyTop=DATA.find(x=>x.seasonTotal>0);
+  const lifetimeTop=DATA.filter(x=>x.lifetimeTotal>0).slice().sort((a,b)=>b.lifetimeTotal-a.lifetimeTotal||b.seasonTotal-a.seasonTotal||a.rank-b.rank)[0];
+  document.getElementById('leader').textContent=monthlyTop?monthlyTop.name+' · '+fmt(monthlyTop.seasonTotal)+'점':'-';
+  document.getElementById('lifetimeLeader').textContent=lifetimeTop?lifetimeTop.name+' · '+fmt(lifetimeTop.lifetimeTotal)+'점':'-';
   document.getElementById('cut10').textContent=members[9]?fmt(members[9][scoreField])+'점':'-';
   document.getElementById('cut20').textContent=members[19]?fmt(members[19][scoreField])+'점':'-';
   document.getElementById('memberCount').textContent=fmt(DATA.length)+'명';
