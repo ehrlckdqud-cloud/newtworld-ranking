@@ -4,12 +4,14 @@
 .nw-guide-launch:focus-visible,.nw-guide-action:focus-visible,.nw-guide-close:focus-visible,.nw-guide-tab:focus-visible,.nw-guide-modal a:focus-visible{outline:2px solid #b2f5dc;outline-offset:3px}
 .nw-guide-launch svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;flex:none}
 .nw-guide-pc-launch{display:none}
+.nw-guide-mobile-header-logo{display:none}
 .nw-guide-mobile-portal{display:none}
 @media(min-width:1041px){
  .pc-top-spacer:has(.nw-guide-pc-launch){flex-direction:column;align-items:stretch;justify-content:flex-end;gap:8px}
  .pc-top-spacer .nw-guide-pc-launch{display:flex}
 }
 @media(max-width:1040px){
+ .nw-guide-mobile-header-logo{display:flex;align-items:center;justify-content:center;width:100%;margin:0 0 8px}
  .nw-guide-mobile-portal{display:flex;flex-direction:column;align-items:center;gap:8px;margin:4px 0 14px;padding:0}
  .nw-guide-mobile-logo{display:block;width:180px;height:58px;max-width:60vw;object-fit:contain}
  .nw-guide-mobile-portal .nw-guide-launch{min-height:50px;flex-wrap:wrap;font-size:14px}
