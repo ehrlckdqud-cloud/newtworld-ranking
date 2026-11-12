@@ -1,5 +1,5 @@
 import {prepareAwardSound,showAward} from './completion-award.mjs';
-import {neoRecord} from './solo-neo-record.mjs?v=2';
+import {neoRecord} from './solo-neo-record.mjs?v=boss1';
 import {pictureQuality,qualityBar} from './picture-quality.mjs';
 import {scale2x} from './scale2x.mjs';
 import {openPspArcade} from './psp-arcade.mjs?v=xx1';
@@ -90,6 +90,7 @@ export async function openLocalArcade(game='mslug3'){
   if(completed&&!disposed)showAward(launch,picture);
  }
  const record=neoRecord(game,sendRecord);
+ const bossCheck=game==='mslug2'&&new URLSearchParams(location.search).get('bossCheck')==='2';
  let cabinetScore=0,cabinetStar=false,saving=false,retryTimer=0;
  let wantedScore=0,wantedStar=false;
  async function saveCabinet(){
@@ -243,6 +244,21 @@ export async function openLocalArcade(game='mslug3'){
   if(!loaded._nw_load()||!loaded._nw_ram()){loaded._nw_close();throw Error('원본 게임 파일을 불러오지 못했습니다.');}
   if(disposed){loaded._nw_close();return;}
   core=loaded;
+  if(bossCheck){
+   const {verifyOwner,selectCheckpoint}=await import('./owner-boss-check.mjs');
+   status.textContent='방장 계정을 확인하는 중…';
+   await verifyOwner(member);
+   if(disposed)return;
+   status.textContent='개인 저장 파일을 선택하세요.';
+   const bytes=await selectCheckpoint(dialog,close,preparation.signal);
+   if(disposed)return;
+   const ptr=core._nw_snapshot_buffer(bytes.length);
+   if(!ptr)throw Error('저장 지점 메모리를 준비하지 못했습니다.');
+   core.HEAPU8.set(bytes,ptr);
+   if(!core._nw_restore())throw Error('저장 지점 복원에 실패했습니다.');
+   record.resumeBoss(core);frame=2260;
+   find('h2').textContent='메탈슬러그 2 · 최종 보스 직전';
+  }
   }
   status.replaceChildren('이번 실행의 입장료는 ',arcadePrice(),'입니다. 게임을 종료한 뒤 다시 실행하면 새 입장료가 적용됩니다.');start.disabled=false;
  }catch(e){if(!disposed){screen.hidden=true;status.textContent=e.message;}}
