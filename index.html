@@ -1843,7 +1843,24 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 @media(max-width:600px){.nw-draw-picker button[data-wild-run]{grid-template-columns:1fr}.picker-race-art{min-height:105px}}
 @media(max-width:720px){#cards .card-grade button.member-grade{appearance:none;background:transparent;border:0;box-shadow:none;padding:0;height:auto;max-width:none}#cards .card-grade .member-grade img{width:52px;height:52px;max-width:none;object-fit:contain}#cards>.card:is([data-rank-tier="4"],[data-rank-tier="5"],[data-rank-tier="6"],[data-rank-tier="7"]) .card-grade .member-grade img{width:84px;height:84px}}
 </style>
-</head>
+<style>
+#nwDrawPicker .picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#nwDrawPicker .picker-grid>.picker-card{box-sizing:border-box;grid-column:auto;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:42% minmax(0,1fr);aspect-ratio:1;width:100%;height:auto;min-width:0;min-height:0;padding:0;text-align:left}
+#nwDrawPicker .picker-card>:first-child{height:100%;min-height:0}
+#nwDrawPicker .picker-card .picker-copy{padding:clamp(8px,2vw,18px);align-self:center}
+#nwDrawPicker .picker-copy p{min-height:0}
+@media(max-width:540px){
+ #nwDrawPicker{padding:14px 9px}
+ #nwDrawPicker .picker-grid{gap:7px}
+ #nwDrawPicker .picker-grid>.picker-card{grid-template-rows:34% minmax(0,1fr)}
+ #nwDrawPicker .picker-copy small,#nwDrawPicker .picker-copy em{display:none}
+ #nwDrawPicker .picker-copy b{font-size:clamp(13px,3.6vw,18px);line-height:1.2;margin:0 0 4px}
+ #nwDrawPicker .picker-copy p{font-size:clamp(10px,2.7vw,12px);line-height:1.25}
+ #nwDrawPicker .picker-copy br{display:none}
+ #nwDrawPicker .picker-card::before{top:3px;right:4px;font-size:9px;padding:2px 5px}
+ #nwDrawPicker .picker-race-art{font-size:26px}
+}
+</style></head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
 <p>오픈채팅방 · 2026.04.28 ~ <span id="nwChatOpeningDay"></span>일째</p>
@@ -2666,9 +2683,9 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!race){
       race=document.createElement('button');
       race.type='button';race.className='picker-card';race.dataset.wildRun='91';
-      race.innerHTML='<span class="picker-race-art" aria-hidden="true">🐸 🦎</span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회(개발 중)</b><p>장애물을 피해 결승선에 먼저 도착할 주자는?</p><em>관리자 인증 후 입장 ↗</em></span>';
+      race.innerHTML='<span class="picker-race-art" aria-hidden="true">🐸 🦎</span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>관리자 인증 후 입장 ↗</em></span>';
       race.addEventListener('click',async()=>{
-        if(!await verifyOwnerEntry())return;
+        if(!await verifyOwnerEntry()){alert('방장 계정으로 인증한 뒤 입장할 수 있습니다.');return;}
         const password=await window.NWUI.password();if(!password)return;
         const form=document.createElement('form');form.method='POST';
         form.action='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/wild-run-91/enter';
@@ -2679,8 +2696,6 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
       });
       dialog.querySelector('.picker-grid').append(race);
     }
-    race.style.display=document.getElementById('nwAdminLoginBtn').hidden?'none':'';
-    verifyOwnerEntry().then(ok=>{race.style.display=ok?'':'none';});
     const ua=navigator.userAgent||'',mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);dialog.querySelectorAll('a').forEach(link=>{link.target=mobile?'_self':'_blank';link.rel='noopener';});
     if(!dialog.open)dialog.showModal();
   }
