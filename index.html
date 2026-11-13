@@ -2683,7 +2683,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!race){
       race=document.createElement('a');
       race.href='draw/wild-run.html';race.className='picker-card';race.dataset.wildRun='91';
-      race.innerHTML='<span class="picker-race-art" aria-hidden="true">🐸 🦎</span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회<br class="race-title-break">(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
+      race.innerHTML='<span class="picker-art nw-game-photo" aria-hidden="true"><img src="assets/draw-wild-run-start.webp" alt=""></span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회<br class="race-title-break">(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
       dialog.querySelector('.picker-grid').append(race);
     }
     const ua=navigator.userAgent||'',mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);dialog.querySelectorAll('a').forEach(link=>{link.target=mobile?'_self':'_blank';link.rel='noopener';});
