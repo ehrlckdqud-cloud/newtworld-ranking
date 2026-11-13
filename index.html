@@ -1793,7 +1793,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 }
 </style>
 <style>.nw-draw-picker .picker-card-space{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;background:#102034}.picker-space{background:radial-gradient(ellipse at 50% 110%,#214866,#070e20);height:100%;min-height:150px}.picker-space svg{display:block;width:100%;height:100%;max-height:190px}@media(max-width:600px){.nw-draw-picker .picker-card-space{grid-template-columns:1fr}.picker-space{height:150px}}</style>
-<script src="assets/newt-ui.js"></script>
+<script src="assets/newt-ui.js?v=race-member"></script>
 <style>.card-head-right{flex-wrap:wrap}.nw-ranking-avatar-mobile.nw-ranking-avatar-missing{width:auto;height:auto;flex:0 0 100%;order:5;font-size:10px;white-space:nowrap;justify-items:end;color:#8da8ba}</style>
 <style>.card .card-score,.card .card-lifetime-text{display:block;font-size:20px;font-weight:800;line-height:1.4;margin:8px 0}.lifetime-breakdown{font-size:12px;color:#9bb4c5;line-height:1.7;white-space:normal}.lifetime-details summary{cursor:pointer}.lifetime-details[open]{min-width:180px}</style>
 <style>
@@ -1837,7 +1837,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <link rel="stylesheet" href="assets/site-guide.css?v=20261112f">
 <style>
 .nw-draw-picker button[data-wild-run]{display:grid;grid-column:1/-1;grid-template-columns:1fr 1fr;width:100%;height:auto;padding:0;text-align:left;font:inherit;white-space:normal;color:#f1f4df;background:#142c21;cursor:pointer}
-.nw-draw-picker button[data-wild-run]::before{content:'관리자 전용'}
+.nw-draw-picker button[data-wild-run]::before{content:'회원 전용'}
 .picker-race-art{display:grid;place-items:center;min-height:145px;background:repeating-conic-gradient(#dfe8cf 0 25%,#173226 0 50%) 0 82%/18px 18px repeat-x,linear-gradient(115deg,#183627,#4b6740);font-size:52px}
 .nw-draw-picker button[data-wild-run] .picker-copy{padding-top:35px}
 @media(max-width:600px){.nw-draw-picker button[data-wild-run]{grid-template-columns:1fr}.picker-race-art{min-height:105px}}
@@ -2683,10 +2683,9 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!race){
       race=document.createElement('button');
       race.type='button';race.className='picker-card';race.dataset.wildRun='91';
-      race.innerHTML='<span class="picker-race-art" aria-hidden="true">🐸 🦎</span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>관리자 인증 후 입장 ↗</em></span>';
+      race.innerHTML='<span class="picker-race-art" aria-hidden="true">🐸 🦎</span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
       race.addEventListener('click',async()=>{
-        if(!await verifyOwnerEntry()){alert('방장 계정으로 인증한 뒤 입장할 수 있습니다.');return;}
-        const password=await window.NWUI.password();if(!password)return;
+        const password=await window.NWUI.confirm({password:true,title:"양서파충류 달리기 대회",message:"게임 입장 비밀번호를 입력해주세요.",accept:"입장"});if(!password)return;
         const form=document.createElement('form');form.method='POST';
         form.action='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/wild-run-91/enter';
         for(const [name,value] of Object.entries({password,token:localStorage.getItem('nwProfileToken'),device:localStorage.getItem('nwProfileDevice')})){

@@ -7,7 +7,7 @@
    const form=document.createElement('form'),h=document.createElement('h2'),p=document.createElement('p'),actions=document.createElement('div'),no=document.createElement('button'),yes=document.createElement('button');h.textContent=title;actions.className='nw-dialog-actions';no.type='button';no.textContent=cancel;yes.type='submit';yes.textContent=accept;yes.className='nw-primary';
    let input,finished=false;const finish=value=>{if(finished)return;finished=true;if(input)input.value='';d.close();d.remove();resolve(value);};
    if(cost!==null){const amount=document.createElement('strong');amount.className='nw-gem-amount';amount.append(gem(),document.createTextNode(String(cost)));p.append(amount,document.createTextNode('이 차감됩니다. 진행하시겠습니까?'));}else p.textContent=message;
-   form.append(h,p);if(password){input=document.createElement('input');input.type='password';input.autocomplete='current-password';input.required=true;input.setAttribute('aria-label','관리자 비밀번호');form.append(input);}
+   form.append(h,p);if(password){input=document.createElement('input');input.type='password';input.autocomplete='current-password';input.required=true;input.setAttribute('aria-label',message);form.append(input);}
    actions.append(no,yes);form.append(actions);d.append(form);no.onclick=()=>finish(password?null:false);d.addEventListener('cancel',e=>{e.preventDefault();finish(password?null:false);});form.onsubmit=e=>{e.preventDefault();finish(password?input.value:true);};document.body.append(d);d.showModal();(input||no).focus();
   });
  }
