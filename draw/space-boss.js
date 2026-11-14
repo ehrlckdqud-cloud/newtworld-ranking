@@ -94,7 +94,7 @@ export class SpaceBoss{
   // Native collapse sound cues, excluding recorded escort fire.
   for(const [i,cue]of this.media.bossData.clips.collapse.sounds.entries())if(['ym-1033','ym-102d'].includes(cue.sound_id))this.audio.add({kind:'sound',id:'prelude-explosion-'+this.firstEncounter+'-'+i,sound:cue.sound_id,at:time+cue.frame/this.media.bossData.hz,priority:true,fullPlayback:cue.sound_id==='ym-1033'});
  }
- preludeTransform(e){const v=this.bounds.view||{left:0,right:this.bounds.W,top:0,bottom:this.bounds.H},f=this.sourceFrame(),width=v.right-v.left,scale=Math.min(width/400,(v.bottom-v.top)/280),cx=v.left+width*(e.i?.75:.25)+Math.sin(this.seconds*.55+e.i*Math.PI)*width*.075,cy=v.top+Math.min((v.bottom-v.top)*.23,90*scale)+Math.sin(this.seconds*.8+e.i*Math.PI)*12*scale;return{x:cx-f.hull[0]*scale,y:cy-f.hull[1]*scale-160*scale*(1-ease(this.seconds/1.5)),scale};}
+ preludeTransform(e){const v=this.bounds.view||{left:0,right:this.bounds.W,top:0,bottom:this.bounds.H},f=this.sourceFrame(),width=v.right-v.left,scale=Math.min(width/320,(v.bottom-v.top)/224),cx=v.left+width*(e.i?.75:.25)+Math.sin(this.seconds*.55+e.i*Math.PI)*width*.075,cy=v.top+Math.min((v.bottom-v.top)*.23,90*scale)+Math.sin(this.seconds*.8+e.i*Math.PI)*12*scale;return{x:cx-f.hull[0]*scale,y:cy-f.hull[1]*scale-160*scale*(1-ease(this.seconds/1.5)),scale};}
  get ceasefire(){return ['collapse','orbs','complete'].includes(this.stage);}
  get finished(){return this.stage==='complete';}
  orbProgress(index,total){return clamp((this.time-(this.orbsAt??this.stageAt)-2.5)/3.8,0,1);}
