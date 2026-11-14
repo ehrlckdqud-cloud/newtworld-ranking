@@ -39,3 +39,27 @@ export function installPauseShortcut(button, doc = document) {
   return () => {observer.disconnect();doc.removeEventListener('keydown',down);doc.removeEventListener('keyup',up);window.removeEventListener('blur',blur);};
 }
 installPauseShortcut(document.querySelector('#pause,#pondPause,#sppause'));
+function installResumeButton(control, arena, paused) {
+  if (!control || !arena) return;
+  const resume = document.createElement('button');
+  resume.type = 'button';
+  resume.textContent = '▶ 경기 계속하기';
+  resume.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:50;min-height:48px;padding:10px 22px;border:1px solid #a9d5ca;border-radius:12px;background:#102c29;color:white;font:700 16px system-ui;white-space:nowrap;pointer-events:auto;cursor:pointer';
+  const sync = () => { resume.hidden = !paused(); resume.style.display = resume.hidden ? 'none' : 'block'; };
+  resume.addEventListener('click', () => { if (paused()) control.click(); sync(); });
+  sync();
+  arena.append(resume);
+  const observer = new MutationObserver(sync);
+  observer.observe(control, {childList:true, characterData:true, subtree:true, attributes:true, attributeFilter:['disabled']});
+  document.addEventListener('visibilitychange', sync);
+  window.addEventListener('pageshow', sync);
+  return sync;
+}
+const pauseControl=document.querySelector('#pause,#pondPause,#sppause');
+if(pauseControl){
+ const space=pauseControl.id==='sppause';
+ const arena=document.querySelector(space?'#nwspace .stage':pauseControl.id==='pondPause'?'#pondRoot':'#arena');
+ const active=document.querySelector('#spnames');
+ const sync=installResumeButton(pauseControl,arena,()=>!pauseControl.disabled&&(!space||active?.disabled)&&/계속/.test(pauseControl.textContent));
+ if(space&&active&&sync)new MutationObserver(sync).observe(active,{attributes:true,attributeFilter:['disabled']});
+}
