@@ -66,28 +66,45 @@ if(pauseControl){
 function installMobileExit(pauseGame, exitUrl) {
   if (!matchMedia('(pointer:coarse)').matches && navigator.maxTouchPoints < 1) return;
   const dialog = document.createElement('dialog');
-  dialog.style.cssText = 'max-width:min(320px,86vw);height:auto;margin:auto;padding:22px;border:1px solid #72998e;border-radius:14px;background:#122a26;color:#fff;text-align:center;z-index:1000';
+  dialog.style.cssText = 'box-sizing:border-box;width:max-content!important;max-width:90vw!important;height:fit-content!important;min-height:0!important;max-height:90dvh!important;inset:0;margin:auto;padding:14px 18px 10px!important;border:1px solid #72998e;border-radius:14px;background:#122a26;color:#fff;text-align:center;z-index:1000';
   dialog.setAttribute('aria-label','게임을 종료하시겠습니까?');
   const title=document.createElement('p');
   title.textContent='게임을 종료하시겠습니까?';
-  title.style.cssText='margin:0 0 18px;font:700 18px system-ui;color:white';
+  title.style.cssText='height:auto!important;min-height:0!important;margin:0 0 10px!important;padding:0!important;font:700 17px/1.35 system-ui;color:white';
   const buttons=['취소','확인'].map(text=>{
     const b=document.createElement('button');b.type='button';b.textContent=text;
-    b.style.cssText='margin:0 4px;min-height:42px;padding:6px 20px;border:1px solid #799e91;border-radius:8px;background:#21463d;color:white;font:600 15px system-ui';
+    b.style.cssText='margin:0 4px;height:38px!important;min-height:0!important;width:auto!important;padding:4px 18px;border:1px solid #799e91;border-radius:8px;background:#21463d;color:white;font:600 15px system-ui';
     return b;
   });
-  dialog.append(title,...buttons);
+  const content=document.createElement('div');
+  content.style.cssText='display:block!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important';
+  content.append(title,...buttons);dialog.append(content);
+
   let leaving=false;
   const arm=()=>{if(!history.state?.nwDrawExit)history.pushState({...history.state,nwDrawExit:true},'');};
-  // Arm from a real interaction so mobile browsers keep the same-document entry.
-  for(const type of ['click','keydown','touchend'])document.addEventListener(type,arm,{capture:true,once:true});
-  window.addEventListener('popstate',()=>{
-    if(leaving||history.state?.nwDrawExit)return;
-    arm();pauseGame();
+  arm();
+  // Renew the entry with activation if the browser would skip a pre-interaction entry.
+  let activated=false;
+  function activate(){
+    if(activated||dialog.open)return;
+    if(navigator.userActivation&&!navigator.userActivation.isActive)return;
+    activated=true;
+    if(history.state?.nwDrawExit)history.replaceState({...history.state,nwDrawExit:false},'');
+    arm();
+  }
+  for(const type of ['click','keydown','touchend'])document.addEventListener(type,activate,{capture:true,once:true});
+  function ask(){
+    pauseGame();
     if(!dialog.open){
       (document.fullscreenElement||document.body).append(dialog);
-      dialog.showModal();buttons[0].focus();
+      dialog.showModal();dialog.style.setProperty('display','block','important');buttons[0].focus();
     }
+  }
+  dialog.addEventListener('close',()=>dialog.style.removeProperty('display'));
+  window.addEventListener('popstate',()=>{if(!leaving&&!history.state?.nwDrawExit){arm();ask();}});
+  window.navigation?.addEventListener('navigate',event=>{
+    if(leaving||event.navigationType!=='traverse'||!event.cancelable||event.destination.index>=navigation.currentEntry.index)return;
+    event.preventDefault();ask();
   });
   buttons[0].onclick=()=>dialog.close();
   dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();});
