@@ -88,3 +88,10 @@ body.space-music-collapsed #spMusicToggle,body.space-top-collapsed #spTopToggle{
 #nwspace.roster-hidden .layout{grid-template-columns:250px minmax(0,1fr)}
 #nwspace.roster-hidden.settings-open .layout,#nwspace.roster-hidden.space-cinema .layout,#nwspace.roster-hidden:fullscreen .layout{grid-template-columns:minmax(0,1fr)}
 @media(max-width:850px){#nwspace.roster-hidden .layout{grid-template-columns:minmax(0,1fr)}}
+
+@media (pointer:coarse), (hover:none) and (max-width:850px){
+ #nwspace #spphase,#nwspace .space-zoom{display:none}
+ #nwspace .hud{justify-content:flex-end}
+ body.space-top-collapsed #nwspace .hud{top:28px}
+ #nwspace .space-status-tools{gap:4px}
+}
