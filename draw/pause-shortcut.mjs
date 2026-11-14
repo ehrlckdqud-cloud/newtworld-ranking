@@ -63,3 +63,37 @@ if(pauseControl){
  const sync=installResumeButton(pauseControl,arena,()=>!pauseControl.disabled&&(!space||active?.disabled)&&/계속/.test(pauseControl.textContent));
  if(space&&active&&sync)new MutationObserver(sync).observe(active,{attributes:true,attributeFilter:['disabled']});
 }
+function installMobileExit(pauseGame, exitUrl) {
+  if (!matchMedia('(pointer:coarse)').matches && navigator.maxTouchPoints < 1) return;
+  const dialog = document.createElement('dialog');
+  dialog.style.cssText = 'max-width:min(320px,86vw);height:auto;margin:auto;padding:22px;border:1px solid #72998e;border-radius:14px;background:#122a26;color:#fff;text-align:center;z-index:1000';
+  dialog.setAttribute('aria-label','게임을 종료하시겠습니까?');
+  const title=document.createElement('p');
+  title.textContent='게임을 종료하시겠습니까?';
+  title.style.cssText='margin:0 0 18px;font:700 18px system-ui;color:white';
+  const buttons=['취소','확인'].map(text=>{
+    const b=document.createElement('button');b.type='button';b.textContent=text;
+    b.style.cssText='margin:0 4px;min-height:42px;padding:6px 20px;border:1px solid #799e91;border-radius:8px;background:#21463d;color:white;font:600 15px system-ui';
+    return b;
+  });
+  dialog.append(title,...buttons);
+  let leaving=false;
+  const arm=()=>{if(!history.state?.nwDrawExit)history.pushState({...history.state,nwDrawExit:true},'');};
+  // Arm from a real interaction so mobile browsers keep the same-document entry.
+  for(const type of ['click','keydown','touchend'])document.addEventListener(type,arm,{capture:true,once:true});
+  window.addEventListener('popstate',()=>{
+    if(leaving||history.state?.nwDrawExit)return;
+    arm();pauseGame();
+    if(!dialog.open){
+      (document.fullscreenElement||document.body).append(dialog);
+      dialog.showModal();buttons[0].focus();
+    }
+  });
+  buttons[0].onclick=()=>dialog.close();
+  dialog.addEventListener('cancel',e=>{e.preventDefault();dialog.close();});
+  buttons[1].onclick=()=>{leaving=true;location.replace(exitUrl);};
+}
+if(pauseControl)installMobileExit(()=>{
+  const running=pauseControl.id!=='sppause'||document.querySelector('#spnames')?.disabled;
+  if(running&&!pauseControl.disabled&&!/계속/.test(pauseControl.textContent))pauseControl.click();
+},new URL('../index.html#draw',location.href).href);
