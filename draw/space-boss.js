@@ -66,6 +66,10 @@ export class SpaceBoss{
   if(['first','fusion','second','collapse','orbs','complete'].includes(this.stage)){
    const {roof,exit}=this.geometry(['first','fusion'].includes(this.stage)?this.media.bossData.clips.second.frames[0]:this.sourceFrame());if(roof){const v=this.bounds.view||{left:0,top:0,right:W,bottom:H};scale=Math.max(base,(v.right-v.left+64)/(roof.right-roof.left));x=(v.left+v.right)/2-159*scale;const portY=exit?.bottom??65;y=Math.min(v.top-32-roof.top*scale,v.top+(v.bottom-v.top)*.32-portY*scale);}
   }
+  if(this.stage==='fusion'&&(H>W||globalThis.matchMedia?.('(pointer: coarse)').matches)){
+   const roof=this.geometry(this.sourceFrame()).roof;
+   if(roof)y=Math.min(y,(this.bounds.view?.top??0)-32-roof.top*scale);
+  }
   if(this.stage==='first'&&this.firstPose){const f=this.sourceFrame();x+=(this.firstPose.x-f.hull[0])*scale;y+=(this.firstPose.y-f.hull[1])*scale;}return {x,y,scale};
  }
  port(){if(this.prelude){const live=this.prelude.filter(e=>!e.dead),e=live[Math.floor(this.time*4)%Math.max(1,live.length)]||this.prelude[0],tr=this.preludeTransform(e),f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}if(this.stage==='approach')return {x:this.bounds.W/2,y:0};const tr=this.transform(),exit=this.geometry().exit;if(this.stage==='first'){const f=this.sourceFrame();return{x:tr.x+f.hull[0]*tr.scale,y:tr.y+(f.hull[1]+64)*tr.scale};}return {x:tr.x+(exit?(exit.left+exit.right)/2:160)*tr.scale,y:tr.y+(exit?exit.bottom:65)*tr.scale};}
