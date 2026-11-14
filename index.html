@@ -1860,7 +1860,19 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
  #nwDrawPicker .picker-card::before{top:3px;right:4px;font-size:9px;padding:2px 5px}
  #nwDrawPicker .picker-race-art{font-size:26px}
 }
-</style><style>#nwDrawPicker .nw-game-photo img{display:block;width:100%;height:100%;object-fit:cover}</style><style>#nwDrawPicker .picker-copy .race-title-break{display:initial}</style><style>#nwDrawPicker .nw-game-photo .pinball-corner-photo{position:absolute;right:1.5%;bottom:2%;width:auto;height:46%;max-height:72px;max-width:none;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:center;pointer-events:none}</style></head>
+</style><style>#nwDrawPicker .nw-game-photo img{display:block;width:100%;height:100%;object-fit:cover}</style><style>#nwDrawPicker .picker-copy .race-title-break{display:initial}</style><style>#nwDrawPicker .nw-game-photo .pinball-corner-photo{position:absolute;right:1.5%;bottom:2%;width:auto;height:46%;max-height:72px;max-width:none;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:center;pointer-events:none}</style><style>
+@media(max-width:720px),(pointer:coarse){
+ #nwDrawPicker .picker-grid>.picker-card{aspect-ratio:auto;grid-template-rows:auto 1fr;align-content:start}
+ #nwDrawPicker .picker-card>.picker-art{height:auto;min-height:0;align-self:start}
+ #nwDrawPicker .nw-game-photo>img:first-child{height:auto;object-fit:contain}
+ #nwDrawPicker .picker-card>.picker-pond{aspect-ratio:1672/941;background-size:contain;background-repeat:no-repeat}
+ #nwDrawPicker .picker-pond>i:nth-child(n){width:20%;height:23%;left:14%;top:30%}
+ #nwDrawPicker .picker-pond>i:nth-child(2){left:44%;top:60%}
+ #nwDrawPicker .picker-pond>i:nth-child(3){left:71%;top:32%}
+ #nwDrawPicker .picker-pond>i::after{width:70%;height:120%;left:15%;top:-36%}
+ #nwDrawPicker .picker-card>.picker-copy{min-width:0;align-self:start;overflow-wrap:anywhere}
+}
+</style></head>
 <body>
 <div id="nwOpeningDays" aria-label="뉴트월드 운영일" aria-hidden="true">
 <p>오픈채팅방 · 2026.04.28 ~ <span id="nwChatOpeningDay"></span>일째</p>
