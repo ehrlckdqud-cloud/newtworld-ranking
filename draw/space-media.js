@@ -24,7 +24,14 @@ export class NativeMedia{
   if(launched&&!ship.dead&&launchAge>=0)this.drawRocketLayer(ctx,time<(ship.cruiseAt??Infinity)?'engine-takeoff':'engine-cruise',launchAge,scale);
   if(launched&&!ship.dead&&armed&&ship.lateralThrust)this.drawRocketLayer(ctx,ship.lateralThrust<0?'thrust-left':'thrust-right',time,scale);
   const warningRow=this.warningData?.palettes.indexOf(ship.deathPalette)??-1;this.drawRocketLayer(ctx,armed?'armed':'idle',time,scale,0,0,true,warningRow>=0?this.warningImage:this.rocketImage,warningRow>=0?warningRow*this.warningData.rowHeight:0);const image=portrait||this.defaultPortrait,[cx,cy,cr]=this.rocketData.cockpit;
-  if(image){ctx.save();ctx.beginPath();ctx.arc(cx*scale,cy*scale,cr*scale,0,Math.PI*2);ctx.clip();ctx.fillStyle='#e1edce';ctx.fillRect((cx-cr)*scale,(cy-cr)*scale,cr*2*scale,cr*2*scale);const k=cr*2*scale/Math.min(image.width,image.height);ctx.drawImage(image,cx*scale-image.width*k/2,cy*scale-image.height*k/2,image.width*k,image.height*k);ctx.restore();}
+  if(image?.width&&image.height){
+   this.cockpitPortraits??=new WeakMap();
+   let tile=this.cockpitPortraits.get(image);
+   if(!tile){tile=document.createElement('canvas');const side=Math.ceil(cr*2*3.75*56/24);tile.width=tile.height=side;
+    const g=tile.getContext('2d');g.beginPath();g.arc(side/2,side/2,side/2,0,Math.PI*2);g.clip();g.fillStyle='#e1edce';g.fillRect(0,0,side,side);
+    const k=side/Math.min(image.width,image.height);g.drawImage(image,(side-image.width*k)/2,(side-image.height*k)/2,image.width*k,image.height*k);this.cockpitPortraits.set(image,tile);}
+   ctx.drawImage(tile,(cx-cr)*scale,(cy-cr)*scale,2*cr*scale,2*cr*scale);
+  }
   if(!ship.dead&&armed){const cActive=(ship.cUntil||0)>time,cAge=(ship.firingUntil||0)>time?(time-(ship.cPickedAt||0))%.12:time-(ship.cMuzzleAt??-100),hAge=time-(ship.hMuzzleAt??-100),tipAge=time-(ship.hTipMuzzleAt??-100),ports=this.rocketData.ports;
    if(cActive&&cAge>=0&&cAge<10/this.rocketData.hz)for(const side of [-1,1])this.drawRocketLayer(ctx,'c-muzzle-up',cAge,scale,side*ports.C[0]*scale,ports.C[1]*scale,false);
    if(!cActive&&hAge>=0&&hAge<4/this.rocketData.hz)for(const side of [-1,1])this.drawRocketLayer(ctx,'h-side',hAge,scale,side*ports.hFlash[0]*scale,ports.hFlash[1]*scale,false);

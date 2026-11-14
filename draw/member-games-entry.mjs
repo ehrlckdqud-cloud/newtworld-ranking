@@ -11,7 +11,7 @@ async function start() {
     await installGameDefaults({musicAndVisuals: !space});
     retry.onclick = null;
     if (pond) await import('./pond.952deb0f.js?v=member-games-1');
-    else if (space) await import('./space-entry.js?v=member-games-1');
+    else if (space) await import('./space-entry.js?v=mobile-flight-1');
     else await import('./newtworld-v326-source.1f601452.js?v=member-games-1');
   } catch (error) {
     status.textContent = error.message || '게임 설정을 준비하지 못했어요. 다시 시도해주세요.';
