@@ -12,6 +12,10 @@ export function initSpaceLayout(){
  const foldMusic=()=>{body.classList.toggle('space-music-collapsed',musicCollapsed);if(musicToggle){musicToggle.textContent=musicCollapsed?'음악 바 펼치기 ▴':'접기 ▾';musicToggle.title=musicCollapsed?'음악 바 펼치기':'음악 바 접기';musicToggle.setAttribute('aria-expanded',String(!musicCollapsed));}};
  if(musicToggle)musicToggle.onclick=()=>{musicCollapsed=!musicCollapsed;foldMusic();save();};
  foldMusic();
+ const rosterButton=document.getElementById('spRosterToggle'),roster=document.getElementById('spRosterPanel');
+ rosterButton.onclick=()=>{roster.hidden=!roster.hidden;root.classList.toggle('roster-hidden',roster.hidden);rosterButton.setAttribute('aria-expanded',String(!roster.hidden));rosterButton.textContent=roster.hidden?'◂ 생존·탈락':'현황 접기 ▸';};
+ root.addEventListener('space-round-start',()=>{collapsed=true;musicCollapsed=true;fold();foldMusic();root.classList.toggle('settings-open',!matchMedia('(max-width:720px)').matches);
+ if(!roster.hidden)rosterButton.click();});
  toggle.onclick=()=>{collapsed=!collapsed;fold();save();};
  grip.onpointerdown=e=>{if(e.button!==0)return;e.preventDefault();drag={id:e.pointerId,x:e.clientX,width};grip.setPointerCapture(e.pointerId);body.classList.add('space-roster-resizing');};
  grip.onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;width=limit(drag.width+drag.x-e.clientX);if(!frame)frame=requestAnimationFrame(()=>{frame=0;apply();});};

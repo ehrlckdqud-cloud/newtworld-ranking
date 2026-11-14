@@ -38,10 +38,16 @@ export class SpaceBoss{
   if(target)this.electricAims.set(key,direction);return direction;
  }
  electricPose(seconds=this.seconds){if(this.stage!=='second')return null;const {index}=sourceFrameIndex(this.media.bossData.clips.second,Math.max(0,seconds),true),win=BOSS_TIMELINE.second.electric.find(([a,b])=>index>=a&&index<b);return win?{direction:this.electricDirection(seconds),ticks:index-win[0]-24}:null;}
- electricThreats(lead=.38){if(this.stage!=='second')return[];let pose=this.electricPose();if(!pose)pose=this.electricPose(this.seconds+lead);if(!pose)return[];const a=(pose.direction-4)*Math.PI/16,tr=this.transform(),x=tr.x+159*tr.scale,y=tr.y+89*tr.scale;return[{x,y,toX:x+Math.sin(a)*240*tr.scale,toY:y+Math.cos(a)*240*tr.scale,r:18*tr.scale,warning:pose.ticks<0}];}
+ electricStretch(tr,direction,ticks){
+  const {W,H,view}=this.bounds;if(H<=W||!this.media.electricData)return 1;
+  const frame=this.media.electricFrame(direction,Math.max(8,ticks));if(!frame)return 1;
+  const end=frame.top+this.media.electricData.textures[frame.texture][3]-3;
+  return Math.max(1,((view?.bottom??H)-tr.y-89*tr.scale)/(tr.scale*Math.max(1,end)));
+ }
+ electricThreats(lead=.38){if(this.stage!=='second')return[];let pose=this.electricPose();if(!pose)pose=this.electricPose(this.seconds+lead);if(!pose)return[];const a=(pose.direction-4)*Math.PI/16,tr=this.transform(),x=tr.x+159*tr.scale,y=tr.y+89*tr.scale;return[{x,y,toX:x+Math.sin(a)*240*tr.scale,toY:y+Math.cos(a)*240*tr.scale*this.electricStretch(tr,pose.direction,pose.ticks),r:18*tr.scale,warning:pose.ticks<0}];}
  electricContacts(from,to,targets){
   if(this.stage!=='second'||!targets.length)return[];const hz=this.media.bossData.hz,tr=this.transform(),hits=new Set,start=Math.floor(Math.max(0,from-this.stageAt)*hz),end=Math.floor(Math.max(0,to-this.stageAt)*hz);
-  for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),pose=this.electricPose(seconds),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=(p.from.x+(p.to.x-p.from.x)*u-tr.x)/tr.scale,y=(p.from.y+(p.to.y-p.from.y)*u-tr.y)/tr.scale,hit=this.media.electricData?this.media.electricSourceHit(pose.direction,pose.ticks,x-159,y-89,p.r/tr.scale):this.media.electricHit(f,x,y,p.r/tr.scale);if(hit)hits.add(p.id);}}
+  for(let tick=start;tick<=end;tick++){const seconds=tick/hz;if(!this.attackState(seconds).electric)continue;const f=this.media.nativeFrame('second',seconds,{loop:true}),pose=this.electricPose(seconds),stretch=this.electricStretch(tr,pose.direction,pose.ticks),u=Math.max(0,Math.min(1,(this.stageAt+seconds-from)/Math.max(.001,to-from)));for(const p of targets){if(hits.has(p.id))continue;const x=(p.from.x+(p.to.x-p.from.x)*u-tr.x)/tr.scale,y=(p.from.y+(p.to.y-p.from.y)*u-tr.y)/tr.scale,hit=this.media.electricData?this.media.electricSourceHit(pose.direction,pose.ticks,x-159,(y-89)/stretch,p.r/tr.scale,stretch):this.media.electricHit(f,x,y,p.r/tr.scale);if(hit)hits.add(p.id);}}
   return [...hits];
  }
  sourceFrame(){if(this.stage==='preludeExplosion')return this.explodingFrame;return this.media.nativeFrame(this.clip,['orbs','complete'].includes(this.stage)?0:this.seconds,{loop:['first','second'].includes(this.stage)});}
@@ -104,7 +110,7 @@ export class SpaceBoss{
   // Retain the original latch recoil at frame 189, without restoring the sideways entry.
   const recoil=tick>=180&&tick<=215?(this.sourceFrame().hull[1]-(frames[180].hull[1]+(frames[215].hull[1]-frames[180].hull[1])*(tick-180)/35))*tr.scale:0,movingHull=this.stage==='fusion'&&start?{x:start.x+(tr.x+159*tr.scale-start.x)*u,y:start.y+(tr.y+tr.scale-start.y)*u+recoil,scale:start.scale+(tr.scale-start.scale)*u}:null;
   media.drawNative(ctx,this.clip,seconds,tr.x,tr.y,tr.scale,{loop:['first','second'].includes(this.stage),flash:hitFeedback(this).flash,movingHull});
-  const electric=this.electricPose();if(electric&&media.electricData)media.drawElectric(ctx,electric.direction,electric.ticks,tr.x+159*tr.scale,tr.y+89*tr.scale,tr.scale);
+  const electric=this.electricPose();if(electric&&media.electricData)media.drawElectric(ctx,electric.direction,electric.ticks,tr.x+159*tr.scale,tr.y+89*tr.scale,tr.scale,this.electricStretch(tr,electric.direction,electric.ticks));
   this.escortFleet.draw(ctx,media);
  }
 
