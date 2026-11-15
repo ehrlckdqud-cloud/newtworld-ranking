@@ -5,6 +5,7 @@ on:
       - pond/stage3-attack-categories
       - pond/stage6-native-attack-motion-audio
       - pond/stage7-wide-screen-full-appearance
+      - pond/unified-creature-scale-bilateral-pairs
     paths:
       - 'draw/pond.html'
       - 'draw/pondApp.e4104cc4.js'

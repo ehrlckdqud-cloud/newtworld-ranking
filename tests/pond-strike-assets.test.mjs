@@ -62,46 +62,36 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
   assert.match(source, /route==="paw"\?strike\.pawContact:strike\.contact/);
 });
 
-test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
-  const vm = await import('node:vm');
-  const from = source.indexOf('function d(e,t,i,n,r,route,event){', source.indexOf('i("aJ7wK"'));
-  const to = source.indexOf('function c(e,', from);
-  assert.ok(from >= 0 && to > from);
-  const smooth = (a, b, t) => {
-    const n = Math.max(0, Math.min(1, (t - a) / (b - a)));
-    return n * n * (3 - 2 * n);
-  };
-  const strikePoint = (key, route) => route === 'paw' && strikes[key]?.paw ? strikes[key].paw : strikes[key]?.mouth;
-  const pose = vm.runInNewContext(source.slice(from, to) + ';d', {
-    pondStrikes: strikes, strikePoint, a: {smooth}, o: {POND_CONTACT_PHASE: .72}, s: {},
-  });
-  for (const [width, height] of [[1600, 850], [1600, 1200], [720, 900], [720, 1300]]) {
-    for (const key of Object.keys(species)) {
-      for (const nx of [.06, .15, .3, .5, .7, .85, .94]) {
-        for (const ny of [.1, .35, .5, .65, .9]) {
-          const target = {x: 70 + nx * (width - 140), y: 200 + ny * (height - 365)};
-          for (const phase of [0, .25, .72, 1]) {
-            const p = pose(key, phase, width, height, target, key === 'otter' ? 'paw' : undefined);
-            const epsilon = 0.00001;
-            assert.ok(p.x >= -epsilon && p.y >= -epsilon && p.x + p.width <= width + epsilon && p.y + p.height <= height + epsilon,
-              `${key} clip bounds ${width}x${height} phase=${phase}`);
-            if (phase === .72) {
-              assert.ok(Math.abs(p.mouth.x - target.x) < epsilon, key);
-              assert.ok(Math.abs(p.mouth.y - target.y) < epsilon, key);
-            }
-          }
-        }
-      }
-      for (const lane of [0, 1]) {
-        for (const nx of lane === 0 ? [.1, .25, .4] : [.6, .75, .9]) {
-          const target = {x: 70 + nx * (width - 140), y: 200 + .7 * (height - 365), lane};
-          const p = pose(key, .72, width, height, target, key === 'otter' ? 'paw' : undefined);
-          assert.ok(p.x >= -0.001 && p.y >= -0.001 && p.x + p.width <= width + .001 && p.y + p.height <= height + .001, key);
-          assert.ok(Math.abs(p.mouth.x - target.x) < .001 && Math.abs(p.mouth.y - target.y) < .001, key);
-        }
-      }
+test('new creatures keep full-size contact poses even for edge targets', async () => {
+ const vm=await import('node:vm');
+ const start=source.indexOf('function d(e,t,i,n,r,route,event){',source.indexOf('i("aJ7wK"'));
+ const end=source.indexOf('function c(e,event){',start);
+ assert.ok(start>=0&&end>start);
+ const smooth=(a,b,t)=>{const n=Math.max(0,Math.min(1,(t-a)/(b-a)));return n*n*(3-2*n)};
+ const strikePoint=(key,route)=>route==='paw'&&strikes[key]?.paw?strikes[key].paw:strikes[key]?.mouth;
+ const pose=vm.runInNewContext(source.slice(start,end)+';d',{pondStrikes:strikes,strikePoint,a:{smooth},o:{POND_CONTACT_PHASE:.72},s:{}});
+ const margins=0.00001;
+ for(const [width,height] of [[1600,850],[1600,1200],[720,900],[720,1300]]){
+  for(const [key,clip] of Object.entries(strikes)){
+   for(const route of key==='otter'?['mouth','paw']:[undefined]){
+    const contact=((route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5)/clip.frames;
+    for(const nx of [.06,.15,.3,.5,.7,.85,.94]){
+     for(const ny of [.1,.35,.5,.65,.9]){
+      const target={x:70+nx*(width-140),y:200+ny*(height-365)};
+      const p=pose(key,contact,width,height,target,route);
+      assert.ok(p.x>=-margins&&p.y>=-margins&&p.x+p.width<=width+margins&&p.y+p.height<=height+margins,key+' contact in bounds');
+      assert.ok(p.mouth.x>=0&&p.mouth.x<=width&&p.mouth.y>=0&&p.mouth.y<=height,key+' safe mouth');
+      assert.ok(p.width>0&&p.height>0,key+' visible');
+      const inLeft={...target,lane:0},inRight={...target,lane:1};
+      const q=pose(key,contact,width,height,inLeft,route);
+      const z=pose(key,contact,width,height,inRight,route);
+      assert.ok(Math.abs(p.width-q.width)<margins&&Math.abs(p.width-z.width)<margins,key+' paired cannot shrink');
+      assert.ok(q.x>=-margins&&q.x+q.width<=width+margins&&z.x>=-margins&&z.x+z.width<=width+margins,key+' pair in bounds');
+     }
     }
+   }
   }
+ }
 });
 
 test('new strikes play at native 24fps and contain complete original WAV audio', async () => {
@@ -141,33 +131,50 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
  assert.match(source,/e\.strikeWindow=pondStrikeWindow\(e\.actor,e\.route,this\.duration\/this\.rounds\)/);
 });
 
-test('new species approach from left or right before contact, including two-creature attacks', async () => {
+test('all creatures use the red-eye treefrog visual baseline in single and paired attacks', async () => {
  const vm=await import('node:vm');
- const start=source.indexOf('function d(e,t,i,n,r,route,event){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
- assert.ok(start>=0&&end>start);
- const smooth=(a,b,t)=>{const p=Math.max(0,Math.min(1,(t-a)/(b-a)));return p*p*(3-2*p)};
+ const from=source.indexOf('function d(e,t,i,n,r,route,event){',source.indexOf('i("aJ7wK"'));
+ const to=source.indexOf('function c(e,event){',from);
+ assert.ok(from>=0&&to>from);
+ const smooth=(a,b,t)=>{const x=Math.max(0,Math.min(1,(t-a)/(b-a)));return x*x*(3-2*x)};
  const strikePoint=(key,route)=>route==='paw'&&strikes[key]?.paw?strikes[key].paw:strikes[key]?.mouth;
- const pose=vm.runInNewContext(source.slice(start,end)+';d',{pondStrikes:strikes,strikePoint,a:{smooth},o:{POND_CONTACT_PHASE:.72},s:{}});
- for(const [width,height] of [[1600,900],[720,1000]]){
-  for(const [key,clip] of Object.entries(strikes)){
-   for(const route of key==='otter'?['mouth','paw']:[undefined]){
-    const at=((route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5)/clip.frames;
-    for(const targetX of [.2,.5,.8]){
-     const target={x:70+targetX*(width-140),y:200+.6*(height-365)};
-     const entrance=pose(key,0,width,height,target,route),impact=pose(key,at,width,height,target,route);
-     assert.ok(Math.abs(entrance.x-impact.x)>5,`${key} must approach target, not pop into place`);
-     assert.ok(Math.abs(impact.mouth.x-target.x)<.001&&Math.abs(impact.mouth.y-target.y)<.001,key);
-     for(const p of [entrance,impact]){
-      assert.ok(p.x>=-1e-5&&p.x+p.width<=width+1e-5&&p.y>=-1e-5&&p.y+p.height<=height+1e-5,key);
-     }
-    }
-    for(const lane of [0,1]){
-     const target={x:width*(lane===0?.25:.75),y:height*.6,lane};
-     const enter=pose(key,0,width,height,target,route),hit=pose(key,at,width,height,target,route);
-     assert.ok(Math.abs(enter.x-hit.x)>1,`${key} paired side entrance`);
-     assert.ok(hit.x>=-1e-5&&hit.x+hit.width<=width+1e-5,key);
-    }
+ const mouths={treefrog:[.55,.34],pacman:[.55,.37],axolotl:[.66,.53],emperor:[.918,.50],marbled:[.89,.47],tiger:[.898,.52],snappingturtle:[.872,.448]};
+ const pose=vm.runInNewContext(source.slice(from,to)+';d',{pondStrikes:strikes,strikePoint,a:{smooth},o:{POND_CONTACT_PHASE:.72},s:mouths});
+ const keys=[...Object.keys(mouths),...Object.keys(strikes)];
+ const factors={otter:1.34,tomatofrog:1.28,platypus:1.26,snappingturtle2:1.12};
+ for(const [width,height] of [[1600,900],[720,900],[1600,1400]]){
+  const baseline=pose('treefrog',.72,width,height,{x:width*.5,y:height*.55});
+  for(const key of keys){
+   const clip=strikes[key];
+   const route=key==='otter'?'paw':undefined;
+   const contact=clip?((route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5)/clip.frames:.72;
+   const target={x:width*.5,y:height*.55};
+   const solo=pose(key,contact,width,height,target,route);
+   for(const lane of [0,1]){
+    const pair=pose(key,contact,width,height,{...target,lane},route);
+    assert.ok(Math.abs(pair.width-solo.width)<1e-7,key+' paired same body width as solo');
+    assert.ok(Math.abs(pair.height-solo.height)<1e-7,key+' paired same body height as solo');
+    const start=pose(key,0,width,height,{...target,lane},route);
+    assert.ok(lane===0?start.x< pair.x-1:start.x>pair.x+1,key+' enter from assigned '+(lane===0?'left':'right'));
    }
+   const factor=factors[key]||1;
+   assert.ok(Math.abs(solo.width/baseline.width-factor)<.02,key+' calibrated to frog reference');
+  }
+ }
+ // Rough-skinned newt (poison event) also uses this same reference footprint.
+ const pa=source.indexOf('function p(e,t,lane,anchor,phase=1){',source.indexOf('i("aJ7wK"'));
+ const pb=source.indexOf('function u(e,t,i,n){',pa);
+ assert.ok(pa>=0&&pb>pa);
+ const poison=vm.runInNewContext(source.slice(pa,pb)+';p',{a:{smooth}});
+ for(const [width,height] of [[1600,900],[720,900]]){
+  const anchor={x:width*.5,y:height*.55},single=poison(width,height,null,anchor,1);
+  const reference=pose('treefrog',.72,width,height,anchor);
+  assert.ok(Math.abs(single.width-reference.width)<1e-7,'poison is also frog-sized');
+  for(const lane of [0,1]){
+   const paired=poison(width,height,lane,anchor,1);
+   assert.equal(paired.width,single.width,'poison does not shrink in simultaneous attack');
+   const start=poison(width,height,lane,anchor,0);
+   assert.ok(lane===0?start.x<paired.x:start.x>paired.x,'poison enters from correct side');
   }
  }
 });

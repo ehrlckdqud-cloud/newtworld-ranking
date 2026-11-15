@@ -74,3 +74,19 @@ test('otter chooses one route per strike',()=>{
   assert.equal(rolls,1);
  }
 });
+
+
+test('a forced two-creature strike assigns different species to the opposite pond banks', () => {
+ const game=engine(size=>size===14?6:size===3?0:size===13?11:0,true);
+ game.start();
+ assert.equal(game.events.length,2,'combined mode really chose two simultaneous creatures');
+ const [left,right]=game.events;
+ assert.equal(left.actor,'emperor');
+ assert.equal(right.actor,'otter');
+ assert.equal(left.lane,0);
+ assert.equal(right.lane,1);
+ assert.ok(left.contact.x<.5,'first creature starts on the left bank');
+ assert.ok(right.contact.x>=.5,'second creature starts on the right bank');
+ assert.ok(left.targets.length>0&&right.targets.length>0);
+ assert.ok(left.strikeWindow==null && right.strikeWindow!=null,'legacy and new attack clips can coexist');
+});
