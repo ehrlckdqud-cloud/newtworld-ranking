@@ -4,6 +4,7 @@ on:
     branches: [pond/stage7-wide-screen-full-appearance]
     paths:
       - .github/workflows/rebuild-pond-full-attacks.yml
+      - tools/rebuild-pond-full-attacks.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -46,6 +47,7 @@ jobs:
       - name: Validate source frames, audio, output structure and bundle sizes
         run: |
           node --input-type=module --check < draw/pondApp.e4104cc4.js
+          node --test tests/pond-random-attacks.test.mjs tests/pond-revival.test.mjs tests/pond-strike-assets.test.mjs
           python - <<'PY'
           import json,os,subprocess
           from pathlib import Path
@@ -59,6 +61,8 @@ jobs:
               sound=f'draw/{key}-strike.wav'
               sec=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',sound]))
               assert abs(sec-5)<.04,(key,sec)
+              assert 0 <= entry['contact'] < entry['frames'],key
+              if key=='otter':assert 0 <= entry['pawContact'] < entry['frames'],key
               print('PASS',key,'120 frames, 5 sec WAV, bundle',size)
           PY
       - name: Commit complete original source animations to stage branch
