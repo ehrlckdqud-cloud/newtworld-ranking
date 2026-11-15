@@ -1,4 +1,4 @@
-import {installGameDefaults} from '../assets/game-defaults.mjs?v=member-games-1';
+import {installGameDefaults} from '../assets/game-defaults.mjs?v=pond-music-20261115';
 
 const pond = location.pathname.endsWith('/pond.html');
 const space = location.pathname.endsWith('/space.html');
@@ -8,7 +8,7 @@ async function start() {
   retry.disabled = true;
   status.textContent = '공통 게임 설정을 준비하고 있어요…';
   try {
-    await installGameDefaults({musicAndVisuals: !space});
+    await installGameDefaults({musicAndVisuals: !space, pondMusic: pond});
     retry.onclick = null;
     if (pond) await import('./pond.952deb0f.js?v=member-games-1');
     else if (space) await import('./space-entry.js?v=mobile-atlas');
