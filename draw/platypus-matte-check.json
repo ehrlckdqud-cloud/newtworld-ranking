@@ -1,0 +1,12 @@
+{
+  "version": "pond15-platypus-no-circle",
+  "frames": 120,
+  "fps": 24,
+  "sourceStartFrame": 21,
+  "regressionSourceFrame": 107,
+  "files": {
+    "platypus-strike.bin": "1f2a00da6efc849c0515137acef517959a0e9c3927932af8863bf6127555efe7",
+    "platypus-strike.webp": "b9f7c126fab841660999f87808dc453705a958eff80e065d4ef1eca08879b1af"
+  },
+  "unchangedAudioSha256": "a362829c8707e91599f2589dd51d4f22f878edf5bdeba7857247e8edc3f8010c"
+}
