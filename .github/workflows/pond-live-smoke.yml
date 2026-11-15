@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - .github/workflows/pond-live-smoke.yml
+      - draw/pond-night.png
       - draw/pond.html
       - draw/pondApp.e4104cc4.js
   workflow_dispatch:
@@ -23,7 +24,7 @@ jobs:
           import assert from 'node:assert/strict';
           import {createHash} from 'node:crypto';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?pondmusic=5beedc3d';
+          const suffix='?check='+process.env.GITHUB_SHA;
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -40,14 +41,17 @@ jobs:
           let html='';
           for(let i=0;i<60;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-15-platypus-no-circle')&&html.includes('content-access.js?v=pond-revival-cost-300')&&html.includes('member-games-entry.mjs?v=pond-music-20261115'))break;
+            if(html.includes('pond-night-photo-20261115')&&html.includes('content-access.js?v=pond-revival-cost-300')&&html.includes('member-games-entry.mjs?v=pond-night-volume-20261115'))break;
             if(i<59)await sleep(5000);
           }
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-15-platypus-no-circle/);
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-night-photo-20261115/);
           assert.ok(html.includes('content-access.js?v=pond-revival-cost-300'),'corrected first-paint cost script cache version');
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
           const js=decode(await read('pondApp.e4104cc4.js'));
+          assert.ok(js.includes('./pond-night.png?v=20261115'), 'night selection uses the pond photograph');
+          const night=await read('pond-night.png');
+          assert.equal(createHash('sha1').update('blob '+night.length+'\0').update(night).digest('hex'),'413037fbcba6d734d9e35b1606b29ff117ab1712','published night photograph');
           const begin=js.indexOf('const pondStrikes = '),end=js.indexOf(';\nfunction strikePoint(',begin);
           assert.ok(begin>=0 && end>begin,'attack source metadata');
           const strikes=JSON.parse(js.slice(begin+'const pondStrikes = '.length,end));
@@ -84,7 +88,7 @@ jobs:
           }
           assert.equal(createHash('sha256').update(await read('platypus-strike.wav')).digest('hex'),manifest.unchangedAudioSha256,'platypus 2x audio unchanged');
           console.log('PASS exact tested platypus no-circle assets, preserved eye and unchanged audio');
-          assert.ok(html.includes('member-games-entry.mjs?v=pond-music-20261115'), 'new music installer cache version published');
+          assert.ok(html.includes('member-games-entry.mjs?v=pond-night-volume-20261115'), 'new music installer cache version published');
           const musicEntry=decode(await read('member-games-entry.mjs'));
           assert.ok(musicEntry.includes('pondMusic: pond'), 'only pond entry installs default music');
           const defaults=decode(await read('../assets/game-defaults.mjs'));
