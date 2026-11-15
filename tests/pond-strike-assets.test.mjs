@@ -61,3 +61,45 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
   assert.match(source, /this\.attackIndex\(2\)===0\?"mouth":"paw"/);
   assert.match(source, /route==="paw"\?strike\.pawContact:strike\.contact/);
 });
+
+test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
+  const vm = await import('node:vm');
+  const from = source.indexOf('function d(e,t,i,n,r,route){', source.indexOf('i("aJ7wK"'));
+  const to = source.indexOf('function c(e){', from);
+  assert.ok(from >= 0 && to > from);
+  const smooth = (a, b, t) => {
+    const n = Math.max(0, Math.min(1, (t - a) / (b - a)));
+    return n * n * (3 - 2 * n);
+  };
+  const strikePoint = (key, route) => route === 'paw' && strikes[key]?.paw ? strikes[key].paw : strikes[key]?.mouth;
+  const pose = vm.runInNewContext(source.slice(from, to) + ';d', {
+    pondStrikes: strikes, strikePoint, a: {smooth}, o: {POND_CONTACT_PHASE: .72}, s: {},
+  });
+  for (const [width, height] of [[1600, 850], [1600, 1200], [720, 900], [720, 1300]]) {
+    for (const key of Object.keys(species)) {
+      for (const nx of [.06, .15, .3, .5, .7, .85, .94]) {
+        for (const ny of [.1, .35, .5, .65, .9]) {
+          const target = {x: 70 + nx * (width - 140), y: 200 + ny * (height - 365)};
+          for (const phase of [0, .25, .72, 1]) {
+            const p = pose(key, phase, width, height, target, key === 'otter' ? 'paw' : undefined);
+            const epsilon = 0.00001;
+            assert.ok(p.x >= -epsilon && p.y >= -epsilon && p.x + p.width <= width + epsilon && p.y + p.height <= height + epsilon,
+              `${key} clip bounds ${width}x${height} phase=${phase}`);
+            if (phase === .72) {
+              assert.ok(Math.abs(p.mouth.x - target.x) < epsilon, key);
+              assert.ok(Math.abs(p.mouth.y - target.y) < epsilon, key);
+            }
+          }
+        }
+      }
+      for (const lane of [0, 1]) {
+        for (const nx of lane === 0 ? [.1, .25, .4] : [.6, .75, .9]) {
+          const target = {x: 70 + nx * (width - 140), y: 200 + .7 * (height - 365), lane};
+          const p = pose(key, .72, width, height, target, key === 'otter' ? 'paw' : undefined);
+          assert.ok(p.x >= -0.001 && p.y >= -0.001 && p.x + p.width <= width + .001 && p.y + p.height <= height + .001, key);
+          assert.ok(Math.abs(p.mouth.x - target.x) < .001 && Math.abs(p.mouth.y - target.y) < .001, key);
+        }
+      }
+    }
+  }
+});
