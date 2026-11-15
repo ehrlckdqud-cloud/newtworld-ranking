@@ -210,3 +210,34 @@ test('new actors remain drawable from announcement through departure, including 
   }
  }
 });
+
+test('otter is drawn before and after its short source clip, even when a sprite page is decoding', async()=>{
+ const vm=await import('node:vm');
+ const from=source.indexOf('actor(e,t,i,n,o=!1){');
+ const to=source.indexOf('poisonActor(',from);
+ assert.ok(from>=0&&to>from);
+ const code='({'+source.slice(from,to)+'})';
+ for(const phase of [.03,.23,.55,.92]){
+  for(const route of ['mouth','paw']){
+   let decoded=false,fallback=0;
+   const pose={actor:{key:'otter'},presence:1,bite:0,size:400,x:100,y:100,mouth:{x:300,y:300}};
+   const smooth=x=>x;
+   const method=vm.runInNewContext(code,{
+    l:{actorPose:()=>pose,pondPhase:()=>phase,smooth},
+    h:{sampleAttackPhase:()=>phase<.25?-1:phase>.75?1:.5,attackPose:()=>({presence:1,flip:false,x:20,y:30,width:180,height:90})},
+   }).actor;
+   const canvas={globalAlpha:1,save(){},restore(){},drawImage(){fallback++}};
+   const renderer={
+    clips:{ready:true,draw(){return decoded}},
+    art:{get:()=>({naturalWidth:960,naturalHeight:540})},
+    anchor:()=>({x:400,y:400}),clock:0,actorOffset:0
+   };
+   const state={event:{route,strikeWindow:{videoStart:.25,videoEnd:.75}},events:[]};
+   method.call(renderer,canvas,state,1600,900,false);
+   assert.equal(fallback,1,'fallback for missing otter page at '+phase+' '+route);
+   decoded=true;fallback=0;
+   method.call(renderer,canvas,state,1600,900,false);
+   assert.equal(fallback,0,'decoded video should not draw preview');
+  }
+ }
+});
