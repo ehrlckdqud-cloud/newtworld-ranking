@@ -65,7 +65,7 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
 test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
   const vm = await import('node:vm');
   const from = source.indexOf('function d(e,t,i,n,r,route){', source.indexOf('i("aJ7wK"'));
-  const to = source.indexOf('function c(e){', from);
+  const to = source.indexOf('function c(e,', from);
   assert.ok(from >= 0 && to > from);
   const smooth = (a, b, t) => {
     const n = Math.max(0, Math.min(1, (t - a) / (b - a)));
