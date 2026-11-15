@@ -1969,6 +1969,59 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
     </button>
   </div>
 </div>
+<style>
+#nwUpdates{display:flex;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;border:1px solid #436158;border-radius:12px;background:#142923;color:#edf6ee;text-align:left}
+#nwUpdates .update-copy{flex:1;min-width:0;line-height:1.4}
+#nwUpdates small,#nwUpdateHistory time{display:block;color:#a8d9bf;font-size:12px}
+#nwUpdates a,#nwUpdateHistory a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+#nwUpdates button,#nwUpdateHistory button{color:#edf6ee;background:#243e35;border:1px solid #557769;border-radius:7px;cursor:pointer;font:inherit}
+#nwUpdates .update-detail{padding:5px 8px;font-size:12px;white-space:nowrap}
+#nwUpdates .update-arrows{display:grid;gap:2px}
+#nwUpdates .update-arrows button{width:32px;height:25px;padding:0;line-height:1}
+#nwUpdates button:disabled{opacity:.35;cursor:default}
+#nwUpdateHistory{box-sizing:border-box;width:min(480px,92vw);max-height:78vh;padding:0;border:1px solid #527464;border-radius:14px;background:#142923;color:#edf6ee;text-align:left}
+#nwUpdateHistory::backdrop{background:#07120ec9}
+#nwUpdateHistory header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
+#nwUpdateHistory h2{margin:0;font-size:18px}
+#nwUpdateHistory button{padding:5px 10px}
+#nwUpdateHistory ol{list-style:none;margin:0;padding:0 18px 12px;max-height:50vh;overflow-y:auto;overscroll-behavior:contain}
+#nwUpdateHistory li{border-top:1px solid #3d584c;padding:12px 0}
+#nwUpdateHistory p{margin:5px 0 0;font-size:14px;line-height:1.5}
+</style>
+<section id="nwUpdates" aria-label="최근 업데이트">
+  <div class="update-copy" aria-live="polite" aria-atomic="true"><small>최근 업데이트 · <time></time></small><a></a></div>
+  <button class="update-detail" type="button" aria-haspopup="dialog">상세보기</button>
+  <div class="update-arrows"><button type="button" aria-label="더 최근 업데이트">▲</button><button type="button" aria-label="더 이전 업데이트">▼</button></div>
+</section>
+<dialog id="nwUpdateHistory" aria-labelledby="nwUpdateHistoryTitle">
+  <header><h2 id="nwUpdateHistoryTitle">업데이트 내역</h2><button type="button">닫기</button></header>
+  <ol>
+    <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못에 보름달이 떴어요</a><p>생존연못 설정에서 배경을 ‘밤’으로 바꾸면 연못에 달빛이 비쳐요. 같은 설정에서 낮 풍경도 선택할 수 있어요.</p></li>
+    <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못 음악을 최대 150%까지 조절할 수 있어요</a><p>음악 설정에서 대기곡과 진행곡의 볼륨을 원하는 크기로 맞춰 보세요.</p></li>
+    <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못에 새 대기곡과 진행곡이 추가됐어요</a><p>대기곡에는 ‘신비로운 생존연못’, 진행곡에는 ‘연못의 긴박한 생존 추격전’이 추가됐어요.</p></li>
+  </ol>
+</dialog>
+<script>
+(()=>{
+  const bar=document.getElementById('nwUpdates'),dialog=document.getElementById('nwUpdateHistory');
+  const entries=Array.from(dialog.querySelectorAll('li'));
+  const [newer,older]=bar.querySelectorAll('.update-arrows button');
+  let index=0;
+  function show(i){
+    index=i;
+    const item=entries[i],link=item.querySelector('a'),date=item.querySelector('time');
+    const title=bar.querySelector('a'),time=bar.querySelector('time');
+    title.textContent=link.textContent;title.href=link.href;
+    time.textContent=date.textContent;time.dateTime=date.dateTime;
+    newer.disabled=i===0;older.disabled=i===entries.length-1;
+  }
+  newer.onclick=()=>show(index-1);
+  older.onclick=()=>show(index+1);
+  bar.querySelector('.update-detail').onclick=()=>{dialog.showModal();dialog.querySelector('ol').scrollTop=0};
+  dialog.querySelector('button').onclick=()=>dialog.close();
+  show(0);
+})();
+</script>
 <section class="community-hub v1820-layout">
   <div class="pc-hub-column pc-hub-left">
     <div class="hub-partner-left"><aside class="partner-panel partner-left">
