@@ -3,6 +3,7 @@
  let items=[],current,id;
  function select(){
    current=items.find(x=>x.id===fields.entry.value);
+   fields.deleteEntry.disabled=!current;
    id=current?.id||crypto.randomUUID();
    fields.date.value=current?.date||new Date(Date.now()+32400000).toISOString().slice(0,10);
    for(const key of ['title','body','link'])fields[key].value=current?.[key]||'';
@@ -13,12 +14,23 @@
    fields.entry.value=selected||'';select();
  }
  async function load(){
-   publish.disabled=true;
+   form.querySelector('fieldset').disabled=true;publish.disabled=true;fields.deleteEntry.disabled=true;
    try{items=await readNewtPublicUpdates();render(fields.entry.value);publish.disabled=false;feedback.textContent='';}
    catch(e){feedback.textContent=e.message}
+   finally{form.querySelector('fieldset').disabled=false}
  }
  fields.entry.onchange=()=>{select();feedback.textContent=''};
  fields.reload.onclick=load;
+ fields.deleteEntry.onclick=async()=>{
+   if(!current||!confirm('“'+current.title+'” 공지를 홈과 상세 목록에서 삭제할까요?'))return;
+   const target=current;form.querySelector('fieldset').disabled=true;
+   try{
+     const r=await NWContent.call('contentUpdateDelete',{id:target.id,revision:target.revision});
+     if(!r.ok)throw Error(r.error||'삭제하지 못했어요.');
+     items=items.filter(x=>x.id!==target.id);render('');feedback.textContent='선택한 공지를 삭제했어요.';
+   }catch(e){feedback.textContent=e.message}
+   finally{form.querySelector('fieldset').disabled=false}
+ };
  form.onsubmit=async e=>{
    e.preventDefault();if(publish.disabled)return;
    const data={id,revision:current?.revision??null};
