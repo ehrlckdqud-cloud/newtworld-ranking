@@ -1973,7 +1973,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 #nwUpdates{display:flex;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;border:1px solid #405977;border-radius:12px;background:#192c46;color:#f0f5ff;text-align:left}
 #nwUpdates .update-copy{flex:1;min-width:0;line-height:1.4}
 #nwUpdates small,#nwUpdateHistory time{display:block;color:#a9d9ff;font-size:12px}
-#nwUpdates a,#nwUpdateHistory a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+#nwUpdates a[href],#nwUpdateHistory a{color:inherit;text-decoration:underline;text-underline-offset:3px}
 #nwUpdates button,#nwUpdateHistory button{color:#f0f5ff;background:#283f5e;border:1px solid #577499;border-radius:7px;cursor:pointer;font:inherit}
 #nwUpdates .update-detail{padding:5px 8px;font-size:12px;white-space:nowrap}
 #nwUpdates .update-arrows{display:grid;gap:2px}
@@ -2002,7 +2002,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
   <ol>
     <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못 입장 화면에 연못 사진이 바로 표시돼요</a><p>저장한 낮·밤 설정에 맞춰 대기 화면의 배경을 먼저 불러와요.</p></li>
     <li><time datetime="2026-11-15">2026.11.15</time><a href="#nwUpdates">홈에서 지난 업데이트를 볼 수 있어요</a><p>화살표로 소식을 넘기거나 상세보기에서 전체 기록을 읽을 수 있어요.</p></li>
-    <li><time datetime="2026-11-15">2026.11.15</time><a href="#nwUpdates">승인된 닉네임의 활동을 이어서 집계해요</a><p>입장 기록의 닉네임까지 바뀌어도 승인 이력과 입장일이 일치하면 기존 회원의 활동에 연결해요.</p></li>
+    <li><time datetime="2026-11-15">2026.11.15</time><span>닉네임을 바꾼 뒤 일부 활동이 누락되던 문제를 수정했어요</span></li>
     <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못에 보름달이 떴어요</a><p>생존연못 설정에서 배경을 ‘밤’으로 바꾸면 연못에 달빛이 비쳐요. 같은 설정에서 낮 풍경도 선택할 수 있어요.</p></li>
     <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못 음악을 최대 150%까지 조절할 수 있어요</a><p>음악 설정에서 대기곡과 진행곡의 볼륨을 원하는 크기로 맞춰 보세요.</p></li>
     <li><time datetime="2026-11-15">2026.11.15</time><a href="draw/pond.html">생존연못에 새 대기곡과 진행곡이 추가됐어요</a><p>대기곡에는 ‘신비로운 생존연못’, 진행곡에는 ‘연못의 긴박한 생존 추격전’이 추가됐어요.</p></li>
@@ -2033,7 +2033,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
     date.dateTime=day;date.textContent=group.label;
     const first=entries.length;
     for(const item of group.items){
-      entries.push({link:item.querySelector('a'),date,first,count:group.items.length});
+      entries.push({link:item.querySelector('a, span'),date,first,count:group.items.length});
       items.append(item);
     }
     section.append(date,items);list.append(section);
@@ -2051,7 +2051,8 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
   function show(i){
     index=i;
     const {link,date}=entries[i];
-    title.textContent=link.textContent;title.href=link.href;
+    title.textContent=link.textContent;
+    if(link.hasAttribute('href'))title.href=link.href;else title.removeAttribute('href');
     time.textContent=date.textContent;time.dateTime=date.dateTime;
     newer.disabled=i===0;older.disabled=i===entries.length-1;
     schedule();
