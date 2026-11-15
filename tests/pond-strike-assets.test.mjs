@@ -119,7 +119,7 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
     assert.equal(window.start,0,key);assert.equal(window.end,1,key);
     assert.ok(Math.abs((window.videoEnd-window.videoStart)*roundSeconds*Math.max(1,nativeLength/roundSeconds)-nativeLength)<1e-8,key);
     const strikeFrame=(route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5;
-    assert.ok(Math.abs((window.contact-window.videoStart)*roundSeconds-strikeFrame/24)<1e-8,key);
+    assert.ok(Math.abs((window.contact-window.videoStart)*roundSeconds*Math.max(1,nativeLength/roundSeconds)-strikeFrame/24)<1e-8,key);
     assert.ok(window.contact<=window.end,key);
    }
   }
