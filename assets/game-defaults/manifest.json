@@ -541,5 +541,31 @@
   "preferences": {
     "nw-space-music-v52": "{\"enabled\":true,\"volume\":0.35}"
   },
-  "release": "member-games-1"
+  "release": "member-games-1",
+  "pondMusic": [
+    {
+      "id": "newtworld-pond-waiting-20261115",
+      "name": "신비로운 생존연못",
+      "phase": "waiting",
+      "blob": {
+        "__type": "Asset",
+        "mime": "audio/mpeg",
+        "path": "media/5d0a9d0323b5320de9271e290d85e2c179b25e32a01b207c0802d322963a3e9a.mp3",
+        "bytes": 3735319,
+        "sha256": "5d0a9d0323b5320de9271e290d85e2c179b25e32a01b207c0802d322963a3e9a"
+      }
+    },
+    {
+      "id": "newtworld-pond-game-20261115",
+      "name": "연못의 긴박한 생존 추격전",
+      "phase": "game",
+      "blob": {
+        "__type": "Asset",
+        "mime": "audio/mpeg",
+        "path": "media/0b24b969523efa29e369d6c428d037c3de47a6ad882ad6fa264a809eb86a6b2f.mp3",
+        "bytes": 3707654,
+        "sha256": "0b24b969523efa29e369d6c428d037c3de47a6ad882ad6fa264a809eb86a6b2f"
+      }
+    }
+  ]
 }
