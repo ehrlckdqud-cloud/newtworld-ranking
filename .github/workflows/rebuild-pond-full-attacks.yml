@@ -1,7 +1,7 @@
 name: Rebuild full source Survival Pond strikes
 on:
   push:
-    branches: [pond/volume-alpha-revival-cost]
+    branches: [pond/restore-eye-whiskers-clean-tomato]
     paths:
       - .github/workflows/rebuild-pond-full-attacks.yml
       - tools/rebuild-pond-full-attacks.py
@@ -44,10 +44,10 @@ jobs:
           path.write_text(source[:begin]+new+source[end:])
           html=Path('draw/pond.html')
           text=html.read_text()
-          if 'pond-strikes-12-unified-size' in text:
-              html.write_text(text.replace('pond-strikes-12-unified-size','pond-strikes-13-audio-matte-cost'))
+          if 'pond-strikes-13-audio-matte-cost' in text:
+              html.write_text(text.replace('pond-strikes-13-audio-matte-cost','pond-strikes-14-eye-whisker-tomato'))
           else:
-              assert 'pond-strikes-13-audio-matte-cost' in text
+              assert 'pond-strikes-14-eye-whisker-tomato' in text
           PY
       - name: Validate source frames, audio, output structure and bundle sizes
         run: |
@@ -83,6 +83,11 @@ jobs:
               alpha=Image.open(f'draw/{key}-strike.webp').convert('RGBA').getpixel(point)[3]
               assert alpha < 40,(key,'residual white underside',alpha)
               print('PASS',key,'underbelly matte transparent',alpha)
+          # Tomato frog's previously visible pale floor beneath its left foot.
+          tomato=Image.open('draw/tomatofrog-strike.webp').convert('RGBA')
+          alpha=tomato.getpixel((155,400))[3]
+          assert alpha<40,('tomatofrog','pale floor residue',alpha)
+          print('PASS tomato frog pale floor removed',alpha)
           PY
       - name: Commit fixed audio and translucent strike assets to repair branch
         run: |
@@ -92,4 +97,4 @@ jobs:
           git add draw/tomatofrog-strike.* draw/snappingturtle2-strike.* draw/otter-strike.* draw/platypus-strike.*
           git diff --cached --quiet && exit 0
           git commit -m "assets(pond): full-length four-creature strike sprites and WAV synchronized to 5sec rounds"
-          git push origin HEAD:pond/volume-alpha-revival-cost
+          git push origin HEAD:pond/restore-eye-whiskers-clean-tomato
