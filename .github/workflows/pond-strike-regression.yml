@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - pond/stage3-attack-categories
+      - pond/stage6-native-attack-motion-audio
     paths:
       - 'draw/pond.html'
       - 'draw/pondApp.e4104cc4.js'
@@ -24,4 +25,6 @@ jobs:
         with:
           node-version: '22'
       - name: Validate attacks, revival, media bundles and positions
-        run: node --test tests/pond-random-attacks.test.mjs tests/pond-revival.test.mjs tests/pond-strike-assets.test.mjs
+        run: |
+          node --input-type=module --check < draw/pondApp.e4104cc4.js
+          node --test tests/pond-random-attacks.test.mjs tests/pond-revival.test.mjs tests/pond-strike-assets.test.mjs

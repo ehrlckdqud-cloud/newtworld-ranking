@@ -7,7 +7,7 @@ const source=readFileSync(new URL('../draw/pondApp.e4104cc4.js',import.meta.url)
 const begin=source.indexOf('let n=[{kind:"wave"}');
 const end=source.indexOf('}),i("c9l5F"',begin);
 // Run the production engine, excluding its Parcel registration wrapper.
-const Engine=vm.runInNewContext(source.slice(source.indexOf('function pondGrid('),source.indexOf('function e(e,t,i,n)'))+source.slice(begin,end)+';h',{crypto:webcrypto});
+const Engine=vm.runInNewContext(source.slice(source.indexOf('const pondStrikes = '),source.indexOf('function strikePoint('))+source.slice(source.indexOf('function pondStrikeWindow('),source.indexOf('function e(e,t,i,n)'))+source.slice(begin,end)+';h',{crypto:webcrypto});
 const names=Array.from({length:80},(_,i)=>'member-'+i);
 function engine(attack,combined=false){const e=new Engine(()=>0,attack);e.setAdminCheck(()=>true);e.reset(names,3,60,combined);return e;}
 test('all fourteen attacks can open a game, independent of the round number',()=>{

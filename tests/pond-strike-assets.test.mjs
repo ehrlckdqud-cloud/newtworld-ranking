@@ -65,7 +65,7 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
 test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
   const vm = await import('node:vm');
   const from = source.indexOf('function d(e,t,i,n,r,route){', source.indexOf('i("aJ7wK"'));
-  const to = source.indexOf('function c(e){', from);
+  const to = source.indexOf('function c(e,', from);
   assert.ok(from >= 0 && to > from);
   const smooth = (a, b, t) => {
     const n = Math.max(0, Math.min(1, (t - a) / (b - a)));
@@ -102,4 +102,71 @@ test('new strike frames stay on-screen while the contact point stays on the actu
       }
     }
   }
+});
+
+test('new strikes play at native 24fps and contain complete original WAV audio', async () => {
+ const vm=await import('node:vm');
+ const from=source.indexOf('function pondStrikeWindow('),to=source.indexOf('function pondGrid(',from);
+ assert.ok(from>=0&&to>from);
+ const clipWindow=vm.runInNewContext(source.slice(from,to)+';pondStrikeWindow',{pondStrikes:strikes});
+ for(const duration of [45,60,90,120]){
+  const rounds=duration===90?18:duration===120?24:12,roundSeconds=duration/rounds;
+  for(const [key,clip] of Object.entries(strikes)){
+   for(const route of key==='otter'?['mouth','paw']:[undefined]){
+    const window=clipWindow(key,route,roundSeconds);
+    const nativeLength=clip.frames/24;
+    assert.ok(window.start>=0&&window.end<=1+1e-9,key);
+    assert.ok(Math.abs((window.end-window.start)*roundSeconds-nativeLength)<1e-8,key);
+    const strikeFrame=(route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5;
+    assert.ok(Math.abs((window.contact-window.start)*roundSeconds-strikeFrame/24)<1e-8,key);
+    assert.ok(window.contact<=window.end,key);
+   }
+  }
+ }
+ for(const key of Object.keys(species)){
+  const wave=readFileSync(new URL(`../draw/${key}-strike.wav`,import.meta.url));
+  let offset=12,byteRate=0,dataLength=0;
+  while(offset+8<=wave.length){
+   const kind=wave.toString('ascii',offset,offset+4),bytes=wave.readUInt32LE(offset+4);
+   if(kind==='fmt ')byteRate=wave.readUInt32LE(offset+16);
+   if(kind==='data')dataLength=bytes;
+   offset+=8+bytes+(bytes%2);
+  }
+  assert.ok(byteRate>0&&dataLength>0,key);
+  assert.ok(Math.abs(dataLength/byteRate-strikes[key].frames/24)<.025,key+' original WAV length matches video');
+ }
+ assert.match(source,/n\.playbackRate=e\.native\?1:/);
+ assert.match(source,/e\.native\?Math\.max\(0,e\.audioSeconds\)/);
+ assert.match(source,/e\.strikeWindow=pondStrikeWindow\(e\.actor,e\.route,this\.duration\/this\.rounds\)/);
+});
+
+test('new species approach from left or right before contact, including two-creature attacks', async () => {
+ const vm=await import('node:vm');
+ const start=source.indexOf('function d(e,t,i,n,r,route){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
+ assert.ok(start>=0&&end>start);
+ const smooth=(a,b,t)=>{const p=Math.max(0,Math.min(1,(t-a)/(b-a)));return p*p*(3-2*p)};
+ const strikePoint=(key,route)=>route==='paw'&&strikes[key]?.paw?strikes[key].paw:strikes[key]?.mouth;
+ const pose=vm.runInNewContext(source.slice(start,end)+';d',{pondStrikes:strikes,strikePoint,a:{smooth},o:{POND_CONTACT_PHASE:.72},s:{}});
+ for(const [width,height] of [[1600,900],[720,1000]]){
+  for(const [key,clip] of Object.entries(strikes)){
+   for(const route of key==='otter'?['mouth','paw']:[undefined]){
+    const at=((route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5)/clip.frames;
+    for(const targetX of [.2,.5,.8]){
+     const target={x:70+targetX*(width-140),y:200+.6*(height-365)};
+     const entrance=pose(key,0,width,height,target,route),impact=pose(key,at,width,height,target,route);
+     assert.ok(Math.abs(entrance.x-impact.x)>5,`${key} must approach target, not pop into place`);
+     assert.ok(Math.abs(impact.mouth.x-target.x)<.001&&Math.abs(impact.mouth.y-target.y)<.001,key);
+     for(const p of [entrance,impact]){
+      assert.ok(p.x>=-1e-5&&p.x+p.width<=width+1e-5&&p.y>=-1e-5&&p.y+p.height<=height+1e-5,key);
+     }
+    }
+    for(const lane of [0,1]){
+     const target={x:width*(lane===0?.25:.75),y:height*.6,lane};
+     const enter=pose(key,0,width,height,target,route),hit=pose(key,at,width,height,target,route);
+     assert.ok(Math.abs(enter.x-hit.x)>1,`${key} paired side entrance`);
+     assert.ok(hit.x>=-1e-5&&hit.x+hit.width<=width+1e-5,key);
+    }
+   }
+  }
+ }
 });
