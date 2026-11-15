@@ -5,6 +5,8 @@ on:
     paths:
       - .github/workflows/rebuild-pond-full-attacks.yml
       - tools/rebuild-pond-full-attacks.py
+      - draw/pondApp.e4104cc4.js
+      - tests/pond-strike-assets.test.mjs
   workflow_dispatch:
 permissions:
   contents: write
