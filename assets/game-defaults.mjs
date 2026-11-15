@@ -58,8 +58,47 @@ async function restore(value) {
   return value;
 }
 
-export async function installGameDefaults({musicAndVisuals = true} = {}) {
-  const response = await fetch(manifestURL);
+// A pond-specific, idempotent additive upgrade for browsers that already have
+// a personalized draw-music library. Never reset existing files, queues, or
+// playback preferences; only prepend a genuinely new default song once.
+async function installPondMusicAdditions(manifest) {
+  const spec = manifest.databases.find(item => item.name === 'nw-draw-music-v1');
+  const entries = manifest.pondMusic;
+  if (!spec || !Array.isArray(entries) || entries.length !== 2) throw Error('생존연못 기본 음악 목록을 확인할 수 없어요.');
+  const db = await openDatabase(spec);
+  try {
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(['tracks', 'settings'], 'readwrite');
+      const tracks = tx.objectStore('tracks');
+      const settings = tx.objectStore('settings');
+      const request = settings.get('config');
+      request.onsuccess = () => {
+        const config = request.result || {waiting: [], game: [], starts: {}, volume: .65, enabled: true};
+        for (const entry of entries) {
+          if (!['waiting', 'game'].includes(entry.phase) || !entry.id || entry.blob?.__type !== 'Asset') {
+            tx.abort(); return;
+          }
+          const row = {
+            id: entry.id, name: entry.name, type: entry.blob.mime,
+            size: entry.blob.bytes, url: new URL(entry.blob.path, manifestURL).href,
+          };
+          const existing = tracks.get(entry.id);
+          existing.onsuccess = () => { if (!existing.result) tracks.put(row); };
+          const queue = Array.isArray(config[entry.phase]) ? config[entry.phase] : [];
+          if (!queue.includes(entry.id)) config[entry.phase] = [entry.id, ...queue];
+        }
+        settings.put(config, 'config');
+      };
+      tx.oncomplete = resolve;
+      tx.onabort = tx.onerror = () => reject(tx.error || Error('생존연못 기본 음악 등록에 실패했어요.'));
+    });
+  } finally {
+    db.close();
+  }
+}
+
+export async function installGameDefaults({musicAndVisuals = true, pondMusic = false} = {}) {
+  const response = await fetch(manifestURL, {cache: 'no-store'});
   if (!response.ok) throw Error('공통 게임 설정을 불러오지 못했어요.');
   const manifest = await response.json();
   if (manifest.format !== 'newtworld-game-defaults' || manifest.version !== 1) throw Error('공통 설정 형식을 확인해주세요.');
@@ -78,6 +117,7 @@ export async function installGameDefaults({musicAndVisuals = true} = {}) {
       await ifEmpty(db, spec, rows);
     } finally { db.close(); }
   }
+  if (pondMusic) await installPondMusicAdditions(manifest);
   const preference = 'nw-space-music-v52';
   if (localStorage.getItem(preference) === null && manifest.preferences[preference]) {
     localStorage.setItem(preference, manifest.preferences[preference]);

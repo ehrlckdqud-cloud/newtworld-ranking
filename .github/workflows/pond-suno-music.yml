@@ -1,0 +1,59 @@
+name: Publish Survival Pond Suno waiting and game music
+on:
+  push:
+    branches: [pond/add-suno-waiting-game-music]
+    paths:
+      - .github/workflows/pond-suno-music.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reassemble source files and verify SHA-256
+        run: |
+          python tools/publish-pond-suno-music.py
+      - name: Verify existing library is unchanged and new tracks are first for pond
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          manifest=json.loads(Path('assets/game-defaults/manifest.json').read_text())
+          db=next(d for d in manifest['databases'] if d['name']=='nw-draw-music-v1')
+          settings=next(s for s in db['stores'] if s['name']=='settings')['values'][0]
+          tracks=next(s for s in db['stores'] if s['name']=='tracks')
+          assert len(tracks['values'])==len(tracks['keys'])==19
+          assert len(settings['waiting'])==9 and len(settings['game'])==11
+          assert [x['phase'] for x in manifest['pondMusic']]==['waiting','game']
+          assert [x['name'] for x in manifest['pondMusic']]==['신비로운 생존연못','연못의 긴박한 생존 추격전']
+          for song in manifest['pondMusic']:
+              asset=song['blob']
+              path=Path('assets/game-defaults')/asset['path']
+              data=path.read_bytes()
+              assert len(data)==asset['bytes']
+              assert hashlib.sha256(data).hexdigest()==asset['sha256']
+              print('PASS',song['phase'],song['name'],asset['bytes'])
+          PY
+          node --check assets/game-defaults.mjs
+          node --check draw/member-games-entry.mjs
+          node --test tests/pond-random-attacks.test.mjs tests/pond-revival.test.mjs tests/pond-strike-assets.test.mjs
+          git diff --check
+      - name: Commit published MP3s and remove transfer chunks
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "assets(pond): add new waiting and chase music as first queued tracks"
+          git push origin HEAD:pond/add-suno-waiting-game-music
