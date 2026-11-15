@@ -7,6 +7,7 @@ on:
       - pond/stage7-wide-screen-full-appearance
       - pond/unified-creature-scale-bilateral-pairs
       - pond/volume-alpha-revival-cost
+      - pond/restore-eye-whiskers-clean-tomato
     paths:
       - 'draw/pond.html'
       - 'draw/pondApp.e4104cc4.js'
