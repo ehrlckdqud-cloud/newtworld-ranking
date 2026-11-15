@@ -64,7 +64,7 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
 
 test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
   const vm = await import('node:vm');
-  const from = source.indexOf('function d(e,t,i,n,r,route){', source.indexOf('i("aJ7wK"'));
+  const from = source.indexOf('function d(e,t,i,n,r,route,event){', source.indexOf('i("aJ7wK"'));
   const to = source.indexOf('function c(e,', from);
   assert.ok(from >= 0 && to > from);
   const smooth = (a, b, t) => {
@@ -116,9 +116,10 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
     const window=clipWindow(key,route,roundSeconds);
     const nativeLength=clip.frames/24;
     assert.ok(window.start>=0&&window.end<=1+1e-9,key);
-    assert.ok(Math.abs((window.end-window.start)*roundSeconds-nativeLength)<1e-8,key);
+    assert.equal(window.start,0,key);assert.equal(window.end,1,key);
+    assert.ok(Math.abs((window.videoEnd-window.videoStart)*roundSeconds*Math.max(1,nativeLength/roundSeconds)-nativeLength)<1e-8,key);
     const strikeFrame=(route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5;
-    assert.ok(Math.abs((window.contact-window.start)*roundSeconds-strikeFrame/24)<1e-8,key);
+    assert.ok(Math.abs((window.contact-window.videoStart)*roundSeconds*Math.max(1,nativeLength/roundSeconds)-strikeFrame/24)<1e-8,key);
     assert.ok(window.contact<=window.end,key);
    }
   }
@@ -135,14 +136,14 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
   assert.ok(byteRate>0&&dataLength>0,key);
   assert.ok(Math.abs(dataLength/byteRate-strikes[key].frames/24)<.025,key+' original WAV length matches video');
  }
- assert.match(source,/n\.playbackRate=e\.native\?1:/);
+ assert.match(source,/n\.playbackRate=e\.native\?Math\.max\(1,Math\.min\(4,5\/t\)\):/);
  assert.match(source,/e\.native\?Math\.max\(0,e\.audioSeconds\)/);
  assert.match(source,/e\.strikeWindow=pondStrikeWindow\(e\.actor,e\.route,this\.duration\/this\.rounds\)/);
 });
 
 test('new species approach from left or right before contact, including two-creature attacks', async () => {
  const vm=await import('node:vm');
- const start=source.indexOf('function d(e,t,i,n,r,route){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
+ const start=source.indexOf('function d(e,t,i,n,r,route,event){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
  assert.ok(start>=0&&end>start);
  const smooth=(a,b,t)=>{const p=Math.max(0,Math.min(1,(t-a)/(b-a)));return p*p*(3-2*p)};
  const strikePoint=(key,route)=>route==='paw'&&strikes[key]?.paw?strikes[key].paw:strikes[key]?.mouth;
@@ -167,6 +168,76 @@ test('new species approach from left or right before contact, including two-crea
      assert.ok(hit.x>=-1e-5&&hit.x+hit.width<=width+1e-5,key);
     }
    }
+  }
+ }
+});
+
+test('ultrawide desktop and compact mobile use full canvas width without green side bars', () => {
+ const start=source.indexOf('get logical(){'),end=source.indexOf('update(e){',start);
+ assert.ok(start>=0&&end>start);
+ const code=source.slice(start,end).replace(/^get logical\(\)\{/,'function view(){').replace(/\}$/,'}');
+ for(const [width,height] of [[2560,1080],[3440,1440],[1920,1080],[1366,768],[360,800],[390,844],[720,900]]){
+  const view=Function('innerWidth','innerHeight',code+';return view()')(width,height);
+  assert.ok(Math.abs(view.width/view.height-width/height)<1e-9,'full-view aspect '+width+'x'+height);
+ }
+});
+test('new actors remain drawable from announcement through departure, including otter frame fallback', async () => {
+ const from=source.indexOf('actor(e,t,i,n,o=!1){'),to=source.indexOf('poisonActor(',from);
+ assert.ok(from>=0&&to>from);
+ const actor=source.slice(from,to);
+ assert.ok(!actor.includes('if(native&&(phase<0||phase>=1))return'));
+ assert.match(actor,/preview=this\.art\.get\(a\.key\)/);
+ assert.match(actor,/visible=this\.clips\.draw/);
+ assert.match(source,/!pondStrikes\[t\]&&this\.art\.images\.delete\(t\)/);
+ const vm=await import('node:vm');
+ const start=source.indexOf('function pondStrikeWindow('),end=source.indexOf('function pondGrid(',start);
+ const timeline=vm.runInNewContext(source.slice(start,end)+';pondStrikeWindow',{pondStrikes:strikes});
+ const sourcePhaseStart=source.indexOf('function h(e,t,route,event){',source.indexOf('i("aJ7wK"'));
+ const sourcePhaseEnd=source.indexOf('function l(e,t,route){',sourcePhaseStart);
+ assert.ok(sourcePhaseStart>=0&&sourcePhaseEnd>sourcePhaseStart);
+ const phase=vm.runInNewContext(source.slice(sourcePhaseStart,sourcePhaseEnd)+';h',{
+  o:{POND_CONTACT_PHASE:.72,POND_POISON_CONTACT_PHASE:.32},a:{clamp:x=>Math.min(1,Math.max(0,x))},r:()=>.5
+ });
+ for(const duration of [45,60,90,120]){
+  const seconds=duration===45?45/12:5;
+  for(const key of Object.keys(strikes)){
+   const route=key==='otter'?'paw':undefined;
+   const window=timeline(key,route,seconds),event={strikeWindow:window};
+   assert.ok(window.videoStart>=0&&window.videoEnd<=1,key);
+   assert.equal(phase(window.videoStart-.00001,key,route,event),-1,key+' approach before video');
+   assert.ok(phase((window.videoStart+window.videoEnd)/2,key,route,event)>.45);
+   assert.equal(phase(window.videoEnd,key,route,event),1,key+' retreat after video');
+  }
+ }
+});
+
+test('otter is drawn before and after its short source clip, even when a sprite page is decoding', async()=>{
+ const vm=await import('node:vm');
+ const from=source.indexOf('actor(e,t,i,n,o=!1){');
+ const to=source.indexOf('poisonActor(',from);
+ assert.ok(from>=0&&to>from);
+ const code='({'+source.slice(from,to)+'})';
+ for(const phase of [.03,.23,.55,.92]){
+  for(const route of ['mouth','paw']){
+   let decoded=false,fallback=0;
+   const pose={actor:{key:'otter'},presence:1,bite:0,size:400,x:100,y:100,mouth:{x:300,y:300}};
+   const smooth=x=>x;
+   const method=vm.runInNewContext(code,{
+    l:{actorPose:()=>pose,pondPhase:()=>phase,smooth},
+    h:{sampleAttackPhase:()=>phase<.25?-1:phase>.75?1:.5,attackPose:()=>({presence:1,flip:false,x:20,y:30,width:180,height:90})},
+   }).actor;
+   const canvas={globalAlpha:1,save(){},restore(){},drawImage(){fallback++}};
+   const renderer={
+    clips:{ready:true,draw(){return decoded}},
+    art:{get:()=>({naturalWidth:960,naturalHeight:540})},
+    anchor:()=>({x:400,y:400}),clock:0,actorOffset:0
+   };
+   const state={event:{route,strikeWindow:{videoStart:.25,videoEnd:.75}},events:[]};
+   method.call(renderer,canvas,state,1600,900,false);
+   assert.equal(fallback,1,'fallback for missing otter page at '+phase+' '+route);
+   decoded=true;fallback=0;
+   method.call(renderer,canvas,state,1600,900,false);
+   assert.equal(fallback,0,'decoded video should not draw preview');
   }
  }
 });

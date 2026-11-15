@@ -1,0 +1,87 @@
+name: Rebuild full source Survival Pond strikes
+on:
+  push:
+    branches: [pond/stage7-wide-screen-full-appearance]
+    paths:
+      - .github/workflows/rebuild-pond-full-attacks.yml
+      - tools/rebuild-pond-full-attacks.py
+      - draw/pondApp.e4104cc4.js
+      - tests/pond-strike-assets.test.mjs
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install original video processing dependencies
+        run: |
+          python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless imageio-ffmpeg
+          python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())'
+      - name: Rebuild all original frames and complete soundtracks
+        run: |
+          python tools/rebuild-pond-full-attacks.py --sources draw/source-videos --output draw
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path=Path('draw/pondApp.e4104cc4.js')
+          source=path.read_text()
+          begin=source.index('const pondStrikes = ')+len('const pondStrikes = ')
+          end=source.index(';\nfunction strikePoint(',begin)
+          existing=json.loads(source[begin:end])
+          metadata=json.loads(Path('draw/pond-full-meta.json').read_text())
+          for key,item in metadata.items():
+              existing[key].update(item)
+          new=json.dumps(existing,ensure_ascii=False,indent=2)
+          path.write_text(source[:begin]+new+source[end:])
+          html=Path('draw/pond.html')
+          text=html.read_text()
+          if 'pond-strikes-10-native' in text:
+              html.write_text(text.replace('pond-strikes-10-native','pond-strikes-11-full-source'))
+          else:
+              assert 'pond-strikes-11-full-source' in text
+          PY
+      - name: Validate source frames, audio, output structure and bundle sizes
+        run: |
+          node --input-type=module --check < draw/pondApp.e4104cc4.js
+          node --test tests/pond-random-attacks.test.mjs tests/pond-revival.test.mjs tests/pond-strike-assets.test.mjs
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path('draw/pond-full-meta.json').read_text())
+          for key,entry in meta.items():
+              assert entry['frames']==120,key
+              assert entry['ranges'][0][0]==0,key
+              assert len(entry['ranges'])==15,key
+              size=sum(x[1] for x in entry['ranges'])
+              assert size==Path(f'draw/{key}-strike.bin').stat().st_size,key
+              sound=f'draw/{key}-strike.wav'
+              wave=Path(sound).read_bytes()
+              assert wave[:4]==b'RIFF' and wave[8:12]==b'WAVE',key
+              data_offset=wave.find(b'data',12)
+              assert data_offset>=0,key
+              data_length=int.from_bytes(wave[data_offset+4:data_offset+8],'little')
+              byte_rate=int.from_bytes(wave[28:32],'little')
+              assert byte_rate>0,key
+              sec=data_length/byte_rate
+              assert abs(sec-5)<.04,(key,sec)
+              assert 0 <= entry['contact'] < entry['frames'],key
+              if key=='otter':assert 0 <= entry['pawContact'] < entry['frames'],key
+              print('PASS',key,'120 frames, 5 sec WAV, bundle',size)
+          PY
+      - name: Commit complete original source animations to stage branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add draw/pond.html draw/pondApp.e4104cc4.js draw/pond-full-meta.json
+          git add draw/tomatofrog-strike.* draw/snappingturtle2-strike.* draw/otter-strike.* draw/platypus-strike.*
+          git diff --cached --quiet && exit 0
+          git commit -m "assets(pond): full-length four-creature strike sprites and WAV synchronized to 5sec rounds"
+          git push origin HEAD:pond/stage7-wide-screen-full-appearance
