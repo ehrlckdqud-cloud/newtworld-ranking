@@ -22,7 +22,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?stage6=b0cdc9f';
+          const suffix='?stage7=9a71b8d';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -39,14 +39,20 @@ jobs:
           let html='';
           for(let i=0;i<20;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-10-native'))break;
+            if(html.includes('pond-strikes-11-full-source'))break;
             if(i<19)await sleep(5000);
           }
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-10-native/);
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-11-full-source/);
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
           const js=decode(await read('pondApp.e4104cc4.js'));
-          for(const name of ['tomatofrog','snappingturtle2','otter','platypus'])assert.ok(js.includes('"'+name+'"'),name);
+          const begin=js.indexOf('const pondStrikes = '),end=js.indexOf(';\nfunction strikePoint(',begin);
+          assert.ok(begin>=0 && end>begin,'attack source metadata');
+          const strikes=JSON.parse(js.slice(begin+'const pondStrikes = '.length,end));
+          for(const name of ['tomatofrog','snappingturtle2','otter','platypus']){
+            assert.ok(js.includes('"'+name+'"'),name);
+            assert.equal(strikes[name].frames,120,name+' full 5s 24fps strike');
+          }
           assert.ok(js.includes('key==="snappingturtle"?"파충류":"양서류"'));
           for(const kind of ['tomatofrog','snappingturtle2','otter','platypus']){
             for(const ext of ['webp','wav','bin']){
