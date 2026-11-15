@@ -2,9 +2,15 @@
 <form id="nwEditUpdate"><fieldset><legend>홈 업데이트 관리</legend>
 <label>편집할 공지<select name="entry"><option value="">새 업데이트</option></select></label>
 <label>게시 날짜<input type="date" name="date" required></label>
-<label>제목<input name="title" maxlength="160" required></label>
+<div id="updateParts"><div class="update-part"><label>제목<input name="title" maxlength="160" required></label>
 <label>내용<textarea name="body" rows="5" maxlength="4000" placeholder="회원에게 보여줄 내용을 붙여넣으세요."></textarea></label>
 <label>회원용 링크 (선택)<input name="link" placeholder="예: draw/pond.html"></label>
+</div></div>
+<template id="updatePartTemplate"><div class="update-part"><label>제목<input name="title" maxlength="160" required></label>
+<label>내용<textarea name="body" rows="5" maxlength="4000" placeholder="회원에게 보여줄 내용을 붙여넣으세요."></textarea></label>
+<label>회원용 링크 (선택)<input name="link" placeholder="예: draw/pond.html"></label>
+<button type="button" data-remove>이 항목 빼기</button></div></template>
+<button type="button" name="addPart">＋ 항목 추가</button>
 <button type="submit" disabled>홈에 발행</button> <button type="button" name="deleteEntry" disabled>선택 공지 삭제</button> <button type="button" name="reload">목록 새로고침</button>
 <p role="status"></p></fieldset></form>
 <form id="settings"><fieldset><legend>회원 뉴트젬과 게임 설정</legend><label>서비스 상태<select name="enabled"><option value="false">준비 중</option><option value="true">운영</option></select></label><label>최초 보상<input name="welcome" type="number" min="0" max="100000" required></label><input name="price" type="hidden"><div id="coursePrices"></div><label>마블 룰렛 공개<select name="public"><option value="true">회원·이용 고객</option><option value="false">관리자 전용</option></select></label><label>이용 문의<input name="contact" maxlength="200" placeholder="문의 이메일 또는 연락처"></label><p>럭키 팩토리·생존연못·우주대탈출은 관리자 전용으로 유지됩니다.</p><p>누적 총점 1점당 1젬을 적립합니다. 비용을 변경해도 관리자 전용 코스는 공개되지 않습니다.</p><button>설정 저장</button></fieldset></form>
@@ -17,4 +23,4 @@
 <p id="recentStatus" role="status"></p>
 <table id="recentTable" hidden><thead><tr><th>회원</th><th>사용 일시 (한국시간)</th><th>사용처</th><th>사용량</th></tr></thead><tbody id="recentRows"></tbody></table>
 <button type="button" id="recentRetry" hidden>다시 불러오기</button>
-<nav id="recentPager" aria-label="사용내역 페이지"></nav></dialog></main><script src="assets/public-updates.js"></script><script src="assets/update-editor.js?v=delete-1"></script><script src="assets/content-admin.js?v=20261107-usage"></script></html>
+<nav id="recentPager" aria-label="사용내역 페이지"></nav></dialog></main><script src="assets/public-updates.js"></script><script src="assets/update-editor.js?v=batch-1"></script><script src="assets/content-admin.js?v=20261107-usage"></script></html>
