@@ -248,3 +248,22 @@ test('otter is drawn before and after its short source clip, even when a sprite 
   }
  }
 });
+
+test('revival mode restores a 300 gem badge before starting the game', () => {
+ const contentAccess=readFileSync(new URL('../assets/content-access.js',import.meta.url),'utf8');
+ assert.match(contentAccess,/\['90','120'\]\.includes\(document\.getElementById\('pondDuration'\)\?\.value\)\?'300'/);
+ assert.match(contentAccess,/addEventListener\('nw-pond-duration-restored',paintCost\)/);
+ assert.match(contentAccess,/requestAnimationFrame\(paintCost\)/);
+ assert.match(source,/requestAnimationFrame\(\(\)=>\{window\.dispatchEvent\(new Event\("nw-pond-duration-restored"\)\)/);
+ // Selected 45/60 sec modes still use the normal 200-gem price;
+ // real 90/120 sec prices remain verified by contentStart on the server.
+ assert.match(contentAccess,/game==='pond'\?'200':'—'/);
+});
+
+test('new creature audio doubles source gain without clipping, and underbelly key is selective', () => {
+ const builder=readFileSync(new URL('../tools/rebuild-pond-full-attacks.py',import.meta.url),'utf8');
+ assert.match(builder,/volume=2,alimiter=limit=0\.97/);
+ assert.match(builder,/if src\.stem in \('snappingturtle2','platypus'\)/);
+ assert.match(builder,/lower=np\.arange\(bh\)\[:,None\]>=int\(bh\*\.54\)/);
+ assert.match(builder,/unwanted\[0\]=False/);
+});

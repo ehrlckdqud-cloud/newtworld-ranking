@@ -1,11 +1,12 @@
 name: Rebuild full source Survival Pond strikes
 on:
   push:
-    branches: [pond/stage7-wide-screen-full-appearance]
+    branches: [pond/volume-alpha-revival-cost]
     paths:
       - .github/workflows/rebuild-pond-full-attacks.yml
       - tools/rebuild-pond-full-attacks.py
       - draw/pondApp.e4104cc4.js
+      - assets/content-access.js
       - tests/pond-strike-assets.test.mjs
   workflow_dispatch:
 permissions:
@@ -43,10 +44,10 @@ jobs:
           path.write_text(source[:begin]+new+source[end:])
           html=Path('draw/pond.html')
           text=html.read_text()
-          if 'pond-strikes-10-native' in text:
-              html.write_text(text.replace('pond-strikes-10-native','pond-strikes-11-full-source'))
+          if 'pond-strikes-12-unified-size' in text:
+              html.write_text(text.replace('pond-strikes-12-unified-size','pond-strikes-13-audio-matte-cost'))
           else:
-              assert 'pond-strikes-11-full-source' in text
+              assert 'pond-strikes-13-audio-matte-cost' in text
           PY
       - name: Validate source frames, audio, output structure and bundle sizes
         run: |
@@ -55,6 +56,7 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
+          from PIL import Image
           meta=json.loads(Path('draw/pond-full-meta.json').read_text())
           for key,entry in meta.items():
               assert entry['frames']==120,key
@@ -75,8 +77,14 @@ jobs:
               assert 0 <= entry['contact'] < entry['frames'],key
               if key=='otter':assert 0 <= entry['pawContact'] < entry['frames'],key
               print('PASS',key,'120 frames, 5 sec WAV, bundle',size)
+          # These are known gray-white gaps under the turtle/platypus
+          # at the strike contact preview, not part of the animal.
+          for key,point in [('snappingturtle2',(562,402)),('platypus',(558,373))]:
+              alpha=Image.open(f'draw/{key}-strike.webp').convert('RGBA').getpixel(point)[3]
+              assert alpha < 40,(key,'residual white underside',alpha)
+              print('PASS',key,'underbelly matte transparent',alpha)
           PY
-      - name: Commit complete original source animations to stage branch
+      - name: Commit fixed audio and translucent strike assets to repair branch
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -84,4 +92,4 @@ jobs:
           git add draw/tomatofrog-strike.* draw/snappingturtle2-strike.* draw/otter-strike.* draw/platypus-strike.*
           git diff --cached --quiet && exit 0
           git commit -m "assets(pond): full-length four-creature strike sprites and WAV synchronized to 5sec rounds"
-          git push origin HEAD:pond/stage7-wide-screen-full-appearance
+          git push origin HEAD:pond/volume-alpha-revival-cost
