@@ -78,29 +78,10 @@ def main():
     for rel, expected in protected.items():
         assert digest(ROOT / rel) == expected, ('unrelated asset changed', rel)
     print('PASS protected assets unchanged:', len(protected))
-
-    # Update the deployment check in the SAME tested commit as the new assets.
-    smoke_path = ROOT / '.github/workflows/pond-live-smoke.yml'
-    smoke = smoke_path.read_text()
-    smoke = smoke.replace('pond-strikes-14-eye-whisker-tomato', HTML_VERSION)
-    smoke = smoke.replace("const suffix='?stage14=2562e0c';", "const suffix='?stage15=platypus-no-circle';")
-    smoke = smoke.replace("js.includes('v=pond14-detail-matte')", "js.includes('pond15-platypus-no-circle')")
-    marker = "          console.log('PASS published corrected platypus eye, otter whiskers, tomato floor, unchanged 2x sound, and 12 attack assets');"
-    replacement = """          const {createHash}=await import('node:crypto');
-          const manifest=JSON.parse(decode(await read('platypus-matte-check.json')));
-          assert.equal(manifest.version,'pond15-platypus-no-circle');
-          assert.equal(strikes.platypus.matteVersion,manifest.version);
-          for(const [path,expected] of Object.entries(manifest.files)){
-            const bytes=await read(path);
-            assert.equal(createHash('sha256').update(bytes).digest('hex'),expected,path+' deployed exact tested asset');
-          }
-          assert.equal(createHash('sha256').update(await read('platypus-strike.wav')).digest('hex'),manifest.unchangedAudioSha256,'platypus 2x audio unchanged');
-          console.log('PASS exact tested platypus no-circle assets, preserved eye and unchanged audio');"""
-    if marker in smoke:
-        smoke = smoke.replace(marker, replacement)
-    else:
-        assert 'exact tested platypus no-circle assets' in smoke
-    smoke_path.write_text(smoke)
+    # Workflow definitions are committed by the authorized repository connector;
+    # the build job writes only generated assets, not workflow configuration.
+    smoke = (ROOT / '.github/workflows/pond-live-smoke.yml').read_text()
+    assert HTML_VERSION in smoke and 'exact tested platypus no-circle assets' in smoke
 
 
 if __name__ == '__main__':
