@@ -1990,8 +1990,9 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 #nwUpdateHistory .update-day ul{margin:0;padding-left:18px;list-style:disc}
 #nwUpdateHistory .update-day li+li{margin-top:10px}
 #nwUpdateHistory .update-day li::marker{color:#83b3da}
-#nwUpdateHistory p{margin:5px 0 0;font-size:14px;line-height:1.5}
+#nwUpdateHistory p{white-space:pre-line;margin:5px 0 0;font-size:14px;line-height:1.5}
 </style>
+<script src="assets/public-updates.js"></script>
 <section id="nwUpdates" aria-label="최근 업데이트">
   <div class="update-copy" aria-live="off" aria-atomic="true"><small>최근 업데이트 · <time></time></small><a></a></div>
   <button class="update-detail" type="button" aria-haspopup="dialog">상세보기</button>
@@ -2018,6 +2019,8 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 (()=>{
   const bar=document.getElementById('nwUpdates'),dialog=document.getElementById('nwUpdateHistory');
   const list=dialog.querySelector('ol');
+  const entries=[];
+  function regroup(){
   const groups=new Map();
   for(const item of Array.from(list.children)){
     const date=item.querySelector('time');
@@ -2026,7 +2029,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
     date.remove();
   }
   list.className='update-days';
-  const entries=[];
+  entries.length=0;
   for(const day of [...groups.keys()].sort().reverse()){
     const group=groups.get(day),section=document.createElement('li'),date=document.createElement('time'),items=document.createElement('ul');
     section.className='update-day';
@@ -2038,6 +2041,8 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
     }
     section.append(date,items);list.append(section);
   }
+  }
+  regroup();
   if(!entries.length){bar.hidden=true;return}
   const [newer,older]=bar.querySelectorAll('.update-arrows button');
   const title=bar.querySelector('a'),time=bar.querySelector('time');
@@ -2065,6 +2070,19 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
   document.addEventListener('visibilitychange',schedule);
   for(const event of ['mouseenter','mouseleave','focus','blur'])title.addEventListener(event,()=>setTimeout(schedule,0));
   show(0);
+  window.NWConfigReady.then(()=>readNewtPublicUpdates()).then(items=>{
+    if(!items.length)return;
+    const fragment=document.createDocumentFragment();
+    for(const item of items){
+      const row=document.createElement('li'),date=document.createElement('time'),label=document.createElement(item.link?'a':'span');
+      date.dateTime=item.date;date.textContent=item.date.replace(/-/g,'.');
+      label.textContent=item.title;if(item.link)label.href=item.link;
+      row.append(date,label);
+      if(item.body){const p=document.createElement('p');p.textContent=item.body;row.append(p)}
+      fragment.append(row);
+    }
+    list.replaceChildren(fragment);regroup();show(0);
+  }).catch(()=>{});
 })();
 </script>
 <section class="community-hub v1820-layout">
