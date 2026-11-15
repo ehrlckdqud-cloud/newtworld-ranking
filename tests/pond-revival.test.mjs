@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
-function load(source){const start=source.indexOf('let n=[{kind:"wave"}'),end=source.indexOf('}),i("c9l5F"',start);return vm.runInNewContext(source.slice(start,end)+';h',{crypto:webcrypto})}
+function load(source){const start=source.indexOf('let n=[{kind:"wave"}'),end=source.indexOf('}),i("c9l5F"',start);return vm.runInNewContext(source.slice(source.indexOf('function pondGrid('),source.indexOf('function e(e,t,i,n)'))+source.slice(start,end)+';h',{crypto:webcrypto})}
 const Engine=load(readFileSync(new URL('../draw/pondApp.e4104cc4.js',import.meta.url),'utf8'));
 const Old=vm.runInNewContext(readFileSync(new URL('./browser-fixtures/pond-engine-before-revival.txt',import.meta.url),'utf8')+';h',{crypto:webcrypto});
 function random(seed=1){return n=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed%n}}
