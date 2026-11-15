@@ -41,10 +41,10 @@ jobs:
           let html='';
           for(let i=0;i<60;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-night-photo-20261115')&&html.includes('content-access.js?v=pond-revival-cost-300')&&html.includes('member-games-entry.mjs?v=pond-night-volume-20261115'))break;
+            if(html.includes('pond-lobby-photo-20261115')&&html.includes('content-access.js?v=pond-revival-cost-300')&&html.includes('member-games-entry.mjs?v=pond-night-volume-20261115'))break;
             if(i<59)await sleep(5000);
           }
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-night-photo-20261115/);
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-lobby-photo-20261115/);
           assert.ok(html.includes('content-access.js?v=pond-revival-cost-300'),'corrected first-paint cost script cache version');
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
@@ -52,6 +52,7 @@ jobs:
           assert.ok(js.includes('./pond-night.png?v=20261115'), 'night selection uses the pond photograph');
           const night=await read('pond-night.png');
           assert.equal(createHash('sha1').update('blob '+night.length+'\0').update(night).digest('hex'),'413037fbcba6d734d9e35b1606b29ff117ab1712','published night photograph');
+          assert.ok(html.includes('data-pond-backdrop') && js.includes('t.state!=="ready"||this.output'), 'waiting screen displays the selected pond photo behind the leaves');
           const begin=js.indexOf('const pondStrikes = '),end=js.indexOf(';\nfunction strikePoint(',begin);
           assert.ok(begin>=0 && end>begin,'attack source metadata');
           const strikes=JSON.parse(js.slice(begin+'const pondStrikes = '.length,end));
