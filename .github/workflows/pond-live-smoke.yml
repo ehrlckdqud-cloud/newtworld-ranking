@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - .github/workflows/pond-live-smoke.yml
+      - draw/pond.html
+      - draw/pondApp.e4104cc4.js
   workflow_dispatch:
 
 permissions:
@@ -34,8 +36,13 @@ jobs:
             throw last;
           }
           const decode=bytes=>new TextDecoder().decode(bytes);
-          const html=decode(await read('pond.html'));
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-9/);
+          let html='';
+          for(let i=0;i<20;i++){
+            html=decode(await read('pond.html'));
+            if(html.includes('pond-strikes-10-native'))break;
+            if(i<19)await sleep(5000);
+          }
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-10-native/);
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
           const js=decode(await read('pondApp.e4104cc4.js'));
