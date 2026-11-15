@@ -22,7 +22,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?stage7=9a71b8d';
+          const suffix='?stage8=213c10e';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -39,10 +39,10 @@ jobs:
           let html='';
           for(let i=0;i<20;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-11-full-source'))break;
+            if(html.includes('pond-strikes-12-unified-size'))break;
             if(i<19)await sleep(5000);
           }
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-11-full-source/);
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-12-unified-size/);
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
           const js=decode(await read('pondApp.e4104cc4.js'));
@@ -54,6 +54,10 @@ jobs:
             assert.equal(strikes[name].frames,120,name+' full 5s 24fps strike');
           }
           assert.ok(js.includes('key==="snappingturtle"?"파충류":"양서류"'));
+          assert.ok(js.includes('const speciesScale=e==="otter"?1.34'), 'otter relative body size corrected');
+          assert.ok(js.includes('const paired=r?.lane!=null,fromLeft=paired?r.lane===0:'), 'two simultaneous creatures enter from different banks');
+          assert.ok(js.includes('reference*speciesScale'), 'common treefrog silhouette reference scale');
+          assert.ok(!js.includes('const left=paired?(r.lane*.5'), 'paired creatures are not squeezed to half-screen');
           for(const kind of ['tomatofrog','snappingturtle2','otter','platypus']){
             for(const ext of ['webp','wav','bin']){
               const path=kind+'-strike.'+ext,bytes=await read(path);
@@ -63,5 +67,5 @@ jobs:
               console.log('PASS',path,bytes.byteLength,'bytes');
             }
           }
-          console.log('PASS published HTML, JS and 12 new attack assets');
+          console.log('PASS published unified creature scale, bilateral entries and 12 source assets');
           NODE
