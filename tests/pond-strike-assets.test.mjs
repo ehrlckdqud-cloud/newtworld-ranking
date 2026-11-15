@@ -64,7 +64,7 @@ test('otter supports separate mouth and paw contacts and an unbiased two-choice 
 
 test('new strike frames stay on-screen while the contact point stays on the actual target', async () => {
   const vm = await import('node:vm');
-  const from = source.indexOf('function d(e,t,i,n,r,route){', source.indexOf('i("aJ7wK"'));
+  const from = source.indexOf('function d(e,t,i,n,r,route,event){', source.indexOf('i("aJ7wK"'));
   const to = source.indexOf('function c(e,', from);
   assert.ok(from >= 0 && to > from);
   const smooth = (a, b, t) => {
@@ -116,9 +116,10 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
     const window=clipWindow(key,route,roundSeconds);
     const nativeLength=clip.frames/24;
     assert.ok(window.start>=0&&window.end<=1+1e-9,key);
-    assert.ok(Math.abs((window.end-window.start)*roundSeconds-nativeLength)<1e-8,key);
+    assert.equal(window.start,0,key);assert.equal(window.end,1,key);
+    assert.ok(Math.abs((window.videoEnd-window.videoStart)*roundSeconds-nativeLength)<1e-8,key);
     const strikeFrame=(route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5;
-    assert.ok(Math.abs((window.contact-window.start)*roundSeconds-strikeFrame/24)<1e-8,key);
+    assert.ok(Math.abs((window.contact-window.videoStart)*roundSeconds-strikeFrame/24)<1e-8,key);
     assert.ok(window.contact<=window.end,key);
    }
   }
@@ -142,7 +143,7 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
 
 test('new species approach from left or right before contact, including two-creature attacks', async () => {
  const vm=await import('node:vm');
- const start=source.indexOf('function d(e,t,i,n,r,route){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
+ const start=source.indexOf('function d(e,t,i,n,r,route,event){',source.indexOf('i("aJ7wK"')),end=source.indexOf('function c(e',start);
  assert.ok(start>=0&&end>start);
  const smooth=(a,b,t)=>{const p=Math.max(0,Math.min(1,(t-a)/(b-a)));return p*p*(3-2*p)};
  const strikePoint=(key,route)=>route==='paw'&&strikes[key]?.paw?strikes[key].paw:strikes[key]?.mouth;
@@ -167,6 +168,45 @@ test('new species approach from left or right before contact, including two-crea
      assert.ok(hit.x>=-1e-5&&hit.x+hit.width<=width+1e-5,key);
     }
    }
+  }
+ }
+});
+
+test('ultrawide desktop and compact mobile use full canvas width without green side bars', () => {
+ const start=source.indexOf('get logical(){'),end=source.indexOf('update(e){',start);
+ assert.ok(start>=0&&end>start);
+ const code=source.slice(start,end).replace(/^get logical\(\)\{/,'function view(){').replace(/\}$/,'}');
+ for(const [width,height] of [[2560,1080],[3440,1440],[1920,1080],[1366,768],[360,800],[390,844],[720,900]]){
+  const view=Function('innerWidth','innerHeight',code+';return view()')(width,height);
+  assert.ok(Math.abs(view.width/view.height-width/height)<1e-9,'full-view aspect '+width+'x'+height);
+ }
+});
+test('new actors remain drawable from announcement through departure, including otter frame fallback', async () => {
+ const from=source.indexOf('actor(e,t,i,n,o=!1){'),to=source.indexOf('poisonActor(',from);
+ assert.ok(from>=0&&to>from);
+ const actor=source.slice(from,to);
+ assert.ok(!actor.includes('if(native&&(phase<0||phase>=1))return'));
+ assert.match(actor,/preview=this\.art\.get\(a\.key\)/);
+ assert.match(actor,/visible=this\.clips\.draw/);
+ assert.match(source,/!pondStrikes\[t\]&&this\.art\.images\.delete\(t\)/);
+ const vm=await import('node:vm');
+ const start=source.indexOf('function pondStrikeWindow('),end=source.indexOf('function pondGrid(',start);
+ const timeline=vm.runInNewContext(source.slice(start,end)+';pondStrikeWindow',{pondStrikes:strikes});
+ const sourcePhaseStart=source.indexOf('function h(e,t,route,event){',source.indexOf('i("aJ7wK"'));
+ const sourcePhaseEnd=source.indexOf('function l(e,t,route){',sourcePhaseStart);
+ assert.ok(sourcePhaseStart>=0&&sourcePhaseEnd>sourcePhaseStart);
+ const phase=vm.runInNewContext(source.slice(sourcePhaseStart,sourcePhaseEnd)+';h',{
+  o:{POND_CONTACT_PHASE:.72,POND_POISON_CONTACT_PHASE:.32},a:{clamp:x=>Math.min(1,Math.max(0,x))},r:()=>.5
+ });
+ for(const duration of [45,60,90,120]){
+  const seconds=duration===45?45/12:5;
+  for(const key of Object.keys(strikes)){
+   const route=key==='otter'?'paw':undefined;
+   const window=timeline(key,route,seconds),event={strikeWindow:window};
+   assert.ok(window.videoStart>=0&&window.videoEnd<=1,key);
+   assert.equal(phase(window.videoStart-.00001,key,route,event),-1,key+' approach before video');
+   assert.ok(phase((window.videoStart+window.videoEnd)/2,key,route,event)>.45);
+   assert.equal(phase(window.videoEnd,key,route,event),1,key+' retreat after video');
   }
  }
 });
