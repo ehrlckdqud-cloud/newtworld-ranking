@@ -1,0 +1,56 @@
+name: Import Survival Pond waiting and game Suno MP3
+on:
+  push:
+    branches: [pond/add-waiting-and-action-music-20261115]
+    paths: [.github/workflows/pond-music-import.yml]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Reassemble original MP3 bytes and validate playlist metadata
+        run: |
+          python - <<'PY'
+          import base64,hashlib,json
+          from pathlib import Path
+          root=Path("assets/game-defaults")
+          manifest=json.loads((root/"manifest.json").read_text())
+          songs=manifest["pondMusic"]
+          expected={
+            "waiting":("신비로운 생존연못",3735319,"5d0a9d0323b5320de9271e290d85e2c179b25e32a01b207c0802d322963a3e9a"),
+            "game":("연못의 긴박한 생존 추격전",3707654,"0b24b969523efa29e369d6c428d037c3de47a6ad882ad6fa264a809eb86a6b2f"),
+          }
+          assert len(songs)==2, songs
+          for track in songs:
+              phase=track["phase"]
+              title,size,digest=expected[phase]
+              assert track["name"]==title and track["blob"]["sha256"]==digest
+              parts=sorted((root/"music-chunks"/phase).glob("*.b64"))
+              assert len(parts)==23,(phase,len(parts))
+              content=b"".join(p.read_bytes().strip() for p in parts)
+              raw=base64.b64decode(content,validate=True)
+              assert len(raw)==size,(phase,len(raw),size)
+              assert raw[:3]==b"ID3" or raw[:2] in (b"\xff\xfb",b"\xff\xf3"),phase
+              assert hashlib.sha256(raw).hexdigest()==digest,phase
+              output=root/track["blob"]["path"]
+              output.parent.mkdir(parents=True,exist_ok=True)
+              output.write_bytes(raw)
+              print("PASS",phase,title,output,len(raw),digest)
+          assert "installPondMusicAdditions" in Path("assets/game-defaults.mjs").read_text()
+          assert "pondMusic: pond" in Path("draw/member-games-entry.mjs").read_text()
+          PY
+      - name: Ensure complete MP3 files are committed without temporary parts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm -r assets/game-defaults/music-chunks
+          git add -A assets/game-defaults
+          git diff --cached --check
+          git commit -m "assets(pond): publish exact waiting and survival chase MP3s"
+          git push origin HEAD:pond/add-waiting-and-action-music-20261115
