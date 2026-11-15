@@ -263,7 +263,18 @@ test('revival mode restores a 300 gem badge before starting the game', () => {
 test('new creature audio doubles source gain without clipping, and underbelly key is selective', () => {
  const builder=readFileSync(new URL('../tools/rebuild-pond-full-attacks.py',import.meta.url),'utf8');
  assert.match(builder,/volume=2,alimiter=limit=0\.97/);
- assert.match(builder,/if src\.stem in \('snappingturtle2','platypus'\)/);
- assert.match(builder,/lower=np\.arange\(bh\)\[:,None\]>=int\(bh\*\.54\)/);
+ assert.match(builder,/if src\.stem in \('snappingturtle2','platypus','tomatofrog'\)/);
+ assert.match(builder,/lower_limit=\.64 if src\.stem=='tomatofrog' else \.54/);
  assert.match(builder,/unwanted\[0\]=False/);
+});
+
+test('transparent-matte protections track platypus sclera and otter whiskers in every source frame', () => {
+ const builder=readFileSync(new URL('../tools/rebuild-pond-full-attacks.py',import.meta.url),'utf8');
+ assert.match(builder,/cv2\.matchTemplate\(patch,eye_template,cv2\.TM_CCOEFF_NORMED\)/);
+ assert.match(builder,/mask=np\.maximum\(mask,guard\)/);
+ assert.match(builder,/assert score>\.55/);
+ assert.match(builder,/whisker_zone=/);
+ assert.match(builder,/rescued_whiskers\+=int\(np\.sum\(strands\)\)/);
+ assert.match(builder,/mask\[strands\]=np\.maximum\(mask\[strands\]/);
+ assert.match(builder,/lower_limit=\.64 if src\.stem=='tomatofrog' else \.54/);
 });
