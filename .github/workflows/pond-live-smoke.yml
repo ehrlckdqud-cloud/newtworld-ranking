@@ -23,7 +23,7 @@ jobs:
           import assert from 'node:assert/strict';
           import {createHash} from 'node:crypto';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?stage15=platypus-no-circle';
+          const suffix='?pondmusic=5beedc3d';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -40,7 +40,7 @@ jobs:
           let html='';
           for(let i=0;i<60;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-15-platypus-no-circle')&&html.includes('content-access.js?v=pond-revival-cost-300'))break;
+            if(html.includes('pond-strikes-15-platypus-no-circle')&&html.includes('content-access.js?v=pond-revival-cost-300')&&html.includes('member-games-entry.mjs?v=pond-music-20261115'))break;
             if(i<59)await sleep(5000);
           }
           assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-15-platypus-no-circle/);
@@ -84,4 +84,25 @@ jobs:
           }
           assert.equal(createHash('sha256').update(await read('platypus-strike.wav')).digest('hex'),manifest.unchangedAudioSha256,'platypus 2x audio unchanged');
           console.log('PASS exact tested platypus no-circle assets, preserved eye and unchanged audio');
+          assert.ok(html.includes('member-games-entry.mjs?v=pond-music-20261115'), 'new music installer cache version published');
+          const musicEntry=decode(await read('member-games-entry.mjs'));
+          assert.ok(musicEntry.includes('pondMusic: pond'), 'only pond entry installs default music');
+          const defaults=decode(await read('../assets/game-defaults.mjs'));
+          assert.ok(defaults.includes('installPondMusicAdditions'), 'existing browser playlists get new songs without reset');
+          assert.ok(defaults.includes('queue.includes(entry.id)'), 'repeated visits do not duplicate songs');
+          const musicManifest=JSON.parse(decode(await read('../assets/game-defaults/manifest.json')));
+          const songs=musicManifest.pondMusic;
+          assert.deepEqual(songs.map(x=>x.name), ['신비로운 생존연못','연못의 긴박한 생존 추격전']);
+          assert.deepEqual(songs.map(x=>x.phase), ['waiting','game']);
+          const expected={
+            waiting:'5d0a9d0323b5320de9271e290d85e2c179b25e32a01b207c0802d322963a3e9a',
+            game:'0b24b969523efa29e369d6c428d037c3de47a6ad882ad6fa264a809eb86a6b2f'
+          };
+          for(const track of songs){
+            const bytes=await read('../assets/game-defaults/'+track.blob.path);
+            assert.equal(bytes.length,track.blob.bytes,track.name+' MP3 size');
+            assert.equal(createHash('sha256').update(bytes).digest('hex'),expected[track.phase],track.name+' exact uploaded MP3');
+            console.log('PASS public MP3',track.name,bytes.length,'bytes');
+          }
+          console.log('PASS pond Suno waiting/game first-track registration and byte-exact hosted MP3s');
           NODE
