@@ -21,8 +21,9 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
+          import {createHash} from 'node:crypto';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?stage14=2562e0c';
+          const suffix='?stage15=platypus-no-circle';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -37,12 +38,12 @@ jobs:
           }
           const decode=bytes=>new TextDecoder().decode(bytes);
           let html='';
-          for(let i=0;i<20;i++){
+          for(let i=0;i<60;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-14-eye-whisker-tomato')&&html.includes('content-access.js?v=pond-revival-cost-300'))break;
-            if(i<19)await sleep(5000);
+            if(html.includes('pond-strikes-15-platypus-no-circle')&&html.includes('content-access.js?v=pond-revival-cost-300'))break;
+            if(i<59)await sleep(5000);
           }
-          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-14-eye-whisker-tomato/);
+          assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-15-platypus-no-circle/);
           assert.ok(html.includes('content-access.js?v=pond-revival-cost-300'),'corrected first-paint cost script cache version');
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
@@ -59,7 +60,7 @@ jobs:
           assert.ok(js.includes('const paired=r?.lane!=null,fromLeft=paired?r.lane===0:'), 'two simultaneous creatures enter from different banks');
           assert.ok(js.includes('reference*speciesScale'), 'common treefrog silhouette reference scale');
           assert.ok(!js.includes('const left=paired?(r.lane*.5'), 'paired creatures are not squeezed to half-screen');
-          assert.ok(js.includes('v=pond14-detail-matte'), 'restored eye, whiskers and tomato matte sprite cache is active');
+          assert.ok(js.includes('pond15-platypus-no-circle'), 'platypus repaired sprite cache is active');
           assert.ok(js.includes('v=pond13-volume-matte'), 'original 2x new-species sound cache remains active');
           assert.ok(js.includes('nw-pond-duration-restored'), 'restored revival mode refresh event active');
           const access=decode(await read('../assets/content-access.js'));
@@ -74,5 +75,13 @@ jobs:
               console.log('PASS',path,bytes.byteLength,'bytes');
             }
           }
-          console.log('PASS published corrected platypus eye, otter whiskers, tomato floor, unchanged 2x sound, and 12 attack assets');
+          const manifest=JSON.parse(decode(await read('platypus-matte-check.json')));
+          assert.equal(manifest.version,'pond15-platypus-no-circle');
+          assert.equal(strikes.platypus.matteVersion,manifest.version);
+          for(const [path,expected] of Object.entries(manifest.files)){
+            const bytes=await read(path);
+            assert.equal(createHash('sha256').update(bytes).digest('hex'),expected,path+' deployed exact tested asset');
+          }
+          assert.equal(createHash('sha256').update(await read('platypus-strike.wav')).digest('hex'),manifest.unchangedAudioSha256,'platypus 2x audio unchanged');
+          console.log('PASS exact tested platypus no-circle assets, preserved eye and unchanged audio');
           NODE

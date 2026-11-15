@@ -8,6 +8,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from PIL import Image
+from pond_eye_matte import enclosed_sclera_guard
 
 # Source frame indices are measured at native 24 fps, BEFORE the attack and AFTER recovery.
 # The original contact frame indices were confirmed against the archived 2026-11-15 sources.
@@ -48,6 +49,7 @@ def convert(src,dest,meta):
     # interpreted as white background when the bill/head moves.
     eye_template=None
     eye_search=None
+    eye_previous=None
     eye_scale=(bw/998.,bh/430.)
     if src.stem=='platypus':
         first=cv2.cvtColor(decoded[wanted[0]][by:by+bh,bx:bx+bw],cv2.COLOR_BGR2GRAY)
@@ -83,22 +85,31 @@ def convert(src,dest,meta):
         mask=cv2.GaussianBlur(cv2.medianBlur(mask,3),(3,3),.65)
 
         if eye_template is not None:
-            # Locate the dark pupil by matching its authentic eye texture,
-            # instead of a fixed rectangle that would miss moving frames.
             gray=cv2.cvtColor(area,cv2.COLOR_RGB2GRAY)
             x0,y0,x1,y1=eye_search
+            th,tw=eye_template.shape
+            if eye_previous is not None:
+                # The actual eye moves by less than 10 source pixels per frame.
+                # Keep a generous 24px margin but reject the 85px jump to the
+                # mouth/background that caused the visible white circle.
+                px,py=eye_previous
+                radius=24
+                x0=max(x0,px-tw//2-radius)
+                y0=max(y0,py-th//2-radius)
+                x1=min(x1,px+(tw+1)//2+radius)
+                y1=min(y1,py+(th+1)//2+radius)
             patch=gray[y0:y1,x0:x1]
+            assert patch.shape[0]>=th and patch.shape[1]>=tw
             _,score,_,loc=cv2.minMaxLoc(cv2.matchTemplate(patch,eye_template,cv2.TM_CCOEFF_NORMED))
             eye_scores.append(score)
             assert score>.55,(src,sourceframe,'eye tracking lost',score)
-            cx=x0+loc[0]+eye_template.shape[1]//2
-            cy=y0+loc[1]+eye_template.shape[0]//2
-            guard=np.zeros((bh,bw),np.uint8)
-            cv2.ellipse(guard,(cx,cy),(round(34*eye_scale[0]),round(29*eye_scale[1])),
-                        0,0,360,255,-1)
-            guard=cv2.GaussianBlur(guard,(5,5),1.0)
-            # Restore only the tight oval around the sclera, not the
-            # separate white background beneath the platypus.
+            cx=x0+loc[0]+tw//2
+            cy=y0+loc[1]+th//2
+            eye_previous=(cx,cy)
+            # A search oval must never be painted as opaque foreground.
+            # Restore only genuine enclosed neutral eye components. Exterior-
+            # connected studio-white pixels remain transparent even on a bad match.
+            guard=enclosed_sclera_guard(area,(cx,cy),(round(34*eye_scale[0]),round(29*eye_scale[1])))
             mask=np.maximum(mask,guard)
 
         if src.stem=='otter':
