@@ -3,6 +3,7 @@
 import argparse
 import json
 import subprocess
+import imageio_ffmpeg
 from pathlib import Path
 import cv2
 import numpy as np
@@ -82,7 +83,7 @@ def convert(src,dest,meta):
     audio=dest/f'{src.stem}-strike.wav'
     start=meta['start']/FPS
     end=start+FRAME_COUNT/FPS
-    subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-i',str(src),'-vn',
+    subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-hide_banner','-loglevel','error','-y','-i',str(src),'-vn',
         '-af',f'atrim=start={start:.9f}:end={end:.9f},asetpts=PTS-STARTPTS,apad,atrim=0:5',
         '-ar','48000','-ac','2','-c:a','pcm_f32le',str(audio)],check=True)
     data={'frames':FRAME_COUNT,'ranges':ranges,'contact':meta['original_contact']-meta['start']}
