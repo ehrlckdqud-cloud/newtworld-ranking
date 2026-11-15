@@ -43,8 +43,10 @@ jobs:
           path.write_text(source[:begin]+new+source[end:])
           html=Path('draw/pond.html')
           text=html.read_text()
-          assert text.count('pond-strikes-10-native')==1
-          html.write_text(text.replace('pond-strikes-10-native','pond-strikes-11-full-source'))
+          if 'pond-strikes-10-native' in text:
+              html.write_text(text.replace('pond-strikes-10-native','pond-strikes-11-full-source'))
+          else:
+              assert 'pond-strikes-11-full-source' in text
           PY
       - name: Validate source frames, audio, output structure and bundle sizes
         run: |
