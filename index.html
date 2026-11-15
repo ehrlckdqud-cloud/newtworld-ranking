@@ -1970,26 +1970,30 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
   </div>
 </div>
 <style>
-#nwUpdates{display:flex;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;border:1px solid #436158;border-radius:12px;background:#142923;color:#edf6ee;text-align:left}
+#nwUpdates{display:flex;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;border:1px solid #405977;border-radius:12px;background:#192c46;color:#f0f5ff;text-align:left}
 #nwUpdates .update-copy{flex:1;min-width:0;line-height:1.4}
-#nwUpdates small,#nwUpdateHistory time{display:block;color:#a8d9bf;font-size:12px}
+#nwUpdates small,#nwUpdateHistory time{display:block;color:#a9d9ff;font-size:12px}
 #nwUpdates a,#nwUpdateHistory a{color:inherit;text-decoration:underline;text-underline-offset:3px}
-#nwUpdates button,#nwUpdateHistory button{color:#edf6ee;background:#243e35;border:1px solid #557769;border-radius:7px;cursor:pointer;font:inherit}
+#nwUpdates button,#nwUpdateHistory button{color:#f0f5ff;background:#283f5e;border:1px solid #577499;border-radius:7px;cursor:pointer;font:inherit}
 #nwUpdates .update-detail{padding:5px 8px;font-size:12px;white-space:nowrap}
 #nwUpdates .update-arrows{display:grid;gap:2px}
 #nwUpdates .update-arrows button{width:32px;height:25px;padding:0;line-height:1}
 #nwUpdates button:disabled{opacity:.35;cursor:default}
-#nwUpdateHistory{box-sizing:border-box;width:min(480px,92vw);max-height:78vh;padding:0;border:1px solid #527464;border-radius:14px;background:#142923;color:#edf6ee;text-align:left}
-#nwUpdateHistory::backdrop{background:#07120ec9}
+#nwUpdateHistory{box-sizing:border-box;width:min(480px,92vw);max-height:78vh;padding:0;border:1px solid #506c91;border-radius:14px;background:#192c46;color:#f0f5ff;text-align:left}
+#nwUpdateHistory::backdrop{background:#07101ec9}
 #nwUpdateHistory header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px}
 #nwUpdateHistory h2{margin:0;font-size:18px}
 #nwUpdateHistory button{padding:5px 10px}
-#nwUpdateHistory ol{list-style:none;margin:0;padding:0 18px 12px;max-height:50vh;overflow-y:auto;overscroll-behavior:contain}
-#nwUpdateHistory li{border-top:1px solid #3d584c;padding:12px 0}
+#nwUpdateHistory .update-days{list-style:none;margin:0;padding:0 18px 12px;max-height:50vh;overflow-y:auto;overscroll-behavior:contain}
+#nwUpdateHistory .update-day + .update-day{border-top:1px solid #405977;margin-top:14px;padding-top:14px}
+#nwUpdateHistory .update-day time{margin-bottom:8px;font-weight:700}
+#nwUpdateHistory .update-day ul{margin:0;padding-left:18px;list-style:disc}
+#nwUpdateHistory .update-day li+li{margin-top:10px}
+#nwUpdateHistory .update-day li::marker{color:#83b3da}
 #nwUpdateHistory p{margin:5px 0 0;font-size:14px;line-height:1.5}
 </style>
 <section id="nwUpdates" aria-label="최근 업데이트">
-  <div class="update-copy" aria-live="polite" aria-atomic="true"><small>최근 업데이트 · <time></time></small><a></a></div>
+  <div class="update-copy" aria-live="off" aria-atomic="true"><small>최근 업데이트 · <time></time></small><a></a></div>
   <button class="update-detail" type="button" aria-haspopup="dialog">상세보기</button>
   <div class="update-arrows"><button type="button" aria-label="더 최근 업데이트">▲</button><button type="button" aria-label="더 이전 업데이트">▼</button></div>
 </section>
@@ -2013,21 +2017,52 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <script>
 (()=>{
   const bar=document.getElementById('nwUpdates'),dialog=document.getElementById('nwUpdateHistory');
-  const entries=Array.from(dialog.querySelectorAll('li'));
+  const list=dialog.querySelector('ol');
+  const groups=new Map();
+  for(const item of Array.from(list.children)){
+    const date=item.querySelector('time');
+    if(!groups.has(date.dateTime))groups.set(date.dateTime,{label:date.textContent,items:[]});
+    groups.get(date.dateTime).items.push(item);
+    date.remove();
+  }
+  list.className='update-days';
+  const entries=[];
+  for(const day of [...groups.keys()].sort().reverse()){
+    const group=groups.get(day),section=document.createElement('li'),date=document.createElement('time'),items=document.createElement('ul');
+    section.className='update-day';
+    date.dateTime=day;date.textContent=group.label;
+    const first=entries.length;
+    for(const item of group.items){
+      entries.push({link:item.querySelector('a'),date,first,count:group.items.length});
+      items.append(item);
+    }
+    section.append(date,items);list.append(section);
+  }
+  if(!entries.length){bar.hidden=true;return}
   const [newer,older]=bar.querySelectorAll('.update-arrows button');
-  let index=0;
+  const title=bar.querySelector('a'),time=bar.querySelector('time');
+  let index=0,timer;
+  function schedule(){
+    clearTimeout(timer);
+    const {first,count}=entries[index];
+    if(count<2||dialog.open||document.hidden||title.matches(':hover,:focus'))return;
+    timer=setTimeout(()=>show(first+(index-first+1)%count),6000);
+  }
   function show(i){
     index=i;
-    const item=entries[i],link=item.querySelector('a'),date=item.querySelector('time');
-    const title=bar.querySelector('a'),time=bar.querySelector('time');
+    const {link,date}=entries[i];
     title.textContent=link.textContent;title.href=link.href;
     time.textContent=date.textContent;time.dateTime=date.dateTime;
     newer.disabled=i===0;older.disabled=i===entries.length-1;
+    schedule();
   }
   newer.onclick=()=>show(index-1);
   older.onclick=()=>show(index+1);
-  bar.querySelector('.update-detail').onclick=()=>{dialog.showModal();dialog.querySelector('ol').scrollTop=0};
+  bar.querySelector('.update-detail').onclick=()=>{dialog.showModal();list.scrollTop=0;schedule()};
   dialog.querySelector('button').onclick=()=>dialog.close();
+  dialog.addEventListener('close',schedule);
+  document.addEventListener('visibilitychange',schedule);
+  for(const event of ['mouseenter','mouseleave','focus','blur'])title.addEventListener(event,()=>setTimeout(schedule,0));
   show(0);
 })();
 </script>
