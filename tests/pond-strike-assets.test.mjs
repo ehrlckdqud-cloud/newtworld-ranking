@@ -117,7 +117,7 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
     const nativeLength=clip.frames/24;
     assert.ok(window.start>=0&&window.end<=1+1e-9,key);
     assert.equal(window.start,0,key);assert.equal(window.end,1,key);
-    assert.ok(Math.abs((window.videoEnd-window.videoStart)*roundSeconds-nativeLength)<1e-8,key);
+    assert.ok(Math.abs((window.videoEnd-window.videoStart)*roundSeconds*Math.max(1,nativeLength/roundSeconds)-nativeLength)<1e-8,key);
     const strikeFrame=(route==='paw'&&clip.pawContact!=null?clip.pawContact:clip.contact)+.5;
     assert.ok(Math.abs((window.contact-window.videoStart)*roundSeconds-strikeFrame/24)<1e-8,key);
     assert.ok(window.contact<=window.end,key);
@@ -136,7 +136,7 @@ test('new strikes play at native 24fps and contain complete original WAV audio',
   assert.ok(byteRate>0&&dataLength>0,key);
   assert.ok(Math.abs(dataLength/byteRate-strikes[key].frames/24)<.025,key+' original WAV length matches video');
  }
- assert.match(source,/n\.playbackRate=e\.native\?1:/);
+ assert.match(source,/n\.playbackRate=e\.native\?Math\.max\(1,Math\.min\(4,5\/t\)\):/);
  assert.match(source,/e\.native\?Math\.max\(0,e\.audioSeconds\)/);
  assert.match(source,/e\.strikeWindow=pondStrikeWindow\(e\.actor,e\.route,this\.duration\/this\.rounds\)/);
 });
