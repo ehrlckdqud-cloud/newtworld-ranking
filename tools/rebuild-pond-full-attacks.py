@@ -44,7 +44,21 @@ def convert(src,dest,meta):
         decoded.append(frame)
     cap.release()
     assert len(decoded)>=original_frames-1,(src,len(decoded),original_frames)
+    # Track the platypus eye frame by frame. The white sclera must NOT be
+    # interpreted as white background when the bill/head moves.
+    eye_template=None
+    eye_search=None
+    eye_scale=(bw/998.,bh/430.)
+    if src.stem=='platypus':
+        first=cv2.cvtColor(decoded[wanted[0]][by:by+bh,bx:bx+bw],cv2.COLOR_BGR2GRAY)
+        ex,ey=eye_scale
+        eye_template=first[round(184*ey):round(220*ey),round(708*ex):round(745*ex)].copy()
+        eye_search=(round(590*ex),round(40*ey),round(920*ex),round(340*ey))
+        assert eye_template.shape[0]>=15 and eye_template.shape[1]>=15
+
     frames=[]
+    eye_scores=[]
+    rescued_whiskers=0
     for sourceframe in wanted:
         frame=decoded[min(sourceframe,len(decoded)-1)]
         area=cv2.cvtColor(frame[by:by+bh,bx:bx+bw],cv2.COLOR_BGR2RGB)
@@ -54,20 +68,61 @@ def convert(src,dest,meta):
         count,labels=cv2.connectedComponents(nearwhite,connectivity=4)
         border=np.unique(np.concatenate((labels[0,:],labels[-1,:],labels[:,0],labels[:,-1])))
         mask=np.where(np.isin(labels,border),0,255).astype(np.uint8)
-        if src.stem in ('snappingturtle2','platypus'):
-            # A large white/gray background island can be enclosed beneath
-            # the abdomen by the four feet, so edge flood-fill misses it.
-            # Only key large neutral components in the LOWER crop area,
-            # protecting the original bright eye and bill highlights.
+        if src.stem in ('snappingturtle2','platypus','tomatofrog'):
+            # Only remove broad neutral flooring/shadows BELOW the animal.
+            # Tomato frog's light beige belly is warm-colored, not neutral.
             neutral=((lo>177)&((hi-lo)<47)).astype(np.uint8)
             total,components,stats,_=cv2.connectedComponentsWithStats(neutral,connectivity=4)
             rim=np.unique(np.concatenate((components[0,:],components[-1,:],components[:,0],components[:,-1])))
             unwanted=np.isin(np.arange(total),rim)|(stats[:,cv2.CC_STAT_AREA]>=80)
             unwanted[0]=False
-            lower=np.arange(bh)[:,None]>=int(bh*.54)
+            lower_limit=.64 if src.stem=='tomatofrog' else .54
+            lower=np.arange(bh)[:,None]>=int(bh*lower_limit)
             mask[np.logical_and(unwanted[components],lower)]=0
-        mask=cv2.medianBlur(mask,3)
-        mask=cv2.GaussianBlur(mask,(3,3),.65)
+
+        mask=cv2.GaussianBlur(cv2.medianBlur(mask,3),(3,3),.65)
+
+        if eye_template is not None:
+            # Locate the dark pupil by matching its authentic eye texture,
+            # instead of a fixed rectangle that would miss moving frames.
+            gray=cv2.cvtColor(area,cv2.COLOR_RGB2GRAY)
+            x0,y0,x1,y1=eye_search
+            patch=gray[y0:y1,x0:x1]
+            _,score,_,loc=cv2.minMaxLoc(cv2.matchTemplate(patch,eye_template,cv2.TM_CCOEFF_NORMED))
+            eye_scores.append(score)
+            assert score>.55,(src,sourceframe,'eye tracking lost',score)
+            cx=x0+loc[0]+eye_template.shape[1]//2
+            cy=y0+loc[1]+eye_template.shape[0]//2
+            guard=np.zeros((bh,bw),np.uint8)
+            cv2.ellipse(guard,(cx,cy),(round(34*eye_scale[0]),round(29*eye_scale[1])),
+                        0,0,360,255,-1)
+            guard=cv2.GaussianBlur(guard,(5,5),1.0)
+            # Restore only the tight oval around the sclera, not the
+            # separate white background beneath the platypus.
+            mask=np.maximum(mask,guard)
+
+        if src.stem=='otter':
+            # Reconstruct thin grey/white whisker strands whose pixels were
+            # swallowed by the white-background key and median filtering.
+            # Restrict the rescue to genuine fine detail beside the moving
+            # muzzle, not the entire white canvas.
+            gray=cv2.cvtColor(area,cv2.COLOR_RGB2GRAY).astype(np.float32)
+            local_bg=cv2.GaussianBlur(gray,(0,0),sigmaX=5)
+            detail=local_bg-gray
+            yy,xx=np.indices((bh,bw))
+            head=(mask>200)&(xx>bw*.55)&(yy>bh*.05)&(yy<bh*.47)&(lo<200)
+            if np.any(head):
+                nose_x=float(np.percentile(xx[head],99.5))
+                at_tip=head&(xx>nose_x-8)
+                nose_y=float(np.median(yy[at_tip])) if np.any(at_tip) else float(bh*.3)
+                whisker_zone=(xx>nose_x-22)&(xx<nose_x+115)&(np.abs(yy-nose_y)<100)&(mask<180)
+                fine=(detail>3.4)&(gray<252)&((hi-lo)<25)&whisker_zone
+                strands=cv2.dilate(fine.astype(np.uint8),np.ones((2,2),np.uint8))>0
+                strands &= whisker_zone
+                rescued_whiskers+=int(np.sum(strands))
+                # Preserve their anti-aliased edge without drawing solid white halos.
+                mask[strands]=np.maximum(mask[strands],np.uint8(170))
+
         rgba=np.dstack((area,mask))
         tile=Image.new('RGBA',CANVAS,(0,0,0,0))
         x=(CANVAS[0]-bw)//2
@@ -101,6 +156,8 @@ def convert(src,dest,meta):
     data={'frames':FRAME_COUNT,'ranges':ranges,'contact':meta['original_contact']-meta['start']}
     if 'original_paw' in meta:data['pawContact']=meta['original_paw']-meta['start']
     print(src.stem,'source',f'{start:.3f}-{end:.3f}s','frames',FRAME_COUNT,'bundle',offset,'audio',audio.stat().st_size,'contact',data['contact'],'pawContact',data.get('pawContact'))
+    if eye_scores:print('EYE_TRACK',src.stem,'min_correlation',round(min(eye_scores),3),'frames',len(eye_scores))
+    if src.stem=='otter':print('WHISKER_RESCUE','pixels',rescued_whiskers)
     return data
 
 def main():
