@@ -54,6 +54,18 @@ def convert(src,dest,meta):
         count,labels=cv2.connectedComponents(nearwhite,connectivity=4)
         border=np.unique(np.concatenate((labels[0,:],labels[-1,:],labels[:,0],labels[:,-1])))
         mask=np.where(np.isin(labels,border),0,255).astype(np.uint8)
+        if src.stem in ('snappingturtle2','platypus'):
+            # A large white/gray background island can be enclosed beneath
+            # the abdomen by the four feet, so edge flood-fill misses it.
+            # Only key large neutral components in the LOWER crop area,
+            # protecting the original bright eye and bill highlights.
+            neutral=((lo>177)&((hi-lo)<47)).astype(np.uint8)
+            total,components,stats,_=cv2.connectedComponentsWithStats(neutral,connectivity=4)
+            rim=np.unique(np.concatenate((components[0,:],components[-1,:],components[:,0],components[:,-1])))
+            unwanted=np.isin(np.arange(total),rim)|(stats[:,cv2.CC_STAT_AREA]>=80)
+            unwanted[0]=False
+            lower=np.arange(bh)[:,None]>=int(bh*.54)
+            mask[np.logical_and(unwanted[components],lower)]=0
         mask=cv2.medianBlur(mask,3)
         mask=cv2.GaussianBlur(mask,(3,3),.65)
         rgba=np.dstack((area,mask))
@@ -84,7 +96,7 @@ def convert(src,dest,meta):
     start=meta['start']/FPS
     end=start+FRAME_COUNT/FPS
     subprocess.run([imageio_ffmpeg.get_ffmpeg_exe(),'-hide_banner','-loglevel','error','-y','-i',str(src),'-vn',
-        '-af',f'atrim=start={start:.9f}:end={end:.9f},asetpts=PTS-STARTPTS,apad,atrim=0:5',
+        '-af',f'atrim=start={start:.9f}:end={end:.9f},asetpts=PTS-STARTPTS,volume=2,alimiter=limit=0.97:attack=5:release=50:level=false:latency=true,apad,atrim=0:5',
         '-ar','48000','-ac','2','-c:a','pcm_f32le',str(audio)],check=True)
     data={'frames':FRAME_COUNT,'ranges':ranges,'contact':meta['original_contact']-meta['start']}
     if 'original_paw' in meta:data['pawContact']=meta['original_paw']-meta['start']
