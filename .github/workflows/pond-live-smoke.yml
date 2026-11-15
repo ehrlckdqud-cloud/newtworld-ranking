@@ -22,7 +22,7 @@ jobs:
           node --input-type=module <<'NODE'
           import assert from 'node:assert/strict';
           const base='https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/';
-          const suffix='?stage9=4822d64';
+          const suffix='?stage10=091d461';
           const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
           async function read(path) {
             let last;
@@ -39,10 +39,11 @@ jobs:
           let html='';
           for(let i=0;i<20;i++){
             html=decode(await read('pond.html'));
-            if(html.includes('pond-strikes-13-audio-matte-cost'))break;
+            if(html.includes('pond-strikes-13-audio-matte-cost')&&html.includes('content-access.js?v=pond-revival-cost-300'))break;
             if(i<19)await sleep(5000);
           }
           assert.match(html,/pondApp\.e4104cc4\.js\?v=pond-strikes-13-audio-matte-cost/);
+          assert.ok(html.includes('content-access.js?v=pond-revival-cost-300'),'corrected first-paint cost script cache version');
           assert.match(html,/동물 12종/);
           assert.match(html,/12종 동물 영상/);
           const js=decode(await read('pondApp.e4104cc4.js'));
