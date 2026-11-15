@@ -42,11 +42,11 @@
   if(startButton&&window.NWUI){
    function paintCost(){
     const game=startButton.id==='pondStart'?'pond':startButton.id==='spstart'?'space':Number(document.getElementById('map')?.value)===4?'factory':'marble',g=lastStatus?.config?.games?.[game];
-    const label=gameAdminToken?'면제':lastStatus?.kind==='guest'?'이용권':g?String(coursePrice(lastStatus.config,game)): '—';
+    const label=gameAdminToken?'면제':lastStatus?.kind==='guest'?'이용권':g?String(coursePrice(lastStatus.config,game)):(game==='pond'&&['90','120'].includes(document.getElementById('pondDuration')?.value)?'300':game==='pond'?'200':'—');
     let badge=startButton.querySelector('.nw-start-cost');if(!badge){badge=document.createElement('span');badge.className='nw-start-cost';startButton.append(badge);}
     if(badge.dataset.label===label)return;badge.dataset.label=label;badge.replaceChildren();if(/^\d+$/.test(label))badge.append(window.NWUI.gem());badge.append(document.createTextNode(label));badge.setAttribute('aria-label',/^\d+$/.test(label)?label+'젬 차감':label);
    }
-   new MutationObserver(paintCost).observe(startButton,{childList:true});document.getElementById('map')?.addEventListener('change',paintCost);document.getElementById('pondDuration')?.addEventListener('change',paintCost);window.addEventListener('nw-content-status',paintCost);paintCost();
+   new MutationObserver(paintCost).observe(startButton,{childList:true});document.getElementById('map')?.addEventListener('change',paintCost);document.getElementById('pondDuration')?.addEventListener('change',paintCost);window.addEventListener('nw-pond-duration-restored',paintCost);window.addEventListener('pageshow',paintCost);window.addEventListener('nw-content-status',paintCost);window.NWContent.refreshStartCost=paintCost;paintCost();requestAnimationFrame(paintCost);
   }
 
   const modeButton=document.getElementById('nwGameAdminMode');
