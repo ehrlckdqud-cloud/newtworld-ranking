@@ -51,11 +51,23 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .recent-activity-panel #recentList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#486d7d transparent;padding-right:6px;align-content:start;touch-action:pan-y}
 .recent-activity-panel #recentList::-webkit-scrollbar{width:6px}
 .recent-activity-panel #recentList::-webkit-scrollbar-thumb{background:#486d7d;border-radius:10px}
-/* On desktop, match the card height of the ranking / monthly-goal grid row.
-   The list remains independently scrollable instead of enlarging the page. */
+/* PC: the rank-history card alone determines row height.
+   Other cards cannot enlarge the row; the activity list scrolls internally. */
 @media(min-width:901px){
-  .three{align-items:stretch}
-  .three>.recent-activity-panel{height:100%;max-height:none;min-height:0}
+  .three{align-items:start}
+  .three>.rank-history-panel{align-self:start;height:auto;max-height:none}
+  .three>.recent-activity-panel{
+    height:var(--nw-rank-panel-height,520px);
+    max-height:var(--nw-rank-panel-height,520px);
+    min-height:0;
+  }
+  .three>.card:last-child{
+    height:var(--nw-rank-panel-height,520px);
+    max-height:var(--nw-rank-panel-height,520px);
+    min-height:0;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
 }
 /* Keep the compact mobile layout unchanged, including the stacked tablet layout. */
 @media(max-width:900px){
@@ -471,6 +483,34 @@ window.NWConfigReady.then(()=>{
     drawRankHistory();
   }));
   $('rankHistoryPeriod').addEventListener('change',e=>{rankHistoryPeriod=e.target.value;rankHistorySelected='';drawRankHistory();});
+  // Read ONLY the natural rank card height: the sibling cards must never
+  // make the row taller. Handles changes in record count, text wrapping,
+  // browser font size and the rank-detail period/metric controls.
+  (function matchDesktopCardHeights(){
+    const rankPanel=document.querySelector('.three>.rank-history-panel');
+    const dashboardRow=rankPanel?.parentElement;
+    if(!rankPanel||!dashboardRow)return;
+    let last=0;
+    const sync=()=>{
+      if(window.innerWidth<=900){
+        dashboardRow.style.removeProperty('--nw-rank-panel-height');
+        last=0;
+        return;
+      }
+      const height=Math.ceil(rankPanel.getBoundingClientRect().height);
+      if(height>0&&height!==last){
+        dashboardRow.style.setProperty('--nw-rank-panel-height',height+'px');
+        last=height;
+      }
+    };
+    if(typeof ResizeObserver!=='undefined'){
+      const observer=new ResizeObserver(sync);
+      observer.observe(rankPanel);
+    }
+    window.addEventListener('resize',sync,{passive:true});
+    sync();
+  })();
+
 
   // Member-only activity history. Monetary ledger entries are READ-ONLY and never cause a payment.
   let activityBaseProfile={},activityWallet=null,activityVisible=20,activityWalletState='loading',activityRequestId=0;
