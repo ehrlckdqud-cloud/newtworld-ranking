@@ -158,6 +158,46 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
  }
  .grade-info-card .grade-row>div:last-child{flex:1 1 0;min-width:0}
 }
+
+/* Keep the donut exactly where it is; nudge only the desktop 2-column
+   numeric legend to align its column pair beneath the graph center. */
+@media(min-width:901px){
+ .activity-analysis-card .legend{
+   width:calc(100% - 24px);
+   margin-left:24px;
+ }
+ .grade-info-card .grade-row{width:min(100%,540px);gap:14px}
+ .grade-info-card .grade-row .shield{
+   flex:0 0 184px;
+   width:184px;
+   height:200px;
+ }
+ .grade-info-card .grade-row .shield img{
+   max-width:184px;
+   max-height:200px;
+   width:100%;
+   height:100%;
+   object-fit:contain;
+ }
+}
+/* On phones/tablets enlarge the badge artwork in its original 92x100
+   allocation; do not change the card height or the text column. */
+@media(max-width:900px){
+ .grade-info-card .grade-row .shield{
+   flex:0 0 92px;
+   width:92px;
+   height:100px;
+   overflow:visible;
+ }
+ .grade-info-card .grade-row .shield img{
+   transform:scale(1.12);
+   transform-origin:center;
+ }
+}
+@media(max-width:370px){
+ .grade-info-card .grade-row{gap:12px}
+ .grade-info-card .grade-row .shield img{transform:scale(1.08)}
+}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
