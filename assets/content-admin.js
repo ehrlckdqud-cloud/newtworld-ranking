@@ -66,10 +66,26 @@
  form.elements.id.onchange=()=>{const c=customers.find(x=>x.id===form.elements.id.value);form.elements.name.value=c?.name||'';form.elements.email.value=c?.email||'';form.elements.mode.value=c?.mode||'days';};
  form.onsubmit=e=>{e.preventDefault();const f=e.target;if(!confirm('입금을 확인했고 해당 이용권을 등록 또는 연장할까요?'))return;mutate({operation:'customer',id:f.elements.id.value,name:f.elements.name.value,email:f.elements.email.value,mode:f.elements.mode.value,quantity:Number(f.elements.quantity.value),games:['marble']},f.querySelector('button'));};
  function showBalance(){const chosen=members.filter(m=>selectedMembers.has(m.id));document.getElementById('adjustSelected').textContent='선택 '+chosen.length+'명'+(chosen.length?' · '+chosen.map(m=>m.name).join(', '):'');document.getElementById('memberBalance').textContent=chosen.length===1?'현재 뉴트젬: '+Number(chosen[0].balance).toLocaleString()+'젬':'';}
+ const adjustmentForm=document.getElementById('adjust');
+ adjustmentForm.querySelector('legend').textContent='회원 뉴트젬 정정 / 협동전 코인 지급';
+ adjustmentForm.elements.direction.add(new Option('협동전 코인 지급 (+)','coins'));
+ adjustmentForm.elements.direction.onchange=()=>{
+   const coins=adjustmentForm.elements.direction.value==='coins';
+   const reasonLabel=adjustmentForm.elements.reason.parentElement.firstChild;
+   reasonLabel.textContent=coins?'코인 지급 사유':'사유 (해당 회원의 이용 내역에 표시됩니다)';
+   document.getElementById('adjustSubmit').textContent=coins?'선택 회원에게 코인 지급':'선택 회원 지급 / 회수';
+ };
+ async function grantCoins(request){
+   const response=await fetch('https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/api/admin-coins',{
+     method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',
+     body:JSON.stringify({...request,adminToken:sessionStorage.getItem('nwAdminToken')||''})
+   });
+   return response.json();
+ }
  document.getElementById('adjust').onsubmit=async e=>{e.preventDefault();const f=e.target,button=document.getElementById('adjustSubmit');if(button.disabled)return;
- if(!pendingAdjustment){const accounts=[...selectedMembers].sort().map(id=>'member:'+id),amount=Number(f.elements.direction.value)*Number(f.elements.amount.value),reason=f.elements.reason.value.trim();if(!accounts.length){status.textContent='회원을 선택해주세요.';return;}if(!confirm(accounts.length+'명에게 각각 '+amount.toLocaleString()+'젬 (합계 '+(amount*accounts.length).toLocaleString()+'젬)을 적용할까요?'))return;pendingAdjustment={operation:'adjustMany',accounts,amount,reason,requestId:crypto.randomUUID()};}
+ if(!pendingAdjustment){const coins=f.elements.direction.value==='coins',unit=coins?'코인':'젬',accounts=[...selectedMembers].sort().map(id=>coins?id:'member:'+id),amount=(coins?1:Number(f.elements.direction.value))*Number(f.elements.amount.value),reason=f.elements.reason.value.trim();if(!accounts.length){status.textContent='회원을 선택해주세요.';return;}if(!confirm(accounts.length+'명에게 각각 '+amount.toLocaleString() +unit+' (합계 '+(amount*accounts.length).toLocaleString()+unit+')을 적용할까요?'))return;pendingAdjustment={operation:coins?'grantCoins':'adjustMany',accounts,amount,reason,requestId:crypto.randomUUID()};}
  button.disabled=true;for(const input of f.querySelectorAll('input,select'))input.disabled=true;renderAdjustMembers();
- try{const r=await NWContent.call('contentAdminSave',{...pendingAdjustment,guestToken:''});if(!r.ok){if(r.unchanged){pendingAdjustment=null;button.textContent='선택 회원 지급 / 회수';}throw Error(r.error||'처리 결과를 확인하지 못했습니다.');}const count=pendingAdjustment.accounts.length;pendingAdjustment=null;button.textContent='선택 회원 지급 / 회수';status.textContent=count+'명 처리 완료'+(r.replayed?' (중복 없이 확인)':'');try{await load();}catch(e){status.textContent+=' · 목록 갱신 실패: '+e.message;}}
+ try{const r=pendingAdjustment.operation==='grantCoins'?await grantCoins(pendingAdjustment):await NWContent.call('contentAdminSave',{...pendingAdjustment,guestToken:''});if(!r.ok){if(r.unchanged){pendingAdjustment=null;adjustmentForm.elements.direction.onchange();}throw Error(r.error||'처리 결과를 확인하지 못했습니다.');}const count=pendingAdjustment.accounts.length;pendingAdjustment=null;adjustmentForm.elements.direction.onchange();status.textContent=count+'명 처리 완료'+(r.replayed?' (중복 없이 확인)':'');try{await load();}catch(e){status.textContent+=' · 목록 갱신 실패: '+e.message;}}
  catch(e){status.textContent=e.message+(pendingAdjustment?' 입력한 요청을 유지했습니다. 같은 요청 재확인을 눌러주세요.':'');if(pendingAdjustment)button.textContent='같은 요청 재확인';}
  finally{button.disabled=false;for(const input of f.querySelectorAll('input,select'))input.disabled=!!pendingAdjustment;renderAdjustMembers();}
  };
