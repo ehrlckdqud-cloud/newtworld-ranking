@@ -88,6 +88,45 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 #recentActivityStatus{font-size:11px;margin-top:8px;line-height:1.6}
 @media(max-width:600px){.recent-activity-total{padding:9px}.recent-activity-total strong{font-size:16px}.recent-activity-label{font-size:12px}.recent-activity-points{font-size:11px}.recent-activity-main{gap:7px}}
 
+
+/* Insight summary, based only on month-to-date recorded activity.
+   The analysis card occupies half the row on PC; the existing left-side
+   chart + legend are retained, while insights use the right half. */
+@media(min-width:901px){.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.activity-analysis-card{min-width:0}
+.activity-analysis-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:14px}
+.activity-analysis-figures{min-width:0}
+.activity-analysis-card .donut-wrap{gap:12px;align-items:center}
+.activity-analysis-card .donut{flex:0 0 128px;width:128px;height:128px}
+.activity-analysis-card .donut:after{inset:25px}
+.activity-analysis-card .legend{flex:1;min-width:0;gap:6px;font-size:11px}
+.activity-analysis-card .legend span{gap:5px;flex-wrap:wrap}
+.activity-analysis-card .legend b{font-weight:650}
+.activity-insight{min-width:0;border:1px solid #365362;background:#102633;border-radius:12px;padding:12px 13px;overflow-wrap:anywhere}
+.activity-insight-heading{font-size:12px;color:#f5cb85;font-weight:750;margin-bottom:7px}
+.activity-insight strong{display:block;font-size:13px;line-height:1.45;color:#f1f7fb}
+.activity-insight p{font-size:12px;line-height:1.65;color:#c1d8e3;margin:6px 0 0;word-break:keep-all}
+.activity-advice-heading{margin-top:12px;padding-top:10px;border-top:1px solid #34515f;color:#95e0ba}
+@media(min-width:901px) and (max-width:1180px){
+ .activity-analysis-card .donut-wrap{flex-direction:column;align-items:flex-start}
+ .activity-analysis-card .donut{flex-basis:120px;width:120px;height:120px}
+ .activity-analysis-card .donut:after{inset:24px}
+}
+@media(max-width:900px){
+ .activity-analysis-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+ .activity-analysis-card .donut-wrap{flex-direction:column;align-items:center;gap:10px}
+ .activity-analysis-card .legend{width:100%}
+ .activity-analysis-card .donut{flex-basis:128px;width:128px;height:128px}
+}
+@media(max-width:400px){
+ .activity-analysis-grid{gap:8px}
+ .activity-analysis-card .donut{flex-basis:106px;width:106px;height:106px}
+ .activity-analysis-card .donut:after{inset:21px}
+ .activity-analysis-card .legend{font-size:10px}
+ .activity-insight{padding:9px}
+ .activity-insight p{font-size:11px}
+ .activity-insight strong{font-size:12px}
+}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -145,7 +184,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 
     <section class="two">
       <div class="card section"><h3>등급 정보</h3><div class="grade-row"><div class="shield"><img id="gradeBadge" src="" alt="등급 배지"></div><div style="flex:1"><div class="grade-name" id="grade">-</div><div class="bar"><i id="gradeBar" style="width:0%"></i></div><div class="meta" id="nextGradeText">-</div></div></div></div>
-      <div class="card section"><h3>활동 분석</h3><div class="donut-wrap"><div class="donut" id="donut"><div class="donut-center"><div><div style="font-size:11px;color:#8aa7b6">총</div><div id="donutTotal">0점</div></div></div></div><div class="legend" id="legend"></div></div></div>
+      <div class="card section activity-analysis-card"><h3>활동 분석</h3><div class="activity-analysis-grid"><div class="activity-analysis-figures"><div class="donut-wrap"><div class="donut" id="donut"><div class="donut-center"><div><div style="font-size:11px;color:#8aa7b6">총</div><div id="donutTotal">0점</div></div></div></div><div class="legend" id="legend"></div></div></div><div class="activity-insight" aria-live="polite"><div class="activity-insight-heading">✨ 나의 활동 분석</div><strong id="activityInsightHeadline">활동 기록을 분석하고 있어요</strong><p id="activityInsightBody"></p><div class="activity-insight-heading activity-advice-heading">💡 추천 활동</div><p id="activityInsightAdvice"></p></div></div></div>
     </section>
 
     <section class="three">
@@ -340,7 +379,82 @@ window.NWConfigReady.then(()=>{
     $('lifetimeRank').textContent=p.lifetimeRank>0?p.lifetimeRank+'위':'—';
   }
   function renderProfile(p,cached=false){const level=window.NWGrades.levels[window.NWGrades.index(p.lifetimeScore)];p={...p,grade:level?level.name:'미획득',nextGrade:window.NWGrades.next(p.lifetimeScore)};ownProfile=p;$('nwGemBalance').textContent=Number.isFinite(p.gemBalance)?fmt(p.gemBalance):'—';avatarImmediate(p,cached);show('profileView');$('memberId').textContent=p.memberId;renderProfileIdentity(p);$('firstJoin').textContent=p.firstJoin||'-';$('seasonScore').textContent=fmt(p.seasonScore)+'점';$('lifetimeScore').textContent=fmt(p.lifetimeScore)+'점';$('attendance').textContent=fmt(p.attendanceCount)+'회';$('workout').textContent=p.workoutCount==null?'불러오는 중…':fmt(p.workoutCount)+'회';$('grade').textContent=p.grade||'미획득';const badge=$('gradeBadge'),src=GRADE_IMG[p.grade]||'';if(src){badge.src=src;badge.style.display='block';badge.alt=(p.grade||'')+' 등급 배지';}else{badge.removeAttribute('src');badge.style.display='none';}const ng=p.nextGrade||{};$('gradeBar').style.width=(ng.progress||0)+'%';$('nextGradeText').textContent=ng.remaining>0?'다음 '+ng.name+'까지 '+fmt(ng.remaining)+'점 남았습니다.':'최고 등급 달성';$('nextRemain').textContent=ng.remaining>0?fmt(ng.remaining)+'점':'달성';$('goalGrade').style.width=(ng.progress||0)+'%';$('goalAttendance').textContent=p.attendanceCount+'/20회';$('goalAttendanceBar').style.width=Math.min(100,p.attendanceCount/20*100)+'%';if(p.workoutCount!=null){$('goalWorkout').textContent=p.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,p.workoutCount/10*100)+'%';}renderActivity(p);renderHistory(p.rankHistory||[]);renderRecent(p);if(!cached){loadEditableProfile(p.memberProfile||null);}}
-  function renderActivity(p){const pts=[['채팅',p.chat||0,'#6ab6ff'],['사진',(p.photo||0)*5,'#ffc64d'],['영상',(p.video||0)*10,'#a26cff'],['소개',(p.intro||0)*500,'#62d3b1'],['출석',(p.attendance||0)*50,'#ef6e9b']];const total=Math.max(1,pts.reduce((a,x)=>a+x[1],0));let a=0,stops=[];pts.forEach(x=>{const b=a+x[1]/total*100;stops.push(`${x[2]} ${a}% ${b}%`);a=b});$('donut').style.background='conic-gradient('+stops.join(',')+')';$('donutTotal').textContent=fmt(p.seasonScore)+'점';$('legend').innerHTML=pts.map(x=>`<span><i style="color:${x[2]}">● ${x[0]}</i><b>${Math.round(x[1]/total*100)}% (${fmt(x[1])}점)</b></span>`).join('');}
+
+  // Stable, rule-based Korean member insight. Never claim inferred member
+  // personality, unrecorded growth, or activity that is absent from the data.
+  function activityInsightText(p){
+    const keys=['chat','photo','video','intro','attendance'];
+    const names={chat:'채팅',photo:'사진',video:'영상',intro:'소개',attendance:'출석'};
+    const units={chat:'회',photo:'회',video:'회',intro:'회',attendance:'회'};
+    const weights={chat:1,photo:5,video:10,intro:500,attendance:50};
+    const counts=Object.fromEntries(keys.map(k=>[k,Math.max(0,Number(p[k])||0)]));
+    const points=Object.fromEntries(keys.map(k=>[k,counts[k]*weights[k]]));
+    const active=keys.filter(k=>counts[k]>0),nonIntro=['chat','photo','video','attendance'];
+    const ordinary=nonIntro.filter(k=>counts[k]>0);
+    const sum=keys.reduce((n,k)=>n+points[k],0);
+    const stableIndex=(String(p.memberId||'').split('').reduce((a,c)=>a+c.charCodeAt(0),0)+Math.floor(Number(p.seasonScore)||0))%3;
+    const pick=items=>items[stableIndex%items.length];
+    if(!sum||!active.length)return{
+      headline:'이번 달 활동 기록을 기다리고 있어요',
+      body:'아직 이번 달에 집계된 활동 점수가 없어요. 집계 후 채팅·사진·영상·소개·출석 기록을 바탕으로 안내해 드릴게요.',
+      advice:'출석체크나 가벼운 채팅부터 편하게 참여해 보세요.'
+    };
+    const sorted=ordinary.slice().sort((a,b)=>points[b]-points[a]||nonIntro.indexOf(a)-nonIntro.indexOf(b));
+    const top=sorted[0],second=sorted[1];
+    let headline='',body='';
+    if(ordinary.length===0){
+      headline='소개 활동이 기록되었어요';
+      body='이번 달 소개 '+fmt(counts.intro)+'회가 집계되어 '+fmt(points.intro)+'점을 획득했어요.';
+    }else if(ordinary.length===1){
+      headline=names[top]+' 활동이 눈에 띄어요';
+      body=pick([
+        '이번 달 '+names[top]+' '+fmt(counts[top])+units[top]+'가 집계되어 '+fmt(points[top])+'점을 획득했어요.',
+        names[top]+' '+fmt(counts[top])+units[top]+'로 이번 달 활동에 참여하고 계시네요. 해당 활동에서 '+fmt(points[top])+'점을 얻었어요.',
+        '이번 달에는 '+names[top]+' '+fmt(counts[top])+units[top]+'가 기록되어 있어요. '+fmt(points[top])+'점이 반영됐습니다.'
+      ]);
+    }else if(second&&points[second]>=points[top]*.7){
+      headline=names[top]+'·'+names[second]+' 활동이 함께 돋보여요';
+      body=names[top]+' '+fmt(counts[top])+'회 ('+fmt(points[top])+'점), '+names[second]+' '+fmt(counts[second])+'회 ('+fmt(points[second])+'점)가 집계되었어요.';
+    }else{
+      headline=names[top]+' 활동의 비중이 높아요';
+      body=pick([
+        '이번 달 '+names[top]+' '+fmt(counts[top])+'회로 '+fmt(points[top])+'점을 얻었어요. '+(second?names[second]+' 활동도 '+fmt(counts[second])+'회 기록되어 있어요.':''),
+        names[top]+'에서 '+fmt(points[top])+'점을 획득했어요 ('+fmt(counts[top])+'회). '+(second?names[second]+'도 '+fmt(counts[second])+'회 참여했어요.':''),
+        '이번 달에는 '+names[top]+' '+fmt(counts[top])+'회가 눈에 띄어요. '+(second?names[second]+' '+fmt(counts[second])+'회도 함께 집계됐어요.':'')
+      ]);
+    }
+    if(counts.intro>0&&ordinary.length>0)body+=' 소개 '+fmt(counts.intro)+'회 ('+fmt(points.intro)+'점)도 기록됐어요.';
+    if(ordinary.length>=3&&second&&points[second]>=points[top]*.45){
+      body+=' 여러 방식으로 활동에 참여하고 계시네요.';
+    }
+    const candidates=[
+      {key:'photo',prompt:'사진으로 사육 환경이나 생물의 모습을 공유해 보세요.'},
+      {key:'video',prompt:'생물의 움직임을 짧은 영상으로도 공유해 보세요.'},
+      {key:'chat',prompt:'다른 회원들과 채팅으로 사육 이야기를 나눠 보세요.'},
+      {key:'attendance',prompt:'출석체크도 함께하며 방문 기록을 남겨 보세요.'}
+    ];
+    // Suggest an underrepresented activity rather than classifying the
+    // member as insufficiently active. Rotate suggestions deterministically.
+    const choices=candidates.filter(x=>x.key!==top&&counts[x.key]===0);
+    const secondary=candidates.filter(x=>x.key!==top).sort((a,b)=>points[a.key]-points[b.key]);
+    const pool=choices.length?choices:secondary;
+    const advice=pool.length?pool[stableIndex%pool.length].prompt:'현재처럼 편한 방식으로 다양한 활동을 이어가 보세요.';
+    return{headline,body,advice};
+  }
+  function renderActivity(p){
+    const pts=[['채팅',Math.max(0,Number(p.chat)||0),'#6ab6ff'],['사진',Math.max(0,Number(p.photo)||0)*5,'#ffc64d'],['영상',Math.max(0,Number(p.video)||0)*10,'#a26cff'],['소개',Math.max(0,Number(p.intro)||0)*500,'#62d3b1'],['출석',Math.max(0,Number(p.attendance)||0)*50,'#ef6e9b']];
+    const sum=pts.reduce((a,x)=>a+x[1],0),denom=Math.max(1,sum);
+    let offset=0;
+    const stops=[];
+    pts.forEach(x=>{const end=offset+x[1]/denom*100;stops.push(x[2]+' '+offset+'% '+end+'%');offset=end;});
+    $('donut').style.background=sum?'conic-gradient('+stops.join(',')+')':'#263c49';
+    $('donutTotal').textContent=fmt(p.seasonScore)+'점';
+    $('legend').innerHTML=pts.map(x=>'<span><i style="color:'+x[2]+'">● '+x[0]+'</i><b>'+Math.round(x[1]/denom*100)+'% ('+fmt(x[1])+'점)</b></span>').join('');
+    const info=activityInsightText(p);
+    $('activityInsightHeadline').textContent=info.headline;
+    $('activityInsightBody').textContent=info.body;
+    $('activityInsightAdvice').textContent=info.advice;
+  }
 
   // A daily snapshot is the LAST successful collection in that calendar day (KST).
   // Never fabricate missing days, historical scores, or activity categories.
