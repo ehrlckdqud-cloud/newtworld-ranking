@@ -44,6 +44,22 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .rank-history-up{color:#79d9af!important}.rank-history-down{color:#f4a1ad!important}.rank-history-muted{color:#94aab6!important}
 @media(max-width:600px){.rank-history-stat{padding:8px 6px}.rank-history-stat strong{font-size:15px}.rank-history-stat small{font-size:10px}.rank-history-controls select{flex:1;max-width:130px}.rank-history-chart{min-height:140px}.rank-history-table{font-size:11px}}
 
+
+/* Profile recent activity ledger — responsive, data-only, no generated points */
+.recent-activity-panel{min-width:0}.recent-activity-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.recent-activity-total{padding:11px;border:1px solid #2a4c5d;border-radius:11px;background:#102834;min-width:0}
+.recent-activity-total small{display:block;color:#9cbbc9;font-size:11px;margin-bottom:5px}.recent-activity-total strong{font-size:18px;overflow-wrap:anywhere}
+.recent-activity-entry{padding:11px 0;border-bottom:1px solid #254454}.recent-activity-entry:last-child{border-bottom:0}
+.recent-activity-main{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.recent-activity-label{font-size:13px;font-weight:650;min-width:0}.recent-activity-time{color:#9eb8c6;font-size:11px;margin-top:4px}
+.recent-activity-points{font-size:12px;font-weight:650;white-space:nowrap;color:#94deb9;background:#14372f;padding:5px 7px;border-radius:9px}
+.recent-activity-points.neutral{color:#b4ceda;background:#183441}
+.recent-activity-entry details{margin-top:7px}.recent-activity-entry summary{font-size:11px;color:#9eb8c6;cursor:pointer}
+.recent-activity-detail{font-size:11px;color:#bfd5df;line-height:1.7;padding-top:7px;white-space:pre-wrap;overflow-wrap:anywhere}
+.recent-more{margin-top:12px;width:100%;min-height:40px}
+#recentActivityStatus{font-size:11px;margin-top:8px;line-height:1.6}
+@media(max-width:600px){.recent-activity-total{padding:9px}.recent-activity-total strong{font-size:16px}.recent-activity-label{font-size:12px}.recent-activity-points{font-size:11px}.recent-activity-main{gap:7px}}
+
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -125,7 +141,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
   <div class="rank-history-table-wrap"><table class="rank-history-table"><thead><tr><th>집계일</th><th>순위</th><th>점수</th><th>전일 대비</th></tr></thead><tbody id="rankHistoryRows"></tbody></table></div>
   <div class="hint" id="rankHistoryNote">전날 집계가 없으면 이전에 기록된 가장 최근 날짜와 비교합니다.</div>
 </div>
-      <div class="card section"><h3>최근 활동 내역</h3><div class="list" id="recentList"></div></div>
+      <div class="card section recent-activity-panel"><h3>최근 활동 내역</h3><div class="recent-activity-summary" id="recentActivitySummary"></div><div class="list" id="recentList" aria-live="polite"></div><button class="btn recent-more" id="recentActivityMore" type="button" hidden>활동 내역 더보기</button><div class="hint" id="recentActivityStatus"></div></div>
       <div class="card section"><h3>이번 달 달성 현황</h3><div class="goal"><div><div class="line"><span>다음 등급</span><b id="nextRemain">-</b></div><div class="mini"><i id="goalGrade" style="width:0%"></i></div></div><div><div class="line"><span>출석</span><b id="goalAttendance">-</b></div><div class="mini"><i id="goalAttendanceBar" style="width:0%"></i></div></div><div><div class="line"><span>오운완</span><b id="goalWorkout">-</b></div><div class="mini"><i id="goalWorkoutBar" style="width:0%"></i></div></div></div></div>
     </section>
 
@@ -284,7 +300,7 @@ window.NWConfigReady.then(()=>{
       status.textContent='';show('authView');loadCandidates();$('authStatus').classList.remove('hidden');$('authStatus').textContent=d?.error||'다시 인증해주세요.';return;
     }
     if(avatarEditVersion!==photoVersion&&ownProfile?.memberProfile){d.profile.memberProfile=d.profile.memberProfile||{};Object.assign(d.profile.memberProfile,{imageUrl:ownProfile.memberProfile.imageUrl,avatarSrc:ownProfile.memberProfile.avatarSrc});}
-    saveCoreCache(d.profile);renderProfile(d.profile,false);$('saveProfileBtn').disabled=false;status.textContent='';loadProfileExtras();
+    saveCoreCache(d.profile);renderProfile(d.profile,false);$('saveProfileBtn').disabled=false;status.textContent='';loadProfileExtras();loadActivityWallet(token,d.profile.memberId);
     jsonp('profileGemBalance',{token,device:device()},45000).then(result=>{if(result?.ok&&Number.isFinite(result.gemBalance)&&ownProfile?.memberId===d.profile.memberId&&localStorage.getItem('nwProfileToken')===token){ownProfile.gemBalance=result.gemBalance;$('nwGemBalance').textContent=fmt(result.gemBalance);saveCoreCache(ownProfile);}});
   }
   function renderProfileIdentity(p){
@@ -420,8 +436,107 @@ window.NWConfigReady.then(()=>{
     drawRankHistory();
   }));
   $('rankHistoryPeriod').addEventListener('change',e=>{rankHistoryPeriod=e.target.value;rankHistorySelected='';drawRankHistory();});
-  function renderRecent(p){const arr=[];(p.recentAttendance||[]).forEach(x=>arr.push({date:x.date,label:'출석체크',tag:'+50점'}));(p.recentWorkout||[]).forEach(x=>arr.push({date:x.date,label:'오운완',tag:'기록'}));arr.sort((a,b)=>String(b.date).localeCompare(String(a.date)));$('recentList').innerHTML=(arr.slice(0,8).map(x=>`<div class="row"><span>${x.label}</span><span>${x.date} <i class="tag">${x.tag}</i></span></div>`).join('')||'<div class="hint">표시할 최근 기록이 없습니다.</div>');}
-  async function loadProfileExtras(){const t=localStorage.getItem('nwProfileToken');if(!t)return;const d=await jsonp('profileExtras',{token:t,device:device()});if(!d?.ok)return;if(d.workoutCount!=null){$('workout').textContent=fmt(d.workoutCount)+'회';$('goalWorkout').textContent=d.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,d.workoutCount/10*100)+'%';}renderHistory(d.rankHistory||[]);renderRecent({recentAttendance:d.recentAttendance||[],recentWorkout:d.recentWorkout||[]});try{const c=JSON.parse(localStorage.getItem(coreCacheKey)||'null');if(c&&c.token===t){Object.assign(c.profile,{workoutCount:d.workoutCount,rankHistory:d.rankHistory,recentAttendance:d.recentAttendance,recentWorkout:d.recentWorkout});saveCoreCache(c.profile);}}catch(_){} }
+
+  // Member-only activity history. Monetary ledger entries are READ-ONLY and never cause a payment.
+  let activityBaseProfile={},activityWallet=null,activityVisible=20,activityWalletState='loading',activityRequestId=0;
+  const activityTime=x=>{
+    const value=x?.at??x?.date??x?.timestamp??x?.createdAt;
+    if(value==null)return 0;
+    if(typeof value==='number')return value<1e12?value*1000:value;
+    const parsed=Date.parse(String(value));return Number.isFinite(parsed)?parsed:0;
+  };
+  const activityDay=x=>{
+    const raw=String(x?.date??x?.at??'');
+    if(/^\\d{4}-\\d{2}-\\d{2}/.test(raw))return raw.slice(0,10);
+    const time=activityTime(x);return time?rankKstDay(time):'';
+  };
+  const activityTimestamp=x=>{
+    const time=activityTime(x);
+    return time?new Date(time).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):activityDay(x);
+  };
+  const activityLedgerEntry=x=>{
+    const note=String(x?.note??x?.reason??'').trim();
+    const amount=Number(x?.amount);
+    if(!Number.isFinite(amount)||amount<=0)return false;
+    // Do not classify gifts, game prizes or admin adjustments as earned activity points.
+    return /활동\\s*점수|활동점수|활동왕\\s*집계|활동\\s*집계/.test(note) && !/관리자|수동|보너스|이벤트|상품|추첨|지급\\s*취소|환불/.test(note);
+  };
+  function renderRecent(p){
+    activityBaseProfile=p||{};
+    const arr=[];
+    const seen=new Set();
+    const push=item=>{const key=item.key;if(seen.has(key))return;seen.add(key);arr.push(item);};
+    for(const x of (p?.recentAttendance||[])){
+      const day=activityDay(x);if(!day)continue;
+      push({key:'attendance:'+day,at:activityTime(x)||Date.parse(day+'T12:00:00+09:00'),date:day,label:'출석체크',points:'+'+(Number.isFinite(Number(x.points))?fmt(x.points):'50')+'점',detail:'출석 인증 기록',kind:'attendance'});
+    }
+    for(const x of (p?.recentWorkout||[])){
+      const day=activityDay(x);if(!day)continue;
+      push({key:'workout:'+day,at:activityTime(x)||Date.parse(day+'T12:00:00+09:00'),date:day,label:'오운완',points:'기록',detail:'운동 인증 기록',kind:'workout'});
+    }
+    let latestActivity=null;
+    const walletItems=Array.isArray(activityWallet?.history)?activityWallet.history:[];
+    for(const x of walletItems){
+      if(!activityLedgerEntry(x))continue;
+      const at=activityTime(x);if(!at)continue;
+      const amount=Number(x.amount),note=String(x.note||'활동 점수 집계');
+      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:'집계 내역: '+note+'\\n뉴트젬 +'+fmt(amount)+'젬 지급',kind:'ledger',amount};
+      push(entry);
+      if(!latestActivity||at>latestActivity.at)latestActivity=entry;
+    }
+    // Use a true server-provided activity breakdown if available. Do not infer chat/photo/video quantities from total points.
+    const snapshots=(p?.rankHistory||[]).filter(x=>x&&typeof x==='object');
+    for(let i=0;i<snapshots.length;i++){
+      const x=snapshots[i],at=activityTime(x),day=activityDay(x);
+      if(!day)continue;
+      const event=x.activity||x.activities;
+      if(!event||typeof event!=='object'||Array.isArray(event))continue;
+      const parts=['chat','photo','video'].filter(k=>Object.hasOwn(event,k)&&Number.isFinite(Number(event[k]))).map(k=>({chat:'채팅',photo:'사진',video:'동영상'})[k]+' '+event[k]);
+      if(!parts.length)continue;
+      // Attach the breakdown to an existing settlement of this day, avoiding an extra score event.
+      const match=arr.find(e=>e.kind==='ledger'&&e.date===day);
+      if(match)match.detail+='\\n'+parts.join(' · ');
+    }
+    const currentMonth=rankKstDay(Date.now()).slice(0,7);
+    arr.sort((a,b)=>b.at-a.at||a.key.localeCompare(b.key));
+    const summary=$('recentActivitySummary');
+    const season=Number(p?.seasonScore);
+    summary.replaceChildren();
+    for(const [heading,value] of [['이번 달 점수',Number.isFinite(season)?fmt(season)+'점':'확인 중'],['최근 활동 집계',latestActivity?latestActivity.points:activityWalletState==='loading'?'불러오는 중':'집계 기록 없음']]){
+      const box=document.createElement('div'),small=document.createElement('small'),strong=document.createElement('strong');
+      box.className='recent-activity-total';small.textContent=heading;strong.textContent=value;box.append(small,strong);summary.append(box);
+    }
+    const list=$('recentList');list.replaceChildren();
+    for(const item of arr.slice(0,activityVisible)){
+      const wrapper=document.createElement('div');wrapper.className='recent-activity-entry';
+      const main=document.createElement('div');main.className='recent-activity-main';
+      const left=document.createElement('div'),label=document.createElement('div'),date=document.createElement('div'),points=document.createElement('span');
+      label.className='recent-activity-label';label.textContent=item.label;date.className='recent-activity-time';
+      date.textContent=item.kind==='ledger'?activityTimestamp({at:item.at}):item.date;
+      left.append(label,date);points.className='recent-activity-points'+(item.kind==='workout'?' neutral':'');points.textContent=item.points;
+      main.append(left,points);wrapper.append(main);
+      if(item.kind==='ledger'){
+        const details=document.createElement('details'),caption=document.createElement('summary'),desc=document.createElement('div');
+        caption.textContent='집계 상세 보기';desc.className='recent-activity-detail';desc.textContent=item.detail;
+        details.append(caption,desc);wrapper.append(details);
+      }
+      list.append(wrapper);
+    }
+    if(!arr.length)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
+    const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
+    const status=$('recentActivityStatus');
+    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'활동 점수는 실제 지급된 뉴트젬 기록만 표시하며, 출석 점수와 중복 합산하지 않습니다.';
+  }
+  $('recentActivityMore').addEventListener('click',()=>{activityVisible+=20;renderRecent(activityBaseProfile);});
+  async function loadActivityWallet(token,memberId){
+    const req=++activityRequestId;activityWallet=null;activityWalletState='loading';renderRecent(activityBaseProfile);
+    const result=await jsonp('contentStatus',{token,device:device()},30000);
+    if(req!==activityRequestId||localStorage.getItem('nwProfileToken')!==token||ownProfile?.memberId!==memberId)return;
+    activityWallet=result?.ok&&result.wallet?result.wallet:null;
+    activityWalletState=activityWallet?'loaded':'error';
+    renderRecent(activityBaseProfile);
+  }
+  async function loadProfileExtras(){const t=localStorage.getItem('nwProfileToken');if(!t)return;const d=await jsonp('profileExtras',{token:t,device:device()});if(!d?.ok)return;if(d.workoutCount!=null){$('workout').textContent=fmt(d.workoutCount)+'회';$('goalWorkout').textContent=d.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,d.workoutCount/10*100)+'%';}renderHistory(d.rankHistory||[]);renderRecent({...activityBaseProfile,recentAttendance:d.recentAttendance||[],recentWorkout:d.recentWorkout||[],rankHistory:d.rankHistory||[]});try{const c=JSON.parse(localStorage.getItem(coreCacheKey)||'null');if(c&&c.token===t){Object.assign(c.profile,{workoutCount:d.workoutCount,rankHistory:d.rankHistory,recentAttendance:d.recentAttendance,recentWorkout:d.recentWorkout});saveCoreCache(c.profile);}}catch(_){} }
 
   // v2.74: bounded persistent own-photo cache and idempotent upload acknowledgement.
   const avatarReplies=new Map(),avatarImages=new Map();let avatarGeneration=0,avatarBusy=false,avatarEditVersion=0,ownProfile=null,avatarRetry=null;
