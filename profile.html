@@ -855,7 +855,7 @@ window.NWConfigReady.then(()=>{
       }
       list.append(wrapper);
     }
-    if(!arr.length)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
+    if(!arr.length&&monthActivityPoints===null)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
     // Re-rendering or revealing more entries must never move the outer page.
     list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
