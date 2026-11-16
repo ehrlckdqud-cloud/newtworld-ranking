@@ -459,7 +459,7 @@ window.NWConfigReady.then(()=>{
     const amount=Number(x?.amount);
     if(!Number.isFinite(amount)||amount<=0)return false;
     // Do not classify gifts, game prizes or admin adjustments as earned activity points.
-    return /활동\\s*점수|활동점수|활동왕\\s*집계|활동\\s*집계/.test(note) && !/관리자|수동|보너스|이벤트|상품|추첨|지급\\s*취소|환불/.test(note);
+    return /활동\s*점수|활동점수|활동왕\s*집계|활동\s*집계/.test(note) && !/관리자|수동|보너스|이벤트|상품|추첨|지급\s*취소|환불/.test(note);
   };
   function renderRecent(p){
     activityBaseProfile=p||{};
@@ -480,7 +480,7 @@ window.NWConfigReady.then(()=>{
       if(!activityLedgerEntry(x))continue;
       const at=activityTime(x);if(!at)continue;
       const amount=Number(x.amount),note=String(x.note||'활동 점수 집계');
-      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:'집계 내역: '+note+'\\n뉴트젬 +'+fmt(amount)+'젬 지급',kind:'ledger',amount};
+      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:'집계 내역: '+note+'\n뉴트젬 +'+fmt(amount)+'젬 지급',kind:'ledger',amount};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
     }
@@ -495,7 +495,7 @@ window.NWConfigReady.then(()=>{
       if(!parts.length)continue;
       // Attach the breakdown to an existing settlement of this day, avoiding an extra score event.
       const match=arr.find(e=>e.kind==='ledger'&&e.date===day);
-      if(match)match.detail+='\\n'+parts.join(' · ');
+      if(match)match.detail+='\n'+parts.join(' · ');
     }
     // Highlight genuine rank rises once per collection date; no invented rankings.
     for(const snap of rankDailyHistory()){
