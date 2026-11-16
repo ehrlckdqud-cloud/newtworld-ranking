@@ -522,8 +522,16 @@ window.NWConfigReady.then(()=>{
     arr.sort((a,b)=>b.at-a.at||a.key.localeCompare(b.key));
     const summary=$('recentActivitySummary');
     const season=Number(p?.seasonScore);
+    // "Recent activity total" combines the most recent earned activity settlement
+    // and the most recent attendance award. Other records (workout, rank)
+    // do not add points; never count past entries twice.
+    const latestAttendance=arr.find(item=>item.kind==='attendance');
+    const attendanceValue=latestAttendance?Number(String(latestAttendance.points).replace(/[^0-9.-]/g,'')):0;
+    const latestTotal=Number(latestActivity?.amount||0)+(Number.isFinite(attendanceValue)?attendanceValue:0);
+    const latestTotalText=activityWalletState==='loading'?'불러오는 중':
+      latestActivity||latestAttendance?'+'+fmt(latestTotal)+'점':'집계 기록 없음';
     summary.replaceChildren();
-    for(const [heading,value] of [['이번 달 점수',Number.isFinite(season)?fmt(season)+'점':'확인 중'],['최근 활동 집계',latestActivity?latestActivity.points:activityWalletState==='loading'?'불러오는 중':'집계 기록 없음']]){
+    for(const [heading,value] of [['이번 달 점수',Number.isFinite(season)?fmt(season)+'점':'확인 중'],['최근 활동 집계',latestTotalText]]){
       const box=document.createElement('div'),small=document.createElement('small'),strong=document.createElement('strong');
       box.className='recent-activity-total';small.textContent=heading;strong.textContent=value;box.append(small,strong);summary.append(box);
     }
@@ -548,7 +556,7 @@ window.NWConfigReady.then(()=>{
     list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
     const status=$('recentActivityStatus');
-    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'활동 점수는 실제 지급된 뉴트젬 기록만 표시하며, 출석 점수와 중복 합산하지 않습니다.';
+    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'상단 최근 활동 집계는 가장 최근 활동 점수 집계와 최근 출석체크 점수를 합산한 값입니다.';
   }
   $('recentActivityMore').addEventListener('click',()=>{
     const list=$('recentList'),previousCount=list.children.length,previousPosition=list.scrollTop;
