@@ -206,6 +206,10 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .gem-earned-split{padding:9px 10px;margin-top:6px;border-radius:9px;background:#0a2c21;border:1px solid #315c49}
 .gem-earned-split>div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;line-height:1.8}
 .gem-earned-split>div strong{color:#a1efd0;font-weight:650;white-space:nowrap}
+
+.recent-month-activity{border:1px solid #315469;border-radius:10px;background:#102a35;padding:10px 11px;margin-bottom:8px}
+.recent-month-activity .recent-activity-main{align-items:center}
+.recent-month-activity .recent-activity-points{font-size:13px}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -755,6 +759,16 @@ window.NWConfigReady.then(()=>{
   };
   function renderRecent(p){
     activityBaseProfile=p||{};
+    // Always present an authoritative current-month non-attendance total,
+    // even when older wallet entries lack per-credit accounting metadata.
+    // Never confuse this cumulative month value with a single payout.
+    const monthCounts=['chat','photo','video','intro'].map(key=>{
+      const v=Number(p?.[key]);
+      return Number.isFinite(v)&&v>=0?v:null;
+    });
+    const monthWeights=[1,5,10,500];
+    const monthActivityPoints=monthCounts.every(v=>v!==null)?
+      monthCounts.reduce((sum,count,i)=>sum+count*monthWeights[i],0):null;
     const arr=[];
     const seen=new Set();
     const push=item=>{const key=item.key;if(seen.has(key))return;seen.add(key);arr.push(item);};
@@ -787,7 +801,7 @@ window.NWConfigReady.then(()=>{
       const activityPoints=explicit!==null?explicit:
         componentSum!==null&&componentSum<=amount?componentSum:null;
       const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',
-        points:activityPoints===null?'활동 점수 기록 없음':'+'+fmt(activityPoints)+'점',
+        points:activityPoints===null?'지급건 세부기록 없음':'+'+fmt(activityPoints)+'점',
         detail:details.join('\n'),kind:'ledger',amount,activityPoints};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
@@ -810,6 +824,22 @@ window.NWConfigReady.then(()=>{
       box.className='recent-activity-total';small.textContent=heading;strong.textContent=value;box.append(small,strong);summary.append(box);
     }
     const list=$('recentList'),previousScroll=list.scrollTop;list.replaceChildren();
+    // This is monthly cumulative activity, NOT a reconstructed historical
+    // wallet credit. It remains visible if the old ledger has no breakdown.
+    if(monthActivityPoints!==null){
+      const row=document.createElement('div');row.className='recent-activity-entry recent-month-activity';
+      const main=document.createElement('div');main.className='recent-activity-main';
+      const left=document.createElement('div'),label=document.createElement('div'),date=document.createElement('div'),points=document.createElement('span');
+      label.className='recent-activity-label';label.textContent='이번 달 활동 점수 (출석 제외)';
+      date.className='recent-activity-time';date.textContent='채팅·사진·영상·소개 월간 누적 · 개별 지급건과 별도';
+      points.className='recent-activity-points';points.textContent=fmt(monthActivityPoints)+'점';
+      left.append(label,date);main.append(left,points);row.append(main);
+      const details=document.createElement('details'),caption=document.createElement('summary'),content=document.createElement('div');
+      caption.textContent='월간 활동별 점수 보기';content.className='recent-activity-detail';
+      content.textContent=['채팅','사진','영상','소개'].map((label,i)=>
+        label+' '+fmt(monthCounts[i])+'회 ('+fmt(monthCounts[i]*monthWeights[i])+'점)').join('\n');
+      details.append(caption,content);row.append(details);list.append(row);
+    }
     for(const item of arr.slice(0,activityVisible)){
       const wrapper=document.createElement('div');wrapper.className='recent-activity-entry';
       const main=document.createElement('div');main.className='recent-activity-main';
@@ -825,12 +855,12 @@ window.NWConfigReady.then(()=>{
       }
       list.append(wrapper);
     }
-    if(!arr.length)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
+    if(!arr.length&&monthActivityPoints===null)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
     // Re-rendering or revealing more entries must never move the outer page.
     list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
     const status=$('recentActivityStatus');
-    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'최근 활동 집계는 활동·출석을 포함한 실제 뉴트젬 적립 총액입니다. 아래 항목은 중복 없이 구분해 표시합니다.';
+    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'최근 활동 집계는 활동·출석을 포함한 실제 뉴트젬 적립 총액입니다. 월간 활동 점수는 출석을 제외한 누적 점수이며, 과거 지급건의 개별 상세 기록과는 구분됩니다.';
   }
   $('recentActivityMore').addEventListener('click',()=>{
     const list=$('recentList'),previousCount=list.children.length,previousPosition=list.scrollTop;
