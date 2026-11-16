@@ -777,12 +777,17 @@ window.NWConfigReady.then(()=>{
         if(!v||!Number.isFinite(Number(v.count))||!Number.isFinite(Number(v.points)))return labels[i]+' — (기록 없음)';
         return labels[i]+' '+fmt(v.count)+'회 ('+fmt(v.points)+'점)';
       });
-      const verified=Number.isFinite(Number(x.activityPoints))&&Number.isFinite(Number(x.attendancePoints))&&
-        Number(x.activityPoints)>=0&&Number(x.attendancePoints)>=0&&
-        Number(x.activityPoints)+Number(x.attendancePoints)===amount;
-      const activityPoints=verified?Number(x.activityPoints):null;
+      // Attendance is included in the credited total, but an absent
+      // attendance breakdown must not hide independently verified activity.
+      const explicit=typeof x.activityPoints==='number'&&Number.isFinite(x.activityPoints)&&
+        x.activityPoints>=0&&x.activityPoints<=amount?x.activityPoints:null;
+      const components=['chat','photo','video','intro'].map(key=>x.breakdown?.[key]?.points);
+      const componentValid=components.every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0);
+      const componentSum=componentValid?components.reduce((a,b)=>a+b,0):null;
+      const activityPoints=explicit!==null?explicit:
+        componentSum!==null&&componentSum<=amount?componentSum:null;
       const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',
-        points:activityPoints===null?'내역 확인 불가':'+'+fmt(activityPoints)+'점',
+        points:activityPoints===null?'활동 점수 기록 없음':'+'+fmt(activityPoints)+'점',
         detail:details.join('\n'),kind:'ledger',amount,activityPoints};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
