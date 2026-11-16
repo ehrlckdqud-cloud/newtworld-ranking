@@ -349,7 +349,26 @@ function advanceGame(t){if(migrationBusy||!playing||!engine||!synced||syncFault|
 requestAnimationFrame(tick);
 const backgroundClock=new Worker(new URL('./clock-worker.mjs?v=82',import.meta.url),{type:'module'});backgroundClock.onmessage=()=>{const now=performance.now();if(document.hidden||now-lastAnimationTick>=32)advanceGame(now);};
 $('create').onclick=e=>{e.preventDefault();void createRoom();};$('joinForm').onsubmit=e=>{e.preventDefault();void createRoom();};$('ready').onclick=createSingleFlight(async()=>{if(launchBusy||remoteLaunch)return;const owner=session,self=roster.find(p=>p.slot===owner?.slot);if(!self)return;readyBusy=true;render();void enableSound().catch(()=>{});try{const result=await act({type:'ready',ready:!self.ready,character:self.character??0});if(session===owner&&result.players){rosterRevision=Math.max(rosterRevision,result.revision||0);roster=result.players;}}catch(e){note(e.message);}finally{readyBusy=false;render();}});
-async function loadCore(){const owner=session,epoch=roomEpoch,generation=coreGeneration;try{if(coreReady)return true;if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],downloaded=pendingDownload;pendingDownload=null;const source=downloaded||(f?await f.arrayBuffer():await readSavedROM());if(!source)throw Error('게임을 선택하고 설치해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();const loadedModule=await createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(loadedModule,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(session!==owner||epoch!==roomEpoch||generation!==coreGeneration){loadedModule._nw_close?.();return false;}module=loadedModule;if(!module._nw_load())throw Error('CORE_LOAD_FAILED');engine=new FiveSession(module,profile,{characters:[0,1,2,3,0],playerCount:5,sharedSelection:true,paid:true});note('게임 시작 화면 준비 중…');for(let block=0;block<35;block++){for(let i=0;i<40;i++)engine.step([0,0,0,0,0]);await new Promise(r=>setTimeout(r,0));if(generation!==coreGeneration||session!==owner)return false;}canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;module.onVideo=renderLocalFrame;module._nw_credits(coins.balance);module._nw_redraw();await act({type:'native-loaded',loaded:true,protocol:PROTOCOL});coreReady=true;for(const r of peers.values())sendHello(r);render();$('start').disabled=false;let stored=!f&&!downloaded;if(f||downloaded){try{await saveROM(source);stored=true;$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}$('installGame').textContent=stored?'설치 완료':'실행 준비 완료 · 저장 안 됨';note('내 PC 게임 준비 완료 · READY를 눌러주세요.');if(hasGame)requestSync();return true;}catch(e){note(e.message);$('load').disabled=false;return false;}};
+let engineDownload;
+function ensureEngine(){
+ if(typeof window.createMS3==='function')return Promise.resolve();
+ if(engineDownload)return engineDownload;
+ engineDownload=new Promise((resolve,reject)=>{
+  const script=document.createElement('script');
+  const finish=ok=>{
+   clearTimeout(timer);script.onload=script.onerror=null;
+   if(ok){resolve();return;}
+   script.remove();reject(Error('게임 엔진을 받지 못했습니다. 다시 시도해주세요.'));
+  };
+  const timer=setTimeout(()=>finish(false),60000);
+  script.onload=()=>finish(typeof window.createMS3==='function');
+  script.onerror=()=>finish(false);
+  script.src='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/core.js?v=arcade100';
+  document.head.append(script);
+ }).finally(()=>{engineDownload=null;});
+ return engineDownload;
+}
+async function loadCore(){const owner=session,epoch=roomEpoch,generation=coreGeneration;try{if(coreReady)return true;if(!crypto.subtle)throw Error('게임 실행은 HTTPS 주소에서 가능합니다. 배포된 사이트를 열어주세요.');const f=$('rom').files[0],downloaded=pendingDownload;pendingDownload=null;const source=downloaded||(f?await f.arrayBuffer():await readSavedROM());if(!source)throw Error('게임을 선택하고 설치해주세요.');$('load').disabled=true;void initAudio();profile=await(await fetch('./native/profile.json')).json();await ensureEngine();if(generation!==coreGeneration||session!==owner)return false;const loadedModule=await window.createMS3({print:()=>{},printErr:()=>{}});await prepareCoopROM(loadedModule,source,profile,v=>note('준비 '+Math.round(v*100)+'%'));if(session!==owner||epoch!==roomEpoch||generation!==coreGeneration){loadedModule._nw_close?.();return false;}module=loadedModule;if(!module._nw_load())throw Error('CORE_LOAD_FAILED');engine=new FiveSession(module,profile,{characters:[0,1,2,3,0],playerCount:5,sharedSelection:true,paid:true});note('게임 시작 화면 준비 중…');for(let block=0;block<35;block++){for(let i=0;i<40;i++)engine.step([0,0,0,0,0]);await new Promise(r=>setTimeout(r,0));if(generation!==coreGeneration||session!==owner)return false;}canvas.width=304*DISPLAY_SCALE;canvas.height=224*DISPLAY_SCALE;module.onVideo=renderLocalFrame;module._nw_credits(coins.balance);module._nw_redraw();await act({type:'native-loaded',loaded:true,protocol:PROTOCOL});coreReady=true;for(const r of peers.values())sendHello(r);render();$('start').disabled=false;let stored=!f&&!downloaded;if(f||downloaded){try{await saveROM(source);stored=true;$('romInfo').textContent='이 PC에 저장 완료 · 다음부터 자동으로 준비됩니다.';}catch{$('romInfo').textContent='브라우저 저장 공간이 부족합니다. 다음 접속 시 다시 선택해주세요.';}}$('installGame').textContent=stored?'설치 완료':'실행 준비 완료 · 저장 안 됨';note('내 PC 게임 준비 완료 · READY를 눌러주세요.');if(hasGame)requestSync();return true;}catch(e){note(e.message);$('load').disabled=false;return false;}};
 $('load').onclick=()=>{if(loadingCore)return loadingCore;const generation=coreGeneration;loadingCore=loadCore().finally(()=>{loadingCore=null;if(!coreReady)$('load').disabled=false;if(session&&generation!==coreGeneration)void $('load').onclick();});return loadingCore;};
 async function checkInstalledGame(joined,epoch){
  const button=$('installGame');
@@ -566,4 +585,4 @@ setInterval(()=>{const frame=frameQueue?.frame||0;if(hasGame){gameDiagnostics.ca
 window.addEventListener('pagehide',()=>diagnostics.save(true));
 
 // Finish registering game state and handlers before the initial wallet lookup yields.
-await refreshWallet().catch(()=>{});
+void refreshWallet().catch(()=>{});
