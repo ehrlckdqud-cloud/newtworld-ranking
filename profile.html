@@ -144,6 +144,20 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
  .activity-insight p{font-size:11px}
  .activity-insight strong{font-size:12px}
 }
+
+/* Desktop: center the grade badge, level, and progress as one unit. */
+@media(min-width:901px){
+ .grade-info-card{display:flex;flex-direction:column;min-width:0}
+ .grade-info-card .grade-row{
+   flex:1 1 auto;
+   width:min(100%,430px);
+   margin:0 auto;
+   justify-content:center;
+   align-items:center;
+   min-height:150px;
+ }
+ .grade-info-card .grade-row>div:last-child{flex:1 1 0;min-width:0}
+}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -200,7 +214,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
     </section>
 
     <section class="two">
-      <div class="card section"><h3>등급 정보</h3><div class="grade-row"><div class="shield"><img id="gradeBadge" src="" alt="등급 배지"></div><div style="flex:1"><div class="grade-name" id="grade">-</div><div class="bar"><i id="gradeBar" style="width:0%"></i></div><div class="meta" id="nextGradeText">-</div></div></div></div>
+      <div class="card section grade-info-card"><h3>등급 정보</h3><div class="grade-row"><div class="shield"><img id="gradeBadge" src="" alt="등급 배지"></div><div style="flex:1"><div class="grade-name" id="grade">-</div><div class="bar"><i id="gradeBar" style="width:0%"></i></div><div class="meta" id="nextGradeText">-</div></div></div></div>
       <div class="card section activity-analysis-card"><h3>활동 분석</h3><div class="activity-analysis-grid"><div class="activity-analysis-figures"><div class="donut-wrap"><div class="donut" id="donut"><div class="donut-center"><div><div style="font-size:11px;color:#8aa7b6">총</div><div id="donutTotal">0점</div></div></div></div><div class="legend" id="legend"></div></div></div><div class="activity-insight" aria-live="polite"><div class="activity-insight-heading">✨ 나의 활동 분석</div><strong id="activityInsightHeadline">활동 기록을 분석하고 있어요</strong><p id="activityInsightBody"></p><div class="activity-insight-heading activity-advice-heading">💡 추천 활동</div><p id="activityInsightAdvice"></p></div></div></div>
     </section>
 
