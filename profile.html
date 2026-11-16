@@ -198,6 +198,14 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
  .grade-info-card .grade-row{gap:12px}
  .grade-info-card .grade-row .shield img{transform:scale(1.08)}
 }
+
+/* Expand one verified payout into activity and attendance, without changing balance. */
+.gem-earned-detail{min-width:0}
+.gem-earned-detail summary{cursor:pointer;color:#e1fff2;list-style-position:inside;line-height:1.6}
+.gem-earned-detail summary:focus-visible{outline:2px solid #79dfb3;outline-offset:3px;border-radius:4px}
+.gem-earned-split{padding:9px 10px;margin-top:6px;border-radius:9px;background:#0a2c21;border:1px solid #315c49}
+.gem-earned-split>div{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;line-height:1.8}
+.gem-earned-split>div strong{color:#a1efd0;font-weight:650;white-space:nowrap}
 </style>
 <script src="assets/badges/grades-v335.js"></script>
 </head>
@@ -339,7 +347,31 @@ window.NWConfigReady.then(()=>{
     const wallet=result.wallet,entries=(wallet.history||[]).slice().sort((a,b)=>Number(b.at)-Number(a.at));
     $('nwGemBalance').textContent=fmt(wallet.balance);
     $('gemHistoryStatus').textContent='현재 '+fmt(wallet.balance)+'젬 · '+(entries.length?'최근 '+entries.length+'건 (최대 50건)':'아직 이용 내역이 없습니다.');
-    for(const entry of entries){const row=document.createElement('li'),date=document.createElement('time'),note=document.createElement('span'),amount=document.createElement('b');row.className='gem-history-row';date.textContent=new Date(entry.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});note.textContent=entry.note||'뉴트젬 변경';amount.textContent=(entry.amount>0?'+':'')+fmt(entry.amount)+'젬';amount.className=entry.amount<0?'gem-debit':'gem-credit';row.append(date,note,amount);$('gemHistoryList').append(row);}
+    for(const entry of entries){
+      const row=document.createElement('li'),date=document.createElement('time'),amount=document.createElement('b');
+      row.className='gem-history-row';
+      date.textContent=new Date(entry.at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
+      amount.textContent=(entry.amount>0?'+':'')+fmt(entry.amount)+'젬';
+      amount.className=entry.amount<0?'gem-debit':'gem-credit';
+      const earned=Number(entry.amount)>0&&String(entry.note||'').trim()==='활동 점수 적립';
+      const note=document.createElement(earned?'details':'span');
+      if(earned){
+        note.className='gem-earned-detail';
+        const summary=document.createElement('summary');summary.textContent='활동 점수 적립';
+        const valid=Number.isFinite(Number(entry.activityPoints))&&Number.isFinite(Number(entry.attendancePoints))&&
+          Number(entry.activityPoints)>=0&&Number(entry.attendancePoints)>=0&&
+          Number(entry.activityPoints)+Number(entry.attendancePoints)===Number(entry.amount);
+        const split=document.createElement('div');split.className='gem-earned-split';
+        for(const [label,value] of [['활동 점수',valid?fmt(entry.activityPoints)+'점':'상세 기록 없음'],['출석체크',valid?fmt(entry.attendancePoints)+'점':'상세 기록 없음']]){
+          const line=document.createElement('div'),title=document.createElement('span'),number=document.createElement('strong');
+          title.textContent=label;number.textContent=value;line.append(title,number);split.append(line);
+        }
+        note.append(summary,split);
+      }else{
+        note.textContent=entry.note||'뉴트젬 변경';
+      }
+      row.append(date,note,amount);$('gemHistoryList').append(row);
+    }
   }
   $('nwWallet').onclick=openGemHistory;$('gemHistoryRetry').onclick=openGemHistory;
   $('gemHistoryClose').onclick=()=>$('gemHistoryDialog').close();
@@ -745,7 +777,13 @@ window.NWConfigReady.then(()=>{
         if(!v||!Number.isFinite(Number(v.count))||!Number.isFinite(Number(v.points)))return labels[i]+' — (기록 없음)';
         return labels[i]+' '+fmt(v.count)+'회 ('+fmt(v.points)+'점)';
       });
-      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:details.join('\n'),kind:'ledger',amount};
+      const verified=Number.isFinite(Number(x.activityPoints))&&Number.isFinite(Number(x.attendancePoints))&&
+        Number(x.activityPoints)>=0&&Number(x.attendancePoints)>=0&&
+        Number(x.activityPoints)+Number(x.attendancePoints)===amount;
+      const activityPoints=verified?Number(x.activityPoints):null;
+      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',
+        points:activityPoints===null?'내역 확인 불가':'+'+fmt(activityPoints)+'점',
+        detail:details.join('\\n'),kind:'ledger',amount,activityPoints};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
     }
@@ -757,14 +795,10 @@ window.NWConfigReady.then(()=>{
     arr.sort((a,b)=>b.at-a.at||a.key.localeCompare(b.key));
     const summary=$('recentActivitySummary');
     const season=Number(p?.seasonScore);
-    // "Recent activity total" combines the most recent earned activity settlement
-    // and the most recent attendance award. Other records (workout, rank)
-    // do not add points; never count past entries twice.
-    const latestAttendance=arr.find(item=>item.kind==='attendance');
-    const attendanceValue=latestAttendance?Number(String(latestAttendance.points).replace(/[^0-9.-]/g,'')):0;
-    const latestTotal=Number(latestActivity?.amount||0)+(Number.isFinite(attendanceValue)?attendanceValue:0);
+    // Earned wallet credit already includes attendance. Adding a separate
+    // attendance row here would credit the same 50 points again.
     const latestTotalText=activityWalletState==='loading'?'불러오는 중':
-      latestActivity||latestAttendance?'+'+fmt(latestTotal)+'점':'집계 기록 없음';
+      latestActivity?'+'+fmt(latestActivity.amount)+'점':'집계 기록 없음';
     summary.replaceChildren();
     for(const [heading,value] of [['이번 달 점수',Number.isFinite(season)?fmt(season)+'점':'확인 중'],['최근 활동 집계',latestTotalText]]){
       const box=document.createElement('div'),small=document.createElement('small'),strong=document.createElement('strong');
@@ -791,7 +825,7 @@ window.NWConfigReady.then(()=>{
     list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
     const status=$('recentActivityStatus');
-    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'상단 최근 활동 집계는 가장 최근 활동 점수 집계와 최근 출석체크 점수를 합산한 값입니다.';
+    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'최근 활동 집계는 활동·출석을 포함한 실제 뉴트젬 적립 총액입니다. 아래 항목은 중복 없이 구분해 표시합니다.';
   }
   $('recentActivityMore').addEventListener('click',()=>{
     const list=$('recentList'),previousCount=list.children.length,previousPosition=list.scrollTop;
