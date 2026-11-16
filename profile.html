@@ -34,7 +34,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .rank-history-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:12px 0}
 .rank-history-toggle{display:flex;flex-wrap:wrap;gap:4px}.rank-history-toggle button,.rank-history-controls select{border:1px solid #355469;background:#0a1b26;color:#c2d8e4;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer}
 .rank-history-toggle button.active{border-color:#ef92b4;background:#42263b;color:#ffcfdf}.rank-history-toggle button:focus-visible,.rank-history-controls select:focus-visible{outline:2px solid #ef92b4;outline-offset:2px}
-.rank-history-chart{min-height:170px}.rank-history-chart svg{display:block;width:100%;height:auto;max-height:220px;overflow:visible}
+.rank-history-chart{min-height:170px;touch-action:pan-y}.rank-history-chart [data-rank-point]{cursor:pointer;touch-action:manipulation;outline:none}.rank-history-chart [data-rank-point]:focus-visible{stroke:#fff;stroke-width:3}.rank-history-chart [data-rank-hit]{cursor:pointer;pointer-events:all;touch-action:manipulation}.rank-history-chart svg{display:block;width:100%;height:auto;max-height:220px;overflow:visible}
 .rank-history-detail{min-height:24px;color:#f1d2de;font-size:12px;margin-top:9px;line-height:1.6}
 .rank-history-subtitle{font-size:13px;margin:18px 0 8px;color:#e8f3f8}.rank-history-table-wrap{overflow:auto;max-height:270px;scrollbar-width:thin}
 .rank-history-table{border-collapse:collapse;width:100%;min-width:315px;font-size:12px;text-align:left}
@@ -401,7 +401,7 @@ window.NWConfigReady.then(()=>{
     const vals=series.map(x=>isScore?x.score:x.rank),low=Math.min(...vals),high=Math.max(...vals);
     const min=isScore?Math.max(0,low-(high-low||10)*.15):Math.max(1,low-1);
     const max=isScore?high+(high-low||10)*.15:high+1;
-    const w=500,h=200,left=44,right=14,top=20,bottom=34;
+    const w=500,h=200,left=44,right=14,top=37,bottom=34;
     const X=x=>left+(w-left-right)*(days.length===1?.5:days.indexOf(x)/(days.length-1));
     const Y=v=>top+(h-top-bottom)*(isScore?(max-v)/(max-min||1):(v-min)/(max-min||1));
     const NS='http://www.w3.org/2000/svg';
@@ -425,10 +425,29 @@ window.NWConfigReady.then(()=>{
       if(i%stride===0||i===days.length-1)elem('text',{x:X(item),y:h-9,'text-anchor':'middle','font-size':10,fill:'#91afbf'},rankDateLabel(item.day));
       const value=isScore?item.score:item.rank;
       if(value===null)return;
-      const circle=elem('circle',{cx:X(item),cy:Y(value),r:item.day===rankHistorySelected?6:4,fill:item.day===rankHistorySelected?'#ffffff':'#ffd1e0',stroke:'#ef92b4','stroke-width':1,tabindex:0,role:'button','aria-label':item.day+' '+(isScore?value+'점':value+'위')});
-      circle.addEventListener('click',()=>{rankHistorySelected=item.day;drawRankHistory();});
-      circle.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();rankHistorySelected=item.day;drawRankHistory();}});
+      const selected=item.day===rankHistorySelected;
+      const circle=elem('circle',{'data-rank-point':'',cx:X(item),cy:Y(value),r:selected?6:4,fill:selected?'#ffffff':'#ffd1e0',stroke:'#ef92b4','stroke-width':selected?2:1,tabindex:0,role:'button','aria-label':item.day+' '+item.rank+'위 선택','aria-pressed':selected});
+      // The visible dots are very small on phones. A transparent 30px hit area
+      // is painted above each dot, without changing its visual diameter.
+      const hit=elem('circle',{'data-rank-hit':'',cx:X(item),cy:Y(value),r:15,fill:'transparent','pointer-events':'all','aria-hidden':'true'});
+      const choose=()=>{rankHistorySelected=item.day;drawRankHistory();};
+      hit.addEventListener('click',choose);
+      circle.addEventListener('click',choose);
+      circle.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}});
     });
+    // Keep the selected rank label above all clickable markers and within the SVG.
+    const selectedPoint=days.find(item=>item.day===rankHistorySelected);
+    if(selectedPoint){
+      const value=isScore?selectedPoint.score:selectedPoint.rank;
+      if(value!==null){
+        const x=X(selectedPoint),y=Y(value),label=selectedPoint.rank+'위';
+        const labelWidth=Math.max(40,label.length*11+18),labelHeight=23;
+        const labelX=Math.min(w-right-labelWidth/2,Math.max(left+labelWidth/2,x));
+        const labelY=Math.max(2,y-35);
+        elem('rect',{x:labelX-labelWidth/2,y:labelY,width:labelWidth,height:labelHeight,rx:7,fill:'#fff0f5',stroke:'#ef92b4','stroke-width':1,'pointer-events':'none'});
+        elem('text',{x:labelX,y:labelY+16,'text-anchor':'middle','font-size':13,'font-weight':700,fill:'#6a2442','pointer-events':'none'},label);
+      }
+    }
   }
   document.querySelectorAll('[data-rank-metric]').forEach(button=>button.addEventListener('click',()=>{
     rankHistoryMetric=button.dataset.rankMetric;
