@@ -783,7 +783,7 @@ window.NWConfigReady.then(()=>{
       const activityPoints=verified?Number(x.activityPoints):null;
       const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',
         points:activityPoints===null?'내역 확인 불가':'+'+fmt(activityPoints)+'점',
-        detail:details.join('\\n'),kind:'ledger',amount,activityPoints};
+        detail:details.join('\n'),kind:'ledger',amount,activityPoints};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
     }
