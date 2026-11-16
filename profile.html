@@ -46,7 +46,13 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 
 
 /* Profile recent activity ledger — responsive, data-only, no generated points */
-.recent-activity-panel{min-width:0}.recent-activity-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
+.recent-activity-panel{min-width:0;height:520px;max-height:520px;box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden}
+.recent-activity-panel>h3,.recent-activity-panel>.recent-activity-summary,.recent-activity-panel>.recent-more,.recent-activity-panel>#recentActivityStatus{flex-shrink:0}
+.recent-activity-panel #recentList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#486d7d transparent;padding-right:6px;align-content:start;touch-action:pan-y}
+.recent-activity-panel #recentList::-webkit-scrollbar{width:6px}
+.recent-activity-panel #recentList::-webkit-scrollbar-thumb{background:#486d7d;border-radius:10px}
+@media(max-width:600px){.recent-activity-panel{height:430px;max-height:430px}.recent-activity-panel #recentList{padding-right:4px}}
+.recent-activity-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
 .recent-activity-total{padding:11px;border:1px solid #2a4c5d;border-radius:11px;background:#102834;min-width:0}
 .recent-activity-total small{display:block;color:#9cbbc9;font-size:11px;margin-bottom:5px}.recent-activity-total strong{font-size:18px;overflow-wrap:anywhere}
 .recent-activity-entry{padding:11px 0;border-bottom:1px solid #254454}.recent-activity-entry:last-child{border-bottom:0}
@@ -521,7 +527,7 @@ window.NWConfigReady.then(()=>{
       const box=document.createElement('div'),small=document.createElement('small'),strong=document.createElement('strong');
       box.className='recent-activity-total';small.textContent=heading;strong.textContent=value;box.append(small,strong);summary.append(box);
     }
-    const list=$('recentList');list.replaceChildren();
+    const list=$('recentList'),previousScroll=list.scrollTop;list.replaceChildren();
     for(const item of arr.slice(0,activityVisible)){
       const wrapper=document.createElement('div');wrapper.className='recent-activity-entry';
       const main=document.createElement('div');main.className='recent-activity-main';
@@ -538,11 +544,21 @@ window.NWConfigReady.then(()=>{
       list.append(wrapper);
     }
     if(!arr.length)list.textContent=activityWalletState==='loading'?'활동 기록을 불러오는 중…':'표시할 최근 활동 기록이 없습니다.';
+    // Re-rendering or revealing more entries must never move the outer page.
+    list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
     const status=$('recentActivityStatus');
     status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'활동 점수는 실제 지급된 뉴트젬 기록만 표시하며, 출석 점수와 중복 합산하지 않습니다.';
   }
-  $('recentActivityMore').addEventListener('click',()=>{activityVisible+=20;renderRecent(activityBaseProfile);});
+  $('recentActivityMore').addEventListener('click',()=>{
+    const list=$('recentList'),previousCount=list.children.length,previousPosition=list.scrollTop;
+    activityVisible+=20;renderRecent(activityBaseProfile);
+    // Bring the first newly revealed entry into the INTERNAL scroll viewport.
+    const firstNew=list.children[previousCount];
+    if(firstNew&&list.children[0]){
+      list.scrollTop=Math.max(previousPosition,firstNew.offsetTop-list.children[0].offsetTop-12);
+    }
+  });
   async function loadActivityWallet(token,memberId){
     const req=++activityRequestId;activityWallet=null;activityWalletState='loading';renderRecent(activityBaseProfile);
     const result=await jsonp('contentStatus',{token,device:device()},30000);
