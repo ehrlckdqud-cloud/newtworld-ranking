@@ -499,22 +499,14 @@ window.NWConfigReady.then(()=>{
       if(!activityLedgerEntry(x))continue;
       const at=activityTime(x);if(!at)continue;
       const amount=Number(x.amount),note=String(x.note||'활동 점수 집계');
-      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:'집계 내역: '+note+'\n뉴트젬 +'+fmt(amount)+'젬 지급',kind:'ledger',amount};
+      const details=['chat','photo','video','intro'].map((key,i)=>{
+        const labels=['채팅','사진','영상','소개'],v=x.breakdown?.[key];
+        if(!v||!Number.isFinite(Number(v.count))||!Number.isFinite(Number(v.points)))return labels[i]+' — (기록 없음)';
+        return labels[i]+' '+fmt(v.count)+'회 ('+fmt(v.points)+'점)';
+      });
+      const entry={key:'ledger:'+at+':'+amount+':'+note,at,date:activityDay(x),label:'활동 점수 집계',points:'+'+fmt(amount)+'점',detail:details.join('\n'),kind:'ledger',amount};
       push(entry);
       if(!latestActivity||at>latestActivity.at)latestActivity=entry;
-    }
-    // Use a true server-provided activity breakdown if available. Do not infer chat/photo/video quantities from total points.
-    const snapshots=(p?.rankHistory||[]).filter(x=>x&&typeof x==='object');
-    for(let i=0;i<snapshots.length;i++){
-      const x=snapshots[i],at=activityTime(x),day=activityDay(x);
-      if(!day)continue;
-      const event=x.activity||x.activities;
-      if(!event||typeof event!=='object'||Array.isArray(event))continue;
-      const parts=['chat','photo','video'].filter(k=>Object.hasOwn(event,k)&&Number.isFinite(Number(event[k]))).map(k=>({chat:'채팅',photo:'사진',video:'동영상'})[k]+' '+event[k]);
-      if(!parts.length)continue;
-      // Attach the breakdown to an existing settlement of this day, avoiding an extra score event.
-      const match=arr.find(e=>e.kind==='ledger'&&e.date===day);
-      if(match)match.detail+='\n'+parts.join(' · ');
     }
     // Highlight genuine rank rises once per collection date; no invented rankings.
     for(const snap of rankDailyHistory()){
