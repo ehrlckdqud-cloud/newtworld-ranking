@@ -497,7 +497,11 @@ window.NWConfigReady.then(()=>{
       const match=arr.find(e=>e.kind==='ledger'&&e.date===day);
       if(match)match.detail+='\\n'+parts.join(' · ');
     }
-    const currentMonth=rankKstDay(Date.now()).slice(0,7);
+    // Highlight genuine rank rises once per collection date; no invented rankings.
+    for(const snap of rankDailyHistory()){
+      if(snap.delta===null||snap.delta<=0)continue;
+      push({key:'rank:'+snap.day,at:Date.parse(snap.day+'T23:59:00+09:00'),date:snap.day,label:'월간 순위 상승',points:'▲ '+snap.delta+'계단',detail:snap.previous.rank+'위 → '+snap.rank+'위',kind:'rank'});
+    }
     arr.sort((a,b)=>b.at-a.at||a.key.localeCompare(b.key));
     const summary=$('recentActivitySummary');
     const season=Number(p?.seasonScore);
@@ -513,11 +517,11 @@ window.NWConfigReady.then(()=>{
       const left=document.createElement('div'),label=document.createElement('div'),date=document.createElement('div'),points=document.createElement('span');
       label.className='recent-activity-label';label.textContent=item.label;date.className='recent-activity-time';
       date.textContent=item.kind==='ledger'?activityTimestamp({at:item.at}):item.date;
-      left.append(label,date);points.className='recent-activity-points'+(item.kind==='workout'?' neutral':'');points.textContent=item.points;
+      left.append(label,date);points.className='recent-activity-points'+(['workout','rank'].includes(item.kind)?' neutral':'');points.textContent=item.points;
       main.append(left,points);wrapper.append(main);
-      if(item.kind==='ledger'){
+      if(item.kind==='ledger'||item.kind==='rank'){
         const details=document.createElement('details'),caption=document.createElement('summary'),desc=document.createElement('div');
-        caption.textContent='집계 상세 보기';desc.className='recent-activity-detail';desc.textContent=item.detail;
+        caption.textContent=item.kind==='rank'?'순위 변화 보기':'집계 상세 보기';desc.className='recent-activity-detail';desc.textContent=item.detail;
         details.append(caption,desc);wrapper.append(details);
       }
       list.append(wrapper);
