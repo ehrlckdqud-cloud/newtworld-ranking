@@ -17,11 +17,9 @@ try{
  const nickname=await claimGameTab({token,device},claimSiteSession,status);
  document.getElementById('name').value=nickname;
  document.getElementById('memberName').textContent=nickname;
- stage='게임 파일 준비';
- lobbyAudio.arm(); // Start waiting music before downloading the game engine.
- await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site/core.js?v=arcade100';script.onload=resolve;script.onerror=()=>reject(Error('CORE_LOAD'));document.head.append(script);});
- if(typeof window.createMS3!=='function')throw Error('CORE_LOAD');
- await import('./play.mjs?v=recovery-init1');document.getElementById('channelView').hidden=false;initLobby(nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
+ stage='채널 준비';
+ status.textContent='회원 확인 완료 · 채널을 여는 중…';
+ await import('./play.mjs?v=lobby-entry2');document.getElementById('channelView').hidden=false;initLobby(nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
  }catch(error){
