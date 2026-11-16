@@ -107,10 +107,27 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .activity-insight strong{display:block;font-size:13px;line-height:1.45;color:#f1f7fb}
 .activity-insight p{font-size:12px;line-height:1.65;color:#c1d8e3;margin:6px 0 0;word-break:keep-all}
 .activity-advice-heading{margin-top:12px;padding-top:10px;border-top:1px solid #34515f;color:#95e0ba}
-@media(min-width:901px) and (max-width:1180px){
- .activity-analysis-card .donut-wrap{flex-direction:column;align-items:flex-start}
- .activity-analysis-card .donut{flex-basis:120px;width:120px;height:120px}
- .activity-analysis-card .donut:after{inset:24px}
+/* Desktop: enlarged donut with a compact two-column activity legend below.
+   The insight stays in the right column; mobile layout remains unchanged. */
+@media(min-width:901px){
+ .activity-analysis-grid{grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:10px}
+ .activity-analysis-card .donut-wrap{flex-direction:column;align-items:stretch;gap:13px}
+ .activity-analysis-card .donut{
+   width:clamp(150px,14vw,190px);
+   height:clamp(150px,14vw,190px);
+   flex:0 0 auto;
+   align-self:center;
+ }
+ .activity-analysis-card .donut:after{inset:19%}
+ .activity-analysis-card .legend{
+   display:grid;
+   grid-template-columns:repeat(2,minmax(0,1fr));
+   gap:8px 10px;
+   width:100%;
+   font-size:11px;
+ }
+ .activity-analysis-card .legend span{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+ .activity-analysis-card .legend b{font-size:11px;white-space:normal;overflow-wrap:anywhere}
 }
 @media(max-width:900px){
  .activity-analysis-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
