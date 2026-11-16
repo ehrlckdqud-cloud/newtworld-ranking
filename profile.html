@@ -51,7 +51,17 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
 .recent-activity-panel #recentList{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#486d7d transparent;padding-right:6px;align-content:start;touch-action:pan-y}
 .recent-activity-panel #recentList::-webkit-scrollbar{width:6px}
 .recent-activity-panel #recentList::-webkit-scrollbar-thumb{background:#486d7d;border-radius:10px}
-@media(max-width:600px){.recent-activity-panel{height:430px;max-height:430px}.recent-activity-panel #recentList{padding-right:4px}}
+/* On desktop, match the card height of the ranking / monthly-goal grid row.
+   The list remains independently scrollable instead of enlarging the page. */
+@media(min-width:901px){
+  .three{align-items:stretch}
+  .three>.recent-activity-panel{height:100%;max-height:none;min-height:0}
+}
+/* Keep the compact mobile layout unchanged, including the stacked tablet layout. */
+@media(max-width:900px){
+  .recent-activity-panel{height:430px;max-height:430px}
+  .recent-activity-panel #recentList{padding-right:4px}
+}
 .recent-activity-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0}
 .recent-activity-total{padding:11px;border:1px solid #2a4c5d;border-radius:11px;background:#102834;min-width:0}
 .recent-activity-total small{display:block;color:#9cbbc9;font-size:11px;margin-bottom:5px}.recent-activity-total strong{font-size:18px;overflow-wrap:anywhere}
