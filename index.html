@@ -1861,6 +1861,8 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
  #nwDrawPicker .picker-race-art{font-size:26px}
 }
 </style><style>#nwDrawPicker .nw-game-photo img{display:block;width:100%;height:100%;object-fit:cover}</style><style>#nwDrawPicker .picker-copy .race-title-break{display:initial}</style><style>#nwDrawPicker .nw-game-photo .pinball-corner-photo{position:absolute;right:1.5%;bottom:2%;width:auto;height:46%;max-height:72px;max-width:none;aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:center;pointer-events:none}</style><style>
+#nwDrawPicker .picker-race-photo{box-sizing:border-box;padding:6px;background:#0f251f}
+#nwDrawPicker .picker-race-photo>img{object-fit:contain}
 @media(max-width:720px),(pointer:coarse){
  #nwDrawPicker .picker-grid>.picker-card{aspect-ratio:auto;grid-template-rows:auto 1fr;align-content:start}
  #nwDrawPicker .picker-card>.picker-art{height:auto;min-height:0;align-self:start}
@@ -2800,13 +2802,13 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!race){
       race=document.createElement('a');
       race.href='draw/wild-run.html';race.className='picker-card';race.dataset.wildRun='91';
-      race.innerHTML='<span class="picker-art nw-game-photo" aria-hidden="true"><img src="assets/draw-wild-run-start.webp" alt=""></span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회<br class="race-title-break">(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
+      race.innerHTML='<span class="picker-art nw-game-photo picker-race-photo" aria-hidden="true"><img src="assets/draw-wild-race-moss.webp" width="1050" height="441" alt=""></span><span class="picker-copy"><small>생존 추첨</small><b>양서파충류 달리기 대회<br class="race-title-break">(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
       dialog.querySelector('.picker-grid').append(race);
     }
     if(!dialog.querySelector('[data-pet-race]')){
       const pets=document.createElement('a');
       pets.href='draw/pet-race.html';pets.className='picker-card';pets.dataset.petRace='1';
-      pets.innerHTML='<span class="picker-art" aria-hidden="true" style="background:linear-gradient(160deg,#bfdde9,#eff7f6);display:grid;place-items:center;font-size:clamp(32px,5vw,52px)">🐕 🐈</span><span class="picker-copy"><small>생존 추첨</small><b>멍냥이 달리기 대회</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
+      pets.innerHTML='<span class="picker-art nw-game-photo picker-race-photo" aria-hidden="true"><img src="assets/draw-pet-race-snow.webp" width="1050" height="441" alt=""></span><span class="picker-copy"><small>생존 추첨</small><b>멍냥이 달리기 대회<br class="race-title-break">(개발 중)</b><p>먹이를 먹고 장애물을 피해 결승선까지 달려요.</p><em>회원식별 후 비밀번호로 입장 ↗</em></span>';
       dialog.querySelector('.picker-grid').append(pets);
     }
     const ua=navigator.userAgent||'',mobile=/android|iphone|ipad|ipod|mobile/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);dialog.querySelectorAll('a').forEach(link=>{link.target=mobile?'_self':'_blank';link.rel='noopener';});
