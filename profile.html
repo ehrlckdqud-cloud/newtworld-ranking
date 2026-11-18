@@ -476,7 +476,9 @@ window.NWConfigReady.then(()=>{
     if(avatarEditVersion!==photoVersion&&ownProfile?.memberProfile){d.profile.memberProfile=d.profile.memberProfile||{};Object.assign(d.profile.memberProfile,{imageUrl:ownProfile.memberProfile.imageUrl,avatarSrc:ownProfile.memberProfile.avatarSrc});}
     // Preserve the last confirmed balance while the current balance is refreshed.
     const confirmed=readMemberWalletCache(token,d.profile.memberId);
+    const previousBalance=Number(cached?.profile?.memberId===d.profile.memberId?cached.profile.gemBalance:NaN);
     if(confirmed&&Number.isFinite(confirmed.balance))d.profile.gemBalance=confirmed.balance;
+    else if(Number.isFinite(previousBalance))d.profile.gemBalance=previousBalance;
     saveCoreCache(d.profile);renderProfile(d.profile,false);$('saveProfileBtn').disabled=false;status.textContent='';loadProfileExtras();
     // Do not run the expensive activity-history lookup alongside the wallet
     // balance request: both use the same Apps Script lock.
