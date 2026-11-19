@@ -220,6 +220,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
   <div id="profileLoadStatus" class="hint" role="status" style="margin:8px 0">회원정보를 불러오는 중…</div>
   <section id="authView" class="card auth hidden">
     <h2>내 페이지 인증</h2>
+    <p style="margin:8px 0 14px"><a class="btn" href="login.html?returnTo=profile.html" target="_top" style="display:inline-block;text-decoration:none;font-size:13px">연결한 계정으로 로그인</a></p>
     <p>본인의 <b>현재 카카오톡 닉네임</b>을 입력하세요. 인증코드는 오픈채팅방에서 직접 말해야 하며, 코드가 확인되어도 <b>관리자 승인 전에는 연결되지 않습니다.</b></p>
     <div class="field"><label>현재 닉네임</label><input id="nickname" list="memberList" autocomplete="off" placeholder="예: 김규민"><datalist id="memberList"></datalist></div>
     <button class="btn primary" id="startBtn">인증코드 발급</button>
@@ -248,7 +249,7 @@ button.gem-line{width:100%;color:var(--text);font-family:inherit;text-align:left
     <section class="card hero">
       <div class="avatar" id="profileAvatar" aria-label="대표이미지"><span class="avatar-loading-placeholder"></span></div>
       <div><div class="tag" id="memberId">-</div><div class="name" id="nicknameView">-</div><div class="meta"><span id="firstJoin">-</span> 가입 · <span class="alive"><i class="dot"></i>재실 중</span></div></div>
-      <div class="actions"><button class="btn danger" id="logoutBtn">이 기기 연결 해제</button></div>
+      <div class="actions" style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn primary" id="socialLinkBtn" href="login.html?returnTo=profile.html" target="_top" style="display:inline-block;text-decoration:none">간편 로그인 계정 연결</a><button class="btn danger" id="logoutBtn">이 기기 연결 해제</button></div>
     </section>
 
     <button type="button" class="card gem-line" id="nwWallet" aria-haspopup="dialog" aria-controls="gemHistoryDialog" aria-label="내 뉴트젬 이용 내역 보기">
@@ -1066,6 +1067,13 @@ window.NWConfigReady.then(()=>{
   $('createLinkCodeBtn').onclick=createConnectionCode;$('copyLinkCodeBtn').onclick=copyConnectionCode;$('refreshConnectionsBtn').onclick=refreshConnections;$('consumeLinkCodeBtn').onclick=consumeConnectionCode;
   $('enterConnectionCode').addEventListener('keydown',e=>{if(e.key==='Enter')consumeConnectionCode();});
 
+  const loginReturn=new URLSearchParams(location.search).get('loginReturn');
+  if(loginReturn){
+    const login=new URL('login.html',location.href);login.search='';login.hash='';login.searchParams.set('returnTo',loginReturn);
+    $('socialLinkBtn').href=login.href;
+    const resume=document.createElement('a');resume.className='btn';resume.href=login.href;resume.target='_top';resume.textContent='로그인 화면으로 돌아가기';resume.style.cssText='display:inline-block;text-decoration:none;margin:10px 0';
+    $('profileLoadStatus').insertAdjacentElement('beforebegin',resume);
+  }
   loadProfile();
 })();
 });
@@ -1073,6 +1081,7 @@ window.NWConfigReady.then(()=>{
 <script src="assets/content-access.js?v=20261025-total-gem"></script>
 </body>
 </html>
+
 
 
 
