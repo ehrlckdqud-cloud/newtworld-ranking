@@ -2129,7 +2129,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 <div id="nwEventStage" class="event-stage" aria-label="좌우 방향키나 스와이프로 사진 넘기기"><div id="nwEventPages" class="event-pages"><div class="event-empty">이벤트 소식을 불러오는 중…</div></div></div>
 <div class="event-controls"><button type="button" id="nwEventPrev" aria-label="이전 페이지" disabled>◀</button><span id="nwEventCount" class="event-count" aria-live="polite">준비 중</span><button type="button" id="nwEventNext" aria-label="다음 페이지" disabled>▶</button><button type="button" id="nwEventAuto" hidden>⏸ 자동 넘김 정지</button></div>
 <div id="nwEventAutoNote" class="event-auto-note"></div><a id="nwDrawOpen" class="nw-draw-open" href="#draw"><span><b>🎲 뉴트월드 생존 추첨</b><small>생존핀볼 · 우주대탈출 · 생존연못 중 선택하세요.</small></span><span aria-hidden="true">↗</span></a>
-<a class="nw-draw-open" href="coop/index.html?release=99" onclick="this.href='coop/index.html?release=99&amp;entry='+Date.now()" target="_blank" rel="noopener">🎮 뉴트월드 고전게임 &amp; 온라인게임</a></section><div class="primary-rooms">
+<a id="nwOnlineGameOpen" class="nw-draw-open" href="coop/index.html?release=99" onclick="this.href='coop/index.html?release=99&amp;entry='+Date.now()" target="_blank" rel="noopener">🎮 뉴트월드 고전게임 &amp; 온라인게임</a></section><div class="primary-rooms">
 <a class="room-card" href="https://open.kakao.com/o/gHSfUKXh" rel="noopener noreferrer" target="_blank">
 <img loading="lazy" decoding="async" fetchpriority="low" alt="뉴트월드 메인방" src="assets/home-media/image-6ce4bc15b30500a6-v241.webp"/>
 <div class="room-tag">OPEN CHAT ↗</div>
@@ -2699,6 +2699,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     <div class="nw-admin-actions"><button class="nw-admin-action" id="nwOpenEventBookAdmin" type="button"><b>🎁 월간 이벤트 사진 관리</b><br><small>월별 사진 업로드 · 순서 변경 · 삭제</small></button>
       <button class="nw-admin-action" id="nwExportGameDefaults" type="button">게임 기본설정 내보내기</button>
       <a class="nw-admin-action" href="content-admin.html">포인트 · 외부 고객 관리</a>
+      <a class="nw-admin-action" href="login-settings.html">간편 로그인 설정</a>
       <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>기본 곡 추가 · 음악 타임코드 수정 및 전체 적용</small></button>
 
       <button class="nw-admin-action" id="nwPreviewAutoTheme" type="button"><b>🌿 현재 테마 확인</b><br><small>사이트 계절 테마를 즉시 미리보기</small></button>
@@ -2815,9 +2816,12 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!dialog.open)dialog.showModal();
   }
   function kakaoMemberNotice(){if(!document.documentElement.classList.contains('nw-kakao-browser'))return false;alert('카톡링크가 아닌 일반 브라우저로 접속하시기 바랍니다');return true;}
-  function openMemberDraw(){if(kakaoMemberNotice())return;if(!localStorage.getItem('nwProfileToken')||!localStorage.getItem('nwProfileDevice')){if(location.hash==='#draw')history.replaceState(null,'',location.pathname+location.search);alert('회원식별을 완료한 회원만 생존 추첨을 이용할 수 있어요. 내페이지에서 회원 인증을 진행해주세요.');openPage('profile.html','👤 뉴트월드 내 페이지','#profile');return;}showDrawPicker();}
+  function openLogin(returnTo){const login=new URL('login.html',location.href);login.search='';login.hash='';login.searchParams.set('returnTo',returnTo);location.assign(login.href);}
+  function hasMemberConnection(){return !!(localStorage.getItem('nwProfileToken')&&localStorage.getItem('nwProfileDevice'));}
+  function openMemberDraw(){if(kakaoMemberNotice())return;if(!hasMemberConnection()){openLogin('index.html#draw');return;}showDrawPicker();}
   const nwDrawLink=document.getElementById('nwDrawOpen');
   if(nwDrawLink){nwDrawLink.href='#draw';nwDrawLink.removeAttribute('target');nwDrawLink.setAttribute('aria-haspopup','dialog');nwDrawLink.addEventListener('click',e=>{e.preventDefault();openMemberDraw();});}
+  document.getElementById('nwOnlineGameOpen')?.addEventListener('click',e=>{if(hasMemberConnection())return;e.preventDefault();openLogin('coop/index.html?release=99');});
 
   // Apps Script HTML replies target top; forward only trusted AI replies to the embedded page.
   window.addEventListener('message',e=>{if(/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin)&&['nw-ai','nw-avatar','nw-content'].includes(e.data?.channel)&&typeof e.data.nonce==='string')frame.contentWindow?.postMessage(e.data,location.origin);});
@@ -2825,7 +2829,10 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
   function closePage(fromPop=false){if(nwDrawRunning&&!confirm('추첨이 진행 중이에요. 중단하고 닫을까요?')){if(fromPop)history.pushState({nwPage:'#draw'},'','#draw');return;}if(/\/draw\/index\.html/.test(frame.src)){frame.src='about:blank';nwDrawRunning=false;}overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members','#ai','#draw'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
   document.getElementById('nwPartnerOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('partner.html','🤝 제휴샵 파트너센터','#partner')});
-  document.getElementById('nwMyPageBtn')?.addEventListener('click',e=>{e.preventDefault();openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
+  const myPageButton=document.getElementById('nwMyPageBtn');
+  function paintMyPageEntry(){if(myPageButton)myPageButton.textContent=hasMemberConnection()?'👤 내 페이지':'👤 로그인';}
+  paintMyPageEntry();window.addEventListener('storage',paintMyPageEntry);window.addEventListener('pageshow',paintMyPageEntry);
+  myPageButton?.addEventListener('click',e=>{e.preventDefault();if(!hasMemberConnection()){openLogin('profile.html');return;}openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
   const memberHubOpen=document.getElementById('nwMemberHubOpen');
   const getMemberAuthDialog=()=>document.getElementById('nwMemberAuthDialog');
   const closeMemberAuth=()=>{const d=getMemberAuthDialog();d?.classList.remove('open');d?.setAttribute('aria-hidden','true');};
@@ -3589,6 +3596,7 @@ window.NWConfigReady.then(function(){
 <script src="assets/game-defaults-export.js?v=member-games-1"></script>
 <script src="assets/site-guide.js?v=20261112f" defer></script>
 </body></html>
+
 
 
 

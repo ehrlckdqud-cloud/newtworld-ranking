@@ -6,7 +6,7 @@
  function credentials(){return {token:localStorage.getItem('nwProfileToken')||'',device:device(),guestToken:localStorage.getItem('nwCustomerToken')||'',adminToken:sessionStorage.getItem('nwAdminToken')||''};}
  function endpoint(){return configJob??=new Promise((resolve,reject)=>{function done(){const u=new URL(window.NW_CONFIG.appScriptUrl);if(u.hostname!=='script.google.com'||u.protocol!=='https:')return reject(Error('서버 주소 오류'));resolve(u.href);}if(window.NW_CONFIG)return done();const s=document.createElement('script');s.src=new URL('site-config.js',base);s.onload=done;s.onerror=()=>reject(Error('서버 설정을 불러오지 못했습니다.'));document.head.append(s);});}
  let gameAdminToken='';
- async function call(action,params={}){const url=await endpoint();if(action==='contentStatus')return readStatus(url,params);return new Promise((resolve,reject)=>{
+ async function call(action,params={}){const url=await endpoint();if(action==='contentStatus'||action==='socialConfig')return readStatus(url,params,action);return new Promise((resolve,reject)=>{
   const nonce=crypto.randomUUID(),payload=JSON.stringify({...credentials(),...params,action,nonce});let done=false,pollTimer,script,callback,frame,form;
   const cleanup=()=>{clearTimeout(timer);clearTimeout(pollTimer);script?.remove();if(callback)delete window[callback];window.removeEventListener('message',receive);frame?.remove();form?.remove();};
   const finish=r=>{if(done)return;done=true;cleanup();resolve(r);};
@@ -18,7 +18,7 @@
   fallback();
   pollTimer=setTimeout(poll,1000);
  });}
- function readStatus(url,params){return new Promise((resolve,reject)=>{const cb='nwContentRead_'+crypto.randomUUID().replace(/-/g,''),script=document.createElement('script');let done=false;const clean=()=>{clearTimeout(timer);script.remove();delete window[cb];};window[cb]=r=>{if(done)return;done=true;clean();resolve(r);};script.onerror=()=>{if(done)return;done=true;clean();reject(Error('회원 확인 서버에 연결하지 못했습니다.'));};const timer=setTimeout(()=>{if(done)return;done=true;clean();reject(Error('회원 확인 응답이 지연됩니다. 다시 확인해주세요.'));},30000);script.referrerPolicy='no-referrer';script.src=url+'?'+new URLSearchParams({...credentials(),...params,adminToken:'',action:'contentStatus',callback:cb,_:Date.now()});document.head.append(script);});}
+ function readStatus(url,params,action='contentStatus'){return new Promise((resolve,reject)=>{const cb='nwContentRead_'+crypto.randomUUID().replace(/-/g,''),script=document.createElement('script');let done=false;const clean=()=>{clearTimeout(timer);script.remove();delete window[cb];};window[cb]=r=>{if(done)return;done=true;clean();resolve(r);};script.onerror=()=>{if(done)return;done=true;clean();reject(Error('회원 확인 서버에 연결하지 못했습니다.'));};const timer=setTimeout(()=>{if(done)return;done=true;clean();reject(Error('회원 확인 응답이 지연됩니다. 다시 확인해주세요.'));},30000);script.referrerPolicy='no-referrer';const query=action==='socialConfig'?{action,callback:cb,_:Date.now()}:{...credentials(),...params,adminToken:'',action,callback:cb,_:Date.now()};script.src=url+'?'+new URLSearchParams(query);document.head.append(script);});}
  let statusJob=null,statusScope='';
  async function status(){const scope=JSON.stringify([credentials(),gameAdminToken]);if(statusJob&&scope===statusScope)return statusJob;statusScope=scope;const job=(async()=>{lastStatus=await call('contentStatus',{adminToken:'',...(gameAdminToken?{gameAdminToken,guestToken:''}:{})});if(!lastStatus.ok&&gameAdminToken){gameAdminToken='';window.dispatchEvent(new Event('nw-game-mode'));}window.dispatchEvent(new Event('nw-content-status'));return lastStatus;})();statusJob=job;try{return await job;}finally{if(statusJob===job)statusJob=null;}}
  function courseKey(game,course){return game+':'+(course??(game==='marble'?String(Number(document.getElementById('map')?.value)||0):game==='factory'?'4':game==='pond'&&['90','120'].includes(document.getElementById('pondDuration')?.value)?document.getElementById('pondDuration').value:'default'));}
@@ -68,3 +68,4 @@
   if(location.pathname.includes('/draw/')){const footer=document.createElement('div');footer.style.cssText='position:fixed;bottom:8px;right:12px;font-size:12px;z-index:30;color:#a9c8ba';status().then(r=>{if(r.ok&&r.config.contact){footer.textContent='이용 문의: '+r.config.contact;document.body.append(footer);}}).catch(()=>{});}
  });
 })();
+

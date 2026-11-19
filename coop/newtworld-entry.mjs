@@ -29,10 +29,15 @@ try{
   const retry=document.createElement('button');retry.type='button';retry.textContent='다시 입장';retry.onclick=()=>location.reload();status.append(' ',retry);
  }
  else if(code==='auth'||code==='NEWTWORLD_LOGIN_REQUIRED'){
-  status.textContent='뉴트월드 회원식별이 필요합니다.';
-  document.getElementById('memberHelp').hidden=false;
+  status.textContent='뉴트월드 로그인 화면으로 이동하고 있어요.';
+  const login=new URL('../login.html',location.href);
+  login.searchParams.set('returnTo','coop/index.html?release=99');
+  const help=document.getElementById('memberHelp');help.hidden=false;
+  const link=help.querySelector('a');if(link){link.href=login.href;link.textContent='로그인하고 다시 입장하기 →';}
+  location.replace(login.href);
  }else if(code!=='PC_ONLY'){
   status.textContent=stage+' 단계에서 연결하지 못했습니다. 잠시 후 다시 시도해주세요. ';
   const retry=document.createElement('button');retry.type='button';retry.textContent='다시 연결';retry.onclick=()=>location.reload();status.append(retry);
  }
 }
+
