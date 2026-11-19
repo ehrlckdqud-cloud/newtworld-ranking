@@ -74,6 +74,11 @@ radial-gradient(circle at 50% -5%,rgba(42,86,63,.35),transparent 30%),
 linear-gradient(#071018,#09131c 55%,#061018);
 color:var(--text);font-family:Inter,system-ui,-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif}
 .wrap{max-width:1180px;margin:auto;padding:18px}
+.nw-home-login-row{display:flex;align-items:center;justify-content:flex-end;min-height:44px;margin:0 0 10px}
+.nw-home-login-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;min-height:44px;padding:10px 18px;border:1px solid #92e7bd;border-radius:12px;background:linear-gradient(135deg,#a5efd0,#6bd2a1);color:#06291d;font-size:16px;font-weight:800;line-height:1.4;text-decoration:none;white-space:nowrap;touch-action:manipulation;box-shadow:0 5px 18px rgba(0,0,0,.18)}
+.nw-home-login-button:hover{background:linear-gradient(135deg,#b9f6df,#83e3b8)}
+.nw-home-login-button:focus-visible{outline:3px solid #eff8ff;outline-offset:3px}
+.nw-home-login-button svg{width:20px;height:20px;flex:none}
 .community-hub{display:grid;grid-template-columns:minmax(190px,.72fr) minmax(0,2.35fr) minmax(190px,.72fr);gap:14px;align-items:stretch}
 .primary-rooms{display:grid;grid-template-columns:1fr 1fr;gap:14px;min-width:0}
 .partner-panel{background:linear-gradient(180deg,#0e1b24,#09131a);border:1px solid #223b49;border-radius:22px;padding:12px;display:flex;flex-direction:column;gap:9px;box-shadow:0 16px 42px rgba(0,0,0,.20)}
@@ -1933,6 +1938,9 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 })();
 </script>
 <div class="wrap">
+<nav class="nw-home-login-row" aria-label="계정 메뉴">
+  <a id="nwHomeLogin" class="nw-home-login-button" href="login.html?returnTo=index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg><span>로그인하기</span></a>
+</nav>
 <div class="pc-top-row">
 <div class="visit-strip" aria-label="뉴트월드 방문 통계">
   <div class="quick-stat visit-today-total">
