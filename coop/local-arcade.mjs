@@ -1,3 +1,4 @@
+import {ensureEngine} from './metal-slug-engine.mjs';
 import {prepareAwardSound,showAward} from './completion-award.mjs';
 import {neoRecord} from './solo-neo-record.mjs?v=boss1';
 import {pictureQuality,qualityBar} from './picture-quality.mjs';
@@ -228,11 +229,13 @@ export async function openLocalArcade(game='mslug3'){
    cabinet.quality(quality.mode);
    screen.classList.remove('gunbird-preparing');screen.hidden=true;
   }else{
+  const createMS3=await ensureEngine();
+  if(disposed)return;
   let source=game==='mslug3'?await readSavedROM():null;
   if(!source){source=await downloadGame({game,member,headers:testHeaders(),onProgress:p=>{status.textContent='게임 준비 중 '+Math.round(p*100)+'%';}});if(!disposed&&game==='mslug3')try{await saveROM(source);}catch{}}
   if(disposed)return;
   let portsReady=false;
-  const loaded=await window.createMS3({localArcadeCore(bytes){const adapted=localArcadeCore(bytes);portsReady=true;return game==='mslug3'?adapted:selectMetalSlug(adapted,game);},print:()=>{},printErr:()=>{}});
+  const loaded=await createMS3({localArcadeCore(bytes){const adapted=localArcadeCore(bytes);portsReady=true;return game==='mslug3'?adapted:selectMetalSlug(adapted,game);},print:()=>{},printErr:()=>{}});
   if(!portsReady)throw Error('실행 코어가 갱신되었습니다. 새로고침해주세요.');
   if(game!=='mslug3')await mountMetalSlug(loaded,source,game);
   else {

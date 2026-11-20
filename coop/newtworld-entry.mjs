@@ -2,7 +2,7 @@ import {claimGameTab} from './tab-owner.mjs?v=member2';
 import {initRankings} from './rankings.mjs?v=rankdetail1';
 import {claimSiteSession,blockSite} from './site-session.mjs?v=98';
 import {lobbyAudio} from './lobby-audio.mjs?v=98';
-import {initLobby} from './lobby.mjs?v=cabinetclear3';
+import {initLobby} from './lobby.mjs?v=solo-core-1';
 const mobile=/android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
 if(mobile){document.getElementById('appShell').hidden=true;document.getElementById('pcOnly').hidden=false;}
 const form=document.getElementById('joinForm');
@@ -19,7 +19,7 @@ try{
  document.getElementById('memberName').textContent=nickname;
  stage='채널 준비';
  status.textContent='회원 확인 완료 · 채널을 여는 중…';
- await import('./play.mjs?v=lobby-entry2');document.getElementById('channelView').hidden=false;initLobby(nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
+ await import('./play.mjs?v=solo-core-1');document.getElementById('channelView').hidden=false;initLobby(nickname);import('./social.mjs?v=98').then(m=>m.initSocial()).catch(()=>{});initRankings();lobbyAudio.arm();
  for(const element of form.elements)element.disabled=false;
  status.textContent='회원 확인 완료 · 방을 만들거나 초대 코드로 입장하세요.';
  }catch(error){
