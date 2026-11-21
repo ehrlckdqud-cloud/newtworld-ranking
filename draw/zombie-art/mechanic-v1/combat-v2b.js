@@ -51,9 +51,20 @@ window.DefenseBattle = (() => {
     return events.sort((a,b)=>a.start-b.start);
   }
   function positions(events,first,t,people,entrances,warnings){
+    let survivors;
     const actors=[];
     for(let i=first;i<events.length && events[i].start<=t;i++){
-      const e=events[i], fadeStart=Math.min(e.removedAt,e.end+(e.breach?.35:.6));
+      const e=events[i];
+      if(!e.breach && people[e.target].hp===0 && e.removedAt===Infinity){
+        if(e.lastX===undefined){
+          survivors ||= people.map((p,i)=>p.hp>0?i:-1).filter(i=>i>=0);
+          if(!survivors.length)continue;
+          e.target=survivors[e.id%survivors.length];
+        }else{
+          e.removedAt=t;
+        }
+      }
+      const fadeStart=Math.min(e.removedAt,e.end+(e.breach?.35:.6));
       if(t>fadeStart+.35)continue;
       const age=Math.min(t,e.removedAt)-e.start;
       const travel=e.end-e.start, progress=Math.min(1,Math.max(0,age/(travel-(e.breach?.78:.45))));
@@ -70,7 +81,7 @@ window.DefenseBattle = (() => {
     }
     return actors;
   }
-  function engage(people,dead,enemies,t,dt,size,weapon){
+  function engage(people,dead,enemies,t,dt,size,weapon,seconds){
     const live=enemies.filter(e=>e.active);
     // Acquire from the same snapshot so a single volley can include every surviving defender.
     const targets=people.map((p,i)=>{
@@ -121,7 +132,7 @@ window.DefenseBattle = (() => {
     });
     for(const enemy of live){
       const e=enemy.event,p=people[e.target];
-      if(e.hp<=0 || dead.has(e.target) || !enemy.contact || t<e.contactAt || t-p.hitAt<.42)continue;
+      if(e.hp<=0 || dead.has(e.target) || !enemy.contact || t<e.contactAt || t-p.hitAt<(e.breach?.42:Math.max(2.4,seconds*.115)))continue;
       const distance=Math.hypot(enemy.x-p.x,enemy.y-p.y);
       if(distance>Math.max(24,size*.48))continue;
       damage(p,1,t,1);e.contactAt=t+.55;
