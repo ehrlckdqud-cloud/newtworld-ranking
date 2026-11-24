@@ -53,15 +53,53 @@ globalThis.createDrawPersonalPhotos = function createDrawPersonalPhotos(anchor, 
       finally { URL.revokeObjectURL(url); }
     };
   }
-  const heading = el('strong','개인 설정 닉네임'), list = el('div'), remove = el('button','선택한 사진 삭제');
-  list.style.cssText = 'display:grid;gap:3px;max-height:10em;overflow:auto';
-  remove.type = 'button';
-  box.append(heading,list,remove,status);
+  const open = el('button'), dialog = el('dialog'), title = el('h2','개인 설정 목록');
+  const close = el('button','닫기'), list = el('div'), remove = el('button','선택한 사진 삭제');
+  const header = el('div'), footer = el('div'), feedback = el('small');
+  for (const button of [open, close, remove]) button.type = 'button';
+  open.setAttribute('aria-haspopup','dialog');
+  title.id = 'personal-photo-title-' + key;
+  dialog.setAttribute('aria-labelledby',title.id);
+  dialog.className = 'nw-personal-photo-dialog';
+  feedback.setAttribute('role','status');
+  if (!document.getElementById('nw-personal-photo-style')) {
+    const style = el('style'); style.id = 'nw-personal-photo-style';
+    style.textContent = `
+      dialog.nw-personal-photo-dialog{box-sizing:border-box;width:min(26rem,calc(100vw - 2rem));max-height:calc(100vh - 2rem);max-height:calc(100dvh - 2rem);position:fixed;inset:0;margin:auto;padding:16px;overflow:hidden;border:1px solid #909c80;border-radius:12px;background:#f8f7ef;color:#17382f;font:inherit;box-shadow:0 12px 40px #07151066}
+      dialog.nw-personal-photo-dialog[open]{display:flex;flex-direction:column;gap:12px}
+      dialog.nw-personal-photo-dialog:not([open]){display:none}
+      dialog.nw-personal-photo-dialog::backdrop{background:#10251e70}
+      .nw-personal-photo-dialog .photo-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+      .nw-personal-photo-dialog h2{margin:0;font-size:1.15rem;color:#17382f}
+      .nw-personal-photo-dialog button{width:auto;min-height:40px;padding:6px 12px;border-radius:6px;background:#27493e;color:#fff;border:0;font:inherit;cursor:pointer}
+      .nw-personal-photo-dialog button:disabled{opacity:.48;cursor:default}
+      .nw-personal-photo-dialog .photo-list{min-height:0;max-height:52vh;max-height:52dvh;overflow:auto;overscroll-behavior:contain;border-block:1px solid #b9c2b2;padding-block:4px}
+      .nw-personal-photo-dialog .photo-list label{min-height:38px;padding:2px 4px;cursor:pointer;color:#17382f}
+    `;
+    document.head.append(style);
+  }
+  header.className = footer.className = 'photo-actions';
+  close.autofocus = true;
+  header.append(title,close);
+  list.className = 'photo-list';
+  footer.append(feedback,remove);
+  dialog.append(header,list,footer);
+  box.append(open,status);
+  open.onclick = () => {
+    (document.fullscreenElement || document.body).append(dialog);
+    list.replaceChildren(); feedback.textContent='';
+    dialog.showModal(); refresh(); list.scrollTop=0;
+  };
+  close.onclick = () => dialog.close();
+  dialog.addEventListener('close',()=>{ list.replaceChildren(); open.focus(); });
+  dialog.addEventListener('keydown',event=>{ if(event.code==='Space') event.stopPropagation(); });
   function selection() { return [...list.querySelectorAll('input:checked')].map(input => input.value); }
   list.onchange = () => { remove.disabled = !selection().length; };
   function refresh() {
     try { records = read(); } catch { records = new Map(); status.textContent = '개인 사진 목록을 불러오지 못했습니다.'; }
     for (const [name, item] of cache) if (records.get(name) !== item.src) cache.delete(name);
+    open.textContent = '개인 설정 목록 (' + records.size + ')';
+    if (!dialog.open) return;
     const selected = new Set(selection());
     list.replaceChildren();
     if (!records.size) list.append(el('small','개인 설정 사진이 없습니다.'));
@@ -76,7 +114,7 @@ globalThis.createDrawPersonalPhotos = function createDrawPersonalPhotos(anchor, 
   }
   function save(next,message) {
     localStorage.setItem(key,JSON.stringify(Object.fromEntries(next)));
-    refresh(); status.textContent = message; changed();
+    refresh(); (dialog.open ? feedback : status).textContent = message; changed();
   }
   remove.onclick = () => {
     const names = selection();
@@ -86,7 +124,7 @@ globalThis.createDrawPersonalPhotos = function createDrawPersonalPhotos(anchor, 
       const next = read();
       for (const name of names) next.delete(name);
       save(next,names.length + '개의 개인 사진을 삭제했습니다.');
-    } catch { status.textContent = '개인 사진을 삭제하지 못했습니다.'; }
+    } catch { feedback.textContent = '개인 사진을 삭제하지 못했습니다.'; }
   };
   addEventListener('storage', e => { if (e.key === key || e.key === null) { ++serial; refresh(); changed(); } });
   function imageFor(name) {
