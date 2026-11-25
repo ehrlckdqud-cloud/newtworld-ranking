@@ -12,15 +12,15 @@
 /* A continuous row-wide tint on desktop and the whole member card on mobile.
    Colors follow the lily pond, fire, sapphire dragon and golden crown artwork. */
 #tb tr[data-rank-tier="3"],#cards>.card[data-rank-tier="3"]{--tier-rgb:88,196,141;--tier-light:193,232,154}
-#tb tr[data-rank-tier="4"],#cards>.card[data-rank-tier="4"]{--tier-rgb:148,64,77;--tier-light:157,98,108}
+#tb tr[data-rank-tier="4"],#cards>.card[data-rank-tier="4"]{--tier-rgb:198,50,68;--tier-light:206,100,112}
 #tb tr[data-rank-tier="5"],#cards>.card[data-rank-tier="5"]{--tier-rgb:63,141,230;--tier-light:151,208,255}
 #tb tr[data-rank-tier="6"],#cards>.card[data-rank-tier="6"]{--tier-rgb:66,91,218;--tier-light:225,197,125}
 #tb tr[data-rank-tier="7"],#cards>.card[data-rank-tier="7"]{--tier-rgb:219,170,62;--tier-light:255,226,150}
 #tb tr[data-rank-tier="3"],#tb tr[data-rank-tier="4"],#tb tr[data-rank-tier="5"],#tb tr[data-rank-tier="6"],#tb tr[data-rank-tier="7"]{background:radial-gradient(ellipse at 0% 50%,rgba(var(--tier-rgb),.22),transparent 65%),linear-gradient(100deg,rgba(var(--tier-rgb),.10),rgba(var(--tier-rgb),.025));box-shadow:inset 3px 0 rgba(var(--tier-light),.65)}
 #tb tr[data-rank-tier="3"]:hover,#tb tr[data-rank-tier="4"]:hover,#tb tr[data-rank-tier="5"]:hover,#tb tr[data-rank-tier="6"]:hover,#tb tr[data-rank-tier="7"]:hover{background:radial-gradient(ellipse at 0% 50%,rgba(var(--tier-rgb),.29),transparent 75%),linear-gradient(100deg,rgba(var(--tier-rgb),.14),rgba(var(--tier-rgb),.05))}
 #cards>.card[data-rank-tier="3"],#cards>.card[data-rank-tier="4"],#cards>.card[data-rank-tier="5"],#cards>.card[data-rank-tier="6"],#cards>.card[data-rank-tier="7"]{background:radial-gradient(ellipse at 100% 0,rgba(var(--tier-rgb),.19),transparent 65%),linear-gradient(120deg,rgba(var(--tier-rgb),.09),transparent 60%),#0e1922;border-color:rgba(var(--tier-rgb),.4);box-shadow:inset 3px 0 rgba(var(--tier-light),.6)}
-/* Keep a dark neutral base beneath the muted red tint on both layouts. */
-#tb tr[data-rank-tier="4"],#tb tr[data-rank-tier="4"]:hover,#cards>.card[data-rank-tier="4"]{background-color:#171b23}
+/* Keep a dark wine base beneath the 숙련자 tint on both layouts. */
+#tb tr[data-rank-tier="4"],#tb tr[data-rank-tier="4"]:hover,#cards>.card[data-rank-tier="4"]{background-color:#281820}
 @media(max-width:700px){.nw-badge-zoom{padding:14px;border-radius:17px}.nw-badge-zoom-head h2{font-size:16px}.nw-badge-zoom-image{height:min(65dvh,560px)}}
 
 /* Every earned badge is a native zoom button. Large tiers use 2x image boxes. */
