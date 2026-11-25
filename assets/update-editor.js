@@ -2,7 +2,25 @@
  const form=document.querySelector('#nwEditUpdate'),fields=form.elements,feedback=form.querySelector('[role=status]'),publish=form.querySelector('[type=submit]');
  const parts=form.querySelector('#updateParts'),first=parts.firstElementChild;
  const control=(row,key)=>row.querySelector('[name="'+key+'"]');
- let items=[],current,id;
+ let items=[],current,id,visible;
+ const visibility=fields.toggleVisibility;
+ function showVisibility(enabled){
+   visible=enabled;
+   visibility.textContent=enabled?'공지사항 끄기':'공지사항 켜기';
+   form.querySelector('#updateVisibility').textContent=enabled?'홈 공지사항 표시 중':'홈 공지사항 꺼짐';
+   visibility.disabled=false;
+ }
+ visibility.onclick=async()=>{
+   const fieldset=form.querySelector('fieldset');
+   fieldset.disabled=true;
+   try{
+     const result=await NWContent.call('contentUpdateVisibility',{enabled:!visible});
+     if(!result.ok||typeof result.enabled!=='boolean')throw Error(result.error||'표시 설정을 저장하지 못했어요.');
+     showVisibility(result.enabled);
+     feedback.textContent=result.enabled?'홈을 다시 열면 공지가 표시됩니다.':'홈을 다시 열면 공지가 숨겨집니다. 기존 공지는 보관됩니다.';
+   }catch(e){feedback.textContent=e.message}
+   finally{fieldset.disabled=false}
+ };
  fields.addPart.onclick=()=>{
    const row=document.querySelector('#updatePartTemplate').content.firstElementChild.cloneNode(true);
    row.dataset.id=crypto.randomUUID();parts.append(row);
@@ -25,7 +43,18 @@
  }
  async function load(){
    form.querySelector('fieldset').disabled=true;publish.disabled=true;fields.deleteEntry.disabled=true;
-   try{items=await readNewtPublicUpdates();render(fields.entry.value);publish.disabled=false;feedback.textContent='';}
+   visibility.disabled=true;
+   try{
+     const list=[];
+     let after='',page;
+     do{
+       page=await NWContent.call('contentUpdateAdminList',{after});
+       if(!page.ok||!Array.isArray(page.items)||typeof page.enabled!=='boolean')throw Error(page.error||'공지 목록을 불러오지 못했어요.');
+       list.push(...page.items);
+       after=page.next;
+     }while(after);
+     items=list;render(fields.entry.value);showVisibility(page.enabled);publish.disabled=false;feedback.textContent='';
+   }
    catch(e){feedback.textContent=e.message}
    finally{form.querySelector('fieldset').disabled=false}
  }
@@ -53,7 +82,7 @@
      const r=await NWContent.call('contentUpdatePublish',{items:batch});if(!r.ok)throw Error(r.error||'저장하지 못했어요.');
      const saved=batch.map((x,i)=>({...x,...r.saved[i]}));
      const ids=new Set(saved.map(x=>x.id));items=[...saved,...items.filter(x=>!ids.has(x.id))].sort((a,b)=>b.date.localeCompare(a.date)||b.order-a.order);
-     render(saved[0].id);feedback.textContent=saved.length+'건을 발행했어요. 홈을 다시 열면 반영됩니다.';
+     render(saved[0].id);feedback.textContent=saved.length+(visible?'건을 발행했어요. 홈을 다시 열면 반영됩니다.':'건을 저장했어요. 공지사항을 켜면 홈에 표시됩니다.');
    }catch(err){feedback.textContent=err.message}
    finally{form.querySelector('fieldset').disabled=false}
  };
