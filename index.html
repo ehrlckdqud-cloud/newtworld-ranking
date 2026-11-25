@@ -2756,6 +2756,95 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
   </div>
 </div>
 
+<script>
+  // Owner-only entry: remember button visibility; only a live check can authorize opening.
+  window.NWVerifyOwnerEntry=(()=>{
+    const button=document.getElementById('nwAdminLoginBtn');
+    const hub=document.getElementById('nwAdminHub');
+    const hintKey='nwOwnerEntryHintV1';
+    let active=null,pending=null;
+    function show(visible){
+      if(button.hidden===!visible)return;
+      button.hidden=!visible;
+      if(!visible){hub.classList.remove('open');hub.setAttribute('aria-hidden','true');}
+      window.dispatchEvent(new Event('resize'));
+    }
+    function currentScope(){
+      const token=localStorage.getItem('nwProfileToken'),device=localStorage.getItem('nwProfileDevice');
+      return token&&device?JSON.stringify([token,device]):'';
+    }
+    function applyHint(session){
+      if(active!==session||currentScope()!==session.scope||!session.fingerprint)return;
+      try{
+        if(session.verdict===true)localStorage.setItem(hintKey,session.fingerprint);
+        else if(session.verdict===false)localStorage.removeItem(hintKey);
+        else show(localStorage.getItem(hintKey)===session.fingerprint);
+      }catch(_){}
+    }
+    function sync(){
+      const scope=currentScope();
+      if(active?.scope===scope)return active;
+      show(false);
+      pending=null;
+      const session=active={scope,verdict:null,fingerprint:''};
+      if(!scope){
+        try{localStorage.removeItem(hintKey);}catch(_){}
+        return session;
+      }
+      if(!window.crypto?.subtle)return session;
+      crypto.subtle.digest('SHA-256',new TextEncoder().encode(scope)).then(bytes=>{
+        session.fingerprint=Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('');
+        applyHint(session);
+      }).catch(()=>{});
+      return session;
+    }
+    function verify(){
+      const session=sync();
+      if(!session.scope)return Promise.resolve(false);
+      if(pending)return pending;
+      const [token,device]=JSON.parse(session.scope);
+      pending=new Promise(resolve=>{
+        const timer=setTimeout(()=>resolve(null),12000);
+        NWJsonp('profileCore',{token,device},data=>{clearTimeout(timer);resolve(data);});
+      }).then(result=>{
+        if(active!==session)return false;
+        pending=null;
+        if(currentScope()!==session.scope){sync();return false;}
+        const owner=result?.ok===true&&result.auth===true&&String(result.profile?.role||'').trim()==='방장';
+        if(owner||result?.auth===false||(result?.ok===true&&result.auth===true)){
+          session.verdict=owner;
+          show(owner);
+          applyHint(session);
+        }
+        return owner;
+      });
+      return pending;
+    }
+    window.addEventListener('storage',event=>{
+      if(!event.key||event.key==='nwProfileToken'||event.key==='nwProfileDevice'){
+        sync();
+        if(window.NWJsonp)void verify();
+      }else if(event.key===hintKey&&!event.newValue){
+        show(false);
+        active=null;
+        sync();
+      }
+    });
+    // The button can be visible while the rest of the admin controls are still loading.
+    const ready=new Promise(resolve=>{window.NWBindAdminEntry=resolve;});
+    let opening=false;
+    button.addEventListener('click',async()=>{
+      if(opening)return;
+      opening=true;
+      try{const open=await ready;await open();}finally{opening=false;}
+    });
+    window.addEventListener('pageshow',event=>{if(event.persisted){sync();if(window.NWJsonp)void verify();}});
+    sync();
+    return verify;
+  })();
+  // End owner-only entry.
+</script>
+
 <div class="nw-app-overlay" id="nwAppOverlay" aria-hidden="true"><div class="nw-app-shell"><div class="nw-app-topbar"><b id="nwAppTitle">뉴트월드</b><button class="nw-app-close" id="nwAppClose" type="button">✕ 닫기</button></div><iframe class="nw-app-frame" id="nwAppFrame" title="뉴트월드 기능 페이지"></iframe></div></div>
 <div class="nw-workout-overlay" id="nwWorkoutOverlay" aria-hidden="true">
   <div class="nw-workout-shell">
@@ -2922,50 +3011,14 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
   document.querySelectorAll('.partner-left .partner-card[data-shop],.partner-site-panel .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
 
   // 관리자 허브 + 계절 테마
-  const adminBtn=document.getElementById('nwAdminLoginBtn');
   const adminHub=document.getElementById('nwAdminHub');
   const themeState=document.getElementById('nwThemeState');
   const themeBtns=[...document.querySelectorAll('.nw-theme-btn')];
 
-  // Owner-only entry: use the authenticated server profile, never the nickname or admin-token cache.
-  let pendingOwnerCheck=null,verifiedOwnerScope='';
-  function showOwnerEntry(visible){
-    if(adminBtn.hidden===!visible)return;
-    adminBtn.hidden=!visible;
-    if(!visible){adminHub?.classList.remove('open');adminHub?.setAttribute('aria-hidden','true');}
-    window.dispatchEvent(new Event('resize'));
-  }
-  function verifyOwnerEntry(){
-    const token=localStorage.getItem('nwProfileToken')||'',device=localStorage.getItem('nwProfileDevice')||'';
-    const scope=JSON.stringify([token,device]);
-    if(scope!==verifiedOwnerScope){
-      verifiedOwnerScope='';
-      showOwnerEntry(false);
-    }
-    if(!token||!device){pendingOwnerCheck=null;return Promise.resolve(false);}
-    if(pendingOwnerCheck?.scope===scope)return pendingOwnerCheck.promise;
-    const check={scope};
-    pendingOwnerCheck=check;
-    check.promise=new Promise(resolve=>{
-      const timeout=setTimeout(()=>resolve(null),12000);
-      NWJsonp('profileCore',{token,device},data=>{clearTimeout(timeout);resolve(data);});
-    }).then(result=>{
-      if(pendingOwnerCheck!==check)return false;
-      pendingOwnerCheck=null;
-      const current=token===localStorage.getItem('nwProfileToken')&&device===localStorage.getItem('nwProfileDevice');
-      const allowed=!!(current&&result?.ok&&result.auth&&String(result.profile?.role||'').trim()==='방장');
-      if(allowed)verifiedOwnerScope=scope;
-      else if(!current||result!==null)verifiedOwnerScope='';
-      showOwnerEntry(scope===verifiedOwnerScope);
-      return allowed;
-    });
-    return check.promise;
-  }
-  window.addEventListener('storage',event=>{if(!event.key||['nwProfileToken','nwProfileDevice'].includes(event.key))void verifyOwnerEntry();});
+  const verifyOwnerEntry=window.NWVerifyOwnerEntry;
   window.addEventListener('focus',()=>void verifyOwnerEntry());
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)void verifyOwnerEntry();});
   void verifyOwnerEntry();
-  // End owner-only entry.
 
 
   function autoSeason(){
@@ -3008,7 +3061,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
       else alert(d?.error||'로그인 실패');
     });
   }
-  adminBtn?.addEventListener('click',adminLoginAndOpen);
+  window.NWBindAdminEntry(adminLoginAndOpen);
   document.getElementById('nwAdminHubClose')?.addEventListener('click',()=>{adminHub?.classList.remove('open');adminHub?.setAttribute('aria-hidden','true');});
   adminHub?.addEventListener('click',e=>{if(e.target===adminHub){adminHub.classList.remove('open');adminHub.setAttribute('aria-hidden','true');}});
   document.getElementById('nwOpenSyncAdmin')?.addEventListener('click',()=>{
