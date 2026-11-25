@@ -40,6 +40,8 @@ window.NWConfigReady = new Promise(function(resolve){
   document.head.appendChild(script);
 });
 </script>
+<style>html:not(.nw-login-enabled) [data-nw-feature="login"],html:not(.nw-ai-enabled) [data-nw-feature="ai"]{display:none!important}</style>
+<script src="assets/service-features.js"></script>
 <meta name="theme-color" content="#071018">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1963,7 +1965,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 })();
 </script>
 <div class="wrap">
-<nav class="nw-home-login-row" aria-label="계정 메뉴">
+<nav data-nw-feature="login" class="nw-home-login-row" aria-label="계정 메뉴">
   <a id="nwHomeLogin" class="nw-home-login-button" href="login.html?returnTo=index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-2a7 7 0 0 1 14 0v2"/></svg><span>로그인하기</span></a>
 </nav>
 <div class="pc-top-row">
@@ -2181,7 +2183,7 @@ body.nw-photo-zoom-open{overflow:hidden}.nw-photo-lightbox[hidden]{display:none!
 </a>
 
 
-</div><a id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문 AI비서 · 회원 전용">
+</div><a data-nw-feature="ai" id="nwAiOpen" class="nw-ai-banner" href="#ai" aria-label="뉴트월드 전문 AI비서 · 회원 전용">
 <span id="nwAiPresence" class="nw-ai-presence" data-online="false" role="status" aria-live="polite" aria-atomic="true"><span class="nw-ai-presence-dot" aria-hidden="true"></span><span id="nwAiPresenceText">휴식 중</span></span>
 <canvas class="nw-ai-gold-orbit" aria-hidden="true"></canvas>
 <img src="assets/ai/assistant.webp" width="140" height="140" loading="lazy" decoding="async" alt="뉴트월드 전문 AI비서">
@@ -2732,6 +2734,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     <div class="nw-admin-actions"><button class="nw-admin-action" id="nwOpenEventBookAdmin" type="button"><b>🎁 월간 이벤트 사진 관리</b><br><small>월별 사진 업로드 · 순서 변경 · 삭제</small></button>
       <button class="nw-admin-action" id="nwExportGameDefaults" type="button">게임 기본설정 내보내기</button>
       <a class="nw-admin-action" href="content-admin.html">포인트 · 외부 고객 관리</a>
+      <a class="nw-admin-action" href="content-admin.html#featureSettings">로그인 · AI비서 운영 설정</a>
       <a class="nw-admin-action" href="login-settings.html">간편 로그인 설정</a>
       <button class="nw-admin-action" id="nwOpenSyncAdmin" type="button"><b>🎚 싱크가사 편집기</b><br><small>기본 곡 추가 · 음악 타임코드 수정 및 전체 적용</small></button>
 
@@ -2826,6 +2829,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
   async function sha256(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
   const overlay=document.getElementById('nwAppOverlay'),frame=document.getElementById('nwAppFrame'),title=document.getElementById('nwAppTitle');
   function openPage(page,label,hash){if(/^(?:profile|members|ai)\.html(?:[?#]|$)/.test(page)&&kakaoMemberNotice())return;const profileFresh=/^(?:profile|members|attendance|workout|ai)\.html(?:[?#]|$)/.test(page)?'&v=2.79&_='+Date.now():'';frame.src=page+(page.includes('?')?'&':'?')+'embedded=1'+profileFresh;title.textContent=label;overlay.classList.add('open');overlay.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';if(hash&&location.hash!==hash)history.pushState({nwPage:hash},'',hash);}
+  async function openAI(){if((await window.NWServiceFeatures).ai)openPage('ai.html','뉴트월드 전문 AI비서','#ai');}
   window.NWOpenPage=openPage;
   let nwDrawRunning=false;
   window.addEventListener('message',e=>{if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data?.channel==='nw-draw-state')nwDrawRunning=e.data.running===true;});
@@ -2855,7 +2859,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     if(!dialog.open)dialog.showModal();
   }
   function kakaoMemberNotice(){if(!document.documentElement.classList.contains('nw-kakao-browser'))return false;alert('카톡링크가 아닌 일반 브라우저로 접속하시기 바랍니다');return true;}
-  function openLogin(returnTo){const login=new URL('login.html',location.href);login.search='';login.hash='';login.searchParams.set('returnTo',returnTo);location.assign(login.href);}
+  async function openLogin(returnTo){if(!(await window.NWServiceFeatures).login){openPage('profile.html','👤 뉴트월드 내 페이지','#profile');return;}const login=new URL('login.html',location.href);login.search='';login.hash='';login.searchParams.set('returnTo',returnTo);location.assign(login.href);}
   function hasMemberConnection(){return !!(localStorage.getItem('nwProfileToken')&&localStorage.getItem('nwProfileDevice'));}
   function openMemberDraw(){if(kakaoMemberNotice())return;if(!hasMemberConnection()){openLogin('index.html#draw');return;}showDrawPicker();}
   const nwDrawLink=document.getElementById('nwDrawOpen');
@@ -2864,7 +2868,7 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
 
   // Apps Script HTML replies target top; forward only trusted AI replies to the embedded page.
   window.addEventListener('message',e=>{if(/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin)&&['nw-ai','nw-avatar','nw-content'].includes(e.data?.channel)&&typeof e.data.nonce==='string')frame.contentWindow?.postMessage(e.data,location.origin);});
-  document.getElementById('nwAiOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('ai.html','뉴트월드 전문 AI비서','#ai');});
+  document.getElementById('nwAiOpen')?.addEventListener('click',e=>{e.preventDefault();openAI();});
   function closePage(fromPop=false){if(nwDrawRunning&&!confirm('추첨이 진행 중이에요. 중단하고 닫을까요?')){if(fromPop)history.pushState({nwPage:'#draw'},'','#draw');return;}if(/\/draw\/index\.html/.test(frame.src)){frame.src='about:blank';nwDrawRunning=false;}overlay.classList.remove('open');overlay.setAttribute('aria-hidden','true');document.documentElement.style.overflow='';document.body.style.overflow='';if(!fromPop&&['#attendance','#partner','#profile','#members','#ai','#draw'].includes(location.hash))history.back();}
   document.getElementById('nwAttendanceOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance')});
   document.getElementById('nwPartnerOpen')?.addEventListener('click',e=>{e.preventDefault();openPage('partner.html','🤝 제휴샵 파트너센터','#partner')});
@@ -2911,8 +2915,8 @@ document.getElementById('nwMusicAppInstall').addEventListener('click',function(e
     const d=getMemberAuthDialog();if(d&&e.target===d)closeMemberAuth();
   });
   document.getElementById('nwAppClose')?.addEventListener('click',()=>closePage(false));window.addEventListener('message',e=>{if(e.data==='nw-close-page')closePage(false);if(e.origin===location.origin&&e.source===frame.contentWindow&&e.data==='nw-ai-open-profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile')});
-  window.addEventListener('hashchange',()=>{if(location.hash==='#draw')openMemberDraw();else if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');else if(location.hash==='#members'){if(kakaoMemberNotice())return;if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
-  if(location.hash==='#draw')openMemberDraw();if(location.hash==='#ai')openPage('ai.html','뉴트월드 전문 AI비서','#ai');if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&(document.documentElement.classList.contains('nw-kakao-browser')||localStorage.getItem('nwProfileToken')))openPage('members.html','👤 뉴트월드 회원 허브','#members');
+  window.addEventListener('hashchange',()=>{if(location.hash==='#draw')openMemberDraw();else if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');else if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');else if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');else if(location.hash==='#ai')openAI();else if(location.hash==='#members'){if(kakaoMemberNotice())return;if(localStorage.getItem('nwProfileToken'))openPage('members.html','👤 뉴트월드 회원 허브','#members');else history.replaceState(null,'',location.pathname+location.search);}else if(overlay.classList.contains('open'))closePage(true)});
+  if(location.hash==='#draw')openMemberDraw();if(location.hash==='#ai')openAI();if(location.hash==='#attendance')openPage('attendance.html','✅ 뉴트월드 출석체크','#attendance');if(location.hash==='#partner')openPage('partner.html','🤝 제휴샵 파트너센터','#partner');if(location.hash==='#profile')openPage('profile.html','👤 뉴트월드 내 페이지','#profile');if(location.hash==='#members'&&(document.documentElement.classList.contains('nw-kakao-browser')||localStorage.getItem('nwProfileToken')))openPage('members.html','👤 뉴트월드 회원 허브','#members');
 
   // 제휴샵 링크 클릭 통계: 사이트는 유지하고 샵 링크는 새 탭으로 열어 음악 세션을 끊지 않음.
   document.querySelectorAll('.partner-left .partner-card[data-shop],.partner-site-panel .partner-card[data-shop]').forEach(a=>a.addEventListener('click',()=>{let visitor=localStorage.getItem('nwVisitorId')||'';NWJsonp('partnerClick',{shop:a.dataset.shop,visitor},()=>{});}));
@@ -3569,7 +3573,7 @@ window.NWConfigReady.then(function(){
  function schedule(){clearTimeout(timer);if(!document.hidden&&navigator.onLine!==false)timer=setTimeout(poll,10000);}
  function poll(){
   clearTimeout(timer);
-  if(document.hidden||navigator.onLine===false){if(navigator.onLine===false)rest();return;}
+  if(!document.documentElement.classList.contains('nw-ai-enabled')||document.hidden||navigator.onLine===false){rest();return;}
   if(pending)return;
   var url=window.NW_CONFIG&&window.NW_CONFIG.appScriptUrl;
   if(!url){rest();schedule();return;}
@@ -3595,7 +3599,7 @@ window.NWConfigReady.then(function(){
  document.addEventListener('visibilitychange',function(){if(document.hidden){clearTimeout(timer);if(cancel)cancel();clearTimeout(timer);}else resume();});
  window.addEventListener('offline',function(){clearTimeout(timer);if(cancel)cancel();rest();});
  window.addEventListener('online',resume);window.addEventListener('pageshow',resume);window.addEventListener('focus',resume);
- if(window.NWConfigReady&&typeof window.NWConfigReady.then==='function')window.NWConfigReady.then(poll);else poll();
+ window.NWServiceFeatures.then(flags=>{if(flags.ai)poll();});
 })();
 
 </script>

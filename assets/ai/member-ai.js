@@ -24,7 +24,7 @@ function post(action,extra){return new Promise(resolve=>{
  function receive(e){const google=/^https:\/\/(?:script\.google\.com|[a-z0-9-]+\.googleusercontent\.com)$/.test(e.origin);const parent=e.origin===location.origin&&e.source===window.parent&&window.parent!==window;if((!google&&!parent)||e.data?.channel!=='nw-ai'||e.data.nonce!==nonce)return;finish(e.data.result);}
  window.addEventListener('message',receive);timer=setTimeout(()=>finish({ok:false,error:'전송 확인이 지연되고 있어요. AI비서 연결을 눌러 접수 상태를 확인해 주세요.'}),40000);document.body.append(frame,form);form.submit();
 });}
-function accept(d){if(d?.auth===false){lock();$('status').textContent='회원식별을 완료한 회원만 이용할 수 있어요.';return false;}if(!d?.ok){$('status').textContent=d?.error||OFFLINE;return false;}return true;}
+function accept(d){if(d?.paused){lock();$('loginLink').hidden=true;$('status').textContent=d.error;return false;}if(d?.auth===false){lock();$('status').textContent='회원식별을 완료한 회원만 이용할 수 있어요.';return false;}if(!d?.ok){$('status').textContent=d?.error||OFFLINE;return false;}return true;}
 function duration(s){return s<60?Math.ceil(s/10)*10+'초':Math.ceil(s/60)+'분';}
 function display(d){
  active={id:d.id,status:d.status};$('queueInfo').hidden=!['queued','processing'].includes(d.status);

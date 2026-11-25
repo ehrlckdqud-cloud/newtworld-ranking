@@ -30,6 +30,7 @@
  }
  function errorMessage(result){
   const code=String(result?.code||result?.error||'');
+  if(code==='LOGIN_PAUSED')return '간편 로그인 운영을 잠시 중단했어요.';
   if(code.includes('MEMBER_LINK_REQUIRED'))return '처음 연결하는 계정이에요. 아래에서 기존 회원 인증을 완료한 뒤 로그인 계정을 연결해주세요.';
   if(/PROVIDER_NOT_READY|PROVIDER_DISABLED|PROVIDER_NOT_CONFIGURED|SOCIAL_NOT_CONFIGURED/.test(code))return '아직 준비 중인 로그인 방법이에요. 기존 회원 인증으로 이용해주세요.';
   if(/EXPIRED|INVALID_TICKET|INVALID_VERIFIER|STATE_INVALID|STATE_MISMATCH/.test(code))return '로그인 연결 시간이 지났거나 요청을 확인하지 못했어요. 같은 브라우저에서 다시 시도해주세요.';
@@ -48,6 +49,8 @@
   if(configBusy)return;configBusy=true;$('retryConfig').hidden=true;
   try{const result=await window.NWContent.call('socialConfig');if(!result?.ok||!Array.isArray(result.providers))throw Error('config');
    providers.clear();result.providers.forEach(p=>{if(['google','kakao','naver'].includes(p.id))providers.set(p.id,p.enabled===true);});
+   if($('providers'))$('providers').hidden=result.loginEnabled===false;
+   if(result.loginEnabled===false){$('providerNotice').textContent='간편 로그인 운영을 잠시 중단했어요. 아래에서 기존 회원 인증을 이용할 수 있어요.';return;}
    const available=[...providers.values()].some(Boolean);
    $('providerNotice').textContent=available?'이미 연결한 계정으로 로그인하세요. 처음 연결하는 계정은 회원 인증 후 이용할 수 있어요.':'간편 로그인은 준비 중입니다. 지금은 아래의 기존 회원 인증으로 이용할 수 있어요.';
   }catch(_){providers.clear();$('providerNotice').textContent='로그인 방법을 불러오지 못했어요. 기존 회원 인증은 계속 이용할 수 있어요.';$('retryConfig').hidden=false;}
@@ -84,7 +87,7 @@
    const result=await window.NWContent.call('contentSocialFinish',{ticket,verifier:attempt.verifier,guestToken:'',adminToken:''});
    if(!result?.ok){
     const code=String(result?.code||result?.error||'');
-    const terminal=/MEMBER_LINK_REQUIRED|MEMBER_LINK_CONFLICT|MEMBER_SESSION_CHANGED|MEMBER_INACTIVE|LOGIN_EXPIRED|INVALID_TICKET|INVALID_VERIFIER|STATE_INVALID|STATE_MISMATCH|DEVICE_MISMATCH|CONFIG_CHANGED|PROVIDER_NOT_READY|LOGIN_CANCELED/.test(code);
+    const terminal=/LOGIN_PAUSED|MEMBER_LINK_REQUIRED|MEMBER_LINK_CONFLICT|MEMBER_SESSION_CHANGED|MEMBER_INACTIVE|LOGIN_EXPIRED|INVALID_TICKET|INVALID_VERIFIER|STATE_INVALID|STATE_MISMATCH|DEVICE_MISMATCH|CONFIG_CHANGED|PROVIDER_NOT_READY|LOGIN_CANCELED/.test(code);
     if(terminal)clearAttempt();else $('retryFinish').hidden=false;
     status(errorMessage(result),'error');return;
    }
