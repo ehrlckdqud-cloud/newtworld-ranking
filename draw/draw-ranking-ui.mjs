@@ -42,12 +42,12 @@ async function request(game, action, result) {
   const api = new URL('/api/draw-rankings/' + game + '/' + action, service);
   let member;
   if (location.origin !== api.origin) {
-    member = { token: localStorage.getItem('nwProfileToken'), device: localStorage.getItem('nwProfileDevice') };
+    member = window.NWContent?.rankingCredentials?.() ?? { token: localStorage.getItem('nwProfileToken'), device: localStorage.getItem('nwProfileDevice') };
   }
   const response = await fetch(api, {
     method:'POST', credentials:'same-origin', cache:'no-store',
     signal:AbortSignal.timeout(15000), headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ member, result })
+    body:JSON.stringify({ member, result, accessGame:game==='pinball' ? (Number(document.getElementById('map')?.value)===4?'factory':'marble') : game })
   });
   if (!response.ok) throw new Error('순위 서버에 연결하지 못했습니다.');
   const data = await response.json();
