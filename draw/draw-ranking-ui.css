@@ -34,3 +34,7 @@ dialog.ndr-dialog::backdrop{background:#04090d52}
 @media(max-width:600px){dialog.ndr-dialog{inset:auto max(5px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) auto;width:min(420px,calc(100vw - 10px));max-width:calc(100vw - 10px);max-height:78dvh;border-radius:12px}.ndr-head{padding:12px}.ndr-body{padding:8px 10px}.ndr-foot{padding:8px 10px}.ndr-dialog[data-view="board"] table{min-width:740px}button.ndr-open{padding:5px 8px;font-size:12px}}
 
 .ndr-corner{position:fixed;right:max(10px,env(safe-area-inset-right));top:max(var(--ndr-top,8px),env(safe-area-inset-top));z-index:32;line-height:1;pointer-events:auto}
+
+.ndr-guide{margin:0 0 14px;padding:10px 12px;border-left:3px solid var(--accent);background:#ffffff08}
+.ndr-guide h3{margin:0 0 5px;color:var(--accent)}
+.ndr-guide p{margin:4px 0;font-size:13px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere}
