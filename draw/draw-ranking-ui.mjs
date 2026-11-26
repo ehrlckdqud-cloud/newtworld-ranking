@@ -5,6 +5,20 @@ const themes = {
   'wild-run-91': { name: '양서파충류 달리기 대회', result: '결승선 통과 기록', stats: ['1위', '당첨권 진입'] },
   'pet-race': { name: '멍냥이 달리기 대회', result: '멍냥이 결승 기록', stats: ['1위', '당첨권 진입'] }
 };
+const finishRules = {
+  pinball: '먼저 도착 모드는 결승선에 먼저 들어온 구슬이, 마지막 생존 모드는 끝까지 남은 구슬이 앞섭니다. 당첨 구슬이 우선이며, 순서가 정해지지 않은 같은 그룹은 공동 순위입니다.',
+  pond: '마지막까지 살아남은 참가자는 공동 1위입니다. 나머지는 최종 탈락이 늦을수록 순위가 높고, 동시에 탈락하면 공동 순위입니다. 부활한 참가자도 최종 결과로 계산합니다.',
+  space: '탈출에 성공한 우주선은 공동 1위입니다. 나머지는 늦게 탈락할수록 순위가 높고, 같은 공격에 동시에 탈락하면 공동 순위입니다.',
+  'wild-run-91': '결승선을 통과한 순서대로 첫 번째 주자부터 마지막 주자까지 점수를 받습니다. 당첨 인원 밖의 주자도 완주 순위에 따라 점수를 받습니다.',
+  'pet-race': '결승선을 통과한 순서대로 첫 번째 멍냥이부터 마지막 멍냥이까지 점수를 받습니다. 당첨 인원 밖의 멍냥이도 완주 순위에 따라 점수를 받습니다.'
+};
+function scoringGuide(game) {
+  const guide = element('section', null, 'ndr-guide');
+  guide.append(element('h3', '점수 기준'), element('p', finishRules[game]),
+    element('p', '1위는 10점, 마지막은 0점이며 그 사이는 같은 간격으로 배점합니다. 예를 들어 5명이면 10 · 7.5 · 5 · 2.5 · 0점입니다. 혼자 참가하면 10점입니다.'),
+    element('p', '공동 순위는 해당 등수들의 평균점수를 받습니다. 한 판에 같은 닉네임이 여러 번 참가하면 그 닉네임의 평균점수를 한 번 더합니다. 전체순위는 이렇게 쌓인 누적점수 순입니다.'));
+  return guide;
+}
 const service = 'https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 const dates = new Intl.DateTimeFormat('ko-KR',{ timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' });
 const points = n => Number(n).toFixed(1);
@@ -167,19 +181,21 @@ export function mountDrawRanking(game) {
       for (const item of failed) await save(item);
       if (generation===seq && dialog.open) showBoard();
     }));
-    body.append(note('전체순위를 불러오는 중입니다.'));
+    const board = element('div');
+    body.append(scoringGuide(game), board);
+    board.append(note('전체순위를 불러오는 중입니다.'));
     try {
       if (latest?.saving) await latest.saving;
       const { rows }=await request(game,'board');
       if (!Array.isArray(rows)) throw new Error();
       if (seq!==generation) return;
-      body.replaceChildren();
-      if (!rows.length) { body.append(note('순위에 반영된 경기가 아직 없습니다.')); return; }
-      body.append(table(['순위','닉네임','최근 참가일','참가 판수','누적 참가 인원',...theme.stats,'획득점수'],
+      board.replaceChildren();
+      if (!rows.length) { board.append(note('순위에 반영된 경기가 아직 없습니다.')); return; }
+      board.append(table(['순위','닉네임','최근 참가일','참가 판수','누적 참가 인원',...theme.stats,'획득점수'],
         rows.map(row=>[row.rank,row.nickname,dates.format(new Date(row.lastPlayedAt)),row.rounds,row.entries,
           row.statA ?? '—',row.statB ?? '—',points(row.points)])));
     } catch {
-      if (seq===generation) body.replaceChildren(note('전체순위를 불러오지 못했습니다.'),button('다시 불러오기',showBoard));
+      if (seq===generation) board.replaceChildren(note('전체순위를 불러오지 못했습니다.'),button('다시 불러오기',showBoard));
     }
   }
   function updateStatus(item) {
