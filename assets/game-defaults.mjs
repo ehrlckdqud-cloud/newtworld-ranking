@@ -71,9 +71,10 @@ async function installPondMusicAdditions(manifest) {
       const tx = db.transaction(['tracks', 'settings'], 'readwrite');
       const tracks = tx.objectStore('tracks');
       const settings = tx.objectStore('settings');
-      const request = settings.get('config');
+      const legacy = settings.get('config');
+      const request = settings.get('pond-config');
       request.onsuccess = () => {
-        const config = request.result || {waiting: [], game: [], starts: {}, volume: .65, enabled: true};
+        const config = request.result || legacy.result || {waiting: [], game: [], starts: {}, volume: .65, enabled: true};
         for (const entry of entries) {
           if (!['waiting', 'game'].includes(entry.phase) || !entry.id || entry.blob?.__type !== 'Asset') {
             tx.abort(); return;
@@ -87,7 +88,7 @@ async function installPondMusicAdditions(manifest) {
           const queue = Array.isArray(config[entry.phase]) ? config[entry.phase] : [];
           if (!queue.includes(entry.id)) config[entry.phase] = [entry.id, ...queue];
         }
-        settings.put(config, 'config');
+        settings.put(config, 'pond-config');
       };
       tx.oncomplete = resolve;
       tx.onabort = tx.onerror = () => reject(tx.error || Error('생존연못 기본 음악 등록에 실패했어요.'));
