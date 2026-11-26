@@ -1,0 +1,233 @@
+const themes = {
+  pinball: { name: '생존핀볼', result: '구슬 추첨 결과', stats: ['먼저 도착 당첨', '마지막 생존 당첨'] },
+  pond: { name: '생존연못', result: '연못의 생존 결과', stats: ['최종 생존', '부활 후 생존'] },
+  space: { name: '우주대탈출', result: '우주선 탈출 결과', stats: ['탈출 성공', '출격 판수'] },
+  'wild-run-91': { name: '양서파충류 달리기 대회', result: '결승선 통과 기록', stats: ['1위', '당첨권 진입'] },
+  'pet-race': { name: '멍냥이 달리기 대회', result: '멍냥이 결승 기록', stats: ['1위', '당첨권 진입'] }
+};
+const service = 'https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
+const dates = new Intl.DateTimeFormat('ko-KR',{ timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' });
+const points = n => Number(n).toFixed(1);
+function element(tag, text, cls) {
+  const node = document.createElement(tag);
+  if (text != null) node.textContent = String(text);
+  if (cls) node.className = cls;
+  return node;
+}
+function button(label, action, cls) {
+  const node = element('button', label, cls);
+  node.type = 'button';
+  node.onclick = action;
+  return node;
+}
+function table(labels, rows) {
+  const wrap = element('div',null,'ndr-table-wrap');
+  const grid = element('table');
+  const head = grid.createTHead().insertRow();
+  for (const label of labels) {
+    const th = element('th',label);
+    th.scope = 'col';
+    head.append(th);
+  }
+  const body = grid.createTBody();
+  for (const values of rows) {
+    const tr = body.insertRow();
+    for (const value of values) tr.insertCell().textContent = value;
+  }
+  wrap.append(grid);
+  return wrap;
+}
+
+async function request(game, action, result) {
+  const api = new URL('/api/draw-rankings/' + game + '/' + action, service);
+  let member;
+  if (location.origin !== api.origin) {
+    member = { token: localStorage.getItem('nwProfileToken'), device: localStorage.getItem('nwProfileDevice') };
+  }
+  const response = await fetch(api, {
+    method:'POST', credentials:'same-origin', cache:'no-store',
+    signal:AbortSignal.timeout(15000), headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ member, result })
+  });
+  if (!response.ok) throw new Error('순위 서버에 연결하지 못했습니다.');
+  const data = await response.json();
+  if (!data.ok) throw new Error('순위 처리를 확인하지 못했습니다.');
+  return data;
+}
+
+export function mountDrawRanking(game) {
+  const theme = themes[game];
+  if (!theme || document.querySelector('.ndr-dialog')) return;
+  const style = element('link');
+  style.rel = 'stylesheet';
+  style.href = new URL('./draw-ranking-ui.css',import.meta.url).href;
+  document.head.append(style);
+  const key = 'nw-draw-ranked:' + game;
+  const field = element('label',null,'ndr-setting');
+  field.append(element('span','순위 반영'));
+  const select = element('select');
+  select.ariaLabel = '순위 반영';
+  select.append(new Option('반영','on'),new Option('끄기','off'));
+  try { select.value = localStorage.getItem(key) === 'off' ? 'off' : 'on'; } catch {}
+  select.onchange = () => {
+    select.setCustomValidity('');
+    try { localStorage.setItem(key,select.value); }
+    catch { select.value='on'; select.setCustomValidity('이 브라우저에 설정을 저장할 수 없습니다.'); select.reportValidity(); }
+  };
+  field.append(select);
+  let settings = document.querySelector('[data-draw-ranking-settings]');
+  const race = game === 'wild-run-91' || game === 'pet-race';
+  if (!settings && race) {
+    const winners = document.getElementById('winners');
+    if (winners) {
+      settings = element('div');
+      (winners.closest('label') || winners).after(settings);
+    }
+  }
+  settings?.append(field);
+
+  const dialog = element('dialog',null,'ndr-dialog');
+  dialog.dataset.game = game;
+  dialog.setAttribute('aria-labelledby','ndr-title');
+  document.body.append(dialog);
+  const head = element('div',null,'ndr-head');
+  const titles = element('div');
+  const title = element('h2');
+  title.id = 'ndr-title';
+  titles.append(element('small',theme.name),title);
+  const close = button('닫기',()=>dialog.close(),'ndr-close');
+  head.append(titles,close);
+  const body = element('div',null,'ndr-body');
+  const foot = element('div',null,'ndr-foot');
+  dialog.append(head,body,foot);
+  let view = '', generation = 0, latest = null;
+  const unconfirmed=new Set();
+  const open = button('전체순위',showBoard,'ndr-open');
+  open.dataset.game = game;
+  open.setAttribute('aria-haspopup','dialog');
+  const slot = document.querySelector('[data-draw-ranking-button]');
+  if (slot) slot.append(open);
+  else { open.classList.add('ndr-floating'); document.body.append(open); }
+  if (slot?.classList.contains('ndr-corner')) {
+    const header=document.querySelector(game==='pinball'?'#headerPanel':'body > nav');
+    const place=()=>{
+      const box=open.getBoundingClientRect();
+      if (!box.width || !header) return;
+      let top=8;
+      const controls=Array.from(header.querySelectorAll('button,a,input,select'),el=>el.getBoundingClientRect())
+        .filter(rect=>rect.width && rect.right>box.left-4 && rect.left<box.right+4)
+        .sort((a,b)=>a.top-b.top);
+      for (const rect of controls) {
+        if (rect.bottom>top && rect.top<top+box.height+4) top=Math.ceil(rect.bottom+6);
+      }
+      slot.style.setProperty('--ndr-top',top+'px');
+    };
+    const observer=new ResizeObserver(place);
+    observer.observe(open);
+    if(header)observer.observe(header);
+    window.addEventListener('resize',place);
+    place();
+  }
+  const home = open.parentNode;
+  document.addEventListener('fullscreenchange',()=>{
+    const full = document.fullscreenElement;
+    if (full && !(full instanceof HTMLCanvasElement) && !full.contains(open)) {
+      full.append(open); open.classList.add('ndr-floating');
+    } else if (!full && open.parentNode !== home) {
+      home.append(open); open.classList.toggle('ndr-floating',!slot);
+    }
+  });
+  function show(next, heading) {
+    generation++;
+    view=next;
+    dialog.dataset.view=next;
+    title.textContent=heading;
+    body.replaceChildren(); foot.replaceChildren();
+    if (!dialog.open) dialog.showModal();
+    close.focus({preventScroll:true});
+    return generation;
+  }
+  dialog.addEventListener('click',event=>{
+    if (event.target !== dialog) return;
+    const box=dialog.getBoundingClientRect();
+    if (event.clientX<box.left || event.clientX>box.right || event.clientY<box.top || event.clientY>box.bottom) dialog.close();
+  });
+  function note(message) {
+    const text=element('p',message,'ndr-note');
+    text.setAttribute('role','status');
+    return text;
+  }
+  async function showBoard() {
+    const seq=show('board','전체순위');
+    if (!settings) foot.append(field);
+    if (latest) foot.append(button('이번 판 결과',()=>showResult(latest)));
+    const failed=[...unconfirmed].filter(item=>item.state==='error');
+    if (failed.length) foot.prepend(button('미반영 '+failed.length+'판 저장 재시도',async event=>{
+      event.currentTarget.disabled=true;
+      for (const item of failed) await save(item);
+      if (generation===seq && dialog.open) showBoard();
+    }));
+    body.append(note('전체순위를 불러오는 중입니다.'));
+    try {
+      if (latest?.saving) await latest.saving;
+      const { rows }=await request(game,'board');
+      if (!Array.isArray(rows)) throw new Error();
+      if (seq!==generation) return;
+      body.replaceChildren();
+      if (!rows.length) { body.append(note('순위에 반영된 경기가 아직 없습니다.')); return; }
+      body.append(table(['순위','닉네임','최근 참가일','참가 판수','누적 참가 인원',...theme.stats,'획득점수'],
+        rows.map(row=>[row.rank,row.nickname,dates.format(new Date(row.lastPlayedAt)),row.rounds,row.entries,
+          row.statA ?? '—',row.statB ?? '—',points(row.points)])));
+    } catch {
+      if (seq===generation) body.replaceChildren(note('전체순위를 불러오지 못했습니다.'),button('다시 불러오기',showBoard));
+    }
+  }
+  function updateStatus(item) {
+    if (view!=='result' || item!==latest) return;
+    const message = {off:'순위 반영 끄기 · 공식 기록에서 제외했습니다.',saving:'전체순위에 반영하는 중입니다.',
+      saved:'전체순위에 반영했습니다.',error:'저장을 확인하지 못했습니다.'}[item.state];
+    foot.replaceChildren(note(message));
+    if (item.state==='error') foot.append(button('저장 재시도',()=>save(item)));
+    foot.append(button('전체순위',showBoard));
+  }
+  async function save(item) {
+    if (item.state==='saved' || item.state==='off' || item.saving) return;
+    unconfirmed.add(item);
+    item.state='saving';
+    updateStatus(item);
+    const {round,groups,finishedAt,winnerIds,revivedWinnerIds,mode}=item.result;
+    item.saving=request(game,'finish',{round,groups,finishedAt,winnerIds,revivedWinnerIds,mode})
+      .then(data=>{ if(data.recorded!==true) throw new Error(); item.state='saved'; unconfirmed.delete(item); })
+      .catch(()=>{item.state='error';})
+      .finally(()=>{item.saving=null;updateStatus(item);});
+    return item.saving;
+  }
+  function showResult(item) {
+    const r=item.result;
+    show('result',theme.result);
+    const wins=new Set(r.winnerIds);
+    const rankCounts=new Map();
+    for (const entry of r.standings) rankCounts.set(entry.rank,(rankCounts.get(entry.rank)||0)+1);
+    const winners=r.standings.filter(entry=>wins.has(entry.id));
+    const ribbon=element('section',null,'ndr-winners');
+    ribbon.append(element('small','당첨 '+winners.length+'명'),element('strong',winners.map(x=>x.name).join(' · ')));
+    body.append(ribbon,table(['순위','닉네임','이번 판 점수'],r.standings.map(row=>[
+      (rankCounts.get(row.rank)>1?'공동 ':'')+row.rank+'위',row.name,points(row.points)])));
+    const multi=r.scores.filter(row=>row.entries>1);
+    if (multi.length) {
+      body.append(element('h3','중복 참가 평균점수'),table(['닉네임','참가 수','평균점수'],
+        multi.map(row=>[row.name,row.entries,points(row.points)])));
+    }
+    updateStatus(item);
+  }
+  window.addEventListener('nw-draw-result',event=>{
+    const result=event.detail;
+    if (result?.round?.game!==game) return;
+    if (latest?.result.round.id===result.round.id) return;
+    latest={result,state:result.round.ranked?'saving':'off',saving:null};
+    showResult(latest);
+    if (result.round.ranked) save(latest);
+  });
+}
+const entry = document.querySelector('script[data-draw-ranking-game]');
+if (entry) mountDrawRanking(entry.dataset.drawRankingGame);

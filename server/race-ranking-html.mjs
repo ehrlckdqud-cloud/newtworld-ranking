@@ -27,5 +27,11 @@ export function addRaceRanking(html, game, moduleUrl) {
         .catch(error => window.dispatchEvent(new CustomEvent('nw-draw-ranking-error', { detail: String(error) })));
     }
   `;
-  return html.replace(anchor, () => anchor + hook);
+  const result = html.replace(anchor, () => anchor + hook);
+  // Source-only snippets are also used by the engine tests.
+  if (!/<html[\s>]|<!doctype html/i.test(result)) return result;
+  const ui = moduleUrl.replace(/[^/?#]+(?:[?#].*)?$/, 'draw-ranking-ui.mjs');
+  const src = ui.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const script = '<script type="module" data-draw-ranking-game="' + game + '" src="' + src + '"></script>';
+  return /<\/body>/i.test(result) ? result.replace(/<\/body>/i, () => script + '</body>') : result + script;
 }

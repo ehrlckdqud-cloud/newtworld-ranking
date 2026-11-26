@@ -1,3 +1,25 @@
+import { nicknameKey } from '../draw/space-selection.js';
+
+function gameRecords(game, standings) {
+  const totals = new Map();
+  for (const entry of standings) {
+    const key = nicknameKey(entry.name);
+    const previous = totals.get(key) ?? [0, 0];
+    const won = typeof entry.winner === 'boolean' ? Number(entry.winner) : null;
+    let values;
+    if (game === 'pinball') {
+      values = entry.mode ? [entry.mode === 'first' ? won : 0, entry.mode === 'last' ? won : 0] : [null,null];
+    } else if (game === 'pond') {
+      values = [won, typeof entry.revivedWinner === 'boolean' ? Number(entry.revivedWinner) : null];
+    } else if (game === 'space') {
+      values = [won,1];
+    } else {
+      values = [Number(entry.rank === 1),won];
+    }
+    totals.set(key,values.map((value,i)=>value === null || previous[i] === null ? null : Math.max(value,previous[i])));
+  }
+  return totals;
+}
 import { checkDrawGame, scoreDrawRound } from '../draw/draw-ranking.mjs';
 
 // Call from the game server after it has authorized a completed round.
@@ -22,6 +44,8 @@ export async function recordDrawRound(db, round, groups, finishedAt, outcome) {
       if (round.game === 'pinball') entry.mode = outcome.mode;
     }
   }
+  const records = gameRecords(round.game,result.standings);
+  for (const row of result.scores) [row.statA,row.statB]=records.get(row.key);
   if (!round.ranked) return { ...result, recorded: false };
   const end = new Date(finishedAt);
   if (typeof finishedAt !== 'string' || !Number.isFinite(end.getTime())) {
@@ -49,7 +73,10 @@ export async function readDrawLeaderboard(db, game) {
              json_extract(s.value, '$.key') AS member,
              json_extract(s.value, '$.name') AS nickname,
              json_extract(s.value, '$.entries') AS entrants,
-             json_extract(s.value, '$.points') AS points
+             json_extract(s.value, '$.points') AS points,
+             json_extract(s.value, '$.statA') AS statA, json_extract(s.value, '$.statB') AS statB,
+             json_type(s.value, '$.statA') IS NULL AS legacy,
+             json_type(s.value, '$.statA') = 'null' AS unknownA, json_type(s.value, '$.statB') = 'null' AS unknownB
       FROM draw_ranking_rounds AS r, json_each(r.scores) AS s
       WHERE r.game = ?
     ), totals AS (
@@ -58,14 +85,41 @@ export async function readDrawLeaderboard(db, game) {
              ) AS latest,
              COUNT(*) OVER by_member AS rounds,
              SUM(entrants) OVER by_member AS entries,
-             SUM(points) OVER by_member AS points
+             SUM(points) OVER by_member AS points,
+             SUM(statA) OVER by_member AS countA, SUM(statB) OVER by_member AS countB,
+             MAX(legacy) OVER by_member AS legacy, MAX(unknownA) OVER by_member AS unknownA,
+             MAX(unknownB) OVER by_member AS unknownB
       FROM entries
       WINDOW by_member AS (PARTITION BY member)
     )
     SELECT RANK() OVER (ORDER BY round(points, 10) DESC) AS rank, nickname,
-           finished_at AS lastPlayedAt, rounds, entries, points
+           finished_at AS lastPlayedAt, rounds, entries, points, legacy,
+           CASE WHEN unknownA THEN NULL ELSE coalesce(countA,0) END AS statA,
+           CASE WHEN unknownB THEN NULL ELSE coalesce(countB,0) END AS statB
     FROM totals WHERE latest = 1
     ORDER BY rank, member
   `).bind(game).all();
-  return results;
+  if (results.some(row=>row.legacy)) {
+    const byKey=new Map(results.map(row=>[nicknameKey(row.nickname),row]));
+    // Earlier rounds kept all placements before per-round counters were added.
+    let cursor = '';
+    for (;;) {
+      const page = await db.prepare(`
+        SELECT round_id, standings FROM draw_ranking_rounds WHERE game=? AND round_id>?
+        AND json_type(scores,'$[0].statA') IS NULL ORDER BY round_id LIMIT 25
+      `).bind(game,cursor).all();
+      for (const saved of page.results) {
+        for (const [key,counts] of gameRecords(game,JSON.parse(saved.standings))) {
+          const row=byKey.get(key);
+          if (!row) continue;
+          for (const [i,field] of ['statA','statB'].entries()) {
+            row[field]=row[field]===null || counts[i]===null ? null : row[field]+counts[i];
+          }
+        }
+        cursor=saved.round_id;
+      }
+      if (page.results.length<25) break;
+    }
+  }
+  return results.map(({legacy,...row})=>row);
 }
