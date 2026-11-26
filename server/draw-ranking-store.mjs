@@ -2,10 +2,26 @@ import { checkDrawGame, scoreDrawRound } from '../draw/draw-ranking.mjs';
 
 // Call from the game server after it has authorized a completed round.
 // The caller keeps finishedAt with the result so an offline retry retains its date.
-export async function recordDrawRound(db, round, groups, finishedAt) {
+export async function recordDrawRound(db, round, groups, finishedAt, outcome) {
   checkDrawGame(round.game);
   if (!round.id || typeof round.ranked !== 'boolean') throw new Error('경기 정보가 필요합니다.');
   const result = scoreDrawRound(round, groups);
+  if (outcome) {
+    const winners = new Set(outcome.winnerIds.map(String));
+    const revived = new Set((outcome.revivedWinnerIds ?? []).map(String));
+    const ids = new Set(result.standings.map(entry => entry.id));
+    if ([...winners].some(id => !ids.has(id)) || [...revived].some(id => !winners.has(id))) {
+      throw new Error('당첨 명단이 경기 결과와 일치하지 않습니다.');
+    }
+    if (round.game === 'pinball' && !['first', 'last'].includes(outcome.mode)) {
+      throw new Error('핀볼 당첨 모드가 필요합니다.');
+    }
+    for (const entry of result.standings) {
+      entry.winner = winners.has(entry.id);
+      if (round.game === 'pond') entry.revivedWinner = revived.has(entry.id);
+      if (round.game === 'pinball') entry.mode = outcome.mode;
+    }
+  }
   if (!round.ranked) return { ...result, recorded: false };
   const end = new Date(finishedAt);
   if (typeof finishedAt !== 'string' || !Number.isFinite(end.getTime())) {
