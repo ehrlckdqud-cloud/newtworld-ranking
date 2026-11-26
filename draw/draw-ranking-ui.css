@@ -38,3 +38,10 @@ dialog.ndr-dialog::backdrop{background:#04090d52}
 .ndr-guide{margin:0 0 14px;padding:10px 12px;border-left:3px solid var(--accent);background:#ffffff08}
 .ndr-guide h3{margin:0 0 5px;color:var(--accent)}
 .ndr-guide p{margin:4px 0;font-size:13px;line-height:1.55;word-break:keep-all;overflow-wrap:anywhere}
+
+.ndr-scope{margin:0 0 8px;color:var(--accent);font-size:13px}
+.ndr-management{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 8px}
+.ndr-management button:disabled{opacity:.45;cursor:default}
+.ndr-dialog .ndr-check{display:inline-block;width:18px;height:18px;padding:0;margin:0;vertical-align:middle;accent-color:var(--accent)}
+.ndr-dialog[data-view="board"] :is(th,td):nth-child(2){text-align:right}
+.ndr-dialog[data-view="board"] :is(th,td):nth-child(3){text-align:left}
