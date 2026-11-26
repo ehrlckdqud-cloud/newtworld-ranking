@@ -53,7 +53,9 @@ function table(labels, rows) {
   return wrap;
 }
 
+const mountedRankings = new Map();
 export function mountDrawRanking(game) {
+  if (mountedRankings.has(game)) return mountedRankings.get(game);
   const theme = themes[game];
   if (!theme || document.querySelector('[data-ndr-trigger]')) return;
   const style = element('link');
@@ -323,6 +325,24 @@ export function mountDrawRanking(game) {
     if (!nativeRace || (dialog.open && raceList.querySelector('ol.results') && view !== 'board')) showResult(latest);
     if (result.round.ranked) save(latest);
   });
+  const controls = {
+    select,
+    resetRace() {
+      latest = null;
+      if (dialog.open && dialog.dataset.view === 'result') dialog.close();
+    },
+    showRaceResult() {
+      if (!latest) return false;
+      if (nativeRace) {
+        for (const control of nativeRace.querySelectorAll('#buttons button'))
+          control.toggleAttribute('data-ndr-native-close',control.textContent.trim() === '닫기');
+      }
+      showResult(latest);
+      return true;
+    }
+  };
+  mountedRankings.set(game,controls);
+  return controls;
 }
 const entry = document.querySelector('script[data-draw-ranking-game]');
 if (entry) mountDrawRanking(entry.dataset.drawRankingGame);
