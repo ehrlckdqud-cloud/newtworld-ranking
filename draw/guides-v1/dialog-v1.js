@@ -1,7 +1,10 @@
 (()=>{
   'use strict';
   const script=document.currentScript;
-  const game=script.dataset.game;
+  const raceRoute=location.pathname.split('/')[1];
+  const hostedGame=location.hostname==='newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site'
+    ? {'wild-run-91':'wild','pet-race':'pets'}[raceRoute] : null;
+  const game=hostedGame || script.dataset.game;
   const names={pin:'생존핀볼',pond:'생존연못',wild:'양서파충류 달리기 대회',pets:'멍냥이 달리기 대회'};
   if(!Object.hasOwn(names,game))return;
   const guide=new URL(game+'.html',script.src);
@@ -27,6 +30,27 @@
     const observer=new MutationObserver(()=>{if(connectRaceRanking())observer.disconnect();});
     observer.observe(document.documentElement,{childList:true,subtree:true});
     document.addEventListener('DOMContentLoaded',()=>observer.disconnect(),{once:true});
+  }
+  // Sites 254 uses a classic script that mounts its own UI and calls finish(entries).
+  function watchHostedRace(){
+    let loading=false;
+    const observer=new MutationObserver(attach);
+    function attach(){
+      if (loading || !window.NWDrawRanks || !document.querySelector('dialog.ndr-ranking[data-ndr="'+game+'"]')) return;
+      loading=true;
+      observer.disconnect();
+      import(new URL('../hosted-race-ranking.mjs',script.src).href)
+        .then(module=>module.connectHostedRace(game))
+        .catch(error=>console.warn('달리기 순위 화면을 갱신하지 못했습니다.',error));
+    }
+    if (!document.querySelector('script[src*="rankings-v1.js"]') && !window.NWDrawRanks) return;
+    observer.observe(document.documentElement,{childList:true,subtree:true});
+    attach();
+    window.addEventListener('load',()=>{attach();if(!document.querySelector('script[src*="rankings-v1.js"]'))observer.disconnect();},{once:true});
+  }
+  if(race) {
+    if (document.readyState==='loading') document.addEventListener('DOMContentLoaded',watchHostedRace,{once:true});
+    else watchHostedRace();
   }
   function install(){
     const original=race?document.getElementById('guide'):null;
