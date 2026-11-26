@@ -892,7 +892,7 @@ window.NWConfigReady.then(()=>{
       list.scrollTop=Math.max(previousPosition,firstNew.offsetTop-list.children[0].offsetTop-12);
     }
   });
-  function loadActivityWallet(token,memberId){
+  function loadActivityWallet(token,memberId,retryPending=true){
     const browserDevice=device(),score=ownProfile?.lifetimeScore;
     if(!token||!memberId||!isCurrent())return Promise.resolve(null);
     function isCurrent(){return localStorage.getItem('nwProfileToken')===token&&ownProfile?.memberId===memberId&&device()===browserDevice;}
@@ -915,6 +915,15 @@ window.NWConfigReady.then(()=>{
         activityWallet=confirmed;activityWalletState=result.settlementPending?'pending':'loaded';
         ownProfile.gemBalance=wallet.balance;$('nwGemBalance').textContent=fmt(wallet.balance);
         saveCoreCache(ownProfile);if(!result.settlementPending)lastWalletRead={key,at:Date.now(),wallet:confirmed};
+        if(result.settlementPending&&retryPending){
+          setTimeout(async()=>{
+            if(!isCurrent()||walletFlight||activityWallet!==confirmed)return;
+            const refreshed=await loadActivityWallet(token,memberId,false);
+            if(!isCurrent()||!refreshed||!$('gemHistoryDialog').open)return;
+            renderGemHistory(refreshed,refreshed.settlementPending?'최근 확정 내역 · 새 집계 대기 중 · ':'');
+            $('gemHistoryRetry').hidden=!refreshed.settlementPending;
+          },4000);
+        }
         return confirmed;
       }catch(_){return null;}
       finally{
