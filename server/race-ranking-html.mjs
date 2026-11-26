@@ -30,8 +30,8 @@ export function addRaceRanking(html, game, moduleUrl) {
   const result = html.replace(anchor, () => anchor + hook);
   // Source-only snippets are also used by the engine tests.
   if (!/<html[\s>]|<!doctype html/i.test(result)) return result;
-  const ui = moduleUrl.replace(/[^/?#]+(?:[?#].*)?$/, 'draw-ranking-ui.mjs');
-  const src = ui.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  // Race HTML is served by Sites; the five games use the same published UI and art.
+  const src = 'https://ehrlckdqud-cloud.github.io/newtworld-ranking/draw/draw-ranking-ui.mjs';
   const script = '<script type="module" data-draw-ranking-game="' + game + '" src="' + src + '"></script>';
   return /<\/body>/i.test(result) ? result.replace(/<\/body>/i, () => script + '</body>') : result + script;
 }

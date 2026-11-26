@@ -14,7 +14,7 @@ const games=['pinball','pond','space','wild-run-91','pet-race'];
 const pages=['index','pond','space'];
 const fixtureName='테스트 대원';
 function raceDocument(game) {
-  const markup='<!doctype html><html lang="ko"><body><label>당첨 인원<input id="winners"></label><canvas id="cv"></canvas><script>function refresh(){} function end(){order=arrivals.concat([]);if(arrivals.length===runners.length)refresh()}</script></body></html>';
+  const markup='<!doctype html><html lang="ko"><body><div id="gameTools" style="display:flex;justify-content:flex-end"><button class="tool">안내</button></div><div class="settings"><label>당첨 인원<input id="winners"></label></div><dialog id="dlg"><h2 id="dh"></h2><div id="db"></div><div id="buttons"></div></dialog><canvas id="cv"></canvas><script>function refresh(){} function end(){order=arrivals.concat([]);if(arrivals.length===runners.length)refresh()}</script></body></html>';
   return addRaceRanking(markup,game,'/draw/draw-game-results.mjs');
 }
 test('browser rankings support game results, multiple selection and resets at desktop and mobile widths',async t=>{
@@ -36,7 +36,7 @@ test('browser rankings support game results, multiple selection and resets at de
         if(req.isNavigationRequest())return route.fulfill({contentType:'text/html',body:doc});
         const name=url.pathname.split('/').pop();
         if(['draw-ranking-ui.mjs','draw-browser-ranking.mjs','draw-ranking-ui.css','draw-game-results.mjs','draw-ranking.mjs','space-selection.js','newtworld-v326-source.7ccbf679.css','pond.64425dec.css','space.css'].includes(name)){
-          return route.fulfill({contentType:name.endsWith('.css')?'text/css':'text/javascript',body:read('draw/'+name)});
+          return route.fulfill({headers:{'Access-Control-Allow-Origin':'*'},contentType:name.endsWith('.css')?'text/css':'text/javascript',body:read('draw/'+name)});
         }
         return route.fulfill({contentType:'text/javascript',body:''});
       });
@@ -58,6 +58,13 @@ test('browser rankings support game results, multiple selection and resets at de
         const detail={round,groups,winnerIds,revivedWinnerIds:game==='pond'?['0']:[],finishedAt:'2026-11-26T16:00:00Z',...scoreDrawRound(round,groups)};
         if(game==='pinball')detail.mode='first';
         window.dispatchEvent(new CustomEvent('nw-draw-result',{detail}));
+        if (race) {
+          const dlg = document.getElementById('dlg');
+          dlg.showModal();
+          const list = document.createElement('ol');
+          list.className = 'results';
+          document.getElementById('db').replaceChildren(list);
+        }
       },{game,race,name:fixtureName});
       // The real settings panes can start collapsed on small displays.
       await select.evaluate(el=>{el.value='off';el.dispatchEvent(new Event('change'));});
@@ -70,6 +77,13 @@ test('browser rankings support game results, multiple selection and resets at de
       await emit();
       await panel.getByRole('heading',{name:titles[i]}).waitFor();
       await panel.getByText(/누적 기록에서 제외/).waitFor();
+      assert.equal(await page.locator('dialog[open]').count(),1);
+      assert.equal(await panel.evaluate(el=>getComputedStyle(el,'::backdrop').backdropFilter),'none');
+      if (race) {
+        assert.equal(await panel.getAttribute('id'),'dlg');
+        assert.equal(await panel.locator('ol.results').isVisible(),false);
+        assert.equal(await page.locator('#gameTools button.tool[data-ndr-trigger]').count(),1);
+      }
       assert.equal(rankingRequests,0);
       const box=await panel.boundingBox();
       assert.ok(box.x>640 && box.x+box.width<=1280,game);

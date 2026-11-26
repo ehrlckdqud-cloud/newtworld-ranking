@@ -55,7 +55,7 @@ function table(labels, rows) {
 
 export function mountDrawRanking(game) {
   const theme = themes[game];
-  if (!theme || document.querySelector('.ndr-dialog')) return;
+  if (!theme || document.querySelector('[data-ndr-trigger]')) return;
   const style = element('link');
   style.rel = 'stylesheet';
   style.href = new URL('./draw-ranking-ui.css',import.meta.url).href;
@@ -78,16 +78,20 @@ export function mountDrawRanking(game) {
   if (!settings && race) {
     const winners = document.getElementById('winners');
     if (winners) {
-      settings = element('div');
-      (winners.closest('label') || winners).after(settings);
+      settings = winners.closest('.settings') || winners.closest('label')?.parentElement;
     }
   }
-  settings?.append(field);
+  field.dataset.layout = game;
+  if (settings) {
+    settings.append(field);
+    if (game === 'pinball' || game === 'pond') field.firstElementChild.className = 'field-label';
+  }
 
-  const dialog = element('dialog',null,'ndr-dialog');
-  dialog.dataset.game = game;
-  dialog.setAttribute('aria-labelledby','ndr-title');
-  document.body.append(dialog);
+  const raceList = race && document.querySelector('#dlg #db');
+  const nativeRace = raceList?.closest?.('dialog');
+  const dialog = nativeRace || element('dialog',null,'ndr-dialog');
+  const originalLabel = dialog.getAttribute('aria-labelledby');
+  if (!nativeRace) document.body.append(dialog);
   const head = element('div',null,'ndr-head');
   const titles = element('div');
   const title = element('h2');
@@ -97,13 +101,16 @@ export function mountDrawRanking(game) {
   head.append(titles,close);
   const body = element('div',null,'ndr-body');
   const foot = element('div',null,'ndr-foot');
-  dialog.append(head,body,foot);
+  if (!nativeRace) dialog.append(head,body,foot);
   let view = '', generation = 0, latest = null;
   const unconfirmed=new Set();
   const open = button('전체순위',showBoard,'ndr-open');
   open.dataset.game = game;
+  open.dataset.ndrTrigger = '';
   open.setAttribute('aria-haspopup','dialog');
-  const slot = document.querySelector('[data-draw-ranking-button]');
+  const raceTools = race && document.querySelector('#gameTools');
+  const slot = raceTools || document.querySelector('[data-draw-ranking-button]');
+  if (raceTools) open.className = 'tool ndr-native-tool';
   if (slot) slot.append(open);
   else { open.classList.add('ndr-floating'); document.body.append(open); }
   if (slot?.classList.contains('ndr-corner')) {
@@ -138,7 +145,11 @@ export function mountDrawRanking(game) {
   function show(next, heading) {
     generation++;
     view=next;
+    if (nativeRace && !dialog.contains(head)) dialog.append(head,body,foot);
+    dialog.classList.add('ndr-dialog');
+    dialog.dataset.game=game;
     dialog.dataset.view=next;
+    dialog.setAttribute('aria-labelledby','ndr-title');
     title.textContent=heading;
     body.replaceChildren(); foot.replaceChildren();
     if (!dialog.open) dialog.showModal();
@@ -146,8 +157,31 @@ export function mountDrawRanking(game) {
     else { title.tabIndex = -1; title.focus({preventScroll:true}); }
     return generation;
   }
+  if (nativeRace) {
+    // The race owns the finish timing, fireworks, copy and restart actions.
+    // Skin that dialog only once its actual result list has been populated.
+    const onRaceResults = () => {
+      if (!nativeRace.open || !latest || !raceList.querySelector('ol.results')) return;
+      for (const control of nativeRace.querySelectorAll('#buttons button'))
+        control.toggleAttribute('data-ndr-native-close', control.textContent.trim() === '닫기');
+      showResult(latest);
+    };
+    new MutationObserver(records => {
+      if (records.some(record=>Array.from(record.addedNodes).some(node=>node.matches?.('ol.results'))))
+        onRaceResults();
+    }).observe(raceList,{childList:true});
+    nativeRace.addEventListener('close',()=>{
+      if (nativeRace.open) return;
+      head.remove(); body.remove(); foot.remove();
+      nativeRace.classList.remove('ndr-dialog');
+      delete nativeRace.dataset.view; delete nativeRace.dataset.game;
+      if (originalLabel === null) nativeRace.removeAttribute('aria-labelledby');
+      else nativeRace.setAttribute('aria-labelledby',originalLabel);
+      view=''; generation++;
+    });
+  }
   dialog.addEventListener('click',event=>{
-    if (event.target !== dialog) return;
+    if (event.target !== dialog || (nativeRace && !dialog.classList.contains('ndr-dialog'))) return;
     const box=dialog.getBoundingClientRect();
     if (event.clientX<box.left || event.clientX>box.right || event.clientY<box.top || event.clientY>box.bottom) dialog.close();
   });
@@ -266,7 +300,10 @@ export function mountDrawRanking(game) {
     const scores = table([race?'도착 순위':'순위','닉네임','이번 판 점수'],r.standings.map(row=>[
       (rankCounts.get(row.rank)>1?'공동 ':'')+row.rank+'위',row.name,points(row.points)]));
     const scoreRows = scores.querySelector('tbody').rows;
-    r.standings.forEach((row,i)=>{ if (wins.has(String(row.id))) scoreRows[i].classList.add('ndr-prize'); });
+    r.standings.forEach((row,i)=>{
+      scoreRows[i].dataset.place = row.rank;
+      if (wins.has(String(row.id))) scoreRows[i].classList.add('ndr-prize');
+    });
     body.append(ribbon,scores);
     const multi=r.scores.filter(row=>row.entries>1);
     if (multi.length) {
@@ -280,7 +317,7 @@ export function mountDrawRanking(game) {
     if (result?.round?.game!==game) return;
     if (latest?.result.round.id===result.round.id) return;
     latest={result,state:result.round.ranked?'saving':'off',saving:null};
-    showResult(latest);
+    if (!nativeRace || (dialog.open && raceList.querySelector('ol.results') && view !== 'board')) showResult(latest);
     if (result.round.ranked) save(latest);
   });
 }
