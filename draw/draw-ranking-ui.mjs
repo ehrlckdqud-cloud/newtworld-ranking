@@ -1,11 +1,11 @@
 import { readBrowserBoard, saveBrowserResult, deleteBrowserRows } from './draw-browser-ranking.mjs';
 
 const themes = {
-  pinball: { name: '생존핀볼', result: '구슬 추첨 결과', stats: ['먼저 도착 당첨', '마지막 생존 당첨'] },
-  pond: { name: '생존연못', result: '연못의 생존 결과', stats: ['최종 생존', '부활 후 생존'] },
-  space: { name: '우주대탈출', result: '우주선 탈출 결과', stats: ['탈출 성공', '출격 판수'] },
-  'wild-run-91': { name: '양서파충류 달리기 대회', result: '결승선 통과 기록', stats: ['1위', '당첨권 진입'] },
-  'pet-race': { name: '멍냥이 달리기 대회', result: '멍냥이 결승 기록', stats: ['1위', '당첨권 진입'] }
+  pinball: { name: '생존핀볼', result: '핀볼 경기 종료', stats: ['먼저 도착 당첨', '마지막 생존 당첨'] },
+  pond: { name: '생존연못', result: '연못의 최후 생존자', stats: ['최종 생존', '부활 후 생존'] },
+  space: { name: '우주대탈출', result: '탈출 임무 완료', stats: ['탈출 성공', '출격 판수'] },
+  'wild-run-91': { name: '양서파충류 달리기 대회', result: '결승선 통과', stats: ['1위', '당첨권 진입'] },
+  'pet-race': { name: '멍냥이 달리기 대회', result: '멍냥이 레이스 종료', stats: ['1위', '당첨권 진입'] }
 };
 const finishRules = {
   pinball: '먼저 도착 모드는 결승선에 먼저 들어온 구슬이, 마지막 생존 모드는 끝까지 남은 구슬이 앞섭니다. 당첨 구슬이 우선이며, 순서가 정해지지 않은 같은 그룹은 공동 순위입니다.',
@@ -142,7 +142,8 @@ export function mountDrawRanking(game) {
     title.textContent=heading;
     body.replaceChildren(); foot.replaceChildren();
     if (!dialog.open) dialog.showModal();
-    close.focus({preventScroll:true});
+    if (next === 'board') { head.append(close); close.focus({preventScroll:true}); }
+    else { title.tabIndex = -1; title.focus({preventScroll:true}); }
     return generation;
   }
   dialog.addEventListener('click',event=>{
@@ -223,7 +224,7 @@ export function mountDrawRanking(game) {
       saved:'전체순위에 반영했습니다.',error:'저장을 확인하지 못했습니다.'}[item.state];
     foot.replaceChildren(note(message));
     if (item.state==='error') foot.append(button('저장 재시도',()=>save(item)));
-    foot.append(button('전체순위',showBoard));
+    foot.append(button('전체순위',showBoard,'ndr-primary'), close);
   }
   async function save(item) {
     if (item.state==='saved' || item.state==='off' || item.saving) return;
@@ -239,14 +240,34 @@ export function mountDrawRanking(game) {
   function showResult(item) {
     const r=item.result;
     show('result',theme.result);
-    const wins=new Set(r.winnerIds);
+    const wins=new Set(r.winnerIds.map(String));
     const rankCounts=new Map();
     for (const entry of r.standings) rankCounts.set(entry.rank,(rankCounts.get(entry.rank)||0)+1);
-    const winners=r.standings.filter(entry=>wins.has(entry.id));
+    const winners=r.standings.filter(entry=>wins.has(String(entry.id)));
     const ribbon=element('section',null,'ndr-winners');
-    ribbon.append(element('small','당첨 '+winners.length+'명'),element('strong',winners.map(x=>x.name).join(' · ')));
-    body.append(ribbon,table(['순위','닉네임','이번 판 점수'],r.standings.map(row=>[
-      (rankCounts.get(row.rank)>1?'공동 ':'')+row.rank+'위',row.name,points(row.points)])));
+    const winnerLabel = game === 'pinball' ? (r.mode === 'last' ? '마지막까지 살아남은 구슬' : '먼저 도착한 구슬')
+      : game === 'pond' ? '최종 생존' : game === 'space' ? '탈출 성공'
+      : winners.length === 1 ? (game === 'pet-race' ? '오늘의 우승' : '우승') : '당첨권 진입';
+    const art = element('img',null,'ndr-result-art');
+    art.alt = '';
+    art.src = new URL('./result-art/'+game+'.jpg', import.meta.url).href;
+    const hero = element('div',null,'ndr-award');
+    const names = winners.map(x=>x.name);
+    const preview = names.length > 4 ? names.slice(0,3) : names;
+    hero.append(element('small',winnerLabel+(names.length > 1 ? ' '+names.length+'명' : '')),
+      element('strong',preview.join(' · ') || '없음'));
+    if (names.length > 4) {
+      const list = element('details',null,'ndr-more-winners');
+      list.append(element('summary','나머지 '+(names.length-preview.length)+'명 보기'),
+        element('p',names.slice(preview.length).join(' · ')));
+      hero.append(list);
+    }
+    ribbon.append(art,hero);
+    const scores = table([race?'도착 순위':'순위','닉네임','이번 판 점수'],r.standings.map(row=>[
+      (rankCounts.get(row.rank)>1?'공동 ':'')+row.rank+'위',row.name,points(row.points)]));
+    const scoreRows = scores.querySelector('tbody').rows;
+    r.standings.forEach((row,i)=>{ if (wins.has(String(row.id))) scoreRows[i].classList.add('ndr-prize'); });
+    body.append(ribbon,scores);
     const multi=r.scores.filter(row=>row.entries>1);
     if (multi.length) {
       body.append(element('h3','중복 참가 평균점수'),table(['닉네임','참가 수','평균점수'],

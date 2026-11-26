@@ -9,7 +9,7 @@ import { drawRankingApi } from '../server/draw-ranking-api.mjs';
 const {chromium} = createRequire(import.meta.url)('playwright');
 const read = path => readFileSync(new URL('../'+path,import.meta.url),'utf8');
 const hub='https://ehrlckdqud-cloud.github.io', server='https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
-const titles=['구슬 추첨 결과','연못의 생존 결과','우주선 탈출 결과','결승선 통과 기록','멍냥이 결승 기록'];
+const titles=["핀볼 경기 종료","연못의 최후 생존자","탈출 임무 완료","결승선 통과","멍냥이 레이스 종료"];
 const games=['pinball','pond','space','wild-run-91','pet-race'];
 const pages=['index','pond','space'];
 const fixtureName='테스트 대원';

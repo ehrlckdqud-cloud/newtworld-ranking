@@ -45,3 +45,69 @@ dialog.ndr-dialog::backdrop{background:#04090d52}
 .ndr-dialog .ndr-check{display:inline-block;width:18px;height:18px;padding:0;margin:0;vertical-align:middle;accent-color:var(--accent)}
 .ndr-dialog[data-view="board"] :is(th,td):nth-child(2){text-align:right}
 .ndr-dialog[data-view="board"] :is(th,td):nth-child(3){text-align:left}
+
+/* The result card is part of the game overlay. Names, ranks and buttons remain live HTML. */
+dialog.ndr-dialog[data-view="result"]{
+  --result-text:#fff0ce;--edge:#c58d42;--sheet:#241519;--card:#35181d;--heading:#5d2021;
+  --key:#982e32;--key-text:#fff3cf;--winner:rgba(238,175,80,.15);
+  --display:Georgia,"Noto Serif KR","Malgun Gothic",serif;
+  width:clamp(410px,46vw,710px);max-height:min(94dvh,940px);
+  border:2px solid var(--edge);border-radius:20px;color:var(--result-text);background:var(--sheet);
+  box-shadow:0 18px 72px #0009,inset 0 0 0 2px var(--sheet),inset 0 0 0 3px var(--edge);
+}
+.ndr-dialog[data-view="result"][data-game="pond"]{
+  --sheet:#0b2925;--card:#123933;--edge:#b6c4ae;--result-text:#f4efd9;--heading:#123b36;
+  --key:#e6dfbd;--key-text:#16332b;--winner:#c3e3a719;border-radius:24px 9px;
+}
+.ndr-dialog[data-view="result"][data-game="space"]{
+  --sheet:#091925;--card:#102c41;--edge:#58c9eb;--result-text:#e0f7ff;--heading:#0e253a;
+  --key:#ffca54;--key-text:#261c04;--winner:#ffb43622;--display:system-ui,sans-serif;border-radius:3px 22px 3px 14px;
+}
+.ndr-dialog[data-view="result"][data-game="wild-run-91"]{
+  --sheet:#f3ead3;--card:#fcf6e6;--edge:#766d46;--result-text:#243822;--heading:#ebdfc0;
+  --key:#274a31;--key-text:#fff4d3;--winner:#c4a75b36;color-scheme:light;border-radius:12px 4px;
+}
+.ndr-dialog[data-view="result"][data-game="pet-race"]{
+  --sheet:#fff4e3;--card:#fffaf0;--edge:#dc745f;--result-text:#2b3052;--heading:#fff3df;
+  --key:#b83d3b;--key-text:white;--winner:#fbd4c2;--display:system-ui,sans-serif;color-scheme:light;border-radius:26px;
+}
+.ndr-dialog[data-view="result"] .ndr-head{
+  display:block;flex:0 0 auto;margin:3px 3px 0;padding:clamp(10px,1.5vw,20px);
+  color:var(--result-text);background:linear-gradient(105deg,var(--heading),var(--sheet));border-bottom:1px solid var(--edge);
+  text-align:center;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0
+}
+.ndr-dialog[data-view="result"] .ndr-head small{color:inherit;font-size:clamp(11px,1vw,14px);font-weight:750;letter-spacing:.05em}
+.ndr-dialog[data-view="result"] .ndr-head h2{margin:3px 0;color:inherit;font:800 clamp(24px,3.1vw,43px)/1.17 var(--display);letter-spacing:-.045em}
+.ndr-dialog[data-game="pinball"][data-view="result"] .ndr-head{
+  background:radial-gradient(circle,#ffe4a3 1.5px,transparent 3px) top/18px 7px repeat-x,linear-gradient(100deg,#451616,#702628,#451616);
+  box-shadow:inset 0 -3px #8f6537;
+}
+.ndr-dialog[data-game="space"][data-view="result"] .ndr-head{text-align:start;border-bottom:2px solid #4598b5}
+.ndr-dialog[data-game="space"][data-view="result"] h2{font-style:italic}
+.ndr-dialog[data-game="wild-run-91"][data-view="result"] .ndr-head{border-bottom:5px solid transparent;border-image:repeating-linear-gradient(90deg,#2a372f 0 12px,#f7eed1 12px 24px) 5}
+.ndr-dialog[data-game="pet-race"][data-view="result"] .ndr-head{box-shadow:inset 0 3px #f8aba0}
+.ndr-dialog[data-view="result"] .ndr-body{padding:clamp(8px,1.2vw,16px);scrollbar-gutter:auto}
+.ndr-dialog[data-view="result"] .ndr-winners{
+  padding:0;margin:0 0 12px;background:var(--card);border:1px solid var(--edge);border-radius:10px;overflow:hidden;
+}
+.ndr-result-art{display:block;width:100%;height:auto;aspect-ratio:4.8/1;object-fit:cover;border:0;border-bottom:1px solid var(--edge)}
+.ndr-award{padding:10px 16px 13px;text-align:center}
+.ndr-dialog[data-view="result"] .ndr-winners small{display:inline-block;color:var(--result-text);font:700 13px/1.4 system-ui,sans-serif}
+.ndr-dialog[data-view="result"] .ndr-winners strong{color:inherit;font:800 clamp(22px,2.55vw,36px)/1.23 var(--display);margin-top:4px;white-space:normal;overflow-wrap:anywhere}
+.ndr-dialog[data-view="result"] .ndr-table-wrap{border:1px solid var(--edge);border-radius:8px;background:var(--card)}
+.ndr-dialog[data-view="result"] table{table-layout:fixed;color:inherit}
+.ndr-dialog[data-view="result"] :is(td,th){padding:8px clamp(5px,1vw,13px);text-align:center;white-space:normal;overflow-wrap:anywhere;border-color:color-mix(in srgb,var(--edge) 45%,transparent)}
+.ndr-dialog[data-view="result"] :is(td,th):nth-child(2){width:44%;text-align:left}
+.ndr-dialog[data-view="result"] th{background:var(--heading);color:var(--result-text)}
+.ndr-dialog[data-view="result"] .ndr-prize{background:var(--winner);font-weight:750}
+.ndr-dialog[data-view="result"] .ndr-foot{flex:0 0 auto;color:inherit;justify-content:center;border-color:var(--edge);gap:7px 10px}
+.ndr-dialog[data-view="result"] .ndr-foot .ndr-note{flex:0 0 100%;color:inherit;text-align:center;font-size:12px}
+.ndr-dialog[data-view="result"] .ndr-foot button{min-width:72px;min-height:38px;color:inherit;background:var(--card);border-color:var(--edge)}
+.ndr-dialog[data-view="result"] .ndr-foot .ndr-primary{min-width:115px;background:var(--key);color:var(--key-text);font-weight:800}
+@media(max-width:600px){dialog.ndr-dialog[data-view="result"]{width:min(430px,calc(100vw - 12px));max-height:90dvh}.ndr-award{padding:8px 10px}}
+@media(max-height:500px){.ndr-dialog[data-view="result"] .ndr-head,.ndr-dialog[data-view="result"] .ndr-foot{padding:5px 10px}.ndr-dialog[data-view="result"] .ndr-head h2{font-size:21px}.ndr-dialog[data-view="result"] .ndr-result-art{max-height:72px}}
+
+.ndr-dialog[data-view="result"] h2:focus{outline:none}
+.ndr-more-winners{margin:6px auto 0;font-size:14px}
+.ndr-more-winners summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.ndr-more-winners p{margin:8px 0 0;overflow-wrap:anywhere;line-height:1.55}
