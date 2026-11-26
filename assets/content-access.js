@@ -35,7 +35,11 @@
    if(!r.ok){sessionStorage.removeItem(key);throw Error(r.error);}sessionStorage.removeItem(key);window.dispatchEvent(new CustomEvent('nw-wallet-updated'));return true;
   }catch(e){alert(e.message);return false;}finally{starting=false;}
  }
- window.NWContent={call,status,start,credentials,base,get account(){return lastStatus?.memberId||'unknown';},async access(){try{return await status();}catch(e){return {ok:false,error:e.message};}}};
+ function rankingCredentials(){
+  const {token,device,guestToken}=credentials();
+  return {token,device,guestToken:gameAdminToken?'':guestToken,gameAdminToken};
+ }
+ window.NWContent={call,status,start,credentials,rankingCredentials,base,get account(){return lastStatus?.memberId||'unknown';},async access(){try{return await status();}catch(e){return {ok:false,error:e.message};}}};
  document.addEventListener('DOMContentLoaded',()=>{
 
   const startButton=document.getElementById('start')||document.getElementById('pondStart')||document.getElementById('spstart');
