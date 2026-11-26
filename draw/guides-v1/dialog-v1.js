@@ -6,6 +6,28 @@
   if(!Object.hasOwn(names,game))return;
   const guide=new URL(game+'.html',script.src);
   const race=game==='wild'||game==='pets';
+  // The race finish engine and its UI are independently versioned. Keep the
+  // server's scorer and select the published UI before the old UI auto-mounts.
+  function connectRaceRanking(){
+    const gameId=game==='wild'?'wild-run-91':'pet-race';
+    const entry=document.querySelector('script[type="module"][data-draw-ranking-game="'+gameId+'"]');
+    if(!entry)return false;
+    const canonical=new URL('../draw-ranking-ui.mjs',script.src).href;
+    if(entry.src===canonical || document.querySelector('[data-ndr-trigger],dialog.ndr-dialog'))return true;
+    const fallback=entry.src;
+    entry.removeAttribute('data-draw-ranking-game');
+    const parsed=document.readyState==='loading'
+      ? new Promise(resolve=>document.addEventListener('DOMContentLoaded',resolve,{once:true})) : Promise.resolve();
+    const mount=ui=>parsed.then(()=>ui.mountDrawRanking(gameId));
+    import(canonical).then(mount).catch(()=>import(fallback).then(mount))
+      .catch(error=>console.warn('달리기 순위 화면을 열지 못했습니다.',error));
+    return true;
+  }
+  if(race && !connectRaceRanking() && document.readyState==='loading'){
+    const observer=new MutationObserver(()=>{if(connectRaceRanking())observer.disconnect();});
+    observer.observe(document.documentElement,{childList:true,subtree:true});
+    document.addEventListener('DOMContentLoaded',()=>observer.disconnect(),{once:true});
+  }
   function install(){
     const original=race?document.getElementById('guide'):null;
     const full=document.getElementById(game==='pin'?'focus':'pondFull');
