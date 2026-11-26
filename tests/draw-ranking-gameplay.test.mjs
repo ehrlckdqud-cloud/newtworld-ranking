@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
-import { drawRankingApi } from '../server/draw-ranking-api.mjs';
 
 const { chromium } = createRequire(import.meta.url)('playwright');
 const site = 'https://ehrlckdqud-cloud.github.io/newtworld-ranking/';
@@ -28,31 +26,20 @@ const accessFixture = `window.NWContent = {
 };`;
 const mime = { html: 'text/html', css: 'text/css', wasm: 'application/wasm', json: 'application/json', bin: 'application/octet-stream' };
 
-async function isolate(context, sqlite, traffic) {
-  sqlite.exec(readFileSync(new URL('server/draw-ranking.sql', root), 'utf8'));
-  const database = { prepare(sql) {
-    const statement = sqlite.prepare(sql);
-    return { bind: (...values) => ({
-      first: async () => statement.get(...values),
-      all: async () => ({ results: statement.all(...values) })
-    }) };
-  } };
+async function isolate(context, traffic) {
   await context.addInitScript(() => {
     localStorage.setItem('nwProfileToken', 'test-token');
     localStorage.setItem('nwProfileDevice', 'test-device');
     window.addEventListener('nw-draw-result', event => { window.qaCompleted = event.detail; });
   });
-  // All requests terminate locally, including membership, entry charges and the real ranking API handler.
+  // All requests terminate locally, including membership and entry charges.
   await context.route('**/*', async route => {
     const request = route.request();
     const url = new URL(request.url());
     const script = body => route.fulfill({ contentType: 'text/javascript', body });
     if (url.origin === api && url.pathname.startsWith('/api/draw-rankings/')) {
-      if (request.method() === 'POST' && url.pathname.endsWith('/finish')) traffic.finishes++;
-      const response = await drawRankingApi(new Request(request.url(), {
-        method: request.method(), headers: request.headers(), body: request.postData() || undefined
-      }), database, async () => true);
-      return route.fulfill({ status: response.status, headers: Object.fromEntries(response.headers), body: await response.text() });
+      traffic.rankingRequests++;
+      return route.abort();
     }
     if (url.hostname === 'script.google.com') {
       const callback = url.searchParams.get('callback');
@@ -91,17 +78,16 @@ async function verifyBoard(panel, result) {
   assert.equal(await rows.count(), result.scores.length);
   for (const score of result.scores) {
     const cells = await rows.filter({ hasText: score.name }).locator('td').allTextContents();
-    assert.deepEqual([cells[3], cells[4], cells.at(-1)], ['1', String(score.entries), score.points.toFixed(1)]);
+    assert.deepEqual([cells[4], cells[5], cells.at(-1)], ['1', String(score.entries), score.points.toFixed(1)]);
   }
 }
 async function play(browser, game, width, ranked) {
   const mobile = width === 390;
   const ui = games[game];
   const context = await browser.newContext({ viewport: { width, height: mobile ? 844 : 760 }, isMobile: mobile, hasTouch: mobile });
-  const sqlite = new DatabaseSync(':memory:');
-  const traffic = { finishes: 0 };
+  const traffic = { rankingRequests: 0 };
   try {
-    await isolate(context, sqlite, traffic);
+    await isolate(context, traffic);
     const page = await context.newPage();
     const exceptions = [];
     page.on('pageerror', error => exceptions.push(error.message));
@@ -155,7 +141,7 @@ async function play(browser, game, width, ranked) {
     const points = await panel.locator('tbody tr').evaluateAll(rows =>
       rows.map(row => [row.cells[1].textContent, row.cells[2].textContent]));
     assert.deepEqual(points, result.standings.map(entry => [entry.name, entry.points.toFixed(1)]));
-    await panel.getByText(ranked ? '전체순위에 반영했습니다.' : /공식 기록에서 제외/).waitFor();
+    await panel.getByText(ranked ? '전체순위에 반영했습니다.' : /누적 기록에서 제외/).waitFor();
     const close = panel.getByRole('button', { name: '닫기' });
     const open = page.locator('.ndr-open');
     await close.click();
@@ -165,11 +151,10 @@ async function play(browser, game, width, ranked) {
     await page.reload({ waitUntil: 'domcontentloaded' });
     await open.click();
     await verifyBoard(panel, result);
-    assert.equal(traffic.finishes, ranked ? 1 : 0);
+    assert.equal(traffic.rankingRequests, 0);
     assert.deepEqual(exceptions, []);
   } finally {
     await context.close();
-    sqlite.close();
   }
 }
 

@@ -17,32 +17,25 @@ function raceDocument(game) {
   const markup='<!doctype html><html lang="ko"><body><label>당첨 인원<input id="winners"></label><canvas id="cv"></canvas><script>function refresh(){} function end(){order=arrivals.concat([]);if(arrivals.length===runners.length)refresh()}</script></body></html>';
   return addRaceRanking(markup,game,'/draw/draw-game-results.mjs');
 }
-test('ranking controls, themed results, official read/write and retry work at desktop and mobile widths',async t=>{
-  const db=new DatabaseSync(':memory:');
-  db.exec(read('server/draw-ranking.sql'));
-  const binding={prepare:sql=>({bind:(...v)=>({first:async()=>db.prepare(sql).get(...v),all:async()=>({results:db.prepare(sql).all(...v)})})})};
+test('browser rankings support game results, multiple selection and resets at desktop and mobile widths',async t=>{
   const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||undefined});
-  t.after(async()=>{await browser.close();db.close()});
+  t.after(()=>browser.close());
   for(const [i,game] of games.entries()){
     const race=i>=3;
     const ctx=await browser.newContext();
     try {
       const page=await ctx.newPage();
       const doc=race?raceDocument(game):read('draw/'+pages[i]+'.html');
-      let finishCalls=0, retryOnce=true;
+      let rankingRequests=0;
       await page.route('**/*',async route=>{
         const req=route.request(), url=new URL(req.url());
         if(url.pathname.startsWith('/api/draw-rankings/')){
-          if(url.pathname.endsWith('/finish')&&req.method()==='POST'){
-            finishCalls++;
-            if(retryOnce){retryOnce=false;return route.abort('failed');}
-          }
-          const res=await drawRankingApi(new Request(req.url(),{method:req.method(),headers:req.headers(),body:req.postData()||undefined}),binding,async()=>true);
-          return route.fulfill({status:res.status,headers:Object.fromEntries(res.headers),body:await res.text()});
+          rankingRequests++;
+          return route.abort();
         }
         if(req.isNavigationRequest())return route.fulfill({contentType:'text/html',body:doc});
         const name=url.pathname.split('/').pop();
-        if(['draw-ranking-ui.mjs','draw-ranking-ui.css','draw-game-results.mjs','draw-ranking.mjs','space-selection.js','newtworld-v326-source.7ccbf679.css','pond.64425dec.css','space.css'].includes(name)){
+        if(['draw-ranking-ui.mjs','draw-browser-ranking.mjs','draw-ranking-ui.css','draw-game-results.mjs','draw-ranking.mjs','space-selection.js','newtworld-v326-source.7ccbf679.css','pond.64425dec.css','space.css'].includes(name)){
           return route.fulfill({contentType:name.endsWith('.css')?'text/css':'text/javascript',body:read('draw/'+name)});
         }
         return route.fulfill({contentType:'text/javascript',body:''});
@@ -76,8 +69,8 @@ test('ranking controls, themed results, official read/write and retry work at de
       await panel.getByRole('button',{name:'닫기'}).click();
       await emit();
       await panel.getByRole('heading',{name:titles[i]}).waitFor();
-      await panel.getByText(/공식 기록에서 제외/).waitFor();
-      assert.equal(finishCalls,0);
+      await panel.getByText(/누적 기록에서 제외/).waitFor();
+      assert.equal(rankingRequests,0);
       const box=await panel.boundingBox();
       assert.ok(box.x>640 && box.x+box.width<=1280,game);
       await panel.getByRole('button',{name:'닫기'}).click();
@@ -88,20 +81,35 @@ test('ranking controls, themed results, official read/write and retry work at de
       await open.click({timeout:5000});
       await panel.getByRole('button',{name:'닫기'}).click();
       await emit();
-      await panel.getByRole('button',{name:'저장 재시도'}).click();
       await panel.getByText('전체순위에 반영했습니다.').waitFor();
       await panel.getByRole('heading',{name:'중복 참가 평균점수'}).waitFor();
       await panel.getByRole('button',{name:'전체순위'}).click();
       const row=panel.locator('tbody tr').filter({hasText:fixtureName});
       await row.waitFor();
       const values=await row.locator('td').allTextContents();
-      assert.equal(values[3],'1');assert.equal(values[4],'2');
-      assert.deepEqual(values.slice(5),['1',game==='pinball'?'0':'1','5.0']);
-      assert.ok(values[2].includes('27'));
+      assert.equal(values[4],'1');assert.equal(values[5],'2');
+      assert.deepEqual(values.slice(6),['1',game==='pinball'?'0':'1','5.0']);
+      assert.ok(values[3].includes('27'));
       const mobile=await panel.boundingBox();
       assert.ok(mobile.x>=0 && mobile.x+mobile.width<=391);
-      await panel.getByRole('button',{name:'닫기'}).click();
-      assert.equal(finishCalls,2);
+      await panel.getByRole('heading',{name:'점수 기준'}).waitFor();
+      const remove=panel.getByRole('button',{name:'선택 삭제'});
+      assert.ok(await remove.isDisabled());
+      await panel.getByRole('checkbox',{name:fixtureName+' 선택'}).check();
+      await panel.getByRole('checkbox',{name:'다른 참가자 선택'}).check();
+      page.once('dialog',prompt=>prompt.dismiss());
+      await remove.click();
+      assert.equal(await panel.getByRole('checkbox',{checked:true}).count(),2);
+      page.once('dialog',prompt=>prompt.accept());
+      await remove.click();
+      await panel.getByText('순위에 반영된 경기가 아직 없습니다.').waitFor();
+      await emit();
+      await panel.getByText('전체순위에 반영했습니다.').waitFor();
+      await panel.getByRole('button',{name:'전체순위'}).click();
+      page.once('dialog',prompt=>prompt.accept());
+      await panel.getByRole('button',{name:'전체 삭제'}).click();
+      await panel.getByText('순위에 반영된 경기가 아직 없습니다.').waitFor();
+      assert.equal(rankingRequests,0);
     }finally{await ctx.close();}
   }
 });

@@ -1,3 +1,5 @@
+import { readBrowserBoard, saveBrowserResult, deleteBrowserRows } from './draw-browser-ranking.mjs';
+
 const themes = {
   pinball: { name: '생존핀볼', result: '구슬 추첨 결과', stats: ['먼저 도착 당첨', '마지막 생존 당첨'] },
   pond: { name: '생존연못', result: '연못의 생존 결과', stats: ['최종 생존', '부활 후 생존'] },
@@ -19,7 +21,6 @@ function scoringGuide(game) {
     element('p', '공동 순위는 해당 등수들의 평균점수를 받습니다. 한 판에 같은 닉네임이 여러 번 참가하면 그 닉네임의 평균점수를 한 번 더합니다. 전체순위는 이렇게 쌓인 누적점수 순입니다.'));
   return guide;
 }
-const service = 'https://newtworld-ms3-coop-5p.ehrlckdqud.chatgpt.site';
 const dates = new Intl.DateTimeFormat('ko-KR',{ timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit' });
 const points = n => Number(n).toFixed(1);
 function element(tag, text, cls) {
@@ -46,27 +47,10 @@ function table(labels, rows) {
   const body = grid.createTBody();
   for (const values of rows) {
     const tr = body.insertRow();
-    for (const value of values) tr.insertCell().textContent = value;
+    for (const value of values) tr.insertCell().append(value);
   }
   wrap.append(grid);
   return wrap;
-}
-
-async function request(game, action, result) {
-  const api = new URL('/api/draw-rankings/' + game + '/' + action, service);
-  let member;
-  if (location.origin !== api.origin) {
-    member = window.NWContent?.rankingCredentials?.() ?? { token: localStorage.getItem('nwProfileToken'), device: localStorage.getItem('nwProfileDevice') };
-  }
-  const response = await fetch(api, {
-    method:'POST', credentials:'same-origin', cache:'no-store',
-    signal:AbortSignal.timeout(15000), headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ member, result, accessGame:game==='pinball' ? (Number(document.getElementById('map')?.value)===4?'factory':'marble') : game })
-  });
-  if (!response.ok) throw new Error('순위 서버에 연결하지 못했습니다.');
-  const data = await response.json();
-  if (!data.ok) throw new Error('순위 처리를 확인하지 못했습니다.');
-  return data;
 }
 
 export function mountDrawRanking(game) {
@@ -182,25 +166,60 @@ export function mountDrawRanking(game) {
       if (generation===seq && dialog.open) showBoard();
     }));
     const board = element('div');
-    body.append(scoringGuide(game), board);
+    body.append(element('p','이 브라우저에서 완료한 '+theme.name+'의 누적 순위입니다.','ndr-scope'),scoringGuide(game), board);
     board.append(note('전체순위를 불러오는 중입니다.'));
     try {
       if (latest?.saving) await latest.saving;
-      const { rows }=await request(game,'board');
+      const rows=await readBrowserBoard(game);
       if (!Array.isArray(rows)) throw new Error();
       if (seq!==generation) return;
       board.replaceChildren();
       if (!rows.length) { board.append(note('순위에 반영된 경기가 아직 없습니다.')); return; }
-      board.append(table(['순위','닉네임','최근 참가일','참가 판수','누적 참가 인원',...theme.stats,'획득점수'],
-        rows.map(row=>[row.rank,row.nickname,dates.format(new Date(row.lastPlayedAt)),row.rounds,row.entries,
-          row.statA ?? '—',row.statB ?? '—',points(row.points)])));
+      const selected = new Set();
+      const controls = element('div', null, 'ndr-management');
+      const status = note('');
+      const removeSelected = button('선택 삭제', () => remove(false));
+      const removeAll = button('전체 삭제', () => remove(true));
+      removeSelected.disabled = true;
+      controls.append(removeSelected, removeAll, status);
+      function sync() {
+        removeSelected.disabled = selected.size === 0;
+        status.textContent = selected.size ? selected.size + '명 선택' : '';
+      }
+      async function remove(all) {
+        const message = all ? theme.name + '의 전체순위를 이 브라우저에서 모두 삭제할까요?'
+          : theme.name + '에서 선택한 ' + selected.size + '명의 누적 기록을 삭제할까요?';
+        if ((!all && !selected.size) || !window.confirm(message)) return;
+        removeAll.disabled = removeSelected.disabled = true;
+        try {
+          await deleteBrowserRows(game, all ? null : [...selected]);
+          if (generation === seq && dialog.open) await showBoard();
+        } catch {
+          removeAll.disabled = false;
+          sync();
+          status.textContent = '삭제하지 못했습니다. 다시 시도해주세요.';
+        }
+      }
+      const data = rows.map(row => {
+        const check = element('input', null, 'ndr-check');
+        check.type = 'checkbox';
+        check.setAttribute('aria-label', row.nickname + ' 선택');
+        check.onchange = () => {
+          if (check.checked) selected.add(row.key);
+          else selected.delete(row.key);
+          sync();
+        };
+        return [check, row.rank, row.nickname, dates.format(new Date(row.lastPlayedAt)), row.rounds,
+          row.entries, row.statA, row.statB, points(row.points)];
+      });
+      board.append(controls, table(['선택','순위','닉네임','최근 참가일','참가 판수','누적 참가 인원',...theme.stats,'획득점수'], data));
     } catch {
       if (seq===generation) board.replaceChildren(note('전체순위를 불러오지 못했습니다.'),button('다시 불러오기',showBoard));
     }
   }
   function updateStatus(item) {
     if (view!=='result' || item!==latest) return;
-    const message = {off:'순위 반영 끄기 · 공식 기록에서 제외했습니다.',saving:'전체순위에 반영하는 중입니다.',
+    const message = {off:'순위 반영 끄기 · 이 브라우저의 누적 기록에서 제외했습니다.',saving:'전체순위에 반영하는 중입니다.',
       saved:'전체순위에 반영했습니다.',error:'저장을 확인하지 못했습니다.'}[item.state];
     foot.replaceChildren(note(message));
     if (item.state==='error') foot.append(button('저장 재시도',()=>save(item)));
@@ -211,9 +230,8 @@ export function mountDrawRanking(game) {
     unconfirmed.add(item);
     item.state='saving';
     updateStatus(item);
-    const {round,groups,finishedAt,winnerIds,revivedWinnerIds,mode}=item.result;
-    item.saving=request(game,'finish',{round,groups,finishedAt,winnerIds,revivedWinnerIds,mode})
-      .then(data=>{ if(data.recorded!==true) throw new Error(); item.state='saved'; unconfirmed.delete(item); })
+    item.saving=saveBrowserResult(item.result)
+      .then(()=>{ item.state='saved'; unconfirmed.delete(item); })
       .catch(()=>{item.state='error';})
       .finally(()=>{item.saving=null;updateStatus(item);});
     return item.saving;
