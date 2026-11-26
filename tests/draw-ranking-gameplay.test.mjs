@@ -12,11 +12,11 @@ const root = new URL('../', import.meta.url);
 const pixel = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGNgYGD4DwABBAEAX+XDSwAAAABJRU5ErkJggg==', 'base64');
 const participants = ['테스트A', '테스트B', '테스트C'];
 const games = {
-  pinball: { file: 'index', gate: 'html:not(.member-gated)', settings: '#settingsToggle', names: '#names',
+  pinball: { file: 'index', settings: '#settingsToggle', names: '#names',
     count: '#winnerCount', start: '#start', record: '#record', winners: '#resultNames' },
-  pond: { file: 'pond', gate: '#pondRoot', settings: '#pondConfigToggle', names: '#pondNames',
+  pond: { file: 'pond', settings: '#pondConfigToggle', names: '#pondNames',
     count: '#pondKeep', start: '#pondStart', record: '#pondRecord', winners: '#pondWinners' },
-  space: { file: 'space', gate: '#nwspace', settings: '#spSettings', names: '#spnames',
+  space: { file: 'space', settings: '#spSettings', names: '#spnames',
     count: '#spcount', start: '#spstart', record: '#spAutoRecord', winners: '#spresult' },
 };
 
@@ -67,6 +67,10 @@ async function isolate(context, sqlite, traffic) {
     if (path === 'draw/space-score.js') {
       // The ranking simulation runs with sound and recording off. Skip the audio-device warm-up.
       return script(readFileSync(new URL(path, root), 'utf8') + '\nSpaceScore.prototype.arm = async function () {};');
+    }
+    // The boss reads these sprites' alpha channels for actual damage and elimination.
+    if (path === 'draw/space-assets/electric-nine-native.png' || path === 'draw/space-assets/native-boss-atlas.png') {
+      return route.fulfill({ contentType: 'image/png', body: readFileSync(new URL(path, root)) });
     }
     if (/\.(png|webp|jpe?g|gif|svg)$/i.test(path)) return route.fulfill({ contentType: 'image/png', body: pixel });
     if (/\.(mp3|wav|ogg|mp4)(\.|$)/i.test(path)) return route.fulfill({ status: 204, body: '' });
