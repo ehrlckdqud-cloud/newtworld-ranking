@@ -344,16 +344,22 @@ window.NWConfigReady.then(()=>{
   async function openGemHistory(){
     const dialog=$('gemHistoryDialog');if(!dialog.open)dialog.showModal();
     const request=++gemHistoryRequest,token=localStorage.getItem('nwProfileToken')||'';
-    $('gemHistoryList').replaceChildren();$('gemHistoryRetry').hidden=true;$('gemHistoryStatus').textContent='이용 내역을 불러오는 중…';
-    const result=await jsonp('contentStatus',{token,device:device()},30000);
-    if(request!==gemHistoryRequest||!dialog.open||token!==localStorage.getItem('nwProfileToken'))return;
-    if(!result?.ok||!result.wallet){$('gemHistoryStatus').textContent=result?.error||'이용 내역을 불러오지 못했어요.';$('gemHistoryRetry').hidden=false;return;}
-    const wallet=result.wallet,entries=(wallet.history||[]).slice().sort((a,b)=>Number(b.at)-Number(a.at));
-    if(ownProfile?.memberId&&Number.isFinite(Number(ownProfile.lifetimeScore))){
-      saveMemberWalletCache(token,ownProfile.memberId,wallet,Number(ownProfile.lifetimeScore));
+    const memberId=ownProfile?.memberId,cached=readMemberWalletCache(token,memberId);
+    $('gemHistoryRetry').hidden=true;
+    if(cached)renderGemHistory(cached,'최근 확인 내역 · ');
+    else{$('gemHistoryList').replaceChildren();$('gemHistoryStatus').textContent='이용 내역을 불러오는 중…';}
+    const result=await loadActivityWallet(token,memberId);
+    if(request!==gemHistoryRequest||!dialog.open||token!==localStorage.getItem('nwProfileToken')||memberId!==ownProfile?.memberId)return;
+    if(result){renderGemHistory(result,result.settlementPending?'최근 확정 내역 · 새 집계 대기 중 · ':'');$('gemHistoryRetry').hidden=!result.settlementPending;}
+    else{
+      $('gemHistoryStatus').textContent=cached?'최근 확인 내역입니다. 최신 내역을 다시 확인해 주세요.':'이용 내역을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
+      $('gemHistoryRetry').hidden=false;
     }
-    $('nwGemBalance').textContent=fmt(wallet.balance);
-    $('gemHistoryStatus').textContent='현재 '+fmt(wallet.balance)+'젬 · '+(entries.length?'최근 '+entries.length+'건 (최대 50건)':'아직 이용 내역이 없습니다.');
+  }
+  function renderGemHistory(wallet,prefix){
+    const entries=wallet.history||[];
+    $('gemHistoryList').replaceChildren();
+    $('gemHistoryStatus').textContent=prefix+fmt(wallet.balance)+'젬 · '+(entries.length?'최근 '+entries.length+'건 (최대 50건)':'아직 이용 내역이 없습니다.');
     for(const entry of entries){
       const row=document.createElement('li'),date=document.createElement('time'),amount=document.createElement('b');
       row.className='gem-history-row';
@@ -463,6 +469,8 @@ window.NWConfigReady.then(()=>{
     }
     let cached=null;try{cached=JSON.parse(localStorage.getItem(coreCacheKey)||'null');}catch(_){}
     if(cached&&cached.token===token&&cached.device===device()&&cached.profile&&Date.now()-Number(cached.savedAt||0)<86400000){
+      const previous=readMemberWalletCache(token,cached.profile.memberId);
+      activityWallet=previous;activityWalletState=previous?'cached':'loading';
       renderProfile(cached.profile,true);if(cached.profile.memberProfile)loadEditableProfile(cached.profile.memberProfile,true);
       $('saveProfileBtn').disabled=true;status.textContent='최근 정보 표시 중 · 최신 정보를 확인하고 있어요.';
     }else{status.textContent='회원정보를 불러오는 중…';}
@@ -479,13 +487,11 @@ window.NWConfigReady.then(()=>{
     if(avatarEditVersion!==photoVersion&&ownProfile?.memberProfile){d.profile.memberProfile=d.profile.memberProfile||{};Object.assign(d.profile.memberProfile,{imageUrl:ownProfile.memberProfile.imageUrl,avatarSrc:ownProfile.memberProfile.avatarSrc});}
     // Preserve the last confirmed balance while the current balance is refreshed.
     const confirmed=readMemberWalletCache(token,d.profile.memberId);
-    const previousBalance=Number(cached?.profile?.memberId===d.profile.memberId?cached.profile.gemBalance:NaN);
+    const previousBalance=cached?.token===token&&cached.device===device()&&cached.profile?.memberId===d.profile.memberId?cached.profile.gemBalance:null;
     if(confirmed&&Number.isFinite(confirmed.balance))d.profile.gemBalance=confirmed.balance;
     else if(Number.isFinite(previousBalance))d.profile.gemBalance=previousBalance;
     saveCoreCache(d.profile);renderProfile(d.profile,false);$('saveProfileBtn').disabled=false;status.textContent='';loadProfileExtras();
-    // Do not run the expensive activity-history lookup alongside the wallet
-    // balance request: both use the same Apps Script lock.
-    refreshMemberGemBalance(token,d.profile.memberId).finally(()=>loadActivityWallet(token,d.profile.memberId));
+    loadActivityWallet(token,d.profile.memberId);
   }
   function renderProfileIdentity(p){
     const value=String(p.role||'').trim(),staff=['방장','부방장'].includes(value)?value:'';
@@ -774,27 +780,8 @@ window.NWConfigReady.then(()=>{
       }));
     }catch(_){}
   }
-  async function refreshMemberGemBalance(token,memberId){
-    for(let attempt=0;attempt<2;attempt++){
-      try{
-        const result=await jsonp('profileGemBalance',{token,device:device()},45000);
-        if(localStorage.getItem('nwProfileToken')!==token||ownProfile?.memberId!==memberId)return;
-        if(result?.ok&&Number.isFinite(Number(result.gemBalance))){
-          const balance=Number(result.gemBalance);
-          ownProfile.gemBalance=balance;
-          $('nwGemBalance').textContent=fmt(balance);
-          saveCoreCache(ownProfile);
-          const old=readMemberWalletCache(token,memberId);
-          if(old){old.balance=balance;localStorage.setItem(memberWalletCacheKey(memberId),JSON.stringify(old));}
-          return;
-        }
-      }catch(_){}
-    }
-    // Preserve last verified balance rather than replacing it with a dash.
-    const old=readMemberWalletCache(token,memberId);
-    if(old&&Number.isFinite(old.balance))$('nwGemBalance').textContent=fmt(old.balance);
-  }
-  let activityBaseProfile={},activityWallet=null,activityVisible=20,activityWalletState='loading',activityRequestId=0;
+  let activityBaseProfile={},activityWallet=null,activityVisible=20,activityWalletState='loading';
+  let walletFlight=null,lastWalletRead=null;
   const activityTime=x=>{
     const value=x?.at??x?.date??x?.timestamp??x?.createdAt;
     if(value==null)return 0;
@@ -867,7 +854,7 @@ window.NWConfigReady.then(()=>{
     // Earned wallet credit already includes attendance. Adding a separate
     // attendance row here would credit the same 50 points again.
     const latestTotalText=activityWalletState==='loading'?'불러오는 중':
-      latestActivity?'+'+fmt(latestActivity.amount)+'점':'집계 기록 없음';
+      latestActivity?'+'+fmt(latestActivity.amount)+'점':activityWalletState==='error'?'조회 지연':'집계 기록 없음';
     summary.replaceChildren();
     for(const [heading,value] of [['이번 달 점수',Number.isFinite(season)?fmt(season)+'점':'확인 중'],['최근 활동 집계',latestTotalText]]){
       const box=document.createElement('div'),small=document.createElement('small'),strong=document.createElement('strong');
@@ -894,7 +881,7 @@ window.NWConfigReady.then(()=>{
     list.scrollTop=previousScroll;
     const more=$('recentActivityMore');more.hidden=arr.length<=activityVisible;more.textContent='활동 내역 더보기 ('+Math.min(20,arr.length-activityVisible)+'건)';
     const status=$('recentActivityStatus');
-    status.textContent=activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'최근 활동 집계는 활동·출석을 포함한 실제 뉴트젬 적립 총액입니다. 과거 지급건은 확인 가능한 세부 기록만 보여줍니다.';
+    status.textContent=activityWalletState==='pending'?'최근 확정 내역입니다. 새 집계 반영을 기다리고 있습니다.':activityWalletState==='cached'?'최근 확인한 집계입니다.':activityWalletState==='error'?'출석·오운완 기록만 표시 중입니다. 뉴트젬 지급 이력 조회에 실패했습니다.':activityWalletState==='loading'?'활동 점수 지급 기록을 확인하고 있습니다.':walletItems.length>=50?'뉴트젬 이용내역 최근 50건 범위에서 확인 가능한 활동 점수만 표시됩니다.':'최근 활동 집계는 활동·출석을 포함한 실제 뉴트젬 적립 총액입니다. 과거 지급건은 확인 가능한 세부 기록만 보여줍니다.';
   }
   $('recentActivityMore').addEventListener('click',()=>{
     const list=$('recentList'),previousCount=list.children.length,previousPosition=list.scrollTop;
@@ -905,42 +892,44 @@ window.NWConfigReady.then(()=>{
       list.scrollTop=Math.max(previousPosition,firstNew.offsetTop-list.children[0].offsetTop-12);
     }
   });
-  async function loadActivityWallet(token,memberId){
-    const req=++activityRequestId;
+  function loadActivityWallet(token,memberId){
+    const browserDevice=device(),score=ownProfile?.lifetimeScore;
+    if(!token||!memberId||!isCurrent())return Promise.resolve(null);
+    function isCurrent(){return localStorage.getItem('nwProfileToken')===token&&ownProfile?.memberId===memberId&&device()===browserDevice;}
+    const key=JSON.stringify([token,browserDevice,memberId,score]);
+    if(walletFlight?.key===key)return walletFlight.promise;
+    if(lastWalletRead?.key===key&&Date.now()-lastWalletRead.at<15000)return Promise.resolve(lastWalletRead.wallet);
     const cached=readMemberWalletCache(token,memberId);
-    if(cached){
-      activityWallet={history:cached.history,balance:cached.balance};
-      activityWalletState='loaded';
-      renderRecent(activityBaseProfile);
-      // Activity entries do not change when the member's score is unchanged.
-      // Spending changes balance only, handled separately above.
-      const currentScore=Number(ownProfile?.lifetimeScore);
-      if(Number.isFinite(currentScore)&&cached.lifetimeScore===currentScore)return;
-    }else{
-      activityWallet=null;activityWalletState='loading';renderRecent(activityBaseProfile);
-    }
-    try{
-      const result=await jsonp('contentStatus',{token,device:device()},45000);
-      if(req!==activityRequestId||localStorage.getItem('nwProfileToken')!==token||ownProfile?.memberId!==memberId)return;
-      if(result?.ok&&result.wallet){
-        const score=Number(ownProfile.lifetimeScore);
-        saveMemberWalletCache(token,memberId,result.wallet,score);
-        const saved=readMemberWalletCache(token,memberId);
-        activityWallet={...result.wallet,history:saved?.history||result.wallet.history};
-        activityWalletState='loaded';
-        if(Number.isFinite(Number(result.wallet.balance))){
-          ownProfile.gemBalance=Number(result.wallet.balance);
-          $('nwGemBalance').textContent=fmt(ownProfile.gemBalance);
-          saveCoreCache(ownProfile);
+    activityWallet=cached;activityWalletState=cached?'cached':'loading';
+    renderRecent(activityBaseProfile);
+    const flight={key};
+    walletFlight=flight;
+    flight.promise=(async()=>{
+      try{
+        const result=await jsonp('contentStatus',{token,device:browserDevice,profileHistory:'1'},45000);
+        if(walletFlight!==flight||!isCurrent())return null;
+        const wallet=result?.wallet;
+        if(!result?.ok||result.memberId!=='member:'+memberId||!Array.isArray(wallet?.history)||!Number.isFinite(wallet.balance))return null;
+        saveMemberWalletCache(token,memberId,wallet,result.settlementPending?cached?.lifetimeScore:score);
+        const confirmed={...(readMemberWalletCache(token,memberId)||wallet),settlementPending:!!result.settlementPending};
+        activityWallet=confirmed;activityWalletState=result.settlementPending?'pending':'loaded';
+        ownProfile.gemBalance=wallet.balance;$('nwGemBalance').textContent=fmt(wallet.balance);
+        saveCoreCache(ownProfile);if(!result.settlementPending)lastWalletRead={key,at:Date.now(),wallet:confirmed};
+        return confirmed;
+      }catch(_){return null;}
+      finally{
+        if(walletFlight===flight){
+          walletFlight=null;
+          if(isCurrent()){
+            if(!['loaded','pending'].includes(activityWalletState))activityWalletState=cached?'cached':'error';
+            renderRecent(activityBaseProfile);
+          }
         }
-      }else if(!cached){activityWallet=null;activityWalletState='error';}
-      renderRecent(activityBaseProfile);
-    }catch(_){
-      if(req!==activityRequestId)return;
-      if(!cached){activityWallet=null;activityWalletState='error';renderRecent(activityBaseProfile);}
-    }
+      }
+    })();
+    return flight.promise;
   }
-  async function loadProfileExtras(){const t=localStorage.getItem('nwProfileToken');if(!t)return;const d=await jsonp('profileExtras',{token:t,device:device()});if(!d?.ok)return;if(d.workoutCount!=null){$('workout').textContent=fmt(d.workoutCount)+'회';$('goalWorkout').textContent=d.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,d.workoutCount/10*100)+'%';}renderHistory(d.rankHistory||[]);renderRecent({...activityBaseProfile,recentAttendance:d.recentAttendance||[],recentWorkout:d.recentWorkout||[],rankHistory:d.rankHistory||[]});try{const c=JSON.parse(localStorage.getItem(coreCacheKey)||'null');if(c&&c.token===t){Object.assign(c.profile,{workoutCount:d.workoutCount,rankHistory:d.rankHistory,recentAttendance:d.recentAttendance,recentWorkout:d.recentWorkout});saveCoreCache(c.profile);}}catch(_){} }
+  async function loadProfileExtras(){const t=localStorage.getItem('nwProfileToken');if(!t)return;const memberId=ownProfile?.memberId,d=await jsonp('profileExtras',{token:t,device:device()});if(!d?.ok||localStorage.getItem('nwProfileToken')!==t||ownProfile?.memberId!==memberId)return;if(d.workoutCount!=null){$('workout').textContent=fmt(d.workoutCount)+'회';$('goalWorkout').textContent=d.workoutCount+'/10회';$('goalWorkoutBar').style.width=Math.min(100,d.workoutCount/10*100)+'%';}renderHistory(d.rankHistory||[]);renderRecent({...activityBaseProfile,recentAttendance:d.recentAttendance||[],recentWorkout:d.recentWorkout||[],rankHistory:d.rankHistory||[]});try{const c=JSON.parse(localStorage.getItem(coreCacheKey)||'null');if(c&&c.token===t){Object.assign(c.profile,{workoutCount:d.workoutCount,rankHistory:d.rankHistory,recentAttendance:d.recentAttendance,recentWorkout:d.recentWorkout});saveCoreCache(c.profile);}}catch(_){} }
 
   // v2.74: bounded persistent own-photo cache and idempotent upload acknowledgement.
   const avatarReplies=new Map(),avatarImages=new Map();let avatarGeneration=0,avatarBusy=false,avatarEditVersion=0,ownProfile=null,avatarRetry=null;
@@ -1083,6 +1072,7 @@ window.NWConfigReady.then(()=>{
 <script src="assets/content-access.js?v=20261025-total-gem"></script>
 </body>
 </html>
+
 
 
 
