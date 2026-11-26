@@ -70,7 +70,8 @@ test('browser rankings support game results, multiple selection and resets at de
       await select.evaluate(el=>{el.value='off';el.dispatchEvent(new Event('change'));});
       await page.setViewportSize({width:1280,height:760});
       const desktopButton=await open.boundingBox();
-      assert.ok(desktopButton.x+desktopButton.width>=1280*.85,game+' desktop button');
+      if (game==='pinball') assert.equal(await page.locator('#headerPanel .head-actions [data-ndr-trigger]').count(),1);
+      else assert.ok(desktopButton.x+desktopButton.width>=1280*.85,game+' desktop button');
       await open.click({timeout:5000});
       await panel.getByText('순위에 반영된 경기가 아직 없습니다.').waitFor();
       await panel.getByRole('button',{name:'닫기'}).click();
@@ -91,7 +92,8 @@ test('browser rankings support game results, multiple selection and resets at de
       await select.evaluate(el=>{el.value='on';el.dispatchEvent(new Event('change'));});
       await page.setViewportSize({width:390,height:844});
       const mobileButton=await open.boundingBox();
-      assert.ok(mobileButton.x+mobileButton.width>=390*.85,game+' mobile button');
+      if (game==='pinball') assert.ok(mobileButton.x>=0 && mobileButton.x+mobileButton.width<=390);
+      else assert.ok(mobileButton.x+mobileButton.width>=390*.85,game+' mobile button');
       await open.click({timeout:5000});
       await panel.getByRole('button',{name:'닫기'}).click();
       await emit();

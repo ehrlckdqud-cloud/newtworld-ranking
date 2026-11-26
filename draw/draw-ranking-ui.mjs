@@ -111,7 +111,10 @@ export function mountDrawRanking(game) {
   const raceTools = race && document.querySelector('#gameTools');
   const slot = raceTools || document.querySelector('[data-draw-ranking-button]');
   if (raceTools) open.className = 'tool ndr-native-tool';
-  if (slot) slot.append(open);
+  if (game === 'pinball' && slot?.closest('.head-actions')) {
+    open.classList.remove('ndr-open');
+    slot.replaceWith(open);
+  } else if (slot) slot.append(open);
   else { open.classList.add('ndr-floating'); document.body.append(open); }
   if (slot?.classList.contains('ndr-corner')) {
     const header=document.querySelector(game==='pinball'?'#headerPanel':'body > nav');
